@@ -93,11 +93,17 @@ curl -X POST https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders \
    | Variable | Value |
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | from step 1 |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | from step 1 |
-   | `SUPABASE_SERVICE_ROLE_KEY` | from step 1 |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | from step 1 — the **Publishable key** (`sb_publishable_…`) |
+   | `SUPABASE_SERVICE_ROLE_KEY` | from step 1 — the **Secret key** (`sb_secret_…`) |
    | `RESEND_API_KEY` | from step 2 |
    | `EMAIL_FROM` | from step 2 |
    | `NEXT_PUBLIC_APP_URL` | your Vercel domain, e.g. `https://eazyexchange.vercel.app` |
+
+   > **⚠️ The last 3 can't be filled in on the first deploy — set them afterward:**
+   > - `RESEND_API_KEY` and `EMAIL_FROM` depend on the Resend setup (step 2). Until they're set, email **degrades gracefully** — the app and submissions work fine; rejection/reminder emails are just skipped (logged as a warning).
+   > - `NEXT_PUBLIC_APP_URL` isn't known until the first deploy assigns a domain. Deploy once, copy the production URL, set this var, then **redeploy** so the value is baked in (it's a `NEXT_PUBLIC_` build-time var).
+   >
+   > Only the first three (Supabase URL + the two keys) are required for the initial build to succeed. Add the others and redeploy once you've done step 2 / have your domain.
 
 3. Deploy:
 
