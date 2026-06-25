@@ -48,12 +48,12 @@ export function FormBuilder({ templateId, type, fields, slots }: Props) {
               </li>
             ))}
           </ul>
-          <div className="flex gap-2 items-end">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
             <div className="flex-1 space-y-1">
               <Label>Label</Label>
               <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Emergency contact name" />
             </div>
-            <div className="w-32 space-y-1">
+            <div className="w-full sm:w-32 space-y-1">
               <Label>Type</Label>
               <Select value={fieldType} onValueChange={v => setFieldType(v as FieldType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -80,7 +80,7 @@ export function FormBuilder({ templateId, type, fields, slots }: Props) {
               </li>
             ))}
           </ul>
-          <div className="flex gap-2 items-end">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
             <div className="flex-1 space-y-1">
               <Label>Slot name</Label>
               <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Passport copy" />

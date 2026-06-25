@@ -99,31 +99,31 @@ Supabase Edge Function (`send-reminders`) on a daily cron:
 - [ ] Authenticated shell layout with nav (organizer vs student views)
 
 ### Phase 2 — Organizer Core
-- [ ] Exchange creation (create exchange, set both school names)
-- [ ] Form template builder — data entry (add/reorder fields)
-- [ ] Form template builder — document upload (add named slots)
-- [ ] Student invite flow (email → Supabase invite → auto-enrollment on signup)
-- [ ] Master dashboard grid (`/exchanges/[id]`)
+- [x] Exchange creation (create exchange, set both school names)
+- [x] Form template builder — data entry (add/reorder fields)
+- [x] Form template builder — document upload (add named slots)
+- [x] Student invite flow (email → Supabase invite → auto-enrollment on signup)
+- [x] Master dashboard grid (`/exchanges/[id]`)
 
 ### Phase 3 — Student Core
-- [ ] Student form checklist (`/my-forms`)
-- [ ] Data-entry form fill page (render fields, save draft, submit)
-- [ ] Document upload page (per-slot upload via Supabase Storage, submit)
-- [ ] Submission status page (show state + rejection note)
+- [x] Student form checklist (`/my-forms`)
+- [x] Data-entry form fill page (render fields, save draft, submit)
+- [x] Document upload page (per-slot upload via Supabase Storage, submit)
+- [x] Submission status page (state + rejection note; integrated into checklist + fill page)
 
 ### Phase 4 — Review Flow
-- [ ] Organizer submission review page (view answers / download files)
-- [ ] Approve action
-- [ ] Reject with note → trigger immediate rejection email via Resend
+- [x] Organizer submission review page (view answers / download files via signed URLs)
+- [x] Approve action
+- [x] Reject with note → trigger immediate rejection email via Resend
 
 ### Phase 5 — Reminders
-- [ ] Supabase Edge Function: `send-reminders`
-- [ ] Cron schedule: daily at 08:00
-- [ ] Resend email templates (reminder + rejection)
+- [x] Supabase Edge Function: `send-reminders`
+- [x] Cron schedule: daily at 08:00 (documented in `supabase/cron-setup.sql`)
+- [x] Resend email templates (reminder + rejection)
 
 ### Phase 6 — Polish & Deploy
-- [ ] Loading states, error handling, empty states
-- [ ] Mobile-responsive layouts
+- [x] Loading states, error handling, empty states (route-level `loading.tsx` + `error.tsx` boundaries)
+- [x] Mobile-responsive layouts (stacking form rows, scrollable grid)
 - [ ] Vercel deployment + Supabase production project
 - [ ] End-to-end smoke test
 
