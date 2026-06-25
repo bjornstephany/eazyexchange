@@ -11,6 +11,16 @@ function getResend(): Resend | null {
   return new Resend(key)
 }
 
+// Escape untrusted values before embedding them in email HTML.
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function layout(body: string): string {
   return `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
@@ -35,14 +45,16 @@ export async function sendRejectionEmail(opts: {
     return
   }
 
-  const link = `${APP_URL}/my-forms/${opts.assignmentId}`
-  const greeting = opts.studentName ? `Hi ${opts.studentName},` : 'Hi,'
+  // assignmentId is a server-generated UUID; encode defensively all the same.
+  const link = `${APP_URL}/my-forms/${encodeURIComponent(opts.assignmentId)}`
+  const greeting = opts.studentName ? `Hi ${esc(opts.studentName)},` : 'Hi,'
+  const note = esc(opts.note).replace(/\n/g, '<br>')
 
   const html = layout(`
     <p>${greeting}</p>
-    <p>Your submission for <strong>${opts.formName}</strong> needs some changes before it can be approved.</p>
+    <p>Your submission for <strong>${esc(opts.formName)}</strong> needs some changes before it can be approved.</p>
     <p style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #b91c1c;">
-      <strong>Organizer note:</strong> ${opts.note}
+      <strong>Organizer note:</strong> ${note}
     </p>
     <p><a href="${link}" style="display: inline-block; background: #0f172a; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
   `)

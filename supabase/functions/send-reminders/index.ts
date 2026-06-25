@@ -23,12 +23,22 @@ function isoDateInDays(days: number): string {
 
 type ReminderForm = { name: string; deadline: string }
 
+// Escape untrusted values before embedding them in email HTML.
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function buildEmail(studentName: string, forms: ReminderForm[]): string {
-  const greeting = studentName ? `Hi ${studentName},` : 'Hi,'
+  const greeting = studentName ? `Hi ${esc(studentName)},` : 'Hi,'
   const items = forms
     .map(
       f =>
-        `<li style="margin-bottom: 6px;"><strong>${f.name}</strong> — due ${new Date(
+        `<li style="margin-bottom: 6px;"><strong>${esc(f.name)}</strong> — due ${new Date(
           f.deadline,
         ).toLocaleDateString()}</li>`,
     )
