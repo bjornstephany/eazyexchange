@@ -25,11 +25,20 @@ export async function inviteStudent(exchangeId: string, email: string) {
 
   const admin = createAdminClient()
 
-  // Send Supabase invite email
+  // Send Supabase invite email. The invite email template must point at the
+  // token_hash verification handler so the SSR cookie flow works, e.g.:
+  //   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/accept-invite
+  // `redirectTo` sets {{ .RedirectTo }} / the allowlisted target; the user lands
+  // on /accept-invite after /auth/confirm establishes their session.
   const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/accept-invite`,
   })
-  if (inviteError) throw inviteError
+  if (inviteError) {
+    if (inviteError.code === 'email_exists') {
+      throw new Error('A user with this email is already registered')
+    }
+    throw inviteError
+  }
 
   // Pre-create the profile row. Use insert (not upsert) so we never overwrite an
   // existing user's profile — that would let an organizer hijack another account

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // Surface the flag set by /auth/confirm when an invite link is invalid/expired.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('error') === 'invite_invalid') {
+      setError('That invite link is invalid or has expired — ask your organizer to resend it.')
+    }
+  }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

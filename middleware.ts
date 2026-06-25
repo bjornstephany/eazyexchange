@@ -7,6 +7,12 @@ export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
   const { pathname } = request.nextUrl
 
+  // /auth/* are server-side verification handlers — never gate or bounce them,
+  // they run before a session is fully established.
+  if (pathname.startsWith('/auth')) {
+    return supabaseResponse
+  }
+
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite')
 
   if (!user && !isAuthRoute) {
@@ -14,14 +20,24 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    // Fetch role to redirect correctly
+    // Fetch role + setup state to redirect correctly
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
     )
     const { data: profile } = await supabase
-      .from('users').select('role').eq('id', user.id).single<{ role: string }>()
+      .from('users').select('role, full_name').eq('id', user.id)
+      .single<{ role: string; full_name: string | null }>()
+
+    // A freshly-invited user has a session (set by /auth/confirm) but an empty
+    // full_name. Let them finish setup on /accept-invite instead of bouncing them
+    // to a dashboard for an account that isn't configured yet.
+    const setupComplete = !!profile?.full_name
+    if (pathname.startsWith('/accept-invite') && !setupComplete) {
+      return supabaseResponse
+    }
+
     const dest = profile?.role === 'organizer' ? '/dashboard' : '/my-forms'
     return NextResponse.redirect(new URL(dest, request.url))
   }

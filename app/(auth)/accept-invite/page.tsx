@@ -20,9 +20,14 @@ export default function AcceptInvitePage() {
     setLoading(true)
     setError(null)
 
-    // Update password (Supabase handles token from URL hash automatically)
+    // The session was already established server-side by /auth/confirm, so the
+    // browser client is authenticated here — just set the chosen password.
     const { data: { user }, error: updateError } = await supabase.auth.updateUser({ password })
-    if (updateError || !user) { setError(updateError?.message ?? 'Error'); setLoading(false); return }
+    if (updateError || !user) {
+      setError(updateError?.message ?? 'Your invite link is invalid or has expired — ask your organizer to resend it.')
+      setLoading(false)
+      return
+    }
 
     // Upsert profile (school_id was set by organizer invite action)
     const { error: profileError } = await supabase
