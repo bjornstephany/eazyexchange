@@ -33,8 +33,11 @@ export async function getTemplate(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('form_templates')
-    .select('*, form_fields(* order by order asc), document_slots(* order by order asc)')
-    .eq('id', id).single() as any
+    .select('*, form_fields(*), document_slots(*)')
+    .eq('id', id)
+    .order('order', { referencedTable: 'form_fields', ascending: true })
+    .order('order', { referencedTable: 'document_slots', ascending: true })
+    .single() as any
   if (error) throw error
   return data as any
 }
