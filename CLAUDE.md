@@ -80,6 +80,7 @@ All tables use Row Level Security (RLS). Organizers can only access data for the
 - **RLS is the most error-prone area.** Avoid self-referential/recursive policies (see `20260625000005_fix_rls_recursion.sql`). New access needs a migration, never a client-side service-role workaround.
 - **Invite acceptance & email confirmation go through `app/auth/confirm/route.ts`.** Session cookies must be persisted via `redirect()` from that route — don't bypass it.
 - **Always escape user-supplied content in email HTML** (Resend) to prevent injection.
+- **Never log student/parent PII** — no student emails, names, or submission contents in logs, error messages, or analytics. This data belongs to minors; treat it as sensitive.
 - Package manager is **pnpm** (not npm).
 
 ## Automated Reminders
