@@ -59,6 +59,13 @@ pnpm test        # vitest run (config: vitest.config.ts)
 pnpm build       # catches type errors + build breakage
 ```
 
+## Git Workflow (solo project)
+
+- Small, safe, self-contained changes (docs, copy, confident bug fixes) → commit straight to `main`.
+- Multi-step, risky, or multi-turn work (new features, schema migrations, refactors) → use a branch so half-finished work never sits on `main`.
+- Vercel deploys `main` to production. **Never push broken code to `main`** — run the Verifying Changes commands before any push.
+- Default to committing small changes to `main`; suggest a branch when a change is big or risky. Commit/push only when the user asks.
+
 ## Database
 
 Migrations live in `supabase/migrations/`. Run with:
