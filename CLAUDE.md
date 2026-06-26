@@ -50,6 +50,15 @@ SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 ```
 
+## Verifying Changes
+
+Run before considering work complete:
+```bash
+pnpm lint        # next lint
+pnpm test        # vitest run (config: vitest.config.ts)
+pnpm build       # catches type errors + build breakage
+```
+
 ## Database
 
 Migrations live in `supabase/migrations/`. Run with:
@@ -58,6 +67,13 @@ supabase db push
 ```
 
 All tables use Row Level Security (RLS). Organizers can only access data for their own school. Students can only access their own assignments and submissions.
+
+## Gotchas & Conventions
+
+- **RLS is the most error-prone area.** Avoid self-referential/recursive policies (see `20260625000005_fix_rls_recursion.sql`). New access needs a migration, never a client-side service-role workaround.
+- **Invite acceptance & email confirmation go through `app/auth/confirm/route.ts`.** Session cookies must be persisted via `redirect()` from that route — don't bypass it.
+- **Always escape user-supplied content in email HTML** (Resend) to prevent injection.
+- Package manager is **pnpm** (not npm).
 
 ## Automated Reminders
 
