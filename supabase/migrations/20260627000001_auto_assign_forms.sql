@@ -6,6 +6,10 @@
 -- SECURITY DEFINER so the inner insert into assignments is not blocked by RLS,
 -- regardless of which user triggered it (matches the helper-fn pattern in
 -- 20260625000005_fix_rls_recursion.sql).
+--
+-- Scope: INSERT-only. This maintains assignments when templates or enrollments
+-- are created. It does NOT re-sync on UPDATE of a user's school_id or a
+-- template's exchange_id/school_id — no code path mutates those columns today.
 
 -- New template -> assign every enrolled, same-school student.
 create or replace function assign_students_to_new_template()
@@ -23,6 +27,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_assign_on_template_insert on form_templates;
 create trigger trg_assign_on_template_insert
   after insert on form_templates for each row
   execute function assign_students_to_new_template();
@@ -43,6 +48,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_assign_on_enrollment_insert on exchange_enrollments;
 create trigger trg_assign_on_enrollment_insert
   after insert on exchange_enrollments for each row
   execute function assign_templates_to_new_enrollment();
