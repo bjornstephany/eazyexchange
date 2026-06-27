@@ -148,9 +148,12 @@ export async function getExchangeGrid(exchangeId: string) {
   const cellMap: Record<string, { assignmentId: string; status?: string }> = {}
   for (const a of assignments) {
     const key = `${a.student_id}:${a.template_id}`
+    // submissions is a one-to-one embed (submissions.assignment_id is unique),
+    // so PostgREST returns an object, not an array. Normalize defensively.
+    const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
     cellMap[key] = {
       assignmentId: a.id,
-      status: a.submissions?.[0]?.status,
+      status: submission?.status,
     }
   }
 

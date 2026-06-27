@@ -34,7 +34,8 @@ export default async function MyFormsPage() {
           <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">{exchangeName}</h2>
           <div className="grid gap-3">
             {items.map(a => {
-              const submission = a.submissions?.[0]
+              // one-to-one embed: PostgREST returns an object, not an array
+              const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
               const status = submission?.status ?? null
               const cfg = status ? statusConfig[status] : null
               const isOverdue = new Date(a.form_templates.deadline) < new Date() && status !== 'approved'
