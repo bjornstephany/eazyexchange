@@ -55,26 +55,15 @@ export async function inviteStudent(exchangeId: string, email: string) {
     throw profileError
   }
 
-  // Enroll in exchange
+  // Enroll in exchange. The trg_assign_on_enrollment_insert trigger fans out
+  // assignments for all existing same-school templates in this exchange, so no
+  // application-side assignment is needed here.
   const { error: enrollError } = await supabase.from('exchange_enrollments').insert({
     exchange_id: exchangeId,
     user_id: invited.user.id,
   })
   // Ignore duplicate enrollment
   if (enrollError && enrollError.code !== '23505') throw enrollError
-
-  // Auto-assign all current templates for this exchange from the organizer's school
-  const { data: templates } = await supabase
-    .from('form_templates')
-    .select('id')
-    .eq('exchange_id', exchangeId)
-    .eq('school_id', profile.school_id)
-
-  if (templates && templates.length > 0) {
-    await supabase.from('assignments').upsert(
-      templates.map(t => ({ template_id: t.id, student_id: invited.user.id }))
-    )
-  }
 
   revalidatePath(`/exchanges/${exchangeId}/students`)
 }
