@@ -58,8 +58,10 @@ export async function getAssignmentDetails(assignmentId: string) {
 
   const { data: template, error: tErr } = await supabase
     .from('form_templates')
-    .select('*, form_fields(* order by order asc), document_slots(* order by order asc)')
+    .select('*, form_fields(*), document_slots(*)')
     .eq('id', assignment.template_id)
+    .order('order', { referencedTable: 'form_fields', ascending: true })
+    .order('order', { referencedTable: 'document_slots', ascending: true })
     .single() as any
   if (tErr) throw tErr
 
@@ -206,8 +208,10 @@ export async function getSubmissionForReview(assignmentId: string) {
   const [{ data: template }, { data: student }, { data: submission }] = await Promise.all([
     supabase
       .from('form_templates')
-      .select('*, form_fields(* order by order asc), document_slots(* order by order asc)')
+      .select('*, form_fields(*), document_slots(*)')
       .eq('id', assignment.template_id)
+      .order('order', { referencedTable: 'form_fields', ascending: true })
+      .order('order', { referencedTable: 'document_slots', ascending: true })
       .single() as any,
     supabase
       .from('users')
