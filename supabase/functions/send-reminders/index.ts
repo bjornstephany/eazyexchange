@@ -79,7 +79,7 @@ function buildEmail(studentName: string, forms: ReminderForm[]): string {
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   if (!RESEND_API_KEY) {
-    console.warn('[send-reminders] RESEND_API_KEY not set — skipping email to', to)
+    console.warn('[send-reminders] RESEND_API_KEY not set — skipping reminder email')
     return false
   }
   const res = await fetch('https://api.resend.com/emails', {
@@ -91,7 +91,8 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
   })
   if (!res.ok) {
-    console.error('[send-reminders] Resend error for', to, await res.text())
+    // Don't log `to` — it's student PII. Status + Resend's message is enough to debug.
+    console.error('[send-reminders] Resend send failed:', res.status, await res.text())
     return false
   }
   return true
@@ -120,7 +121,10 @@ Deno.serve(async () => {
   >()
 
   for (const row of (rows ?? []) as any[]) {
-    const status: string | undefined = row.submissions?.[0]?.status
+    // submissions is one-to-one with assignments, so PostgREST returns it as an
+    // object (not an array). Handle both shapes defensively.
+    const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
+    const status: string | undefined = submission?.status
     if (status === 'approved' || status === 'submitted') continue
 
     const deadline: string | undefined = row.form_templates?.deadline
