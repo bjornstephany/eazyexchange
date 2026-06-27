@@ -64,7 +64,8 @@ pnpm build       # catches type errors + build breakage
 - Small, safe, self-contained changes (docs, copy, confident bug fixes) → commit straight to `main`.
 - Multi-step, risky, or multi-turn work (new features, schema migrations, refactors) → use a branch so half-finished work never sits on `main`.
 - Vercel deploys `main` to production. **Never push broken code to `main`** — run the Verifying Changes commands before any push.
-- Default to committing small changes to `main`; suggest a branch when a change is big or risky. Commit/push only when the user asks.
+- Default to committing small changes to `main`; suggest a branch when a change is big or risky.
+- **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
 
 ## Database
 
@@ -85,7 +86,7 @@ All tables use Row Level Security (RLS). Organizers can only access data for the
 
 ## Automated Reminders
 
-A Supabase Edge Function (`send-reminders`) runs daily at 08:00 via cron. It sends reminder emails to students with incomplete forms due within 7 or 3 days. Rejection notifications are sent immediately when an organizer rejects a submission.
+A Supabase Edge Function (`send-reminders`) runs daily at 08:00 via cron. It paces reminder emails to students with incomplete forms: weekly while the deadline is more than 7 days out, then daily during the final week and while overdue. Pacing is tracked per assignment via `assignments.last_reminded_at`. Rejection notifications are sent immediately when an organizer rejects a submission.
 
 ## Project Plan
 

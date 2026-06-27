@@ -155,4 +155,4 @@ Run against the deployed app:
 
 - Migrations are idempotent on a fresh project; re-running `db push` only applies new ones.
 - Rotate the `service_role` key if it's ever exposed — it bypasses RLS.
-- The reminder schedule runs at **08:00 UTC**; adjust the cron expression in `cron-setup.sql` for a local timezone.
+- The reminder schedule runs at **08:00 UTC**; adjust the cron expression in `cron-setup.sql` for a local timezone. The cron fires daily, but the function paces each student's reminders (weekly while >7 days out, daily in the final week and while overdue) via `assignments.last_reminded_at`.

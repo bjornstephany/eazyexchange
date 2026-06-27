@@ -1,9 +1,15 @@
-// send-reminders — daily reminder emails for forms approaching their deadline.
+// send-reminders — paced reminder emails for forms that still need student action.
 //
-// Runs on a daily cron (see supabase/cron-setup.sql). For every assignment whose
-// form deadline is exactly 7 or 3 days away and which still needs student action
-// (no submission, or status 'draft'/'rejected'), the student gets one summary
-// email listing all such forms.
+// Runs on a daily cron (see supabase/cron-setup.sql). Cadence per assignment:
+//   - deadline more than 7 days away  → remind weekly (>= 7 days since last reminder)
+//   - deadline within 7 days, or overdue → remind daily (>= 1 day since last reminder)
+// "Needs action" = no submission, or status 'draft' / 'rejected'. The first
+// reminder fires on the first run after creation (last_reminded_at IS NULL),
+// giving a weekly drip from creation that accelerates to daily near the deadline
+// and keeps nagging daily until an overdue form is submitted/approved.
+//
+// Each run groups every due form per student into one email, sends it, then
+// stamps last_reminded_at on those assignments so the next run respects the cadence.
 //
 // Deno runtime. Uses the service-role key (bypasses RLS) and the Resend REST API.
 
@@ -15,13 +21,27 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'EazyExchange <onboarding@resend.dev>'
 const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:3000'
 
-function isoDateInDays(days: number): string {
-  const d = new Date()
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
+const FINAL_WEEK_DAYS = 7
+const DAY_MS = 24 * 60 * 60 * 1000
+
+type ReminderForm = { name: string; deadline: string; overdue: boolean }
+
+// Whole days from now until an ISO date (UTC). Negative when the date is past.
+function daysUntil(isoDate: string): number {
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+  const target = new Date(`${isoDate}T00:00:00Z`)
+  return Math.round((target.getTime() - today.getTime()) / DAY_MS)
 }
 
-type ReminderForm = { name: string; deadline: string }
+// Whether a reminder is due given the deadline distance and when we last reminded.
+function isDue(daysLeft: number, lastRemindedAt: string | null): boolean {
+  // Within the final week or overdue → daily; otherwise → weekly.
+  const minIntervalDays = daysLeft <= FINAL_WEEK_DAYS ? 1 : 7
+  if (!lastRemindedAt) return true
+  const elapsedDays = (Date.now() - new Date(lastRemindedAt).getTime()) / DAY_MS
+  return elapsedDays >= minIntervalDays
+}
 
 // Escape untrusted values before embedding them in email HTML.
 function esc(s: string): string {
@@ -36,18 +56,19 @@ function esc(s: string): string {
 function buildEmail(studentName: string, forms: ReminderForm[]): string {
   const greeting = studentName ? `Hi ${esc(studentName)},` : 'Hi,'
   const items = forms
-    .map(
-      f =>
-        `<li style="margin-bottom: 6px;"><strong>${esc(f.name)}</strong> — due ${new Date(
-          f.deadline,
-        ).toLocaleDateString()}</li>`,
-    )
+    .map(f => {
+      const due = new Date(f.deadline).toLocaleDateString()
+      const label = f.overdue
+        ? `<span style="color: #b91c1c;">overdue — was due ${due}</span>`
+        : `due ${due}`
+      return `<li style="margin-bottom: 6px;"><strong>${esc(f.name)}</strong> — ${label}</li>`
+    })
     .join('')
   return `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
       <h2 style="font-weight: 600;">EazyExchange</h2>
       <p>${greeting}</p>
-      <p>You have ${forms.length} form${forms.length === 1 ? '' : 's'} due soon:</p>
+      <p>You have ${forms.length} form${forms.length === 1 ? '' : 's'} to complete:</p>
       <ul style="padding-left: 18px;">${items}</ul>
       <p><a href="${APP_URL}/my-forms" style="display: inline-block; background: #0f172a; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Complete your forms</a></p>
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -78,46 +99,71 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
 
 Deno.serve(async () => {
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-  const targetDeadlines = [isoDateInDays(7), isoDateInDays(3)]
 
+  // Pull every assignment with its form deadline, reminder state, and latest
+  // submission status. Cadence and "needs action" are filtered in code.
   const { data: rows, error } = await supabase
     .from('assignments')
     .select(
-      'id, student:users!student_id(email, full_name), form_templates!inner(name, deadline), submissions(status)',
+      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline), submissions(status)',
     )
-    .in('form_templates.deadline', targetDeadlines)
 
   if (error) {
     console.error('[send-reminders] query failed:', error)
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 
-  // Group forms that still need action, one bucket per student email.
-  const perStudent = new Map<string, { name: string; forms: ReminderForm[] }>()
+  // Group due forms per student email, tracking which assignment ids to stamp.
+  const perStudent = new Map<
+    string,
+    { name: string; forms: ReminderForm[]; assignmentIds: string[] }
+  >()
+
   for (const row of (rows ?? []) as any[]) {
     const status: string | undefined = row.submissions?.[0]?.status
     if (status === 'approved' || status === 'submitted') continue
+
+    const deadline: string | undefined = row.form_templates?.deadline
+    if (!deadline) continue
+
+    const daysLeft = daysUntil(deadline)
+    if (!isDue(daysLeft, row.last_reminded_at)) continue
 
     const student = row.student
     if (!student?.email) continue
 
     if (!perStudent.has(student.email)) {
-      perStudent.set(student.email, { name: student.full_name ?? '', forms: [] })
+      perStudent.set(student.email, {
+        name: student.full_name ?? '',
+        forms: [],
+        assignmentIds: [],
+      })
     }
-    perStudent.get(student.email)!.forms.push({
-      name: row.form_templates.name,
-      deadline: row.form_templates.deadline,
-    })
+    const bucket = perStudent.get(student.email)!
+    bucket.forms.push({ name: row.form_templates.name, deadline, overdue: daysLeft < 0 })
+    bucket.assignmentIds.push(row.id)
   }
 
+  const nowIso = new Date().toISOString()
   let sent = 0
-  for (const [email, { name, forms }] of perStudent) {
-    const ok = await sendEmail(
-      email,
-      `You have ${forms.length} form${forms.length === 1 ? '' : 's'} due soon`,
-      buildEmail(name, forms),
-    )
-    if (ok) sent++
+  for (const [email, { name, forms, assignmentIds }] of perStudent) {
+    const anyOverdue = forms.some(f => f.overdue)
+    const subject = anyOverdue
+      ? `Action needed: ${forms.length} form${forms.length === 1 ? '' : 's'} for your exchange`
+      : `You have ${forms.length} form${forms.length === 1 ? '' : 's'} to complete`
+
+    const ok = await sendEmail(email, subject, buildEmail(name, forms))
+    if (!ok) continue
+    sent++
+
+    // Stamp only after a successful send so a failed email retries next run.
+    const { error: stampError } = await supabase
+      .from('assignments')
+      .update({ last_reminded_at: nowIso })
+      .in('id', assignmentIds)
+    if (stampError) {
+      console.error('[send-reminders] failed to stamp last_reminded_at:', stampError)
+    }
   }
 
   return new Response(

@@ -81,9 +81,10 @@ Student exchange organizers at high schools currently chase parents and students
 ## Automated Reminders
 
 Supabase Edge Function (`send-reminders`) on a daily cron:
-1. Find all assignments where `status != 'approved'` and deadline is within 7 or 3 days
-2. Group by student, send one summary email per student via Resend
-3. Rejection notification: immediate email when organizer rejects a submission
+1. Find all assignments still needing action (no submission, or status `draft`/`rejected`)
+2. Pace per assignment via `assignments.last_reminded_at`: weekly while the deadline is >7 days out, daily in the final week and while overdue
+3. Group by student, send one summary email per student via Resend, then stamp `last_reminded_at`
+4. Rejection notification: immediate email when organizer rejects a submission
 
 ---
 

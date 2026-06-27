@@ -2,6 +2,10 @@
 -- Daily reminder cron for the `send-reminders` edge function.
 -- Apply manually against the live project (needs the project ref
 -- and service-role key, which aren't known at migration time).
+--
+-- The cron runs daily; the function itself paces each student's
+-- reminders (weekly while >7 days out, daily in the final week and
+-- while overdue) via assignments.last_reminded_at.
 -- ============================================================
 --
 -- Prerequisites
