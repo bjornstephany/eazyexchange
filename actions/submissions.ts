@@ -123,7 +123,9 @@ export async function saveFormAnswers(
     value,
   }))
   if (answerRows.length > 0) {
-    const { error } = await supabase.from('field_answers').upsert(answerRows)
+    const { error } = await supabase
+      .from('field_answers')
+      .upsert(answerRows, { onConflict: 'submission_id,field_id' })
     if (error) throw error
   }
 
@@ -181,12 +183,15 @@ export async function recordDocumentUpload(
     submissionId = created.id
   }
 
-  const { error } = await supabase.from('document_uploads').upsert({
-    submission_id: submissionId,
-    slot_id: slotId,
-    storage_path: storagePath,
-    file_name: fileName,
-  })
+  const { error } = await supabase.from('document_uploads').upsert(
+    {
+      submission_id: submissionId,
+      slot_id: slotId,
+      storage_path: storagePath,
+      file_name: fileName,
+    },
+    { onConflict: 'submission_id,slot_id' },
+  )
   if (error) throw error
 
   revalidatePath(`/my-forms/${assignmentId}`)
