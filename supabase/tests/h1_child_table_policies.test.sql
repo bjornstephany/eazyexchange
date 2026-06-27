@@ -28,6 +28,7 @@ begin
   insert into form_fields(id, template_id, label, field_type, required, "order")
     values (v_field, v_template, 'Existing', 'text', true, 0);
   select id into v_assignment from assignments where template_id = v_template and student_id = v_student;
+  if v_assignment is null then raise exception 'H1 FAIL: assignment fixture not created'; end if;
 
   -- Impersonate the STUDENT
   perform set_config('request.jwt.claims', json_build_object('sub', v_student, 'role', 'authenticated')::text, true);
@@ -37,6 +38,12 @@ begin
     insert into form_fields(template_id, label, field_type, required, "order")
       values (v_template, 'Injected', 'text', true, 1);
     raise exception 'H1 FAIL: student inserted a form field';
+  exception when sqlstate '42501' then null; end;  -- RLS WITH CHECK block = expected
+
+  begin
+    insert into document_slots(template_id, label, description, required, "order")
+      values (v_template, 'Injected slot', null, true, 0);
+    raise exception 'H1 FAIL: student inserted a document slot';
   exception when sqlstate '42501' then null; end;  -- RLS WITH CHECK block = expected
 
   delete from form_fields where id = v_field;
@@ -54,6 +61,8 @@ begin
   set local role authenticated;
   insert into form_fields(template_id, label, field_type, required, "order")
     values (v_template, 'Org field', 'text', true, 2);  -- must succeed
+  insert into document_slots(template_id, label, description, required, "order")
+    values (v_template, 'Org slot', null, true, 1);  -- must succeed
   reset role;
 
   raise exception 'ROLLBACK_OK: H1 assertions passed';
