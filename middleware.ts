@@ -13,7 +13,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite')
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite') || pathname.startsWith('/signup')
   const isPublicRoute = pathname === '/'
 
   if (!user && !isAuthRoute && !isPublicRoute) {
