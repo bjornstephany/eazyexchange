@@ -14,8 +14,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite')
+  const isPublicRoute = pathname === '/'
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
