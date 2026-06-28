@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { revalidatePath } from 'next/cache'
 
 export async function inviteStudent(exchangeId: string, email: string) {
@@ -23,6 +24,9 @@ export async function inviteStudent(exchangeId: string, email: string) {
     throw new Error('Unauthorized')
   }
 
+  const normalizedEmail = normalizeEmail(email)
+  if (!isValidEmail(normalizedEmail)) throw new Error('Please enter a valid email address')
+
   const admin = createAdminClient()
 
   // Send Supabase invite email. The invite email template must point at the
@@ -30,7 +34,7 @@ export async function inviteStudent(exchangeId: string, email: string) {
   //   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/accept-invite
   // `redirectTo` sets {{ .RedirectTo }} / the allowlisted target; the user lands
   // on /accept-invite after /auth/confirm establishes their session.
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(normalizedEmail, {
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/accept-invite`,
   })
   if (inviteError) {
@@ -47,10 +51,13 @@ export async function inviteStudent(exchangeId: string, email: string) {
     id: invited.user.id,
     school_id: profile.school_id,
     role: 'student' as const,
-    email,
+    email: normalizedEmail,
     full_name: '',
   })
   if (profileError) {
+    // Roll back the just-created auth user so a failed profile insert doesn't
+    // leave an orphaned account with no profile row.
+    await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})
     if (profileError.code === '23505') throw new Error('A user with this email is already registered')
     throw profileError
   }
