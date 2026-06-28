@@ -33,7 +33,7 @@ A SaaS web app for student exchange organizers to manage forms and documents col
 - **Organizer:** Creates exchanges, builds form templates, invites students, reviews/approves submissions.
 - **Student/Parent:** Invited by email, fills out forms and uploads documents, sees their own status.
 
-Access is invite-only — no self-registration.
+Organizers self-register at `/signup` (email-confirmed; creates their school). Students/parents remain invite-only — no student self-registration.
 
 ## Local Development
 
