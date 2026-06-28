@@ -385,6 +385,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+[functions.send-reminders]
+# Invocation is gated by our own CRON_SECRET check inside the function, not by a
+# platform JWT: the anon/publishable key is public, so verify_jwt would not keep
+# anyone out. Disabling it also decouples the function from the legacy keys.
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

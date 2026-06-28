@@ -16,7 +16,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Prefer an explicitly-set secret key (SERVICE_KEY = an sb_secret_… key) so this
+// keeps working after the legacy service_role key is deactivated. Falls back to
+// the auto-injected legacy key during the migration window.
+const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'EazyExchange <onboarding@resend.dev>'
 const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:3000'
