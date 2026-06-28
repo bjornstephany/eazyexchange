@@ -12,8 +12,11 @@
 -- -------------
 -- 1. Deploy the function:
 --      pnpm supabase functions deploy send-reminders
--- 2. Set the function's secrets (RESEND_API_KEY, EMAIL_FROM, APP_URL):
---      pnpm supabase secrets set RESEND_API_KEY=... EMAIL_FROM='EazyExchange <noreply@yourdomain>' APP_URL=https://yourapp.com
+-- 2. Set the function's secrets (RESEND_API_KEY, EMAIL_FROM, APP_URL, CRON_SECRET):
+--      pnpm supabase secrets set RESEND_API_KEY=... EMAIL_FROM='EazyExchange <noreply@yourdomain>' APP_URL=https://yourapp.com CRON_SECRET=<long-random-string>
+--    CRON_SECRET gates the function: the anon key is public, so without it anyone
+--    could trigger a reminder blast. Use the SAME value in the x-cron-secret
+--    header below. Generate one with e.g. `openssl rand -hex 32`.
 -- 3. Enable the pg_cron and pg_net extensions (Dashboard → Database → Extensions).
 --
 -- Schedule (runs daily at 08:00 UTC)
@@ -28,7 +31,8 @@ select cron.schedule(
     url     := 'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer <SERVICE_ROLE_KEY>'
+      'Authorization', 'Bearer <SERVICE_ROLE_KEY>',
+      'x-cron-secret', '<CRON_SECRET>'
     ),
     body    := '{}'::jsonb
   );

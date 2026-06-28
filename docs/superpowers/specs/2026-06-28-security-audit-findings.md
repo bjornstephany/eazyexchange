@@ -278,7 +278,8 @@ service-role workaround), per project convention.
 | M1 | ✅ Fixed | `documents` bucket `allowed_mime_types` (PDF/JPEG/PNG/WebP, no SVG) + `file_size_limit` 10 MB (`20260628000007`); client validator `lib/uploads.ts`; organizer downloads forced to attachment disposition. Live in prod. |
 | L3 | ⊘ Blocked (Pro-only) | Leaked-password (HIBP) protection is a Supabase Pro-tier feature; not togglable on the free plan. If staying on free, self-implement via the HIBP range API in the signup/password-set flow. |
 | H3 | ☐ Pending | Rotate service-role + Resend keys before real student data — operational, at deploy time. |
-| M2, L2, L4, L5 | ☐ Pending | Deferred to a later hardening pass (see above). |
+| M2 | ◑ Fixed in source | `send-reminders` now requires an `x-cron-secret` header matching the `CRON_SECRET` env var (fail-closed). **Not yet enforced in prod:** the live function (v9) predates this and the cron is active without the header — enforced only after redeploy + setting `CRON_SECRET` + updating the cron header (see `cron-setup.sql`). |
+| L2, L4, L5 | ☐ Pending | Deferred to a later hardening pass (see above). |
 
 **Not yet deployed to Vercel:** all the above DB migrations are live in the Supabase
 project, but the app-code change (`forms.ts` guards, H1 defense-in-depth) deploys
