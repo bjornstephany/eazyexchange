@@ -20,6 +20,10 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'EazyExchange <onboarding@resend.dev>'
 const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:3000'
+// Shared secret the daily pg_cron job must present. Gating on this is independent
+// of the platform JWT check: the anon key is public, so verify_jwt alone would
+// let anyone trigger a reminder blast. Fail closed if it isn't configured.
+const CRON_SECRET = Deno.env.get('CRON_SECRET')
 
 const FINAL_WEEK_DAYS = 7
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -98,7 +102,12 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
   return true
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  // Only the scheduled cron job (which presents the shared secret) may run this.
+  if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
   // Pull every assignment with its form deadline, reminder state, and latest
