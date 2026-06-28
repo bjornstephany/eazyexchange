@@ -236,7 +236,10 @@ export async function getSubmissionForReview(assignmentId: string) {
       submission.document_uploads.map(async (upload: any) => {
         const { data } = await supabase.storage
           .from('documents')
-          .createSignedUrl(upload.storage_path, 3600)
+          // download: true sets content-disposition=attachment so a crafted
+          // file can't render inline in the organizer's browser (defense in
+          // depth alongside the bucket's MIME allowlist — see lib/uploads.ts).
+          .createSignedUrl(upload.storage_path, 3600, { download: true })
         upload.signed_url = data?.signedUrl ?? null
       })
     )

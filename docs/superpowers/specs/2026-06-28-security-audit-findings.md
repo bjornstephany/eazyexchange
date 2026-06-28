@@ -275,9 +275,10 @@ service-role workaround), per project convention.
 | H2 | ✅ Fixed | `exchange_in_my_school` scoping (`20260628000003`) + `user_in_my_school` user validation (`20260628000004`); merged, live |
 | M3 | ✅ Fixed | `search_path` pinned on `my_role`/`my_school_id`/`update_updated_at` (`20260628000005`); advisor cleared |
 | L1 | ◑ Partial | EXECUTE revoked on the 3 trigger functions (`20260628000006`); advisor cleared for those. The RLS **helper** functions must retain EXECUTE — PostgreSQL requires it to evaluate policies for `authenticated` (verified: revoking yields `permission denied for function my_role`). Their only exposure is the caller's own auth.uid()-scoped role/school (not sensitive). Fully clearing the remaining 0028/0029 advisor entries requires relocating the helpers to a non-exposed schema — a larger deferred change. |
-| L3 | ☐ Pending | Enable leaked-password protection — Auth config, dashboard toggle (no migration). |
+| M1 | ✅ Fixed | `documents` bucket `allowed_mime_types` (PDF/JPEG/PNG/WebP, no SVG) + `file_size_limit` 10 MB (`20260628000007`); client validator `lib/uploads.ts`; organizer downloads forced to attachment disposition. Live in prod. |
+| L3 | ⊘ Blocked (Pro-only) | Leaked-password (HIBP) protection is a Supabase Pro-tier feature; not togglable on the free plan. If staying on free, self-implement via the HIBP range API in the signup/password-set flow. |
 | H3 | ☐ Pending | Rotate service-role + Resend keys before real student data — operational, at deploy time. |
-| M1, M2, L2, L4, L5 | ☐ Pending | Deferred to a later hardening pass (see above). |
+| M2, L2, L4, L5 | ☐ Pending | Deferred to a later hardening pass (see above). |
 
 **Not yet deployed to Vercel:** all the above DB migrations are live in the Supabase
 project, but the app-code change (`forms.ts` guards, H1 defense-in-depth) deploys

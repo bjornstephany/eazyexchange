@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { recordDocumentUpload, submitDocumentAssignment } from '@/actions/submissions'
+import { validateUploadFile, ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { DocumentSlot } from '@/types/db'
@@ -27,6 +28,11 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
   const supabase = createClient()
 
   async function handleFileChange(slot: DocumentSlot, file: File) {
+    const validationError = validateUploadFile(file)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
     setUploading(slot.id)
     setError(null)
     try {
@@ -91,6 +97,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
                 <input
                   type="file"
                   className="sr-only"
+                  accept={ALLOWED_UPLOAD_ACCEPT}
                   disabled={isUploading}
                   onChange={e => {
                     const file = e.target.files?.[0]
