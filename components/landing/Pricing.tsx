@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { landingContent } from '@/lib/landing/content'
 
 export function Pricing() {
-  const { title, subtitle, tiers, note } = landingContent.pricing
+  const { title, subtitle, popularLabel, tiers, note } = landingContent.pricing
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <div className="text-center">
@@ -19,7 +19,7 @@ export function Pricing() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>{tier.name}</CardTitle>
-                {tier.highlighted && <Badge>Popular</Badge>}
+                {tier.highlighted && <Badge>{popularLabel}</Badge>}
               </div>
               <p className="mt-2">
                 <span className="text-3xl font-bold">{tier.price}</span>{' '}

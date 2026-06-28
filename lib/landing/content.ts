@@ -65,6 +65,7 @@ export interface LandingContent {
   pricing: {
     title: string
     subtitle: string
+    popularLabel: string
     // TIERS ARE PLACEHOLDERS — edit names/prices/features freely.
     tiers: PricingTier[]
     note: string
@@ -166,6 +167,7 @@ export const landingContent: LandingContent = {
   pricing: {
     title: "Simple pricing",
     subtitle: "Start free. Upgrade when your program grows.",
+    popularLabel: "Popular",
     note: "Prices shown are placeholders — final pricing to be confirmed.",
     tiers: [
       {
