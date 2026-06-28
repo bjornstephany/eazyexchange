@@ -2,12 +2,14 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { provisionOrganizer } from '@/lib/auth/provision'
 
 // Handles email-link verification for the SSR (PKCE) cookie flow.
 // Supabase email templates point here with a `token_hash` + `type`, e.g.
 //   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/accept-invite
-// We verify the OTP server-side, which writes the session cookies, then forward
-// the user to `next`.
+//   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard
+// We verify the OTP server-side (which writes the session cookies), provision
+// the organizer's school+profile on signup, then forward to `next`.
 //
 // IMPORTANT: redirect via next/navigation's redirect() rather than
 // NextResponse.redirect(). verifyOtp persists the session through the
@@ -25,12 +27,17 @@ export async function GET(request: NextRequest) {
 
   if (token_hash && type) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash })
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash })
     if (!error) {
-      redirect(safeNext)
+      if (type === 'signup') {
+        if (!data.user) return redirect('/login?error=signup_failed')
+        const result = await provisionOrganizer(data.user)
+        if (!result.ok) return redirect('/login?error=signup_failed')
+      }
+      return redirect(safeNext)
     }
   }
 
   // Invalid or expired link — send to login with a flag the page can surface.
-  redirect('/login?error=invite_invalid')
+  return redirect('/login?error=invite_invalid')
 }
