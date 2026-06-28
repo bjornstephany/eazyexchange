@@ -263,3 +263,22 @@ Remediation: <https://supabase.com/docs/guides/database/database-linter?lint=001
 
 Each fix that touches the database is a new migration (never a client-side
 service-role workaround), per project convention.
+
+---
+
+## Remediation status (updated 2026-06-28)
+
+| # | Status | Notes |
+|---|--------|-------|
+| C1 | ✅ Fixed | trigger `guard_submission_review` — migration `20260628000001`, merged to `main`, live in prod DB |
+| H1 | ✅ Fixed | child-table role checks (`20260628000002`) + `forms.ts` authz guards; merged, live |
+| H2 | ✅ Fixed | `exchange_in_my_school` scoping (`20260628000003`) + `user_in_my_school` user validation (`20260628000004`); merged, live |
+| M3 | ✅ Fixed | `search_path` pinned on `my_role`/`my_school_id`/`update_updated_at` (`20260628000005`); advisor cleared |
+| L1 | ◑ Partial | EXECUTE revoked on the 3 trigger functions (`20260628000006`); advisor cleared for those. The RLS **helper** functions must retain EXECUTE — PostgreSQL requires it to evaluate policies for `authenticated` (verified: revoking yields `permission denied for function my_role`). Their only exposure is the caller's own auth.uid()-scoped role/school (not sensitive). Fully clearing the remaining 0028/0029 advisor entries requires relocating the helpers to a non-exposed schema — a larger deferred change. |
+| L3 | ☐ Pending | Enable leaked-password protection — Auth config, dashboard toggle (no migration). |
+| H3 | ☐ Pending | Rotate service-role + Resend keys before real student data — operational, at deploy time. |
+| M1, M2, L2, L4, L5 | ☐ Pending | Deferred to a later hardening pass (see above). |
+
+**Not yet deployed to Vercel:** all the above DB migrations are live in the Supabase
+project, but the app-code change (`forms.ts` guards, H1 defense-in-depth) deploys
+only when `main` is pushed to `origin`.
