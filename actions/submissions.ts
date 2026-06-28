@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendRejectionEmail } from '@/lib/email'
+import { hasOverlongAnswer, hasMissingRequired, MAX_ANSWER_LENGTH } from '@/lib/validation'
 
 // Verify the assignment belongs to the calling student. Throws if not.
 async function assertStudentOwnsAssignment(
@@ -83,6 +84,27 @@ export async function saveFormAnswers(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+
+  // L5: cap answer length (storage-abuse guard) and, on submit, enforce required
+  // fields server-side — the form inputs' `required` attribute isn't enforced on
+  // the client (the submit button isn't a native form submit).
+  if (hasOverlongAnswer(answers)) {
+    throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  }
+  if (submit) {
+    const { data: assignmentRow } = await supabase
+      .from('assignments').select('template_id').eq('id', assignmentId).single()
+    if (assignmentRow) {
+      const { data: requiredFields } = await supabase
+        .from('form_fields')
+        .select('id')
+        .eq('template_id', assignmentRow.template_id)
+        .eq('required', true)
+      if (hasMissingRequired((requiredFields ?? []).map(f => f.id), answers)) {
+        throw new Error('Please complete all required fields before submitting.')
+      }
+    }
+  }
 
   // Ensure submission row exists (upsert via assignment)
   const { data: existing } = await supabase
