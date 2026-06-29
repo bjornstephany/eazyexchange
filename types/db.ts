@@ -11,7 +11,7 @@ export type Exchange = {
   school_a_id: string; school_b_id: string; created_at: string
   application_open: boolean
   application_deadline: string | null
-  apply_slug: string
+  apply_slug: string | null
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
