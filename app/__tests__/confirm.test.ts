@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({ auth: { verifyOtp: async () => verifyResult } }),
 }))
 
-const provisionOrganizer = vi.fn(async () => ({ ok: true }) as { ok: boolean; reason?: string })
+const provisionOrganizer = vi.fn(async (_u: unknown) => ({ ok: true }) as { ok: boolean; reason?: string })
 vi.mock('@/lib/auth/provision', () => ({ provisionOrganizer: (u: unknown) => provisionOrganizer(u) }))
 
 import { GET } from '@/app/auth/confirm/route'

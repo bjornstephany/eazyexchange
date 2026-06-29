@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-const signUp = vi.fn(async () => ({ data: { user: { id: 'u1' } }, error: null }))
+type SignUpArg = { email: string; password: string; options: { data: Record<string, string> } }
+const signUp = vi.fn(async (_arg: SignUpArg) => ({ data: { user: { id: 'u1' } }, error: null }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signUp } }) }))
 
 import SignupPage from '@/app/(auth)/signup/page'
@@ -21,9 +22,7 @@ describe('SignupPage', () => {
     await user.click(screen.getByRole('button', { name: /create account/i }))
 
     expect(signUp).toHaveBeenCalledTimes(1)
-    const arg = signUp.mock.calls[0][0] as {
-      email: string; password: string; options: { data: Record<string, string> }
-    }
+    const arg = signUp.mock.calls[0][0]
     expect(arg.email).toBe('jane@example.com')
     expect(arg.password).toBe('supersecret')
     expect(arg.options.data).toEqual({ full_name: 'Jane Doe', school_name: 'Lincoln High' })
