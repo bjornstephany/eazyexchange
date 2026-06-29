@@ -15,10 +15,13 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Surface the flag set by /auth/confirm when an invite link is invalid/expired.
+  // Surface flags set by /auth/confirm.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('error') === 'invite_invalid') {
+    const err = new URLSearchParams(window.location.search).get('error')
+    if (err === 'invite_invalid') {
       setError('That invite link is invalid or has expired — ask your organizer to resend it.')
+    } else if (err === 'signup_failed') {
+      setError('We couldn’t finish creating your account. Please try signing up again.')
     }
   }, [])
 
