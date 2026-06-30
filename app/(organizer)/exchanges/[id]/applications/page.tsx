@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getExchange } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications'
+import { applicantName } from '@/lib/application-form'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -19,7 +20,7 @@ export default async function ApplicationsListPage({ params }: { params: Promise
       ) : (
         <div className="border rounded-lg divide-y">
           {applications.map(a => {
-            const name = `${a.data?.first_name ?? ''} ${a.data?.last_name ?? ''}`.trim() || a.email
+            const name = applicantName(a.data) || a.email
             return (
               <Link key={a.id} href={`/exchanges/${id}/applications/${a.id}`} className="flex items-center justify-between px-4 py-3 hover:bg-muted">
                 <div>

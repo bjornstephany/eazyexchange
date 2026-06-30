@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
-import { missingRequiredApplication } from '@/lib/application-form'
+import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile } from '@/lib/uploads'
 import { enforceRateLimit, clientIp } from '@/lib/rate-limit'
 import {
@@ -97,13 +97,11 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, exchange_id, resume_token_expires_at')
+    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
-  const { data: exchange } = await admin
-    .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
-  const exchangeName = exchange?.name ?? ''
+  const exchangeName = (app as any).exchanges?.name ?? ''
   // Don't return PII through an expired link.
   if (tokenExpired(app.resume_token_expires_at)) {
     return { expired: true as const, exchangeName }
@@ -158,7 +156,7 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (error) throw error
 
   // Emails: applicant confirmation + organizer alert. Fire-and-forget.
-  const applicantName = `${data.first_name ?? ''} ${data.last_name ?? ''}`.trim()
+  const applicantName = buildApplicantName(data)
   void sendApplicationConfirmationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
   }).catch(() => {})
@@ -262,7 +260,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
 
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
-  const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
+  const applicantName = buildApplicantName(app.data)
   void sendInvitationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
     respondUrl: `${APP_URL}/invite/${inviteToken}`,
@@ -290,7 +288,7 @@ export async function rejectApplication(applicationId: string, note: string, sen
   if (sendEmail) {
     const { data: exchange } = await supabase
       .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
-    const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
+    const applicantName = buildApplicantName(app.data)
     void sendApplicationRejectionEmail({
       to: app.email, applicantName, exchangeName: exchange?.name ?? '', note,
     }).catch(() => {})
@@ -303,13 +301,11 @@ export async function rejectApplication(applicationId: string, note: string, sen
 export async function getInvitation(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('status, data, exchange_id, invite_token_expires_at').eq('invite_token', token).maybeSingle()
+    .from('applications').select('status, data, invite_token_expires_at, exchanges(name)').eq('invite_token', token).maybeSingle()
   if (!app) return null
-  const { data: exchange } = await admin
-    .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
-  const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
+  const applicantName = buildApplicantName(app.data)
   return {
-    exchangeName: exchange?.name ?? '', applicantName, status: app.status,
+    exchangeName: (app as any).exchanges?.name ?? '', applicantName, status: app.status,
     expired: tokenExpired(app.invite_token_expires_at),
   }
 }

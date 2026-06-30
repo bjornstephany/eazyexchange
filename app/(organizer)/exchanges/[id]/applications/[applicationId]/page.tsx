@@ -3,11 +3,12 @@ import { getApplicationForReview } from '@/actions/applications'
 import { ApplicationReadView } from '@/components/ApplicationReadView'
 import { ApplicationReviewActions } from '@/components/ApplicationReviewActions'
 import { Button } from '@/components/ui/button'
+import { applicantName } from '@/lib/application-form'
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string; applicationId: string }> }) {
   const { id, applicationId } = await params
   const { application, photoUrl } = await getApplicationForReview(applicationId)
-  const name = `${application.data?.first_name ?? ''} ${application.data?.last_name ?? ''}`.trim() || application.email
+  const name = applicantName(application.data) || application.email
 
   return (
     <div className="max-w-3xl">

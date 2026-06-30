@@ -95,22 +95,16 @@ export async function getExchangeStudents(exchangeId: string) {
     throw new Error('Unauthorized')
   }
 
-  const { data: enrollments } = await supabase
-    .from('exchange_enrollments')
-    .select('user_id')
-    .eq('exchange_id', exchangeId)
-
-  const enrolledIds = (enrollments ?? []).map(e => e.user_id)
-  if (enrolledIds.length === 0) return []
-
+  // Single embedded join (enrollment -> user) instead of fetching the id list
+  // and refetching users with an IN clause.
   const { data, error } = await supabase
-    .from('users')
-    .select('id, full_name, email')
-    .in('id', enrolledIds)
-    .eq('school_id', profile.school_id)
-    .eq('role', 'student')
-    .order('full_name')
+    .from('exchange_enrollments')
+    .select('users!inner(id, full_name, email)')
+    .eq('exchange_id', exchangeId)
+    .eq('users.school_id', profile.school_id)
+    .eq('users.role', 'student')
+    .order('full_name', { referencedTable: 'users' })
 
   if (error) throw error
-  return data ?? []
+  return (data ?? []).map((r: any) => r.users).filter(Boolean)
 }

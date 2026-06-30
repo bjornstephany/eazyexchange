@@ -3,13 +3,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-
-const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
-  approved: { label: 'Approved', variant: 'success' },
-  submitted: { label: 'Submitted', variant: 'info' },
-  rejected: { label: 'Rejected — action needed', variant: 'danger' },
-  draft: { label: 'In progress', variant: 'neutral' },
-}
+import { SUBMISSION_STATUS_BADGE } from '@/lib/submission-status'
 
 export default async function MyFormsPage() {
   const assignments = await getMyAssignments()
@@ -37,7 +31,7 @@ export default async function MyFormsPage() {
               // one-to-one embed: PostgREST returns an object, not an array
               const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
               const status = submission?.status ?? null
-              const cfg = status ? statusConfig[status] : null
+              const cfg = status ? SUBMISSION_STATUS_BADGE[status as keyof typeof SUBMISSION_STATUS_BADGE] : null
               const isOverdue = new Date(a.form_templates.deadline) < new Date() && status !== 'approved'
 
               return (
