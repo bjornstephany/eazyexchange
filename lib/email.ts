@@ -127,7 +127,7 @@ export async function sendInvitationEmail(opts: { to: string; applicantName: str
 
 export async function sendApplicationRejectionEmail(opts: { to: string; applicantName: string; exchangeName: string; note: string }): Promise<void> {
   const greeting = opts.applicantName ? `Hi ${esc(opts.applicantName)},` : 'Hi,'
-  const note = opts.note ? `<p style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">${esc(opts.note).replace(/\n/g, '<br>')}</p>` : ''
+  const note = opts.note ? `<p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${esc(opts.note).replace(/\n/g, '<br>')}</p>` : ''
   const html = layout(`
     <p>${greeting}</p>
     <p>Thank you for applying to <strong>${esc(opts.exchangeName)}</strong>. After careful consideration, we're unable to offer you a place this time.</p>
