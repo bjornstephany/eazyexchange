@@ -116,3 +116,9 @@ export function requiredApplicationFieldIds(): string[] {
 export function missingRequiredApplication(data: Record<string, string>): string[] {
   return requiredApplicationFieldIds().filter(id => (data[id] ?? '').trim() === '')
 }
+
+// An applicant's display name from their submitted application data. Empty when
+// neither name part is present (callers add an email fallback where wanted).
+export function applicantName(data: Record<string, string> | null | undefined): string {
+  return `${data?.first_name ?? ''} ${data?.last_name ?? ''}`.trim()
+}

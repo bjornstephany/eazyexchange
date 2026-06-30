@@ -4,13 +4,7 @@ import { DocumentUploadForm } from '@/components/DocumentUploadForm'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-
-const statusLabels: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
-  approved: { label: 'Approved', variant: 'success' },
-  submitted: { label: 'Under review', variant: 'info' },
-  rejected: { label: 'Rejected', variant: 'danger' },
-  draft: { label: 'Draft', variant: 'neutral' },
-}
+import { SUBMISSION_STATUS_BADGE } from '@/lib/submission-status'
 
 export default async function AssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
   const { assignmentId } = await params
@@ -18,7 +12,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
 
   const status = submission?.status ?? null
   const readOnly = status === 'approved' || status === 'submitted'
-  const cfg = status ? statusLabels[status] : null
+  const cfg = status ? SUBMISSION_STATUS_BADGE[status as keyof typeof SUBMISSION_STATUS_BADGE] : null
 
   const initialAnswers: Record<string, string> = Object.fromEntries(
     (submission?.field_answers ?? []).map((a: any) => [a.field_id, a.value])
