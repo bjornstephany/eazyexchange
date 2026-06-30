@@ -2,7 +2,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { randomToken } from '@/lib/tokens'
-import { normalizeEmail, isValidEmail, MAX_ANSWER_LENGTH } from '@/lib/validation'
+import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication } from '@/lib/application-form'
 import { validateUploadFile } from '@/lib/uploads'
 import {
@@ -21,10 +21,6 @@ function applicationsClosed(exchange: { application_open: boolean; application_d
     if (today > exchange.application_deadline) return true
   }
   return false
-}
-
-function tooLong(data: Record<string, string>): boolean {
-  return Object.values(data).some(v => (v?.length ?? 0) > MAX_ANSWER_LENGTH)
 }
 
 export async function startApplication(
@@ -90,7 +86,7 @@ export async function getApplicationDraft(token: string) {
 }
 
 export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<void> {
-  if (tooLong(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications').select('id, status').eq('resume_token', token).maybeSingle()
@@ -102,7 +98,7 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
 }
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<void> {
-  if (tooLong(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const missing = missingRequiredApplication(data)
   if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
 
@@ -114,14 +110,22 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (!app) throw new Error('Application not found')
   if (app.status !== 'draft') throw new Error('This application is already submitted')
 
+  // Re-check the window at submit time: startApplication gated it, but the
+  // organizer may have closed applications (or the deadline passed) while this
+  // draft was open.
+  const { data: exchange } = await admin
+    .from('exchanges')
+    .select('name, application_open, application_deadline')
+    .eq('id', app.exchange_id).maybeSingle()
+  if (!exchange) throw new Error('Application not found')
+  if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
+
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
   }).eq('resume_token', token)
   if (error) throw error
 
   // Emails: applicant confirmation + organizer alert. Fire-and-forget.
-  const { data: exchange } = await admin
-    .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = `${data.first_name ?? ''} ${data.last_name ?? ''}`.trim()
   void sendApplicationConfirmationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
@@ -237,6 +241,12 @@ export async function rejectApplication(applicationId: string, note: string, sen
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const app = await assertOrganizerOwnsApplication(supabase, user.id, applicationId)
+  // Never reject an application that has already enrolled (which would leave the
+  // student's account, enrollment and assignments live while showing rejected),
+  // nor one that was never submitted / already declined.
+  if (!['submitted', 'accepted', 'maybe'].includes(app.status)) {
+    throw new Error('This application can no longer be rejected.')
+  }
   const { error } = await supabase.from('applications').update({
     status: 'rejected', reviewed_at: new Date().toISOString(),
     reviewer_id: user.id, review_note: note || null,
@@ -301,10 +311,14 @@ export async function respondToInvitation(
     if ((inviteError as any).code === 'email_exists') throw new Error('An account already exists for this email')
     throw inviteError
   }
-  const fullName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
+  // Insert with an empty full_name (mirroring inviteStudent). Middleware infers
+  // "setup complete" from a non-empty full_name; pre-filling the applicant's
+  // name here would bounce them past /accept-invite before they set a password,
+  // leaving a passwordless account they can't log back into. They (re-)enter
+  // their name on the accept-invite screen.
   const { error: profileError } = await admin.from('users').insert({
     id: invited.user.id, school_id: app.school_id, role: 'student' as const,
-    email: app.email, full_name: fullName,
+    email: app.email, full_name: '',
   })
   if (profileError) {
     await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})

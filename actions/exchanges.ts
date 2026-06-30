@@ -28,32 +28,26 @@ export async function createExchange(formData: FormData) {
   if (!user) throw new Error('Unauthenticated')
 
   const { data: profile } = await supabase
-    .from('users').select('school_id').eq('id', user.id).single()
-  if (!profile) throw new Error('No profile')
+    .from('users').select('school_id, role').eq('id', user.id).single()
+  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
 
-  const name = formData.get('name') as string
+  const name = (formData.get('name') as string ?? '').trim()
   const year = parseInt(formData.get('year') as string)
-  const schoolBName = formData.get('school_b_name') as string
-
-  // Check if school B already exists by name; create if not
-  let schoolBId: string
-  const { data: existing } = await supabase
-    .from('schools')
-    .select('id')
-    .eq('name', schoolBName)
-    .maybeSingle()
-
-  if (existing) {
-    schoolBId = existing.id
-  } else {
-    const { data: created, error: createError } = await supabase
-      .from('schools')
-      .insert({ name: schoolBName })
-      .select('id')
-      .single()
-    if (createError) throw createError
-    schoolBId = created.id
+  const schoolBName = (formData.get('school_b_name') as string ?? '').trim()
+  if (!name || !schoolBName || Number.isNaN(year)) {
+    throw new Error('Please provide an exchange name, year, and partner school name')
   }
+
+  // Always create a fresh partner-school record. Never bind to an existing
+  // school by name: a name collision with another customer's school would give
+  // that school's organizers read/update access to this exchange.
+  const { data: created, error: createError } = await supabase
+    .from('schools')
+    .insert({ name: schoolBName })
+    .select('id')
+    .single()
+  if (createError) throw createError
+  const schoolBId = created.id
 
   const { error } = await supabase.from('exchanges').insert({
     name,

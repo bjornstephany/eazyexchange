@@ -47,7 +47,10 @@ function isDue(daysLeft: number, lastRemindedAt: string | null): boolean {
   const minIntervalDays = daysLeft <= FINAL_WEEK_DAYS ? 1 : 7
   if (!lastRemindedAt) return true
   const elapsedDays = (Date.now() - new Date(lastRemindedAt).getTime()) / DAY_MS
-  return elapsedDays >= minIntervalDays
+  // Tolerance: the cron fires at a fixed 08:00 but last_reminded_at is stamped a
+  // few seconds later, so consecutive runs are elapsed-wise just under 24h apart.
+  // Without the 0.5-day slack a `>= 1` daily gate would skip every other day.
+  return elapsedDays >= minIntervalDays - 0.5
 }
 
 // Escape untrusted values before embedding them in email HTML.
@@ -89,20 +92,27 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     console.warn('[send-reminders] RESEND_API_KEY not set — skipping reminder email')
     return false
   }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
-  })
-  if (!res.ok) {
-    // Don't log `to` — it's student PII. Status + Resend's message is enough to debug.
-    console.error('[send-reminders] Resend send failed:', res.status, await res.text())
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
+    })
+    if (!res.ok) {
+      // Don't log `to` — it's student PII. Status + Resend's message is enough to debug.
+      console.error('[send-reminders] Resend send failed:', res.status, await res.text())
+      return false
+    }
+    return true
+  } catch (err) {
+    // A network/DNS error must not abort the per-student loop — return false so
+    // the rest of the cohort still gets reminded. No `to` in the log (PII).
+    console.error('[send-reminders] Resend request error:', (err as Error).message)
     return false
   }
-  return true
 }
 
 Deno.serve(async (req) => {
