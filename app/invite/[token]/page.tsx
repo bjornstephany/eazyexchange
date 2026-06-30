@@ -1,6 +1,10 @@
 import { getInvitation } from '@/actions/applications'
 import { InviteResponseForm } from '@/components/InviteResponseForm'
 
+// Reads live invitation state (accepted / already-answered) via the cookie-less
+// admin client — force dynamic so the response page is never served stale.
+export const dynamic = 'force-dynamic'
+
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const invite = await getInvitation(token)

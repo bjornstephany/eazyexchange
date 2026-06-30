@@ -1,6 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ApplicationStartForm } from '@/components/ApplicationStartForm'
 
+// Reads live exchange state (application_open/deadline) via the cookie-less admin
+// client, which is otherwise eligible for Next's Data Cache — force dynamic so the
+// open/closed state is never served stale.
+export const dynamic = 'force-dynamic'
+
 export default async function ApplyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const admin = createAdminClient()

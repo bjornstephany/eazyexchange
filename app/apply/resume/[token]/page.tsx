@@ -1,6 +1,10 @@
 import { getApplicationDraft } from '@/actions/applications'
 import { ApplicationForm } from '@/components/ApplicationForm'
 
+// Reads the live draft (autosaved answers, submitted/locked state) via the
+// cookie-less admin client — force dynamic so it is never served from cache.
+export const dynamic = 'force-dynamic'
+
 export default async function ResumePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const draft = await getApplicationDraft(token)
