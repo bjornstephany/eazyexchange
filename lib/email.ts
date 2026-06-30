@@ -41,9 +41,24 @@ async function send(to: string, subject: string, html: string, label: string): P
     return
   }
   const { error } = await resend.emails.send({ from: FROM, to, subject, html })
-  // Log only the error category name — never the raw error object, which can
-  // echo the recipient address (PII) in Resend validation messages.
-  if (error) console.error(`[email] ${label} failed:`, (error as { name?: string }).name ?? 'unknown error')
+  if (error) logSendError(label, error)
+}
+
+// Log only the error category/status — never the raw error message, which can
+// echo the recipient address (PII) in Resend validation messages. Auth (401/403)
+// and sender-validation (422) errors aren't one-off bounces: they mean EVERY
+// email is failing (bad RESEND_API_KEY or malformed EMAIL_FROM), so surface them
+// loudly with a config hint instead of a quiet one-liner.
+function logSendError(label: string, error: unknown): void {
+  const e = error as { name?: string; statusCode?: number }
+  const code = e.statusCode
+  if (code === 401 || code === 403) {
+    console.error(`[email] ${label} FAILED — auth/config error (${code} ${e.name ?? 'unknown'}). All email is broken: check RESEND_API_KEY.`)
+  } else if (code === 422) {
+    console.error(`[email] ${label} FAILED — validation error (422 ${e.name ?? 'unknown'}). All email may be broken: check EMAIL_FROM is a valid "Name <mailbox@verified-domain>".`)
+  } else {
+    console.error(`[email] ${label} failed:`, e.name ?? 'unknown error')
+  }
 }
 
 export async function sendRejectionEmail(opts: {
@@ -79,11 +94,8 @@ export async function sendRejectionEmail(opts: {
     subject: `Action needed: ${opts.formName}`,
     html,
   })
-  if (error) {
-    // Don't fail the caller's action just because the email bounced; log only
-    // the error category (never the raw error — it can echo the recipient PII).
-    console.error('[email] rejection email failed:', (error as { name?: string }).name ?? 'unknown error')
-  }
+  // Don't fail the caller's action just because the email bounced.
+  if (error) logSendError('rejection email', error)
 }
 
 const APP_FOOTER = "You're receiving this because you applied (or were invited to apply) to a student exchange."
