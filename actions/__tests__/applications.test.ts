@@ -81,11 +81,13 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
-import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft } from '../applications'
+import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft, sendApplicationResumeLink } from '../applications'
+import { sendApplicationResumeEmail } from '@/lib/email'
 
 const PAST = new Date(Date.now() - 60_000).toISOString()
 
 beforeEach(() => {
+  vi.clearAllMocks()
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_a_id: 's-1', application_open: true, application_deadline: null },
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
@@ -110,6 +112,10 @@ describe('startApplication', () => {
     expect(res.token).toBeTruthy()
     expect(scenario.inserted.table).toBe('applications')
     expect(scenario.inserted.row.status).toBe('draft')
+  })
+  it('does not email a resume link on start (only "Finish later" does that)', async () => {
+    await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
   it('rejects when the rate limit is exceeded', async () => {
     scenario.rateLimitAllowed = false
@@ -137,6 +143,36 @@ describe('getApplicationDraft', () => {
     const res = await getApplicationDraft('tok') as any
     expect(res.expired).toBe(true)
     expect(res.data).toBeUndefined()
+  })
+  it('returns a submitted marker (no PII) once the application is no longer a draft', async () => {
+    scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'en', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: null }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.submitted).toBe(true)
+    expect(res.data).toBeUndefined()
+  })
+})
+
+describe('sendApplicationResumeLink', () => {
+  it('emails the resume link for an open draft', async () => {
+    scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: null }
+    await sendApplicationResumeLink('tok')
+    expect(sendApplicationResumeEmail).toHaveBeenCalledTimes(1)
+  })
+  it('refuses once the application has been submitted', async () => {
+    scenario.application = { email: 'a@b.co', status: 'submitted', resume_token_expires_at: null }
+    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('already been submitted')
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+  it('refuses through an expired resume link', async () => {
+    scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: PAST }
+    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('expired')
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+  it('rejects when the rate limit is exceeded', async () => {
+    scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: null }
+    scenario.rateLimitAllowed = false
+    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('Too many attempts')
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
 })
 

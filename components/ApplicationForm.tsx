@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { APPLICATION_SECTIONS, missingRequiredApplication, type AppField } from '@/lib/application-form'
-import { saveApplicationDraft, submitApplication, uploadApplicationPhoto } from '@/actions/applications'
+import { saveApplicationDraft, submitApplication, uploadApplicationPhoto, sendApplicationResumeLink } from '@/actions/applications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,14 +12,15 @@ interface Props {
   token: string
   initialData: Record<string, string>
   initialLanguage: 'en' | 'fr'
-  locked: boolean
 }
 
-export function ApplicationForm({ token, initialData, initialLanguage, locked }: Props) {
+export function ApplicationForm({ token, initialData, initialLanguage }: Props) {
   const [lang, setLang] = useState<'en' | 'fr'>(initialLanguage)
   const [data, setData] = useState<Record<string, string>>(initialData)
   const [saving, setSaving] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [reminding, setReminding] = useState(false)
+  const [remindSent, setRemindSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -33,11 +34,22 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
     })
   }
   async function autosave(d: Record<string, string>) {
-    if (locked) return
     setSaving(true)
     try { await saveApplicationDraft(token, d) } catch { /* transient; next edit retries */ } finally { setSaving(false) }
   }
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current) }, [])
+
+  async function onFinishLater() {
+    setReminding(true); setError(null)
+    try {
+      // Flush the latest answers first so the emailed link returns to current work.
+      await saveApplicationDraft(token, data)
+      await sendApplicationResumeLink(token)
+      setRemindSent(true)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
+    } finally { setReminding(false) }
+  }
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -60,14 +72,14 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
 
   function renderField(f: AppField) {
     if (f.type === 'textarea') {
-      return <Textarea id={f.id} value={data[f.id] ?? ''} onChange={e => set(f.id, e.target.value)} disabled={locked} />
+      return <Textarea id={f.id} value={data[f.id] ?? ''} onChange={e => set(f.id, e.target.value)} />
     }
     if (f.type === 'yesno') {
       return (
         <div className="flex gap-4 text-sm">
           {['yes', 'no'].map(v => (
             <label key={v} className="flex items-center gap-1">
-              <input type="radio" name={f.id} checked={data[f.id] === v} onChange={() => set(f.id, v)} disabled={locked} />
+              <input type="radio" name={f.id} checked={data[f.id] === v} onChange={() => set(f.id, v)} />
               {lang === 'fr' ? (v === 'yes' ? 'Oui' : 'Non') : (v === 'yes' ? 'Yes' : 'No')}
             </label>
           ))}
@@ -79,7 +91,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
         <div className="flex flex-col gap-1 text-sm">
           {f.options!.map(o => (
             <label key={o.value} className="flex items-center gap-1">
-              <input type="radio" name={f.id} checked={data[f.id] === o.value} onChange={() => set(f.id, o.value)} disabled={locked} />
+              <input type="radio" name={f.id} checked={data[f.id] === o.value} onChange={() => set(f.id, o.value)} />
               {o.label[lang]}
             </label>
           ))}
@@ -87,7 +99,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
       )
     }
     const inputType = f.type === 'date' ? 'date' : f.type === 'email' ? 'email' : f.type === 'tel' ? 'tel' : 'text'
-    return <Input id={f.id} type={inputType} value={data[f.id] ?? ''} onChange={e => set(f.id, e.target.value)} disabled={locked} />
+    return <Input id={f.id} type={inputType} value={data[f.id] ?? ''} onChange={e => set(f.id, e.target.value)} />
   }
 
   return (
@@ -107,7 +119,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
           {section.id === 'student' && (
             <div className="space-y-1">
               <Label>{lang === 'fr' ? 'Photo récente' : 'Recent photo'}</Label>
-              <input type="file" accept={ALLOWED_UPLOAD_ACCEPT} onChange={onPhoto} disabled={locked} />
+              <input type="file" accept={ALLOWED_UPLOAD_ACCEPT} onChange={onPhoto} />
             </div>
           )}
           {section.fields.map(f => (
@@ -120,10 +132,20 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
       ))}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {!locked && (
-        <Button onClick={onSubmit} disabled={submitting}>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={onSubmit} disabled={submitting || reminding}>
           {submitting ? '…' : (lang === 'fr' ? 'Envoyer ma candidature' : 'Submit my application')}
         </Button>
+        <Button variant="outline" onClick={onFinishLater} disabled={reminding || submitting}>
+          {reminding ? '…' : (lang === 'fr' ? 'Terminer plus tard' : 'Finish later')}
+        </Button>
+      </div>
+      {remindSent && (
+        <p className="text-sm text-emerald-700">
+          {lang === 'fr'
+            ? 'Nous vous avons envoyé un lien par e-mail pour reprendre votre candidature.'
+            : "We've emailed you a link to continue your application anytime."}
+        </p>
       )}
     </div>
   )

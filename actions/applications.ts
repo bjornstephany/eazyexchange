@@ -85,11 +85,9 @@ export async function startApplication(
   }).select('id').single()
   if (error) throw error
 
-  await sendApplicationResumeEmail({
-    to: email,
-    exchangeName: exchange.name,
-    resumeUrl: `${APP_URL}/apply/resume/${token}`,
-  })
+  // No resume email is sent here: the applicant continues straight to the form.
+  // A resume link is only emailed if they explicitly click "Finish later"
+  // (sendApplicationResumeLink), so we never mail a link they didn't ask for.
   return { token }
 }
 
@@ -104,13 +102,44 @@ export async function getApplicationDraft(token: string) {
   const exchangeName = (app as any).exchanges?.name ?? ''
   // Don't return PII through an expired link.
   if (tokenExpired(app.resume_token_expires_at)) {
-    return { expired: true as const, exchangeName }
+    return { expired: true as const, submitted: false as const, exchangeName }
+  }
+  // Once submitted (or further along) the application is final — the resume link
+  // can no longer reopen it. Return a marker only, never the PII, so the page
+  // shows an "already submitted" notice instead of the form.
+  if (app.status !== 'draft') {
+    return { expired: false as const, submitted: true as const, exchangeName }
   }
   return {
-    expired: false as const,
+    expired: false as const, submitted: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
     photo_path: app.photo_path, exchangeName,
   }
+}
+
+// Emails the applicant their private resume link on demand ("Finish later").
+// Only valid while the application is still an open draft.
+export async function sendApplicationResumeLink(token: string): Promise<void> {
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('email, status, resume_token_expires_at, exchanges(name)')
+    .eq('resume_token', token).maybeSingle()
+  if (!app) throw new Error('Application not found')
+  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
+  if (app.status !== 'draft') throw new Error('This application has already been submitted.')
+
+  // This mails the applicant's address, so cap by IP + recipient to prevent
+  // mail-bombing from our sending domain (mirrors startApplication's old gate).
+  const ip = await clientIp()
+  await enforceRateLimit(`resume_ip:${ip}`, 10, 3600)
+  await enforceRateLimit(`resume_email:${app.email}`, 3, 3600)
+
+  await sendApplicationResumeEmail({
+    to: app.email,
+    exchangeName: (app as any).exchanges?.name ?? '',
+    resumeUrl: `${APP_URL}/apply/resume/${token}`,
+  })
 }
 
 export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<void> {

@@ -41,7 +41,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       <div className="space-y-1">
         <Label htmlFor="email">E-mail</Label>
         <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-        <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Nous vous enverrons un lien privé pour reprendre votre candidature à tout moment.' : "We'll email you a private link to resume your application anytime."}</p>
+        <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Vous pourrez compléter votre candidature maintenant ou cliquer sur « Terminer plus tard » pour recevoir par e-mail un lien pour la reprendre.' : "You can complete your application now, or click “Finish later” to email yourself a private link to continue."}</p>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name}>
