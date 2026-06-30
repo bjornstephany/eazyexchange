@@ -23,11 +23,13 @@ function esc(s: string): string {
 
 function layout(body: string, footer = "You're receiving this because you have forms to complete for a student exchange."): string {
   return `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
-      <h2 style="font-weight: 600;">EazyExchange</h2>
+    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #1F3A30;">
+      <h2 style="font-weight: 700; letter-spacing: -0.02em; font-size: 20px;">
+        <span style="color: #3FA277;">Eazy</span>Exchange
+      </h2>
       ${body}
-      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-      <p style="font-size: 12px; color: #94a3b8;">${footer}</p>
+      <hr style="border: none; border-top: 1px solid #E7F1EC; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #5C7268;">${footer}</p>
     </div>
   `
 }
@@ -68,7 +70,7 @@ export async function sendRejectionEmail(opts: {
     <p style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #b91c1c;">
       <strong>Organizer note:</strong> ${note}
     </p>
-    <p><a href="${link}" style="display: inline-block; background: #0f172a; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
+    <p><a href="${link}" style="display: inline-block; background: #1F7A57; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
   `)
 
   const { error } = await resend.emails.send({
@@ -90,7 +92,7 @@ export async function sendApplicationResumeEmail(opts: { to: string; exchangeNam
   const html = layout(`
     <p>Hi,</p>
     <p>Here's your private link to continue your application for <strong>${esc(opts.exchangeName)}</strong>. You can leave and come back anytime, on any device:</p>
-    <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
+    <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
     <p style="font-size:12px;color:#94a3b8;">Keep this email — it's the only way back to your in-progress application.</p>
   `, APP_FOOTER)
   await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email')
@@ -108,7 +110,7 @@ export async function sendApplicationConfirmationEmail(opts: { to: string; appli
 export async function sendNewApplicationAlertEmail(opts: { to: string; applicantName: string; exchangeName: string; reviewUrl: string }): Promise<void> {
   const html = layout(`
     <p>A new application has arrived for <strong>${esc(opts.exchangeName)}</strong> from <strong>${esc(opts.applicantName)}</strong>.</p>
-    <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
+    <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
   `)
   await send(opts.to, `New application — ${opts.exchangeName}`, html, 'new application alert email')
 }
@@ -118,7 +120,7 @@ export async function sendInvitationEmail(opts: { to: string; applicantName: str
   const html = layout(`
     <p>${greeting}</p>
     <p>Great news — you've been accepted into <strong>${esc(opts.exchangeName)}</strong>! Please let the organizer know whether you'd like to join:</p>
-    <p><a href="${opts.respondUrl}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Respond to your invitation</a></p>
+    <p><a href="${opts.respondUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Respond to your invitation</a></p>
   `, APP_FOOTER)
   await send(opts.to, `You're invited — ${opts.exchangeName}`, html, 'invitation email')
 }
