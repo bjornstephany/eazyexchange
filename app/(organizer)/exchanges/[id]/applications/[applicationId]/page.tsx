@@ -1,0 +1,33 @@
+import Link from 'next/link'
+import { getApplicationForReview } from '@/actions/applications'
+import { ApplicationReadView } from '@/components/ApplicationReadView'
+import { ApplicationReviewActions } from '@/components/ApplicationReviewActions'
+import { Button } from '@/components/ui/button'
+
+export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string; applicationId: string }> }) {
+  const { id, applicationId } = await params
+  const { application, photoUrl } = await getApplicationForReview(applicationId)
+  const name = `${application.data?.first_name ?? ''} ${application.data?.last_name ?? ''}`.trim() || application.email
+
+  return (
+    <div className="max-w-3xl">
+      <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2 text-slate-500">
+        <Link href={`/exchanges/${id}/applications`}>← Back to applications</Link>
+      </Button>
+      <h1 className="text-2xl font-semibold mb-1">{name}</h1>
+      <p className="text-sm text-slate-500 mb-6">{application.email}</p>
+
+      <div className="mb-8 p-4 border rounded-lg bg-slate-50">
+        <ApplicationReviewActions
+          applicationId={application.id}
+          exchangeId={id}
+          status={application.status}
+          response={application.invite_response}
+          note={application.invite_response_note ?? application.review_note}
+        />
+      </div>
+
+      <ApplicationReadView data={application.data} photoUrl={photoUrl} />
+    </div>
+  )
+}
