@@ -19,7 +19,7 @@ export function LandingFooter() {
           ))}
         </nav>
       </div>
-      <p className="pb-8 text-center text-xs text-muted-foreground">{copyright}</p>
+      <p className="pb-8 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} {copyright}</p>
     </footer>
   )
 }

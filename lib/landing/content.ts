@@ -228,6 +228,8 @@ export const landingContent: LandingContent = {
     brand: "EazyExchange",
     tagline: "Form and document collection for student exchange organizers.",
     links: [LOGIN, SIGNUP],
-    copyright: `© ${new Date().getFullYear()} EazyExchange. All rights reserved.`,
+    // The year is prepended at render time (LandingFooter) so it never freezes
+    // at the value captured when this module was first imported.
+    copyright: "EazyExchange. All rights reserved.",
   },
 }

@@ -87,6 +87,7 @@ export async function sendRejectionEmail(opts: {
 }
 
 const APP_FOOTER = "You're receiving this because you applied (or were invited to apply) to a student exchange."
+const ORG_FOOTER = "You're receiving this because you're an organizer for this exchange on EazyExchange."
 
 export async function sendApplicationResumeEmail(opts: { to: string; exchangeName: string; resumeUrl: string }): Promise<void> {
   const html = layout(`
@@ -111,7 +112,7 @@ export async function sendNewApplicationAlertEmail(opts: { to: string; applicant
   const html = layout(`
     <p>A new application has arrived for <strong>${esc(opts.exchangeName)}</strong> from <strong>${esc(opts.applicantName)}</strong>.</p>
     <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
-  `)
+  `, ORG_FOOTER)
   await send(opts.to, `New application — ${opts.exchangeName}`, html, 'new application alert email')
 }
 
