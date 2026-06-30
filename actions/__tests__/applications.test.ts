@@ -8,6 +8,7 @@ let scenario: {
   enrollError: any | null
   deletedProfileUserId: string | null
   deletedAuthUserId: string | null
+  rateLimitAllowed: boolean
 }
 
 function builder(table: string) {
@@ -28,7 +29,25 @@ function builder(table: string) {
         then: (resolve: any) => resolve({ error }),
       }
     },
-    update: (row: any) => { scenario.updated = { table, row }; return { eq: async () => ({ error: null }) } },
+    update: (row: any) => {
+      scenario.updated = { table, row }
+      // Chainable supporting .eq().eq(), .eq().in().select().maybeSingle(), and
+      // a direct await (thenable). maybeSingle honors an .in(col, [...]) guard
+      // against the current row so the atomic-claim path can "miss".
+      const u: any = {
+        _in: null as null | { col: string; vals: any[] },
+        eq() { return u },
+        in(col: string, vals: any[]) { u._in = { col, vals }; return u },
+        select() { return u },
+        async maybeSingle() {
+          const r = rowFor(table)
+          if (u._in && r && !u._in.vals.includes(r[u._in.col])) return { data: null, error: null }
+          return { data: r, error: null }
+        },
+        then: (resolve: any) => resolve({ error: null }),
+      }
+      return u
+    },
     delete: () => ({ eq: async (_col: string, val: any) => { scenario.deletedProfileUserId = val; return { error: null } } }),
     single: async () => ({ data: rowFor(table), error: rowFor(table) ? null : { message: 'none' } }),
     maybeSingle: async () => ({ data: rowFor(table), error: null }),
@@ -49,10 +68,13 @@ const adminClient = {
     inviteUserByEmail: async () => ({ data: { user: { id: 'new-user' } }, error: null }),
     deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
   } },
+  // Rate-limit check — controlled by scenario.rateLimitAllowed.
+  rpc: async () => ({ data: scenario.rateLimitAllowed, error: null }),
 }
 
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => adminClient }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => adminClient }))
+vi.mock('next/headers', () => ({ headers: async () => ({ get: () => null }) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/email', () => ({
   sendApplicationResumeEmail: vi.fn(), sendApplicationConfirmationEmail: vi.fn(),
@@ -67,6 +89,7 @@ beforeEach(() => {
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
     inserted: null, updated: null,
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
+    rateLimitAllowed: true,
   }
 })
 
@@ -85,6 +108,12 @@ describe('startApplication', () => {
     expect(res.token).toBeTruthy()
     expect(scenario.inserted.table).toBe('applications')
     expect(scenario.inserted.row.status).toBe('draft')
+  })
+  it('rejects when the rate limit is exceeded', async () => {
+    scenario.rateLimitAllowed = false
+    await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
+      .rejects.toThrow('Too many attempts')
+    expect(scenario.inserted).toBeNull()
   })
 })
 
@@ -128,12 +157,19 @@ describe('respondToInvitation', () => {
     expect(scenario.updated.row.status).toBe('enrolled')
     expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
   })
+  it('treats a Yes on an already-claimed (enrolling) invite as success, no second account', async () => {
+    scenario.application.status = 'enrolling'
+    await expect(respondToInvitation('inv-1', 'yes', '')).resolves.toBeUndefined()
+    expect(scenario.deletedAuthUserId).toBeNull()
+  })
   it('on a non-23505 enroll failure, rolls back the profile + auth user, then throws', async () => {
     scenario.enrollError = { code: '500', message: 'boom' }
     await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toBeTruthy()
     expect(scenario.deletedProfileUserId).toBe('new-user')
     expect(scenario.deletedAuthUserId).toBe('new-user')
-    // the application is NOT marked enrolled when enrollment failed
-    expect(scenario.updated).toBeNull()
+    // The application is NOT marked enrolled when enrollment failed — the claim
+    // is released back to 'accepted' so the applicant can retry.
+    expect(scenario.updated.row.status).toBe('accepted')
+    expect(scenario.updated.row.enrolled_user_id).toBeUndefined()
   })
 })

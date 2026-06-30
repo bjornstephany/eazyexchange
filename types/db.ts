@@ -3,7 +3,7 @@ export type FormType = 'data_entry' | 'document_upload'
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
 export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
 export type ApplicationStatus =
-  | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolled'
+  | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolling' | 'enrolled'
 
 export type School = { id: string; name: string; created_at: string }
 export type Exchange = {
@@ -57,6 +57,7 @@ export type Application = {
   reviewer_id: string | null; review_note: string | null
   created_at: string; updated_at: string
 }
+export type RateLimit = { key: string; hits: number; window_start: string }
 
 type TableDef<Row, Insert, Update> = {
   Row: Row
@@ -80,8 +81,14 @@ export type Database = {
       field_answers: TableDef<FieldAnswer, Omit<FieldAnswer, 'id'>, Partial<FieldAnswer>>
       document_uploads: TableDef<DocumentUpload, Omit<DocumentUpload, 'id' | 'uploaded_at'>, Partial<DocumentUpload>>
       applications: TableDef<Application, Omit<Application, 'id' | 'created_at' | 'updated_at'>, Partial<Application>>
+      rate_limits: TableDef<RateLimit, RateLimit, Partial<RateLimit>>
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      check_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication } from '@/lib/application-form'
 import { validateUploadFile } from '@/lib/uploads'
+import { enforceRateLimit, clientIp } from '@/lib/rate-limit'
 import {
   sendApplicationResumeEmail, sendApplicationConfirmationEmail, sendNewApplicationAlertEmail,
   sendInvitationEmail, sendApplicationRejectionEmail,
@@ -29,6 +30,13 @@ export async function startApplication(
 ): Promise<{ token: string }> {
   const email = normalizeEmail(input.email)
   if (!isValidEmail(email)) throw new Error('Please enter a valid email address')
+
+  // This endpoint is unauthenticated and emails an arbitrary address, so cap it
+  // by source IP and by recipient to prevent enumeration / mail-bombing from our
+  // sending domain. Per-email is the tighter limit (don't re-mail the same victim).
+  const ip = await clientIp()
+  await enforceRateLimit(`apply_ip:${ip}`, 10, 3600)
+  await enforceRateLimit(`apply_email:${email}`, 3, 3600)
 
   const admin = createAdminClient()
   const { data: exchange } = await admin
@@ -281,63 +289,93 @@ export async function respondToInvitation(
   token: string, response: 'yes' | 'no' | 'maybe', note: string,
 ): Promise<void> {
   const admin = createAdminClient()
-  const { data: app } = await admin
-    .from('applications').select('*').eq('invite_token', token).maybeSingle()
-  if (!app) throw new Error('Invitation not found')
-  if (!['accepted', 'maybe'].includes(app.status)) {
-    throw new Error('This invitation is no longer open')
-  }
   const base = {
     invite_response: response, invite_response_note: note || null,
     responded_at: new Date().toISOString(),
   }
 
-  if (response === 'no') {
-    await admin.from('applications').update({ ...base, status: 'declined' }).eq('id', app.id)
-    return
-  }
-  if (response === 'maybe') {
-    await admin.from('applications').update({ ...base, status: 'maybe' }).eq('id', app.id)
+  // 'no' / 'maybe' are single atomic updates, gated on the invite still being
+  // open. `.in('status', [...])` makes the guard race-safe (a second click that
+  // arrives after the first updates nothing → "no longer open").
+  if (response === 'no' || response === 'maybe') {
+    const { data: updated } = await admin
+      .from('applications')
+      .update({ ...base, status: response === 'no' ? 'declined' : 'maybe' })
+      .eq('invite_token', token).in('status', ['accepted', 'maybe'])
+      .select('id').maybeSingle()
+    if (!updated) {
+      // Distinguish "doesn't exist" from "already responded" for a clearer error.
+      const { data: exists } = await admin
+        .from('applications').select('id').eq('invite_token', token).maybeSingle()
+      throw new Error(exists ? 'This invitation is no longer open' : 'Invitation not found')
+    }
     return
   }
 
-  // Yes → create the auth account + profile + enrollment (reuses inviteStudent's
-  // proven sequence). The trg_assign_on_enrollment_insert trigger fans out the
-  // Phase 2 form assignments automatically.
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(app.email, {
-    redirectTo: `${APP_URL}/accept-invite`,
-  })
-  if (inviteError) {
-    if ((inviteError as any).code === 'email_exists') throw new Error('An account already exists for this email')
-    throw inviteError
-  }
-  // Insert with an empty full_name (mirroring inviteStudent). Middleware infers
-  // "setup complete" from a non-empty full_name; pre-filling the applicant's
-  // name here would bounce them past /accept-invite before they set a password,
-  // leaving a passwordless account they can't log back into. They (re-)enter
-  // their name on the accept-invite screen.
-  const { error: profileError } = await admin.from('users').insert({
-    id: invited.user.id, school_id: app.school_id, role: 'student' as const,
-    email: app.email, full_name: '',
-  })
-  if (profileError) {
-    await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})
-    if ((profileError as any).code === '23505') throw new Error('An account already exists for this email')
-    throw profileError
-  }
-  const { error: enrollError } = await admin.from('exchange_enrollments').insert({
-    exchange_id: app.exchange_id, user_id: invited.user.id,
-  })
-  if (enrollError && (enrollError as any).code !== '23505') {
-    // Roll back the profile + auth user so a transient enrollment failure doesn't
-    // dead-end a "Yes" retry — without this, the next attempt hits email_exists
-    // and the candidate can never enroll.
-    await admin.from('users').delete().eq('id', invited.user.id)
-    await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})
-    throw enrollError
+  // 'yes' → atomically CLAIM the invite (accepted/maybe → enrolling) before
+  // touching auth. Only one concurrent/retried request wins the claim, so the
+  // account-creation sequence runs exactly once.
+  const { data: claimed } = await admin
+    .from('applications')
+    .update({ ...base, status: 'enrolling' })
+    .eq('invite_token', token).in('status', ['accepted', 'maybe'])
+    .select('id, email, school_id, exchange_id').maybeSingle()
+  if (!claimed) {
+    const { data: cur } = await admin
+      .from('applications').select('status').eq('invite_token', token).maybeSingle()
+    if (!cur) throw new Error('Invitation not found')
+    // A parallel request already claimed it (enrolling) or finished (enrolled) —
+    // treat as success so a double-click doesn't surface a scary error.
+    if (cur.status === 'enrolling' || cur.status === 'enrolled') return
+    throw new Error('This invitation is no longer open')
   }
 
-  await admin.from('applications').update({
-    ...base, status: 'enrolled', enrolled_user_id: invited.user.id,
-  }).eq('id', app.id)
+  let userId: string
+  try {
+    // Create the auth account + profile + enrollment (reuses inviteStudent's
+    // sequence). trg_assign_on_enrollment_insert fans out the Phase 2 assignments.
+    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(claimed.email, {
+      redirectTo: `${APP_URL}/accept-invite`,
+    })
+    if (inviteError) {
+      if ((inviteError as any).code === 'email_exists') throw new Error('An account already exists for this email')
+      throw inviteError
+    }
+    userId = invited.user.id
+    // Empty full_name (mirroring inviteStudent): middleware infers "setup
+    // complete" from a non-empty full_name, so pre-filling it would bounce the
+    // student past /accept-invite before they set a password.
+    const { error: profileError } = await admin.from('users').insert({
+      id: userId, school_id: claimed.school_id, role: 'student' as const,
+      email: claimed.email, full_name: '',
+    })
+    if (profileError) {
+      await admin.auth.admin.deleteUser(userId).catch(() => {})
+      if ((profileError as any).code === '23505') throw new Error('An account already exists for this email')
+      throw profileError
+    }
+    const { error: enrollError } = await admin.from('exchange_enrollments').insert({
+      exchange_id: claimed.exchange_id, user_id: userId,
+    })
+    if (enrollError && (enrollError as any).code !== '23505') {
+      await admin.from('users').delete().eq('id', userId)
+      await admin.auth.admin.deleteUser(userId).catch(() => {})
+      throw enrollError
+    }
+  } catch (err) {
+    // Account creation failed (and any partial account was rolled back above):
+    // release the claim back to 'accepted' so the applicant can retry cleanly.
+    await admin.from('applications')
+      .update({ status: 'accepted' }).eq('id', claimed.id).eq('status', 'enrolling')
+    throw err
+  }
+
+  // Account + enrollment exist. Finalize enrolling → enrolled (now error-checked).
+  // If this rare last step fails we deliberately leave the row 'enrolling' rather
+  // than releasing it: the account is live, so reverting to 'accepted' would
+  // dead-end a retry on email_exists. A retry instead hits the claim-fail branch
+  // above and returns success.
+  const { error: finalErr } = await admin.from('applications')
+    .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
+  if (finalErr) throw finalErr
 }
