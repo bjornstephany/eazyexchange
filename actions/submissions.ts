@@ -101,10 +101,10 @@ export async function saveFormAnswers(
     }
     const { data: requiredFields } = await supabase
       .from('form_fields')
-      .select('id')
+      .select('id, field_type')
       .eq('template_id', assignmentRow.template_id)
       .eq('required', true)
-    if (hasMissingRequired((requiredFields ?? []).map(f => f.id), answers)) {
+    if (hasMissingRequired(requiredFields ?? [], answers)) {
       throw new Error('Please complete all required fields before submitting.')
     }
   }

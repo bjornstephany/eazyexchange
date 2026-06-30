@@ -24,11 +24,18 @@ export function hasOverlongAnswer(
   return Object.values(answers).some(v => String(v ?? '').length > max)
 }
 
-// True if any required field id lacks a non-empty (trimmed) answer. Note: a
-// checkbox stores 'true'/'false', both of which count as answered.
+export type RequiredFieldInfo = { id: string; field_type?: string }
+
+// True if any required field lacks an acceptable answer. A required checkbox
+// must be explicitly checked: it stores 'true'/'false', and an unchecked box
+// ('false') is non-empty, so a plain non-empty test would wrongly accept it.
 export function hasMissingRequired(
-  requiredFieldIds: string[],
+  requiredFields: RequiredFieldInfo[],
   answers: Record<string, string>,
 ): boolean {
-  return requiredFieldIds.some(id => (answers[id] ?? '').trim() === '')
+  return requiredFields.some(f => {
+    const v = (answers[f.id] ?? '').trim()
+    if (f.field_type === 'checkbox') return v !== 'true'
+    return v === ''
+  })
 }

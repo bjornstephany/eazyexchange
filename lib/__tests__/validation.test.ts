@@ -36,10 +36,17 @@ describe('hasOverlongAnswer', () => {
 
 describe('hasMissingRequired', () => {
   it('is false when every required field has a non-empty answer', () => {
-    expect(hasMissingRequired(['f1', 'f2'], { f1: 'a', f2: 'false' })).toBe(false)
+    // f2 is a plain field, so the string 'false' counts as a real answer.
+    expect(hasMissingRequired([{ id: 'f1' }, { id: 'f2' }], { f1: 'a', f2: 'false' })).toBe(false)
   })
   it('is true when a required field is missing or blank', () => {
-    expect(hasMissingRequired(['f1', 'f2'], { f1: 'a' })).toBe(true)
-    expect(hasMissingRequired(['f1'], { f1: '   ' })).toBe(true)
+    expect(hasMissingRequired([{ id: 'f1' }, { id: 'f2' }], { f1: 'a' })).toBe(true)
+    expect(hasMissingRequired([{ id: 'f1' }], { f1: '   ' })).toBe(true)
+  })
+  it('requires a required checkbox to be checked (true), not merely present', () => {
+    const fields = [{ id: 'c', field_type: 'checkbox' }]
+    expect(hasMissingRequired(fields, { c: 'false' })).toBe(true)
+    expect(hasMissingRequired(fields, {})).toBe(true)
+    expect(hasMissingRequired(fields, { c: 'true' })).toBe(false)
   })
 })
