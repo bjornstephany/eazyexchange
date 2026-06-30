@@ -39,8 +39,9 @@ async function send(to: string, subject: string, html: string, label: string): P
     return
   }
   const { error } = await resend.emails.send({ from: FROM, to, subject, html })
-  // Never log PII; only the failure category.
-  if (error) console.error(`[email] ${label} failed:`, error)
+  // Log only the error category name — never the raw error object, which can
+  // echo the recipient address (PII) in Resend validation messages.
+  if (error) console.error(`[email] ${label} failed:`, (error as { name?: string }).name ?? 'unknown error')
 }
 
 export async function sendRejectionEmail(opts: {
@@ -77,8 +78,9 @@ export async function sendRejectionEmail(opts: {
     html,
   })
   if (error) {
-    // Don't fail the caller's action just because the email bounced; log it.
-    console.error('[email] rejection email failed:', error)
+    // Don't fail the caller's action just because the email bounced; log only
+    // the error category (never the raw error — it can echo the recipient PII).
+    console.error('[email] rejection email failed:', (error as { name?: string }).name ?? 'unknown error')
   }
 }
 

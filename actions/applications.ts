@@ -314,7 +314,14 @@ export async function respondToInvitation(
   const { error: enrollError } = await admin.from('exchange_enrollments').insert({
     exchange_id: app.exchange_id, user_id: invited.user.id,
   })
-  if (enrollError && (enrollError as any).code !== '23505') throw enrollError
+  if (enrollError && (enrollError as any).code !== '23505') {
+    // Roll back the profile + auth user so a transient enrollment failure doesn't
+    // dead-end a "Yes" retry — without this, the next attempt hits email_exists
+    // and the candidate can never enroll.
+    await admin.from('users').delete().eq('id', invited.user.id)
+    await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})
+    throw enrollError
+  }
 
   await admin.from('applications').update({
     ...base, status: 'enrolled', enrolled_user_id: invited.user.id,

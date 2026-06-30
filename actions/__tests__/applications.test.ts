@@ -5,6 +5,9 @@ let scenario: {
   application: any | null
   inserted: any
   updated: any
+  enrollError: any | null
+  deletedProfileUserId: string | null
+  deletedAuthUserId: string | null
 }
 
 function builder(table: string) {
@@ -13,10 +16,20 @@ function builder(table: string) {
     select: () => b,
     eq: (col: string, val: any) => { b._filters[col] = val; return b },
     order: () => b,
-    insert: (row: any) => { scenario.inserted = { table, row }; return {
-      select: () => ({ single: async () => ({ data: { ...row, id: 'app-1' }, error: null }) }),
-    } },
+    insert: (row: any) => {
+      scenario.inserted = { table, row }
+      // The enrollment insert can be made to fail to exercise the Yes-branch rollback.
+      const error = table === 'exchange_enrollments' ? (scenario.enrollError ?? null) : null
+      return {
+        error,
+        // startApplication chains .select('id').single() on the insert
+        select: () => ({ single: async () => ({ data: { ...row, id: 'app-1' }, error: null }) }),
+        // respondToInvitation/inviteStudent await the insert directly for { error }
+        then: (resolve: any) => resolve({ error }),
+      }
+    },
     update: (row: any) => { scenario.updated = { table, row }; return { eq: async () => ({ error: null }) } },
+    delete: () => ({ eq: async (_col: string, val: any) => { scenario.deletedProfileUserId = val; return { error: null } } }),
     single: async () => ({ data: rowFor(table), error: rowFor(table) ? null : { message: 'none' } }),
     maybeSingle: async () => ({ data: rowFor(table), error: null }),
   }
@@ -34,7 +47,7 @@ const adminClient = {
   storage: { from: () => ({ upload: async () => ({ data: { path: 'app-1/photo.png' }, error: null }) }) },
   auth: { admin: {
     inviteUserByEmail: async () => ({ data: { user: { id: 'new-user' } }, error: null }),
-    deleteUser: async () => ({ error: null }),
+    deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
   } },
 }
 
@@ -53,6 +66,7 @@ beforeEach(() => {
     exchange: { id: 'ex-1', name: 'France-Canada', school_a_id: 's-1', application_open: true, application_deadline: null },
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
     inserted: null, updated: null,
+    enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
   }
 })
 
@@ -113,5 +127,13 @@ describe('respondToInvitation', () => {
     await respondToInvitation('inv-1', 'yes', '')
     expect(scenario.updated.row.status).toBe('enrolled')
     expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
+  })
+  it('on a non-23505 enroll failure, rolls back the profile + auth user, then throws', async () => {
+    scenario.enrollError = { code: '500', message: 'boom' }
+    await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toBeTruthy()
+    expect(scenario.deletedProfileUserId).toBe('new-user')
+    expect(scenario.deletedAuthUserId).toBe('new-user')
+    // the application is NOT marked enrolled when enrollment failed
+    expect(scenario.updated).toBeNull()
   })
 })
