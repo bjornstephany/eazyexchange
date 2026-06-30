@@ -13,7 +13,7 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
     <main className="max-w-2xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-semibold mb-1">{draft.exchangeName}</h1>
       {locked && <p className="text-sm text-emerald-700 mb-6">Your application has been submitted. It&apos;s now read-only.</p>}
-      <ApplicationForm token={token} initialData={draft.data} initialLanguage={draft.language as 'en' | 'fr'} locked={locked} />
+      <ApplicationForm token={token} initialData={draft.data} initialLanguage={draft.language === 'fr' ? 'fr' : 'en'} locked={locked} />
     </main>
   )
 }

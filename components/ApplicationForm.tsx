@@ -43,7 +43,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
     const file = e.target.files?.[0]
     if (!file) return
     const fd = new FormData(); fd.set('photo', file)
-    try { await uploadApplicationPhoto(token, fd) } catch (err: unknown) { setError((err as Error).message) }
+    try { await uploadApplicationPhoto(token, fd) } catch (err: unknown) { setError(err instanceof Error ? err.message : 'An unexpected error occurred.') }
   }
 
   async function onSubmit() {
@@ -51,7 +51,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
     if (missing.length) { setError(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires.' : 'Please complete all required fields.'); return }
     setSubmitting(true); setError(null)
     try { await submitApplication(token, data); setDone(true) }
-    catch (err: unknown) { setError((err as Error).message); setSubmitting(false) }
+    catch (err: unknown) { setError(err instanceof Error ? err.message : 'An unexpected error occurred.'); setSubmitting(false) }
   }
 
   if (done) {
