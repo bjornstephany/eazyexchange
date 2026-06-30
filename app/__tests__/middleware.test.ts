@@ -49,4 +49,14 @@ describe('middleware', () => {
     const res = await middleware(req('/dashboard'))
     expect(res.headers.get('location')).toContain('/login')
   })
+
+  it('lets a logged-out visitor reach /apply/<slug> (no redirect)', async () => {
+    const res = await middleware(req('/apply/some-slug'))
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('lets a logged-out visitor reach /invite/<tok> (no redirect)', async () => {
+    const res = await middleware(req('/invite/tok123'))
+    expect(res.headers.get('location')).toBeNull()
+  })
 })
