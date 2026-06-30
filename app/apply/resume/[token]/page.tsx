@@ -12,6 +12,9 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
   if (!draft) {
     return <main className="max-w-2xl mx-auto px-4 py-12"><p className="text-muted-foreground">This application link is not valid.</p></main>
   }
+  if (draft.expired) {
+    return <main className="max-w-2xl mx-auto px-4 py-12"><p className="text-muted-foreground">This application link has expired. Contact the organizer if you still need to complete your application.</p></main>
+  }
   const locked = draft.status !== 'draft'
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
