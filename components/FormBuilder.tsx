@@ -42,8 +42,8 @@ export function FormBuilder({ templateId, type, fields, slots }: Props) {
           <h3 className="font-medium mb-3">Fields ({fields.length})</h3>
           <ul className="space-y-2 mb-4">
             {fields.map(f => (
-              <li key={f.id} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded text-sm">
-                <span>{f.label} <span className="text-slate-400">({f.field_type}){f.required ? ' *' : ''}</span></span>
+              <li key={f.id} className="flex items-center justify-between bg-muted px-3 py-2 rounded text-sm">
+                <span>{f.label} <span className="text-muted-foreground">({f.field_type}){f.required ? ' *' : ''}</span></span>
                 <button onClick={() => removeField(f.id)} className="text-red-500 hover:text-red-700 text-xs">Remove</button>
               </li>
             ))}
@@ -74,7 +74,7 @@ export function FormBuilder({ templateId, type, fields, slots }: Props) {
           <h3 className="font-medium mb-3">Document slots ({slots.length})</h3>
           <ul className="space-y-2 mb-4">
             {slots.map(s => (
-              <li key={s.id} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded text-sm">
+              <li key={s.id} className="flex items-center justify-between bg-muted px-3 py-2 rounded text-sm">
                 <span>{s.label}{s.required ? ' *' : ''}</span>
                 <button onClick={() => removeSlot(s.id)} className="text-red-500 hover:text-red-700 text-xs">Remove</button>
               </li>

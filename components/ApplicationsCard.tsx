@@ -32,20 +32,20 @@ export function ApplicationsCard({ exchangeId, applySlug, open, deadline, counts
   return (
     <Card className="p-5 mb-8">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-slate-700">Phase 1 · Applications</h2>
+        <h2 className="text-sm font-semibold text-foreground">Phase 1 · Applications</h2>
         <Button size="sm" variant={isOpen ? 'secondary' : 'outline'} disabled={saving} onClick={() => toggle(!isOpen)}>
           {isOpen ? 'Open — click to close' : 'Closed — click to open'}
         </Button>
       </div>
 
-      <label className="text-xs text-slate-500">Share this link in your intro email:</label>
+      <label className="text-xs text-muted-foreground">Share this link in your intro email:</label>
       <div className="flex gap-2 mt-1 mb-3">
         <Input readOnly value={appUrl} onFocus={e => e.currentTarget.select()} />
         <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(appUrl)}>Copy</Button>
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <label className="text-xs text-slate-500">Deadline:</label>
+        <label className="text-xs text-muted-foreground">Deadline:</label>
         <Input type="date" value={dl} onChange={e => setDl(e.target.value)} className="w-auto" />
         <Button size="sm" variant="ghost" disabled={saving} onClick={saveDeadline}>Save</Button>
       </div>
@@ -53,7 +53,7 @@ export function ApplicationsCard({ exchangeId, applySlug, open, deadline, counts
       {counts.toReview > 0 && (
         <p className="text-sm text-amber-700 mb-2">{counts.toReview} new application{counts.toReview === 1 ? '' : 's'} waiting for review.</p>
       )}
-      <p className="text-sm text-slate-600 mb-3">
+      <p className="text-sm text-muted-foreground mb-3">
         {counts.submitted} submitted · {counts.accepted} accepted
       </p>
       <Button asChild size="sm"><Link href={`/exchanges/${exchangeId}/applications`}>Review applications</Link></Button>

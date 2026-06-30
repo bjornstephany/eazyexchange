@@ -9,12 +9,12 @@ export function ApplicationReadView({ data, photoUrl }: { data: Record<string, s
       )}
       {APPLICATION_SECTIONS.map(section => (
         <section key={section.id}>
-          <h2 className="text-sm font-semibold text-slate-700 border-b pb-1 mb-3">{section.title.en}</h2>
+          <h2 className="text-sm font-semibold text-foreground border-b border-border pb-1 mb-3">{section.title.en}</h2>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {section.fields.map(f => (
               <div key={f.id}>
-                <dt className="text-xs text-slate-500">{f.label.en}</dt>
-                <dd className="text-sm text-slate-900 whitespace-pre-wrap">{data[f.id]?.trim() || '—'}</dd>
+                <dt className="text-xs text-muted-foreground">{f.label.en}</dt>
+                <dd className="text-sm text-foreground whitespace-pre-wrap">{data[f.id]?.trim() || '—'}</dd>
               </div>
             ))}
           </dl>

@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  approved: { label: 'Approved', variant: 'default' },
-  submitted: { label: 'Submitted', variant: 'secondary' },
-  rejected: { label: 'Rejected', variant: 'destructive' },
-  draft: { label: 'Draft', variant: 'outline' },
+const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
+  approved: { label: 'Approved', variant: 'success' },
+  submitted: { label: 'Submitted', variant: 'info' },
+  rejected: { label: 'Rejected', variant: 'danger' },
+  draft: { label: 'Draft', variant: 'neutral' },
 }
 
 export default async function SubmissionReviewPage({
@@ -25,26 +25,26 @@ export default async function SubmissionReviewPage({
 
   return (
     <div>
-      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-slate-500">
+      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
         <Link href={`/exchanges/${exchangeId}`}>← Back to exchange</Link>
       </Button>
 
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">{template.name}</h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             {student?.full_name ?? <span className="italic">Unknown</span>} · {student?.email}
           </p>
         </div>
         {cfg ? (
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         ) : (
-          <Badge variant="outline">Not submitted</Badge>
+          <Badge variant="neutral">Not submitted</Badge>
         )}
       </div>
 
       {!submission && (
-        <p className="text-slate-500">This student has not started this form yet.</p>
+        <p className="text-muted-foreground">This student has not started this form yet.</p>
       )}
 
       {submission && template.type === 'data_entry' && (
@@ -53,9 +53,9 @@ export default async function SubmissionReviewPage({
             const answer = submission.field_answers?.find((a: any) => a.field_id === field.id)
             return (
               <div key={field.id}>
-                <p className="text-sm font-medium text-slate-600">{field.label}</p>
-                <p className="text-sm text-slate-900 mt-0.5">
-                  {answer?.value || <span className="text-slate-400 italic">No answer</span>}
+                <p className="text-sm font-medium text-muted-foreground">{field.label}</p>
+                <p className="text-sm text-foreground mt-0.5">
+                  {answer?.value || <span className="text-border italic">No answer</span>}
                 </p>
               </div>
             )
@@ -81,10 +81,10 @@ export default async function SubmissionReviewPage({
                       📄 {upload.file_name}
                     </a>
                   ) : (
-                    <p className="text-sm text-slate-600 mt-1">📄 {upload.file_name}</p>
+                    <p className="text-sm text-muted-foreground mt-1">📄 {upload.file_name}</p>
                   )
                 ) : (
-                  <p className="text-sm text-slate-400 italic mt-1">Not uploaded</p>
+                  <p className="text-sm text-border italic mt-1">Not uploaded</p>
                 )}
               </div>
             )
@@ -98,8 +98,8 @@ export default async function SubmissionReviewPage({
 
       {submission && !canReview && submission.review_note && (
         <div className="border-t pt-6 mt-6">
-          <p className="text-sm font-medium text-slate-600 mb-1">Review note</p>
-          <p className="text-sm text-slate-900">{submission.review_note}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">Review note</p>
+          <p className="text-sm text-foreground">{submission.review_note}</p>
         </div>
       )}
     </div>
