@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/brand/Logo'
 
 export function OrganizerNav() {
   const pathname = usePathname()
@@ -18,15 +19,15 @@ export function OrganizerNav() {
   }
 
   return (
-    <nav className="border-b bg-white px-6 py-3 flex items-center gap-6">
-      <span className="font-semibold text-slate-900">EazyExchange</span>
+    <nav className="border-b bg-card px-6 py-3 flex items-center gap-6">
+      <Logo />
       <Link
         href="/dashboard"
         className={cn(
           'text-sm',
           pathname === '/dashboard'
-            ? 'text-slate-900 font-medium'
-            : 'text-slate-500 hover:text-slate-900'
+            ? 'text-foreground font-medium'
+            : 'text-muted-foreground hover:text-foreground'
         )}
       >
         Exchanges
