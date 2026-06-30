@@ -365,8 +365,8 @@ export async function respondToInvitation(
 
   let userId: string
   try {
-    // Create the auth account + profile + enrollment (reuses inviteStudent's
-    // sequence). trg_assign_on_enrollment_insert fans out the Phase 2 assignments.
+    // Create the auth account + profile + enrollment via the Supabase invite
+    // email. trg_assign_on_enrollment_insert fans out the Phase 2 assignments.
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(claimed.email, {
       redirectTo: `${APP_URL}/accept-invite`,
     })
@@ -375,7 +375,7 @@ export async function respondToInvitation(
       throw inviteError
     }
     userId = invited.user.id
-    // Empty full_name (mirroring inviteStudent): middleware infers "setup
+    // Empty full_name: middleware infers "setup
     // complete" from a non-empty full_name, so pre-filling it would bounce the
     // student past /accept-invite before they set a password.
     const { error: profileError } = await admin.from('users').insert({

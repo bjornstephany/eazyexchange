@@ -35,9 +35,6 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
           <h1 className="text-2xl font-semibold">{exchange.name}</h1>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/exchanges/${id}/students`}>Manage students</Link>
-          </Button>
           <Button asChild size="sm">
             <Link href={`/exchanges/${id}/forms/new`}>New form</Link>
           </Button>

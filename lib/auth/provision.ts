@@ -14,9 +14,8 @@ function metaString(meta: Record<string, unknown> | undefined, key: string): str
 }
 
 // Idempotently create the school + organizer profile for a freshly confirmed
-// signup. Uses the service-role admin client (bypasses RLS), mirroring
-// actions/students.ts. Nothing is written until the email is confirmed, so
-// abandoned signups leave no rows.
+// signup. Uses the service-role admin client (bypasses RLS). Nothing is written
+// until the email is confirmed, so abandoned signups leave no rows.
 export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
   const fullName = metaString(user.user_metadata, 'full_name')
   const schoolName = metaString(user.user_metadata, 'school_name')

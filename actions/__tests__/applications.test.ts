@@ -25,7 +25,7 @@ function builder(table: string) {
         error,
         // startApplication chains .select('id').single() on the insert
         select: () => ({ single: async () => ({ data: { ...row, id: 'app-1' }, error: null }) }),
-        // respondToInvitation/inviteStudent await the insert directly for { error }
+        // respondToInvitation awaits the insert directly for { error }
         then: (resolve: any) => resolve({ error }),
       }
     },
