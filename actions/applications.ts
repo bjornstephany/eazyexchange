@@ -120,17 +120,17 @@ export async function submitApplication(token: string, data: Record<string, stri
   const { data: exchange } = await admin
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = `${data.first_name ?? ''} ${data.last_name ?? ''}`.trim()
-  await sendApplicationConfirmationEmail({
+  void sendApplicationConfirmationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
-  })
+  }).catch(() => {})
   const { data: organizers } = await admin
     .from('users').select('email').eq('school_id', app.school_id).eq('role', 'organizer')
-  for (const org of organizers ?? []) {
-    await sendNewApplicationAlertEmail({
+  void Promise.all((organizers ?? []).map(org =>
+    sendNewApplicationAlertEmail({
       to: org.email, applicantName, exchangeName: exchange?.name ?? '',
       reviewUrl: `${APP_URL}/exchanges/${app.exchange_id}/applications`,
-    })
-  }
+    }).catch(() => {})
+  ))
 }
 
 export async function uploadApplicationPhoto(token: string, formData: FormData): Promise<{ path: string }> {
