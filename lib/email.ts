@@ -93,7 +93,7 @@ export async function sendApplicationResumeEmail(opts: { to: string; exchangeNam
     <p>Hi,</p>
     <p>Here's your private link to continue your application for <strong>${esc(opts.exchangeName)}</strong>. You can leave and come back anytime, on any device:</p>
     <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
-    <p style="font-size:12px;color:#94a3b8;">Keep this email — it's the only way back to your in-progress application.</p>
+    <p style="font-size:12px;color:#5C7268;">Keep this email — it's the only way back to your in-progress application.</p>
   `, APP_FOOTER)
   await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email')
 }
