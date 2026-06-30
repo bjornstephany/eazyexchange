@@ -92,35 +92,39 @@ export async function saveFormAnswers(
     throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   }
   if (submit) {
-    const { data: assignmentRow } = await supabase
+    // Fail closed: if we can't read the template, we can't verify required
+    // fields, so refuse rather than letting an unvalidated submission through.
+    const { data: assignmentRow, error: assignmentErr } = await supabase
       .from('assignments').select('template_id').eq('id', assignmentId).single()
-    if (assignmentRow) {
-      const { data: requiredFields } = await supabase
-        .from('form_fields')
-        .select('id')
-        .eq('template_id', assignmentRow.template_id)
-        .eq('required', true)
-      if (hasMissingRequired((requiredFields ?? []).map(f => f.id), answers)) {
-        throw new Error('Please complete all required fields before submitting.')
-      }
+    if (assignmentErr || !assignmentRow) {
+      throw new Error('Could not verify the form before submitting — please try again.')
+    }
+    const { data: requiredFields } = await supabase
+      .from('form_fields')
+      .select('id')
+      .eq('template_id', assignmentRow.template_id)
+      .eq('required', true)
+    if (hasMissingRequired((requiredFields ?? []).map(f => f.id), answers)) {
+      throw new Error('Please complete all required fields before submitting.')
     }
   }
 
   // Ensure submission row exists (upsert via assignment)
   const { data: existing } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, status')
     .eq('assignment_id', assignmentId)
     .maybeSingle()
+
+  // An approved submission is locked: re-saving would overwrite the reviewed
+  // answers and revert status while keeping the stale review trail.
+  if (existing && existing.status === 'approved') {
+    throw new Error('This form has already been approved and can no longer be edited.')
+  }
 
   let submissionId: string
   if (existing) {
     submissionId = existing.id
-    if (submit) {
-      await supabase.from('submissions')
-        .update({ status: 'submitted', submitted_at: new Date().toISOString() })
-        .eq('id', submissionId)
-    }
   } else {
     const { data: created, error } = await supabase
       .from('submissions')
@@ -173,17 +177,23 @@ export async function recordDocumentUpload(
   if (!user) throw new Error('Unauthenticated')
   await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
 
-  // Storage key must stay within this assignment/slot prefix (no traversal)
-  if (!storagePath.startsWith(`${assignmentId}/${slotId}/`) || storagePath.includes('..')) {
+  // Storage key must stay within this assignment/slot prefix (no traversal).
+  // Match only a real `..` path segment so legitimate filenames that merely
+  // contain consecutive dots (e.g. "scan..final.pdf") aren't rejected.
+  if (!storagePath.startsWith(`${assignmentId}/${slotId}/`) || /(^|\/)\.\.(\/|$)/.test(storagePath)) {
     throw new Error('Invalid storage path')
   }
 
   // Ensure submission row exists
   const { data: existing } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, status')
     .eq('assignment_id', assignmentId)
     .maybeSingle()
+
+  if (existing && existing.status === 'approved') {
+    throw new Error('This form has already been approved and can no longer be edited.')
+  }
 
   let submissionId: string
   if (existing) {
@@ -300,10 +310,15 @@ export async function rejectSubmission(assignmentId: string, note: string) {
 
   const { data: submission } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, status')
     .eq('assignment_id', assignmentId)
     .single()
   if (!submission) throw new Error('No submission found')
+  // Only a submitted (or previously approved) submission can be rejected — never
+  // a draft the student hasn't submitted, which would email them out of the blue.
+  if (submission.status === 'draft') {
+    throw new Error('This form has not been submitted yet and cannot be rejected.')
+  }
 
   const { error } = await supabase
     .from('submissions')
@@ -343,11 +358,14 @@ export async function submitDocumentAssignment(assignmentId: string) {
 
   const { data: existing } = await supabase
     .from('submissions')
-    .select('id')
+    .select('id, status')
     .eq('assignment_id', assignmentId)
     .maybeSingle()
 
   if (!existing) throw new Error('No submission found — upload at least one document first')
+  if (existing.status === 'approved') {
+    throw new Error('This form has already been approved and can no longer be edited.')
+  }
 
   const { error } = await supabase
     .from('submissions')

@@ -18,7 +18,10 @@ export function hasOverlongAnswer(
   answers: Record<string, string>,
   max: number = MAX_ANSWER_LENGTH,
 ): boolean {
-  return Object.values(answers).some(v => (v?.length ?? 0) > max)
+  // Coerce defensively: server actions receive `data` from the client and the
+  // Record<string,string> type isn't enforced at runtime, so a non-string value
+  // (object/number) must not slip past the cap with an undefined `.length`.
+  return Object.values(answers).some(v => String(v ?? '').length > max)
 }
 
 // True if any required field id lacks a non-empty (trimmed) answer. Note: a
