@@ -81,7 +81,9 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
-import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation } from '../applications'
+import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft } from '../applications'
+
+const PAST = new Date(Date.now() - 60_000).toISOString()
 
 beforeEach(() => {
   scenario = {
@@ -122,6 +124,20 @@ describe('saveApplicationDraft', () => {
     scenario.application.status = 'submitted'
     await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('locked')
   })
+  it('refuses to write through an expired resume link', async () => {
+    scenario.application.status = 'draft'
+    scenario.application.resume_token_expires_at = PAST
+    await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('expired')
+  })
+})
+
+describe('getApplicationDraft', () => {
+  it('returns an expired marker (no PII) for an expired resume link', async () => {
+    scenario.application = { status: 'draft', data: { first_name: 'A' }, language: 'en', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: PAST }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.expired).toBe(true)
+    expect(res.data).toBeUndefined()
+  })
 })
 
 describe('submitApplication', () => {
@@ -137,6 +153,10 @@ describe('respondToInvitation', () => {
       email: 'a@b.co', invite_token: 'inv-1', data: { first_name: 'A', last_name: 'B' },
       enrolled_user_id: null,
     }
+  })
+  it('rejects a response through an expired invite link', async () => {
+    scenario.application.invite_token_expires_at = PAST
+    await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toThrow('expired')
   })
   it('records a No without creating an account', async () => {
     await respondToInvitation('inv-1', 'no', '')

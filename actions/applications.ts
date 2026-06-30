@@ -24,6 +24,20 @@ function applicationsClosed(exchange: { application_open: boolean; application_d
   return false
 }
 
+const RESUME_FALLBACK_MS = 30 * 24 * 60 * 60 * 1000
+const INVITE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+
+// When a resume link should die: end of the deadline day (the day after, 00:00
+// UTC — the moment applicationsClosed flips), or 30 days out if no deadline.
+function resumeExpiry(deadline: string | null): string {
+  if (deadline) return new Date(new Date(`${deadline}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000).toISOString()
+  return new Date(Date.now() + RESUME_FALLBACK_MS).toISOString()
+}
+
+function tokenExpired(expiresAt: string | null): boolean {
+  return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
+}
+
 export async function startApplication(
   slug: string,
   input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
@@ -54,6 +68,8 @@ export async function startApplication(
     email,
     resume_token: token,
     invite_token: null,
+    resume_token_expires_at: resumeExpiry(exchange.application_deadline),
+    invite_token_expires_at: null,
     status: 'draft',
     language: input.language,
     data: { first_name: input.first_name.trim(), last_name: input.last_name.trim(), email },
@@ -81,15 +97,21 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, exchange_id')
+    .select('status, data, language, photo_path, exchange_id, resume_token_expires_at')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
   const { data: exchange } = await admin
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
+  const exchangeName = exchange?.name ?? ''
+  // Don't return PII through an expired link.
+  if (tokenExpired(app.resume_token_expires_at)) {
+    return { expired: true as const, exchangeName }
+  }
   return {
+    expired: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
-    photo_path: app.photo_path, exchangeName: exchange?.name ?? '',
+    photo_path: app.photo_path, exchangeName,
   }
 }
 
@@ -97,8 +119,9 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status').eq('resume_token', token).maybeSingle()
+    .from('applications').select('id, status, resume_token_expires_at').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
+  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
   const { error } = await admin
     .from('applications').update({ data }).eq('resume_token', token)
@@ -113,9 +136,10 @@ export async function submitApplication(token: string, data: Record<string, stri
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('id, status, email, exchange_id, school_id')
+    .select('id, status, email, exchange_id, school_id, resume_token_expires_at')
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
+  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted')
 
   // Re-check the window at submit time: startApplication gated it, but the
@@ -157,8 +181,9 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status').eq('resume_token', token).maybeSingle()
+    .from('applications').select('id, status, resume_token_expires_at').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
+  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
@@ -230,6 +255,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   const inviteToken = randomToken()
   const { error } = await supabase.from('applications').update({
     status: 'accepted', invite_token: inviteToken,
+    invite_token_expires_at: new Date(Date.now() + INVITE_WINDOW_MS).toISOString(),
     reviewed_at: new Date().toISOString(), reviewer_id: user.id, review_note: null,
   }).eq('id', applicationId)
   if (error) throw error
@@ -277,18 +303,29 @@ export async function rejectApplication(applicationId: string, note: string, sen
 export async function getInvitation(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('status, data, exchange_id').eq('invite_token', token).maybeSingle()
+    .from('applications').select('status, data, exchange_id, invite_token_expires_at').eq('invite_token', token).maybeSingle()
   if (!app) return null
   const { data: exchange } = await admin
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
-  return { exchangeName: exchange?.name ?? '', applicantName, status: app.status }
+  return {
+    exchangeName: exchange?.name ?? '', applicantName, status: app.status,
+    expired: tokenExpired(app.invite_token_expires_at),
+  }
 }
 
 export async function respondToInvitation(
   token: string, response: 'yes' | 'no' | 'maybe', note: string,
 ): Promise<void> {
   const admin = createAdminClient()
+
+  // Reject an expired invite link up front with a clear message (the atomic
+  // updates below would otherwise just report "no longer open").
+  const { data: pre } = await admin
+    .from('applications').select('id, invite_token_expires_at').eq('invite_token', token).maybeSingle()
+  if (!pre) throw new Error('Invitation not found')
+  if (tokenExpired(pre.invite_token_expires_at)) throw new Error('This invitation has expired.')
+
   const base = {
     invite_response: response, invite_response_note: note || null,
     responded_at: new Date().toISOString(),

@@ -12,6 +12,9 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!invite) {
     return <main className="max-w-lg mx-auto px-4 py-12"><p className="text-muted-foreground">This invitation link is not valid.</p></main>
   }
+  if (invite.expired) {
+    return <main className="max-w-lg mx-auto px-4 py-12"><p className="text-muted-foreground">This invitation has expired. Contact the organizer to ask for a new one.</p></main>
+  }
   const closed = !['accepted', 'maybe'].includes(invite.status)
   return (
     <main className="max-w-lg mx-auto px-4 py-12">

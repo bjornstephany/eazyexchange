@@ -47,6 +47,7 @@ export type DocumentUpload = {
 export type Application = {
   id: string; exchange_id: string; school_id: string
   email: string; resume_token: string; invite_token: string | null
+  resume_token_expires_at: string | null; invite_token_expires_at: string | null
   status: ApplicationStatus
   data: Record<string, string>
   photo_path: string | null; language: 'en' | 'fr'
