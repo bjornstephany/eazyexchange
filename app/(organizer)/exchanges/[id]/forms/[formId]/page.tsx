@@ -14,7 +14,7 @@ export default async function FormTemplatePage({ params }: { params: { id: strin
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-xl font-semibold">{template.name}</h1>
         <Badge>{template.type === 'data_entry' ? 'Data entry' : 'Document upload'}</Badge>
-        <span className="text-sm text-slate-500">Deadline: {template.deadline}</span>
+        <span className="text-sm text-muted-foreground">Deadline: {template.deadline}</span>
       </div>
       <Card>
         <CardContent className="pt-6">

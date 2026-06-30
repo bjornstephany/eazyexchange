@@ -29,8 +29,8 @@ export function ApplicationReviewActions({ applicationId, exchangeId, status, re
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium">{labels[status]}</p>
-        {response && <p className="text-sm text-slate-600">Response: <strong>{response}</strong></p>}
-        {note && <p className="text-sm text-slate-600">Note: {note}</p>}
+        {response && <p className="text-sm text-muted-foreground">Response: <strong>{response}</strong></p>}
+        {note && <p className="text-sm text-muted-foreground">Note: {note}</p>}
       </div>
     )
   }

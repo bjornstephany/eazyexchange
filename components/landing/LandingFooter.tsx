@@ -1,13 +1,14 @@
 import Link from 'next/link'
 import { landingContent } from '@/lib/landing/content'
+import { Logo } from '@/components/brand/Logo'
 
 export function LandingFooter() {
-  const { brand, tagline, links, copyright } = landingContent.footer
+  const { tagline, links, copyright } = landingContent.footer
   return (
     <footer className="border-t">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-semibold">{brand}</p>
+          <Logo href={null} />
           <p className="mt-1 text-sm text-muted-foreground">{tagline}</p>
         </div>
         <nav className="flex gap-4 text-sm">

@@ -14,7 +14,7 @@ export default async function DashboardPage() {
         <Button asChild><Link href="/exchanges/new">New exchange</Link></Button>
       </div>
       {exchanges.length === 0 && (
-        <p className="text-slate-500">No exchanges yet. Create your first one.</p>
+        <p className="text-muted-foreground">No exchanges yet. Create your first one.</p>
       )}
       <div className="grid gap-4">
         {exchanges.map(ex => (
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {(ex.school_a as any)?.name} ↔ {(ex.school_b as any)?.name}
               </p>
               <Button asChild variant="outline" size="sm" className="mt-3">

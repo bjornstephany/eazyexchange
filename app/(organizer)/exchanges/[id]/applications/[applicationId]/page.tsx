@@ -11,13 +11,13 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   return (
     <div className="max-w-3xl">
-      <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2 text-slate-500">
+      <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground">
         <Link href={`/exchanges/${id}/applications`}>← Back to applications</Link>
       </Button>
       <h1 className="text-2xl font-semibold mb-1">{name}</h1>
-      <p className="text-sm text-slate-500 mb-6">{application.email}</p>
+      <p className="text-sm text-muted-foreground mb-6">{application.email}</p>
 
-      <div className="mb-8 p-4 border rounded-lg bg-slate-50">
+      <div className="mb-8 p-4 border border-border rounded-lg bg-muted">
         <ApplicationReviewActions
           applicationId={application.id}
           exchangeId={id}

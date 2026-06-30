@@ -73,7 +73,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
                 checked={answers[field.id] === 'true'}
                 onChange={e => setValue(field.id, e.target.checked ? 'true' : 'false')}
                 disabled={readOnly}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded border-border"
               />
               {field.label}
             </label>

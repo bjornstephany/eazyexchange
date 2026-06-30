@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Logo } from '@/components/brand/Logo'
 
 export default function AcceptInvitePage() {
   const [fullName, setFullName] = useState('')
@@ -41,7 +42,8 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background">
+      <Logo />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Set up your account</CardTitle>

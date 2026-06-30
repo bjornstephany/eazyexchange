@@ -5,11 +5,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-const statusLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  approved: { label: 'Approved', variant: 'default' },
-  submitted: { label: 'Under review', variant: 'secondary' },
-  rejected: { label: 'Rejected', variant: 'destructive' },
-  draft: { label: 'Draft', variant: 'outline' },
+const statusLabels: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
+  approved: { label: 'Approved', variant: 'success' },
+  submitted: { label: 'Under review', variant: 'info' },
+  rejected: { label: 'Rejected', variant: 'danger' },
+  draft: { label: 'Draft', variant: 'neutral' },
 }
 
 export default async function AssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
@@ -27,7 +27,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
 
   return (
     <div>
-      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-slate-500">
+      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
         <Link href="/my-forms">← My forms</Link>
       </Button>
 
@@ -35,9 +35,9 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
         <div>
           <h1 className="text-2xl font-semibold">{template.name}</h1>
           {template.description && (
-            <p className="text-slate-500 mt-1">{template.description}</p>
+            <p className="text-muted-foreground mt-1">{template.description}</p>
           )}
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Due {new Date(template.deadline).toLocaleDateString()}
           </p>
         </div>
@@ -52,7 +52,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
       )}
 
       {status === 'submitted' && (
-        <p className="mb-6 text-sm text-slate-500 bg-slate-100 rounded px-4 py-3">
+        <p className="mb-6 text-sm text-muted-foreground bg-muted rounded px-4 py-3">
           Your submission is under review. You will be notified when it is approved.
         </p>
       )}

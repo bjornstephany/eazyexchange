@@ -12,7 +12,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   if (profile?.role !== 'student') redirect('/dashboard')
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <StudentNav />
       <main className="max-w-3xl mx-auto px-6 py-8">{children}</main>
     </div>

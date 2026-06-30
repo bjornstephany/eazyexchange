@@ -21,16 +21,16 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
   return (
     <main className="max-w-lg mx-auto px-4 py-12">
       {!exchange ? (
-        <p className="text-slate-600">This application link is not valid.</p>
+        <p className="text-muted-foreground">This application link is not valid.</p>
       ) : closed ? (
         <div>
           <h1 className="text-2xl font-semibold mb-2">{exchange.name}</h1>
-          <p className="text-slate-600">Applications are currently closed for this exchange.</p>
+          <p className="text-muted-foreground">Applications are currently closed for this exchange.</p>
         </div>
       ) : (
         <div>
           <h1 className="text-2xl font-semibold mb-1">{exchange.name}</h1>
-          <p className="text-slate-600 mb-6">Apply to join this student exchange. Start by entering your details below.</p>
+          <p className="text-muted-foreground mb-6">Apply to join this student exchange. Start by entering your details below.</p>
           <ApplicationStartForm slug={slug} />
         </div>
       )}

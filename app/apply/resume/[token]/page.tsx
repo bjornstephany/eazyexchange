@@ -10,7 +10,7 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
   const draft = await getApplicationDraft(token)
 
   if (!draft) {
-    return <main className="max-w-2xl mx-auto px-4 py-12"><p className="text-slate-600">This application link is not valid.</p></main>
+    return <main className="max-w-2xl mx-auto px-4 py-12"><p className="text-muted-foreground">This application link is not valid.</p></main>
   }
   const locked = draft.status !== 'draft'
   return (

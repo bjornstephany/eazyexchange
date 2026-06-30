@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/brand/Logo'
 
 export function StudentNav() {
   const router = useRouter()
@@ -14,8 +15,8 @@ export function StudentNav() {
   }
 
   return (
-    <nav className="border-b bg-white px-6 py-3 flex items-center">
-      <span className="font-semibold text-slate-900">EazyExchange</span>
+    <nav className="border-b bg-card px-6 py-3 flex items-center">
+      <Logo />
       <div className="ml-auto">
         <Button variant="ghost" size="sm" onClick={handleSignOut}>Sign out</Button>
       </div>
