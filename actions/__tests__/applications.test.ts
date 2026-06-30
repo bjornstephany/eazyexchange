@@ -46,7 +46,7 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
-import { startApplication, submitApplication, saveApplicationDraft } from '../applications'
+import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation } from '../applications'
 
 beforeEach(() => {
   scenario = {
@@ -86,8 +86,6 @@ describe('submitApplication', () => {
     await expect(submitApplication('tok', { first_name: 'A' })).rejects.toThrow('required')
   })
 })
-
-import { respondToInvitation } from '../applications'
 
 describe('respondToInvitation', () => {
   beforeEach(() => {

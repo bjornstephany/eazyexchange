@@ -176,6 +176,9 @@ export async function listApplications(exchangeId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
+  const { data: profile } = await supabase
+    .from('users').select('role').eq('id', user.id).single()
+  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data, error } = await supabase
     .from('applications')
     .select('*')
@@ -222,10 +225,10 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
-  await sendInvitationEmail({
+  void sendInvitationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
     respondUrl: `${APP_URL}/invite/${inviteToken}`,
-  })
+  }).catch(() => {})
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
 }
 
@@ -244,9 +247,9 @@ export async function rejectApplication(applicationId: string, note: string, sen
     const { data: exchange } = await supabase
       .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
     const applicantName = `${app.data?.first_name ?? ''} ${app.data?.last_name ?? ''}`.trim()
-    await sendApplicationRejectionEmail({
+    void sendApplicationRejectionEmail({
       to: app.email, applicantName, exchangeName: exchange?.name ?? '', note,
-    })
+    }).catch(() => {})
   }
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
 }
@@ -305,6 +308,7 @@ export async function respondToInvitation(
   })
   if (profileError) {
     await admin.auth.admin.deleteUser(invited.user.id).catch(() => {})
+    if ((profileError as any).code === '23505') throw new Error('An account already exists for this email')
     throw profileError
   }
   const { error: enrollError } = await admin.from('exchange_enrollments').insert({
