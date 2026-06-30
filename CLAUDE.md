@@ -42,7 +42,7 @@ pnpm install
 pnpm dev
 ```
 
-Environment variables required (copy `.env.example` to `.env.local`):
+Environment variables required (create `.env.local`):
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
