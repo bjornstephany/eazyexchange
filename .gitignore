@@ -40,3 +40,6 @@ next-env.d.ts
 # Claude Code local config
 .claude/
 .env*
+
+# Student application PDFs dropped in docs/ — never commit (PII)
+docs/*.pdf
