@@ -43,7 +43,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ id: s
               <div key={student.id} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {student.full_name || <span className="text-border italic">Pending setup</span>}
+                    {student.full_name || <span className="text-muted-foreground italic">Pending setup</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">{student.email}</p>
                 </div>

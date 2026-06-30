@@ -55,7 +55,7 @@ export default async function SubmissionReviewPage({
               <div key={field.id}>
                 <p className="text-sm font-medium text-muted-foreground">{field.label}</p>
                 <p className="text-sm text-foreground mt-0.5">
-                  {answer?.value || <span className="text-border italic">No answer</span>}
+                  {answer?.value || <span className="text-muted-foreground italic">No answer</span>}
                 </p>
               </div>
             )
@@ -84,7 +84,7 @@ export default async function SubmissionReviewPage({
                     <p className="text-sm text-muted-foreground mt-1">📄 {upload.file_name}</p>
                   )
                 ) : (
-                  <p className="text-sm text-border italic mt-1">Not uploaded</p>
+                  <p className="text-sm text-muted-foreground italic mt-1">Not uploaded</p>
                 )}
               </div>
             )

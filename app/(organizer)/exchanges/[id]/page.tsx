@@ -74,7 +74,7 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
                     >
                       {t.name}
                     </Link>
-                    <p className="text-xs font-normal text-border mt-0.5">
+                    <p className="text-xs font-normal text-muted-foreground mt-0.5">
                       Due {new Date(t.deadline).toLocaleDateString()}
                     </p>
                   </th>
@@ -86,7 +86,7 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
                 <tr key={student.id} className="border-b hover:bg-muted">
                   <td className="py-3 pr-4">
                     <p className="font-medium text-foreground">
-                      {student.full_name || <span className="text-border italic">Pending setup</span>}
+                      {student.full_name || <span className="text-muted-foreground italic">Pending setup</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">{student.email}</p>
                   </td>
@@ -94,7 +94,7 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
                     const cell = cellMap[`${student.id}:${t.id}`]
                     if (!cell) return (
                       <td key={t.id} className="py-3 px-3">
-                        <span className="text-xs text-border">—</span>
+                        <span className="text-xs text-muted-foreground">—</span>
                       </td>
                     )
                     const cfg = cell.status ? statusConfig[cell.status] : null
