@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { applySlug } from '@/lib/tokens'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -59,6 +60,7 @@ export async function createExchange(formData: FormData) {
     year,
     school_a_id: profile.school_id,
     school_b_id: schoolBId,
+    apply_slug: applySlug(name),
   })
   if (error) throw error
   revalidatePath('/dashboard')
@@ -162,4 +164,21 @@ export async function getExchangeGrid(exchangeId: string) {
     students,
     cellMap,
   }
+}
+
+export async function setApplicationOpen(exchangeId: string, open: boolean, deadline: string | null): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthenticated')
+  const { data: profile } = await supabase
+    .from('users').select('school_id, role').eq('id', user.id).single()
+  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await assertExchangeInScope(supabase, user.id, exchangeId)
+
+  const { error } = await supabase
+    .from('exchanges')
+    .update({ application_open: open, application_deadline: deadline })
+    .eq('id', exchangeId)
+  if (error) throw error
+  revalidatePath(`/exchanges/${exchangeId}`)
 }

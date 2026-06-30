@@ -66,7 +66,10 @@ export interface LandingContent {
     title: string
     subtitle: string
     popularLabel: string
-    // TIERS ARE PLACEHOLDERS — edit names/prices/features freely.
+    valueProp: {
+      headline: string
+      body: string
+    }
     tiers: PricingTier[]
     note: string
   }
@@ -165,19 +168,24 @@ export const landingContent: LandingContent = {
     ],
   },
   pricing: {
-    title: "Simple pricing",
-    subtitle: "Start free. Upgrade when your program grows.",
-    popularLabel: "Popular",
-    note: "Prices shown are placeholders — final pricing to be confirmed.",
+    title: "Pricing that pays for itself",
+    subtitle: "Pick the plan that matches how many exchanges you run.",
+    popularLabel: "Most popular",
+    valueProp: {
+      headline: "Organizers spend an average of 60 hours per exchange chasing down forms.",
+      body:
+        "At a modest $10/hour, that's $600 of your time gone — for a single exchange. EazyExchange does the chasing for you, cutting that cost in half or more. Every plan pays for itself before the first deadline.",
+    },
+    note: "Annual billing. Prices in USD. Cancel anytime.",
     tiers: [
       {
-        name: "Free",
-        price: "$0",
-        period: "/ exchange",
-        description: "Everything you need to run a single small exchange.",
+        name: "Starter",
+        price: "$299",
+        period: "/ year",
+        description: "For the organizer running a single exchange program.",
         features: [
-          "Up to 25 students",
           "1 active exchange",
+          "Unlimited students & parents",
           "Form templates & document slots",
           "Automated reminders",
         ],
@@ -185,18 +193,34 @@ export const landingContent: LandingContent = {
         highlighted: false,
       },
       {
-        name: "Pro",
-        price: "$49",
-        period: "/ month",
-        description: "For organizers running larger or multiple programs.",
+        name: "Growth",
+        price: "$499",
+        period: "/ year",
+        description: "For organizers juggling a pair of programs each year.",
         features: [
-          "Unlimited students",
-          "Multiple active exchanges",
+          "Up to 2 active exchanges",
+          "Unlimited students & parents",
+          "Form templates & document slots",
+          "Automated reminders",
           "Priority email support",
-          "Everything in Free",
         ],
         cta: SIGNUP,
         highlighted: true,
+      },
+      {
+        name: "Scale",
+        price: "$599",
+        period: "/ year",
+        description: "For schools and agencies coordinating several exchanges.",
+        features: [
+          "3+ active exchanges",
+          "Unlimited students & parents",
+          "Form templates & document slots",
+          "Automated reminders",
+          "Priority email support",
+        ],
+        cta: SIGNUP,
+        highlighted: false,
       },
     ],
   },

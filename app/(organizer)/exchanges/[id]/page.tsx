@@ -1,4 +1,6 @@
 import { getExchange, getExchangeGrid } from '@/actions/exchanges'
+import { listApplications } from '@/actions/applications'
+import { ApplicationsCard } from '@/components/ApplicationsCard'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,10 +14,16 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 
 export default async function ExchangePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [exchange, { templates, students, cellMap }] = await Promise.all([
+  const [exchange, { templates, students, cellMap }, applications] = await Promise.all([
     getExchange(id),
     getExchangeGrid(id),
+    listApplications(id),
   ])
+  const counts = {
+    submitted: applications.filter((a: { status: string }) => ['submitted', 'accepted', 'declined', 'maybe', 'enrolled', 'rejected'].includes(a.status)).length,
+    toReview: applications.filter((a: { status: string }) => a.status === 'submitted').length,
+    accepted: applications.filter((a: { status: string }) => ['accepted', 'maybe', 'enrolled'].includes(a.status)).length,
+  }
 
   return (
     <div>
@@ -35,6 +43,14 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
           </Button>
         </div>
       </div>
+
+      <ApplicationsCard
+        exchangeId={id}
+        applySlug={exchange.apply_slug}
+        open={exchange.application_open}
+        deadline={exchange.application_deadline}
+        counts={counts}
+      />
 
       {templates.length === 0 && (
         <p className="text-slate-500 text-sm mb-6">No form templates yet. Create one to get started.</p>

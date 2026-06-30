@@ -13,8 +13,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite')
-  const isPublicRoute = pathname === '/'
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite') || pathname.startsWith('/signup')
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/apply') ||
+    pathname.startsWith('/invite')
 
   if (!user && !isAuthRoute && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))

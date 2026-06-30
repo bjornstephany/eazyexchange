@@ -2,11 +2,16 @@ export type Role = 'organizer' | 'student'
 export type FormType = 'data_entry' | 'document_upload'
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
 export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
+export type ApplicationStatus =
+  | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolled'
 
 export type School = { id: string; name: string; created_at: string }
 export type Exchange = {
   id: string; name: string; year: number
   school_a_id: string; school_b_id: string; created_at: string
+  application_open: boolean
+  application_deadline: string | null
+  apply_slug: string | null
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
@@ -39,6 +44,19 @@ export type DocumentUpload = {
   id: string; submission_id: string; slot_id: string
   storage_path: string; file_name: string; uploaded_at: string
 }
+export type Application = {
+  id: string; exchange_id: string; school_id: string
+  email: string; resume_token: string; invite_token: string | null
+  status: ApplicationStatus
+  data: Record<string, string>
+  photo_path: string | null; language: 'en' | 'fr'
+  invite_response: 'yes' | 'no' | 'maybe' | null
+  invite_response_note: string | null; responded_at: string | null
+  enrolled_user_id: string | null
+  submitted_at: string | null; reviewed_at: string | null
+  reviewer_id: string | null; review_note: string | null
+  created_at: string; updated_at: string
+}
 
 type TableDef<Row, Insert, Update> = {
   Row: Row
@@ -51,7 +69,7 @@ export type Database = {
   public: {
     Tables: {
       schools: TableDef<School, Omit<School, 'id' | 'created_at'>, Partial<School>>
-      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at'>, Partial<Exchange>>
+      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug'>>, Partial<Exchange>>
       users: TableDef<UserProfile, Omit<UserProfile, 'created_at'>, Partial<UserProfile>>
       exchange_enrollments: TableDef<ExchangeEnrollment, Omit<ExchangeEnrollment, 'id' | 'created_at'>, Partial<ExchangeEnrollment>>
       form_templates: TableDef<FormTemplate, Omit<FormTemplate, 'id' | 'created_at'>, Partial<FormTemplate>>
@@ -61,6 +79,7 @@ export type Database = {
       submissions: TableDef<Submission, Omit<Submission, 'id' | 'created_at' | 'updated_at'>, Partial<Submission>>
       field_answers: TableDef<FieldAnswer, Omit<FieldAnswer, 'id'>, Partial<FieldAnswer>>
       document_uploads: TableDef<DocumentUpload, Omit<DocumentUpload, 'id' | 'uploaded_at'>, Partial<DocumentUpload>>
+      applications: TableDef<Application, Omit<Application, 'id' | 'created_at' | 'updated_at'>, Partial<Application>>
     }
     Views: Record<string, never>
     Functions: Record<string, never>

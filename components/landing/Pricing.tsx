@@ -6,14 +6,18 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { landingContent } from '@/lib/landing/content'
 
 export function Pricing() {
-  const { title, subtitle, popularLabel, tiers, note } = landingContent.pricing
+  const { title, subtitle, popularLabel, valueProp, tiers, note } = landingContent.pricing
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <div className="text-center">
         <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
         <p className="mt-3 text-muted-foreground">{subtitle}</p>
       </div>
-      <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mx-auto lg:max-w-3xl">
+      <div className="mx-auto mt-10 max-w-3xl rounded-xl border bg-muted/40 p-6 text-center">
+        <p className="text-lg font-semibold">{valueProp.headline}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{valueProp.body}</p>
+      </div>
+      <div className="mt-12 grid gap-6 md:grid-cols-3">
         {tiers.map((tier) => (
           <Card key={tier.name} className={tier.highlighted ? 'border-primary shadow-md' : undefined}>
             <CardHeader>
