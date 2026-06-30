@@ -32,6 +32,10 @@ function rowFor(table: string) {
 const adminClient = {
   from: (t: string) => builder(t),
   storage: { from: () => ({ upload: async () => ({ data: { path: 'app-1/photo.png' }, error: null }) }) },
+  auth: { admin: {
+    inviteUserByEmail: async () => ({ data: { user: { id: 'new-user' } }, error: null }),
+    deleteUser: async () => ({ error: null }),
+  } },
 }
 
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => adminClient }))
@@ -80,5 +84,36 @@ describe('saveApplicationDraft', () => {
 describe('submitApplication', () => {
   it('rejects when required fields are missing', async () => {
     await expect(submitApplication('tok', { first_name: 'A' })).rejects.toThrow('required')
+  })
+})
+
+import { respondToInvitation } from '../applications'
+
+describe('respondToInvitation', () => {
+  beforeEach(() => {
+    scenario.application = {
+      id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'accepted',
+      email: 'a@b.co', invite_token: 'inv-1', data: { first_name: 'A', last_name: 'B' },
+      enrolled_user_id: null,
+    }
+  })
+  it('records a No without creating an account', async () => {
+    await respondToInvitation('inv-1', 'no', '')
+    expect(scenario.updated.table).toBe('applications')
+    expect(scenario.updated.row.status).toBe('declined')
+  })
+  it('records a Maybe with a note', async () => {
+    await respondToInvitation('inv-1', 'maybe', 'need to check dates')
+    expect(scenario.updated.row.status).toBe('maybe')
+    expect(scenario.updated.row.invite_response_note).toBe('need to check dates')
+  })
+  it('rejects a response for a non-invited application', async () => {
+    scenario.application.status = 'submitted'
+    await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toThrow()
+  })
+  it('on Yes creates the account, enrolls, and marks enrolled', async () => {
+    await respondToInvitation('inv-1', 'yes', '')
+    expect(scenario.updated.row.status).toBe('enrolled')
+    expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
   })
 })
