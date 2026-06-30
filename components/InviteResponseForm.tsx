@@ -17,8 +17,8 @@ export function InviteResponseForm({ token }: { token: string }) {
   }
 
   if (result === 'yes') return <p className="text-emerald-700">Wonderful! Check your email for a link to set up your account and get started.</p>
-  if (result === 'no') return <p className="text-slate-700">Thanks for letting us know. We wish you all the best.</p>
-  if (result === 'maybe') return <p className="text-slate-700">Thanks &mdash; we&apos;ve noted your response and the organizer will follow up.</p>
+  if (result === 'no') return <p className="text-foreground">Thanks for letting us know. We wish you all the best.</p>
+  if (result === 'maybe') return <p className="text-foreground">Thanks &mdash; we&apos;ve noted your response and the organizer will follow up.</p>
 
   return (
     <div className="space-y-4">

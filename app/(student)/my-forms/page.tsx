@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  approved: { label: 'Approved', variant: 'default' },
-  submitted: { label: 'Submitted', variant: 'secondary' },
-  rejected: { label: 'Rejected — action needed', variant: 'destructive' },
-  draft: { label: 'In progress', variant: 'outline' },
+const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
+  approved: { label: 'Approved', variant: 'success' },
+  submitted: { label: 'Submitted', variant: 'info' },
+  rejected: { label: 'Rejected — action needed', variant: 'danger' },
+  draft: { label: 'In progress', variant: 'neutral' },
 }
 
 export default async function MyFormsPage() {
@@ -26,12 +26,12 @@ export default async function MyFormsPage() {
       <h1 className="text-2xl font-semibold mb-6">My forms</h1>
 
       {assignments.length === 0 && (
-        <p className="text-slate-500">No forms assigned yet. Check back after your organizer sets things up.</p>
+        <p className="text-muted-foreground">No forms assigned yet. Check back after your organizer sets things up.</p>
       )}
 
       {Object.entries(grouped).map(([exchangeName, items]) => (
         <div key={exchangeName} className="mb-8">
-          <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">{exchangeName}</h2>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">{exchangeName}</h2>
           <div className="grid gap-3">
             {items.map(a => {
               // one-to-one embed: PostgREST returns an object, not an array
@@ -48,12 +48,12 @@ export default async function MyFormsPage() {
                       {cfg ? (
                         <Badge variant={cfg.variant}>{cfg.label}</Badge>
                       ) : (
-                        <Badge variant="outline">Not started</Badge>
+                        <Badge variant="neutral">Not started</Badge>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className={`text-sm mb-3 ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                    <p className={`text-sm mb-3 ${isOverdue ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
                       {isOverdue ? 'Overdue — ' : 'Due '}
                       {new Date(a.form_templates.deadline).toLocaleDateString()}
                     </p>

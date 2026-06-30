@@ -26,9 +26,9 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-1 text-sm">
-        <button onClick={() => setLang('en')} className={lang === 'en' ? 'font-semibold underline' : 'text-slate-500'}>EN</button>
-        <span className="text-slate-300">/</span>
-        <button onClick={() => setLang('fr')} className={lang === 'fr' ? 'font-semibold underline' : 'text-slate-500'}>FR</button>
+        <button onClick={() => setLang('en')} className={lang === 'en' ? 'font-semibold underline' : 'text-muted-foreground'}>EN</button>
+        <span className="text-muted-foreground">/</span>
+        <button onClick={() => setLang('fr')} className={lang === 'fr' ? 'font-semibold underline' : 'text-muted-foreground'}>FR</button>
       </div>
       <div className="space-y-1">
         <Label htmlFor="first_name">{lang === 'fr' ? 'Prénom' : 'First name'}</Label>
@@ -41,7 +41,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       <div className="space-y-1">
         <Label htmlFor="email">E-mail</Label>
         <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-        <p className="text-xs text-slate-400">{lang === 'fr' ? 'Nous vous enverrons un lien privé pour reprendre votre candidature à tout moment.' : "We'll email you a private link to resume your application anytime."}</p>
+        <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Nous vous enverrons un lien privé pour reprendre votre candidature à tout moment.' : "We'll email you a private link to resume your application anytime."}</p>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name}>

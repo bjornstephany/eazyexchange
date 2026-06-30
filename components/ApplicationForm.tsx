@@ -55,7 +55,7 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
   }
 
   if (done) {
-    return <p className="text-slate-700">{lang === 'fr' ? 'Merci ! Votre candidature a été envoyée.' : 'Thank you! Your application has been submitted.'}</p>
+    return <p className="text-foreground">{lang === 'fr' ? 'Merci ! Votre candidature a été envoyée.' : 'Thank you! Your application has been submitted.'}</p>
   }
 
   function renderField(f: AppField) {
@@ -94,11 +94,11 @@ export function ApplicationForm({ token, initialData, initialLanguage, locked }:
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex gap-1 text-sm">
-          <button onClick={() => setLang('en')} className={lang === 'en' ? 'font-semibold underline' : 'text-slate-500'}>EN</button>
-          <span className="text-slate-300">/</span>
-          <button onClick={() => setLang('fr')} className={lang === 'fr' ? 'font-semibold underline' : 'text-slate-500'}>FR</button>
+          <button onClick={() => setLang('en')} className={lang === 'en' ? 'font-semibold underline' : 'text-muted-foreground'}>EN</button>
+          <span className="text-muted-foreground">/</span>
+          <button onClick={() => setLang('fr')} className={lang === 'fr' ? 'font-semibold underline' : 'text-muted-foreground'}>FR</button>
         </div>
-        {saving && <span className="text-xs text-slate-400">{lang === 'fr' ? 'Enregistrement…' : 'Saving…'}</span>}
+        {saving && <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Enregistrement…' : 'Saving…'}</span>}
       </div>
 
       {APPLICATION_SECTIONS.map(section => (

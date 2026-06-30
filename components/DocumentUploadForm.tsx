@@ -82,14 +82,14 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
                   {slot.required && <span className="text-red-500 ml-1">*</span>}
                 </p>
                 {slot.description && (
-                  <p className="text-xs text-slate-500 mt-0.5">{slot.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{slot.description}</p>
                 )}
               </div>
-              {upload && <Badge variant="secondary">Uploaded</Badge>}
+              {upload && <Badge variant="info">Uploaded</Badge>}
             </div>
 
             {upload && (
-              <p className="text-xs text-slate-600 mb-2">📄 {upload.file_name}</p>
+              <p className="text-xs text-muted-foreground mb-2">📄 {upload.file_name}</p>
             )}
 
             {!readOnly && (
@@ -104,7 +104,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
                     if (file) handleFileChange(slot, file)
                   }}
                 />
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 border rounded px-3 py-1.5 hover:bg-slate-50 transition-colors">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground border rounded px-3 py-1.5 hover:bg-muted transition-colors">
                   {isUploading ? 'Uploading…' : upload ? 'Replace file' : 'Upload file'}
                 </span>
               </label>
@@ -125,7 +125,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
         </Button>
       )}
       {!readOnly && !allRequiredUploaded && (
-        <p className="text-xs text-slate-500">Upload all required documents to submit.</p>
+        <p className="text-xs text-muted-foreground">Upload all required documents to submit.</p>
       )}
     </div>
   )
