@@ -20,8 +20,8 @@ function friendlyMessage(message: string): string {
 export function ErrorState({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <p className="text-slate-900 font-medium mb-1">{friendlyMessage(error.message)}</p>
-      <p className="text-sm text-slate-500 mb-6">Try again, or head back and retry.</p>
+      <p className="text-foreground font-medium mb-1">{friendlyMessage(error.message)}</p>
+      <p className="text-sm text-muted-foreground mb-6">Try again, or head back and retry.</p>
       <Button onClick={reset} variant="outline" size="sm">Try again</Button>
     </div>
   )
