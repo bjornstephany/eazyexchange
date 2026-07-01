@@ -42,6 +42,33 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Landing "Cleared for departure" palette
+        ink: {
+          DEFAULT: "#0C1E2E",
+          800: "#12293B",
+          700: "#1B384C",
+          muted: "#7C93A2",
+        },
+        paper: {
+          DEFAULT: "#F3F4F2",
+          card: "#FBFBFA",
+          line: "#DFE3E0",
+        },
+        cleared: {
+          DEFAULT: "#22B573",
+          soft: "#1D9E64",
+        },
+        boarding: {
+          DEFAULT: "#E9A23B",
+        },
+        stamp: {
+          DEFAULT: "#C64B3B",
+        },
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",

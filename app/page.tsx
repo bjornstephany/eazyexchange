@@ -19,7 +19,7 @@ export default async function RootPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-paper text-ink">
       <LandingNav />
       <main className="flex-1">
         <Hero />
