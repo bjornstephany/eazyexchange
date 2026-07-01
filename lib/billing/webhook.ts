@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import type { School, SubscriptionStatus } from '@/types/db'
-import { coercePlan } from './plans'
+import { coercePlan, isPlanKey } from './plans'
 
 export type SchoolBillingPatch = Partial<Pick<School,
   | 'stripe_customer_id'
@@ -41,12 +41,12 @@ export function resolveBillingUpdate(event: Stripe.Event): BillingUpdate | null 
       const patch: SchoolBillingPatch = {
         subscription_status: sub.status as SubscriptionStatus,
         stripe_subscription_id: sub.id,
-        plan: coercePlan(sub.metadata?.plan),
         current_period_end: periodEnd
           ? new Date(periodEnd * 1000).toISOString()
           : null,
       }
       if (sub.status === 'active') patch.grace_until = null
+      if (isPlanKey(sub.metadata?.plan)) patch.plan = sub.metadata.plan
       return { customerId: String(sub.customer), patch }
     }
     case 'invoice.payment_failed': {

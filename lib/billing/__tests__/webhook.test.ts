@@ -44,6 +44,14 @@ describe('resolveBillingUpdate', () => {
     expect('grace_until' in (r?.patch ?? {})).toBe(false)
   })
 
+  it('subscription.updated without a valid plan omits plan from the patch', () => {
+    const r = resolveBillingUpdate(evt('customer.subscription.updated', {
+      id: 'sub_1', customer: 'cus_1', status: 'active', current_period_end: 1767225600, metadata: {},
+    }))
+    expect('plan' in (r?.patch ?? {})).toBe(false)
+    expect(r?.patch.subscription_status).toBe('active')
+  })
+
   it('invoice.payment_failed → setGraceIfNull with empty patch', () => {
     const r = resolveBillingUpdate(evt('invoice.payment_failed', { customer: 'cus_1' }))
     expect(r).toEqual({ customerId: 'cus_1', patch: {}, setGraceIfNull: true })
