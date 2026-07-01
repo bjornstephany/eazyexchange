@@ -5,7 +5,20 @@ export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
 export type ApplicationStatus =
   | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolling' | 'enrolled'
 
-export type School = { id: string; name: string; created_at: string }
+export type SubscriptionStatus =
+  | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete'
+
+export type School = {
+  id: string
+  name: string
+  created_at: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  subscription_status: SubscriptionStatus | null
+  plan: 'starter' | 'growth' | 'scale' | null
+  current_period_end: string | null
+  grace_until: string | null
+}
 export type Exchange = {
   id: string; name: string; year: number
   school_a_id: string; school_b_id: string; created_at: string
@@ -70,7 +83,7 @@ type TableDef<Row, Insert, Update> = {
 export type Database = {
   public: {
     Tables: {
-      schools: TableDef<School, Omit<School, 'id' | 'created_at'>, Partial<School>>
+      schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'created_at' | 'name'>>, Partial<School>>
       exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug'>>, Partial<Exchange>>
       users: TableDef<UserProfile, Omit<UserProfile, 'created_at'>, Partial<UserProfile>>
       exchange_enrollments: TableDef<ExchangeEnrollment, Omit<ExchangeEnrollment, 'id' | 'created_at'>, Partial<ExchangeEnrollment>>
