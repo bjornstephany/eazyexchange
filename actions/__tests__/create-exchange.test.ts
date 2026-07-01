@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-let opts: { role?: string; ownSchoolName?: string }
+let opts: { role?: string; ownSchoolName?: string; ownSchoolError?: unknown }
 let calls: { schoolUpdated: any; partnerInserted: any; exchangeInserted: any }
 
 function makeClient() {
@@ -13,7 +13,7 @@ function makeClient() {
       }
       if (table === 'schools') {
         return {
-          select: () => ({ eq: () => ({ single: async () => ({ data: { name: opts.ownSchoolName ?? 'Existing High' }, error: null }) }) }),
+          select: () => ({ eq: () => ({ single: async () => ({ data: opts.ownSchoolError ? null : { name: opts.ownSchoolName ?? 'Existing High' }, error: opts.ownSchoolError ?? null }) }) }),
           update: (row: any) => { calls.schoolUpdated = row; return { eq: async () => ({ error: null }) } },
           insert: (row: any) => { calls.partnerInserted = row; return { select: () => ({ single: async () => ({ data: { id: 's-partner' }, error: null }) }) } },
         }
@@ -58,5 +58,12 @@ describe('createExchange deferred school name', () => {
     opts = { ownSchoolName: 'Existing High' }
     await createExchange(form({ ...base, school_a_name: 'Ignored' }))
     expect(calls.schoolUpdated).toBeNull()
+  })
+
+  it('surfaces a read error instead of silently proceeding', async () => {
+    opts = { ownSchoolError: { message: 'db down' } }
+    await expect(createExchange(form({ ...base, school_a_name: 'Lincoln High' }))).rejects.toThrow('db down')
+    expect(calls.schoolUpdated).toBeNull()
+    expect(calls.exchangeInserted).toBeNull()
   })
 })

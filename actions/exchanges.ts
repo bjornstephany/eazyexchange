@@ -41,8 +41,9 @@ export async function createExchange(formData: FormData) {
   // Deferred school-name capture: organizers who signed up with Google start
   // with an empty school name (nothing displays it until their first exchange).
   // Collect and persist it now, alongside the partner-school name.
-  const { data: ownSchool } = await supabase
+  const { data: ownSchool, error: ownSchoolError } = await supabase
     .from('schools').select('name').eq('id', profile.school_id).single()
+  if (ownSchoolError) throw ownSchoolError
   if (ownSchool && ownSchool.name === '') {
     const schoolAName = (formData.get('school_a_name') as string ?? '').trim()
     if (!schoolAName) throw new Error('Please provide your school name')
