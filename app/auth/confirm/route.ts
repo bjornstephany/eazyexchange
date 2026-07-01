@@ -3,6 +3,7 @@ import { type NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { provisionOrganizer } from '@/lib/auth/provision'
+import { safeNextPath } from '@/lib/auth/safe-next'
 
 // Handles email-link verification for the SSR (PKCE) cookie flow.
 // Supabase email templates point here with a `token_hash` + `type`, e.g.
@@ -21,9 +22,7 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
   const next = searchParams.get('next') ?? '/'
-
-  // Only allow same-origin relative paths for `next` to avoid open redirects.
-  const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/'
+  const safeNext = safeNextPath(next)
 
   if (token_hash && type) {
     const supabase = await createClient()

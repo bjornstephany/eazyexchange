@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 let profile: { id: string; role: string; full_name: string } | null
+let profileError: unknown = null
 const deleteUser = vi.fn(async () => ({ error: null }))
 const usersUpdated: any[] = []
 vi.mock('@/lib/supabase/admin', () => ({
@@ -23,7 +24,7 @@ vi.mock('@/lib/supabase/admin', () => ({
     from: (table: string) => {
       if (table === 'users') {
         return {
-          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: profile, error: null }) }) }),
+          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: profile, error: profileError }) }) }),
           update: (row: any) => { usersUpdated.push(row); return { eq: async () => ({ error: null }) } },
         }
       }
@@ -53,6 +54,7 @@ beforeEach(() => {
   provisionOrganizerFromOAuth.mockClear(); usersUpdated.length = 0
   exchangeResult = { data: { user: { id: 'u1', email: 'a@b.com', user_metadata: { full_name: 'Stu Dent' } } }, error: null }
   profile = null
+  profileError = null
 })
 
 describe('GET /auth/callback', () => {
@@ -105,5 +107,16 @@ describe('GET /auth/callback', () => {
   it('ignores an open-redirect next and falls back to the role-based destination', async () => {
     profile = { id: 'u1', role: 'organizer', full_name: 'Org' }
     expect(await getRedirect('code=x&next=//evil.com')).toBe('/dashboard')
+  })
+
+  it('honors a safe next override for an existing organizer', async () => {
+    profile = { id: 'u1', role: 'organizer', full_name: 'Org' }
+    expect(await getRedirect('code=x&next=/exchanges/42')).toBe('/exchanges/42')
+  })
+
+  it('redirects oauth_failed on a profile-lookup DB error, without deleting the user', async () => {
+    profileError = { message: 'connection reset' }
+    expect(await getRedirect('code=x')).toBe('/login?error=oauth_failed')
+    expect(deleteUser).not.toHaveBeenCalled()
   })
 })

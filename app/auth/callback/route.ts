@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { provisionOrganizerFromOAuth } from '@/lib/auth/provision'
+import { safeNextPath } from '@/lib/auth/safe-next'
 
 // OAuth (Google) callback for the SSR/PKCE flow. Distinct from /auth/confirm,
 // which handles email-OTP links (?token_hash=). Here we exchange the ?code=
@@ -16,8 +17,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const intent = searchParams.get('intent')
   const next = searchParams.get('next') ?? '/'
-  // Only same-origin relative paths for `next`, to avoid open redirects.
-  const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/'
+  const safeNext = safeNextPath(next)
 
   if (!code) return redirect('/login?error=oauth_failed')
 
@@ -27,8 +27,14 @@ export async function GET(request: NextRequest) {
   const user = data.user
 
   const admin = createAdminClient()
-  const { data: profile } = await admin
+  const { data: profile, error: profileError } = await admin
     .from('users').select('id, role, full_name').eq('id', user.id).maybeSingle()
+
+  // A real DB failure returns data:null too — distinct from zero-rows
+  // (data:null, error:null). Don't fall through to the invite-only delete
+  // branch below on a transient error; that would delete a legitimately
+  // invited user's auth account.
+  if (profileError) return redirect('/login?error=oauth_failed')
 
   if (profile) {
     // A freshly-invited student whose Google identity auto-linked to their
@@ -56,6 +62,8 @@ export async function GET(request: NextRequest) {
   // Uninvited student / stranger — enforce invite-only: drop the session and
   // delete the orphan auth row Google just created.
   await supabase.auth.signOut()
-  await admin.auth.admin.deleteUser(user.id).catch(() => {})
+  await admin.auth.admin.deleteUser(user.id).catch((e) =>
+    console.error('[auth/callback] deleteUser failed:', (e as { code?: string })?.code ?? 'unknown')
+  )
   return redirect('/login?error=not_invited')
 }
