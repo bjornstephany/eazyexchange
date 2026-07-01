@@ -17,7 +17,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 let profile: { id: string; role: string; full_name: string } | null
 let profileError: unknown = null
-const deleteUser = vi.fn(async () => ({ error: null }))
+const deleteUser = vi.fn(async (_id: string) => ({ error: null }))
 const usersUpdated: any[] = []
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
