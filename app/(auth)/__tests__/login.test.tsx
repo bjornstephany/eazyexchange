@@ -18,4 +18,16 @@ describe('LoginPage error banner', () => {
     render(<LoginPage />)
     expect(await screen.findByText(/invite link is invalid/i)).toBeInTheDocument()
   })
+
+  it('surfaces the oauth_failed message', async () => {
+    window.history.pushState({}, '', '/login?error=oauth_failed')
+    render(<LoginPage />)
+    expect(await screen.findByText(/couldn’t sign you in with google/i)).toBeInTheDocument()
+  })
+
+  it('surfaces the not_invited message', async () => {
+    window.history.pushState({}, '', '/login?error=not_invited')
+    render(<LoginPage />)
+    expect(await screen.findByText(/couldn’t match your google account to an invitation/i)).toBeInTheDocument()
+  })
 })

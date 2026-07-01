@@ -13,18 +13,18 @@ function metaString(meta: Record<string, unknown> | undefined, key: string): str
   return typeof v === 'string' ? v.trim() : ''
 }
 
-// Idempotently create the school + organizer profile for a freshly confirmed
-// signup. Uses the service-role admin client (bypasses RLS). Nothing is written
-// until the email is confirmed, so abandoned signups leave no rows.
-export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
-  const fullName = metaString(user.user_metadata, 'full_name')
-  const schoolName = metaString(user.user_metadata, 'school_name')
+// Shared account-creation core. Idempotent; rolls back the school if the
+// profile insert fails so a partial failure leaves no debris.
+async function createOrganizerAccount(
+  user: ProvisionUser,
+  fullName: string,
+  schoolName: string,
+): Promise<ProvisionResult> {
   const email = (user.email ?? '').trim().toLowerCase()
-  if (!fullName || !schoolName || !email) return { ok: false, reason: 'missing_metadata' }
+  if (!fullName || !email) return { ok: false, reason: 'missing_metadata' }
 
   const admin = createAdminClient()
 
-  // Idempotent: if a profile already exists, do nothing (double-clicked link, retry).
   const { data: existing } = await admin
     .from('users').select('id').eq('id', user.id).maybeSingle()
   if (existing) return { ok: true }
@@ -41,10 +41,25 @@ export async function provisionOrganizer(user: ProvisionUser): Promise<Provision
     email,
   })
   if (profileError) {
-    // Roll back the orphan school so a failed profile insert leaves no debris.
     await admin.from('schools').delete().eq('id', school.id)
     return { ok: false, reason: 'profile_insert_failed' }
   }
 
   return { ok: true }
+}
+
+// Email/password signup: full name + school name come from signup metadata.
+export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
+  const fullName = metaString(user.user_metadata, 'full_name')
+  const schoolName = metaString(user.user_metadata, 'school_name')
+  if (!schoolName) return { ok: false, reason: 'missing_metadata' }
+  return createOrganizerAccount(user, fullName, schoolName)
+}
+
+// Google signup: full name comes from the Google identity; the school name is
+// deferred (empty sentinel), captured later on the first-exchange form.
+export async function provisionOrganizerFromOAuth(user: ProvisionUser): Promise<ProvisionResult> {
+  const fullName =
+    metaString(user.user_metadata, 'full_name') || metaString(user.user_metadata, 'name')
+  return createOrganizerAccount(user, fullName, '')
 }

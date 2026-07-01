@@ -42,7 +42,7 @@ function makeAdmin(opts: AdminOpts = {}) {
 
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => admin }))
 
-import { provisionOrganizer } from '@/lib/auth/provision'
+import { provisionOrganizer, provisionOrganizerFromOAuth } from '@/lib/auth/provision'
 
 const baseUser = {
   id: 'u1',
@@ -81,5 +81,37 @@ describe('provisionOrganizer', () => {
     const result = await provisionOrganizer({ id: 'u1', email: 'a@b.com', user_metadata: {} })
     expect(result).toEqual({ ok: false, reason: 'missing_metadata' })
     expect(admin.calls.schoolsInserted).toEqual([])
+  })
+})
+
+const oauthUser = {
+  id: 'g1',
+  email: 'Org@Example.com',
+  user_metadata: { full_name: '  Jane Google  ' },
+}
+
+describe('provisionOrganizerFromOAuth', () => {
+  it('creates a school with an empty name and an organizer profile from the Google identity', async () => {
+    const result = await provisionOrganizerFromOAuth(oauthUser)
+    expect(result).toEqual({ ok: true })
+    expect(admin.calls.schoolsInserted).toEqual([{ name: '' }])
+    expect(admin.calls.usersInserted).toEqual([
+      { id: 'g1', school_id: 'school-1', role: 'organizer', full_name: 'Jane Google', email: 'org@example.com' },
+    ])
+  })
+
+  it('falls back to the name field when full_name is absent', async () => {
+    const result = await provisionOrganizerFromOAuth({
+      id: 'g1', email: 'a@b.com', user_metadata: { name: 'From Name' },
+    })
+    expect(result).toEqual({ ok: true })
+    expect(admin.calls.usersInserted[0]).toMatchObject({ full_name: 'From Name' })
+  })
+
+  it('is idempotent when a profile already exists', async () => {
+    admin = makeAdmin({ existingUser: { id: 'g1' } })
+    const result = await provisionOrganizerFromOAuth(oauthUser)
+    expect(result).toEqual({ ok: true })
+    expect(admin.calls.usersInserted).toEqual([])
   })
 })

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,6 +24,10 @@ export default function LoginPage() {
       setError('That invite link is invalid or has expired — ask your organizer to resend it.')
     } else if (err === 'signup_failed') {
       setError('We couldn’t finish creating your account. Please try signing up again.')
+    } else if (err === 'oauth_failed') {
+      setError('We couldn’t sign you in with Google. Please try again.')
+    } else if (err === 'not_invited') {
+      setError('We couldn’t match your Google account to an invitation. Use the same email your organizer invited you with, or set a password from your invite link instead.')
     }
   }, [])
 
@@ -44,6 +49,10 @@ export default function LoginPage() {
           <CardTitle>Sign in to EazyExchange</CardTitle>
         </CardHeader>
         <CardContent>
+          <GoogleButton />
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
