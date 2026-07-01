@@ -5,6 +5,19 @@
 configure the provider in the Google Cloud and Supabase dashboards. These steps are
 manual and are **not** performed by any migration or code.
 
+## Deploy order (do this first)
+
+**Apply the migration `20260701000001_schools_update_own_name.sql`
+(`supabase db push`) BEFORE enabling the Google provider in Supabase.**
+
+A new Google organizer is provisioned with an empty school name and is asked for it on
+their first exchange, which `createExchange` persists via an UPDATE on their own `schools`
+row. That UPDATE is allowed only by this migration's RLS policy. If the provider is enabled
+before the migration is applied, a Google organizer can sign up but then cannot create any
+exchange (the UPDATE is denied and the action throws) — they get stuck. Existing
+email/password organizers are unaffected either way (their school name is already set, so
+the UPDATE is skipped).
+
 ## 1. Google Cloud OAuth client
 
 Google Cloud Console → **APIs & Services → Credentials** → **Create credentials → OAuth
