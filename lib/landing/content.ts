@@ -231,7 +231,7 @@ export const landingContent: LandingContent = {
         period: '/ year',
         description: 'For the organizer running a single exchange program.',
         features: [
-          '1 active exchange',
+          'Up to 2 active exchanges',
           'Unlimited students & parents',
           'Form templates & document slots',
           'Automated reminders',
@@ -245,7 +245,7 @@ export const landingContent: LandingContent = {
         period: '/ year',
         description: 'For organizers juggling a pair of programs each year.',
         features: [
-          'Up to 2 active exchanges',
+          'Up to 6 active exchanges',
           'Unlimited students & parents',
           'Form templates & document slots',
           'Automated reminders',
@@ -260,7 +260,7 @@ export const landingContent: LandingContent = {
         period: '/ year',
         description: 'For schools and agencies coordinating several exchanges.',
         features: [
-          '3+ active exchanges',
+          'Unlimited active exchanges',
           'Unlimited students & parents',
           'Form templates & document slots',
           'Automated reminders',
