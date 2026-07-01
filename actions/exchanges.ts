@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { applySlug } from '@/lib/tokens'
+import { canCreateExchange } from '@/lib/billing/limits'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -42,8 +43,22 @@ export async function createExchange(formData: FormData) {
   // with an empty school name (nothing displays it until their first exchange).
   // Collect and persist it now, alongside the partner-school name.
   const { data: ownSchool, error: ownSchoolError } = await supabase
-    .from('schools').select('name').eq('id', profile.school_id).single()
+    .from('schools')
+    .select('name, subscription_status, plan, grace_until')
+    .eq('id', profile.school_id).single()
   if (ownSchoolError) throw ownSchoolError
+
+  // Enforce the plan's exchange cap (trial = 1). Count only exchanges this
+  // school owns — it is always school_a on exchanges it created.
+  const { count, error: countError } = await supabase
+    .from('exchanges')
+    .select('id', { count: 'exact', head: true })
+    .eq('school_a_id', profile.school_id)
+  if (countError) throw countError
+  if (ownSchool && !canCreateExchange(ownSchool, count ?? 0)) {
+    throw new Error('You have reached your plan’s exchange limit. Subscribe to add more.')
+  }
+
   if (ownSchool && ownSchool.name === '') {
     const schoolAName = (formData.get('school_a_name') as string ?? '').trim()
     if (!schoolAName) throw new Error('Please provide your school name')

@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-let opts: { role?: string; ownSchoolName?: string; ownSchoolError?: unknown }
+let opts: {
+  role?: string; ownSchoolName?: string; ownSchoolError?: unknown
+  subStatus?: string; plan?: string; exchangeCount?: number
+}
 let calls: { schoolUpdated: any; partnerInserted: any; exchangeInserted: any }
 
 function makeClient() {
@@ -13,13 +16,24 @@ function makeClient() {
       }
       if (table === 'schools') {
         return {
-          select: () => ({ eq: () => ({ single: async () => ({ data: opts.ownSchoolError ? null : { name: opts.ownSchoolName ?? 'Existing High' }, error: opts.ownSchoolError ?? null }) }) }),
+          select: () => ({ eq: () => ({ single: async () => ({
+            data: opts.ownSchoolError ? null : {
+              name: opts.ownSchoolName ?? 'Existing High',
+              subscription_status: opts.subStatus ?? null,
+              plan: opts.plan ?? null,
+              grace_until: null,
+            },
+            error: opts.ownSchoolError ?? null,
+          }) }) }),
           update: (row: any) => { calls.schoolUpdated = row; return { eq: async () => ({ error: null }) } },
           insert: (row: any) => { calls.partnerInserted = row; return { select: () => ({ single: async () => ({ data: { id: 's-partner' }, error: null }) }) } },
         }
       }
       if (table === 'exchanges') {
-        return { insert: async (row: any) => { calls.exchangeInserted = row; return { error: null } } }
+        return {
+          select: () => ({ eq: async () => ({ count: opts.exchangeCount ?? 0, error: null }) }),
+          insert: async (row: any) => { calls.exchangeInserted = row; return { error: null } },
+        }
       }
       throw new Error('unexpected table ' + table)
     },
@@ -65,5 +79,30 @@ describe('createExchange deferred school name', () => {
     await expect(createExchange(form({ ...base, school_a_name: 'Lincoln High' }))).rejects.toThrow('db down')
     expect(calls.schoolUpdated).toBeNull()
     expect(calls.exchangeInserted).toBeNull()
+  })
+})
+
+describe('createExchange plan cap', () => {
+  it('allows a trial school to create its first exchange', async () => {
+    opts = { exchangeCount: 0 }
+    await createExchange(form(base))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+  })
+
+  it('blocks a trial school at 1 exchange', async () => {
+    opts = { exchangeCount: 1 }
+    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
+    expect(calls.exchangeInserted).toBeNull()
+  })
+
+  it('allows a Starter school to create a second exchange', async () => {
+    opts = { exchangeCount: 1, subStatus: 'active', plan: 'starter' }
+    await createExchange(form(base))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+  })
+
+  it('blocks a Starter school at 2 exchanges', async () => {
+    opts = { exchangeCount: 2, subStatus: 'active', plan: 'starter' }
+    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
   })
 })
