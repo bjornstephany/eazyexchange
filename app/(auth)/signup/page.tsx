@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -69,6 +70,10 @@ export default function SignupPage() {
           <CardTitle>Create your EazyExchange account</CardTitle>
         </CardHeader>
         <CardContent>
+          <GoogleButton intent="organizer_signup" next="/dashboard" label="Sign up with Google" />
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="fullName">Full name</Label>

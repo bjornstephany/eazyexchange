@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function AcceptInvitePage() {
   const [fullName, setFullName] = useState('')
@@ -49,6 +50,10 @@ export default function AcceptInvitePage() {
           <CardTitle>Set up your account</CardTitle>
         </CardHeader>
         <CardContent>
+          <GoogleButton next="/my-forms" label="Continue with Google" />
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or set a password <span className="h-px flex-1 bg-border" />
+          </div>
           <form onSubmit={handleAccept} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="name">Full name</Label>
