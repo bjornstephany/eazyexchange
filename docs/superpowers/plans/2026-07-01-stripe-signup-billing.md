@@ -1,164 +1,33 @@
-# Stripe Billing During Organizer Signup — Implementation Plan
+# Stripe Billing with a Usage-Based Free Trial — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add Stripe subscription billing to organizer signup — card-upfront Checkout with a 14-day trial, school-anchored subscription state driven by webhooks, a 7-day grace period, then a middleware gate.
+**Goal:** Add Stripe subscription billing to EazyExchange with a usage-based free trial — no card at signup, one free exchange, and a paid plan required to create more. The only gate is exchange creation.
 
-**Architecture:** Provisioning is unchanged; billing is a gate layered after account creation. Stripe hosted Checkout collects the card; a signature-verified webhook is the source of truth and writes billing columns onto the `schools` row via the service-role admin client. A pure `isEntitled(school)` function drives both the middleware gate and UI banners.
+**Architecture:** Signup and the dashboard stay open. A school's exchange cap is derived from its subscription (trial = 1, Starter = 2, Growth = 6, Scale = unlimited) and enforced in `createExchange` + the dashboard UI. Subscribing goes through Stripe hosted Checkout; a signature-verified webhook is the source of truth and writes billing state onto the `schools` row via the service-role admin client.
 
-**Tech Stack:** Next.js 14 App Router (route handlers + server components), `stripe` (stripe-node), Supabase (`@supabase/ssr` + service-role admin client), Vitest + React Testing Library, Tailwind + shadcn/ui.
+**Tech Stack:** Next.js 14 App Router (route handlers + server components + server actions), `stripe` (stripe-node), Supabase (`@supabase/ssr` + service-role admin client), Vitest + React Testing Library, Tailwind + shadcn/ui.
 
 **Design spec:** `docs/superpowers/specs/2026-07-01-stripe-signup-billing-design.md`
 
 ## Global Constraints
 
 - Package manager is **pnpm** (never npm).
-- Plan keys are exactly `'starter' | 'growth' | 'scale'`; default plan is `'growth'`.
-- Trial length: **14 days**. Grace period: **7 days**.
-- `subscription_status` stores Stripe's status string verbatim: `trialing | active | past_due | canceled | unpaid | incomplete`.
+- Plan keys are exactly `'starter' | 'growth' | 'scale'`.
+- Exchange caps: Trial (no active sub) = **1**, Starter = **2**, Growth = **6**, Scale = **unlimited (Infinity)**.
+- Grace period: **7 days** after a failed renewal payment.
+- `subscription_status` stores Stripe's status string verbatim: `active | past_due | unpaid | canceled | incomplete`. There is **no `trialing`** status — the trial is the absence of an active subscription.
 - All billing-column writes go through the **service-role admin client** (`createAdminClient()`), never the browser.
-- **Never log student/parent PII.** Billing code touches only organizers/schools; still, never log emails or names.
+- **Never log student/parent PII** (emails, names, submission contents).
+- A school's own exchanges are `exchanges where school_a_id = <school_id>` (the organizer is always `school_a`).
 - Verify with: `pnpm lint`, `pnpm test`, `pnpm build`.
 - Tests use Vitest globals (`describe/it/expect/vi`) + RTL; `@` alias maps to repo root.
 
 ---
 
-### Task 1: Stripe dependency, client, and plan/price config
+### Task 1: Stripe dependency, client, and plan/price config — ✅ DONE (commit 1410896)
 
-**Files:**
-- Modify: `package.json` (add `stripe` dependency)
-- Create: `lib/billing/stripe.ts`
-- Create: `lib/billing/plans.ts`
-- Test: `lib/billing/__tests__/plans.test.ts`
-- Modify: `.env.local.example` if it exists (else skip); document new env vars in `README`/`CLAUDE.md` is out of scope here
-
-**Interfaces:**
-- Produces: `getStripe(): Stripe`
-- Produces: `PLAN_KEYS`, `type PlanKey`, `DEFAULT_PLAN`, `isPlanKey(v): v is PlanKey`, `coercePlan(v): PlanKey`, `priceIdForPlan(plan): string`, `resolveCheckoutPlan(input): PlanKey`
-
-- [ ] **Step 1: Add the Stripe SDK**
-
-Run: `pnpm add stripe`
-Expected: `stripe` appears under `dependencies` in `package.json`.
-
-- [ ] **Step 2: Write the Stripe client module**
-
-Create `lib/billing/stripe.ts`:
-
-```ts
-import Stripe from 'stripe'
-
-// Lazy singleton so importing this module never throws at build time when the
-// secret is absent (e.g. during `next build` type-checking).
-let _stripe: Stripe | null = null
-
-export function getStripe(): Stripe {
-  if (!_stripe) {
-    // apiVersion omitted → the SDK pins its own default. If your installed
-    // stripe version requires it, set it to the version shown in the Stripe
-    // dashboard (Developers → API version).
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
-  }
-  return _stripe
-}
-```
-
-- [ ] **Step 3: Write the failing test for plans config**
-
-Create `lib/billing/__tests__/plans.test.ts`:
-
-```ts
-import { describe, it, expect } from 'vitest'
-import {
-  PLAN_KEYS, DEFAULT_PLAN, isPlanKey, coercePlan, resolveCheckoutPlan,
-} from '@/lib/billing/plans'
-
-describe('plans', () => {
-  it('exposes the three plan keys', () => {
-    expect(PLAN_KEYS).toEqual(['starter', 'growth', 'scale'])
-    expect(DEFAULT_PLAN).toBe('growth')
-  })
-
-  it('isPlanKey narrows valid keys only', () => {
-    expect(isPlanKey('starter')).toBe(true)
-    expect(isPlanKey('enterprise')).toBe(false)
-    expect(isPlanKey(null)).toBe(false)
-  })
-
-  it('coercePlan falls back to the default', () => {
-    expect(coercePlan('scale')).toBe('scale')
-    expect(coercePlan('nonsense')).toBe('growth')
-    expect(coercePlan(undefined)).toBe('growth')
-  })
-
-  it('resolveCheckoutPlan prefers query, then school, then metadata, then default', () => {
-    expect(resolveCheckoutPlan({ query: 'starter', schoolPlan: 'scale', metadataPlan: 'growth' })).toBe('starter')
-    expect(resolveCheckoutPlan({ query: null, schoolPlan: 'scale', metadataPlan: 'growth' })).toBe('scale')
-    expect(resolveCheckoutPlan({ query: 'bad', schoolPlan: null, metadataPlan: 'starter' })).toBe('starter')
-    expect(resolveCheckoutPlan({ query: null, schoolPlan: null, metadataPlan: null })).toBe('growth')
-  })
-})
-```
-
-- [ ] **Step 4: Run the test to verify it fails**
-
-Run: `pnpm test lib/billing/__tests__/plans.test.ts`
-Expected: FAIL — cannot resolve `@/lib/billing/plans`.
-
-- [ ] **Step 5: Implement the plans module**
-
-Create `lib/billing/plans.ts`:
-
-```ts
-export const PLAN_KEYS = ['starter', 'growth', 'scale'] as const
-export type PlanKey = (typeof PLAN_KEYS)[number]
-export const DEFAULT_PLAN: PlanKey = 'growth'
-
-export function isPlanKey(v: unknown): v is PlanKey {
-  return typeof v === 'string' && (PLAN_KEYS as readonly string[]).includes(v)
-}
-
-export function coercePlan(v: unknown): PlanKey {
-  return isPlanKey(v) ? v : DEFAULT_PLAN
-}
-
-const PRICE_ENV: Record<PlanKey, string> = {
-  starter: 'STRIPE_PRICE_STARTER',
-  growth: 'STRIPE_PRICE_GROWTH',
-  scale: 'STRIPE_PRICE_SCALE',
-}
-
-// Server-only: reads the price id from env. Throws if unset so a
-// misconfiguration surfaces loudly rather than silently billing the wrong plan.
-export function priceIdForPlan(plan: PlanKey): string {
-  const id = process.env[PRICE_ENV[plan]]
-  if (!id) throw new Error(`Missing Stripe price env for plan: ${plan}`)
-  return id
-}
-
-// Precedence: explicit ?plan= query → school's stored plan → signup metadata → default.
-export function resolveCheckoutPlan(input: {
-  query?: string | null
-  schoolPlan?: string | null
-  metadataPlan?: unknown
-}): PlanKey {
-  if (isPlanKey(input.query)) return input.query
-  if (isPlanKey(input.schoolPlan)) return input.schoolPlan
-  return coercePlan(input.metadataPlan)
-}
-```
-
-- [ ] **Step 6: Run the test to verify it passes**
-
-Run: `pnpm test lib/billing/__tests__/plans.test.ts`
-Expected: PASS.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add package.json pnpm-lock.yaml lib/billing/stripe.ts lib/billing/plans.ts lib/billing/__tests__/plans.test.ts
-git commit -m "feat(billing): add stripe client and plan/price config"
-```
+Already implemented and controller-reviewed. Produced: `lib/billing/stripe.ts` (`getStripe`), `lib/billing/plans.ts` (`PLAN_KEYS`, `PlanKey`, `DEFAULT_PLAN`, `isPlanKey`, `coercePlan`, `priceIdForPlan`, `resolveCheckoutPlan`) + tests. No action needed. (Note: `resolveCheckoutPlan`'s `metadataPlan` param is vestigial under this model and simply goes unused.)
 
 ---
 
@@ -166,7 +35,7 @@ git commit -m "feat(billing): add stripe client and plan/price config"
 
 **Files:**
 - Create: `supabase/migrations/20260701000002_billing_columns.sql`
-- Modify: `types/db.ts:8` (extend `School`), `types/db.ts:73` (loosen `schools` insert type), add `SubscriptionStatus` type
+- Modify: `types/db.ts` (extend `School`, add `SubscriptionStatus`, loosen `schools` insert type)
 
 **Interfaces:**
 - Produces: extended `School` type with `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan`, `current_period_end`, `grace_until`; exported `type SubscriptionStatus`.
@@ -191,20 +60,20 @@ create index schools_stripe_customer_id_idx on schools (stripe_customer_id);
 -- SECURITY: RLS is row-level, not column-level. The existing
 -- "organizers update their school" policy (20260701000001) would otherwise let
 -- an organizer set their own billing columns from the browser
--- (e.g. subscription_status='active'), granting themselves free access.
--- Restrict client UPDATEs to the `name` column only. The service-role admin
--- client (webhook) has BYPASSRLS + full grants, so it still writes billing state.
+-- (e.g. plan='scale'), granting themselves a higher exchange cap. Restrict
+-- client UPDATEs to the `name` column only. The service-role admin client
+-- (webhook) has BYPASSRLS + full grants, so it still writes billing state.
 revoke update on schools from authenticated;
 grant update (name) on schools to authenticated;
 ```
 
 - [ ] **Step 2: Extend the `School` type and add `SubscriptionStatus`**
 
-In `types/db.ts`, replace the `School` definition on line 8:
+In `types/db.ts`, replace the `School` definition (currently `export type School = { id: string; name: string; created_at: string }`):
 
 ```ts
 export type SubscriptionStatus =
-  | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete'
+  | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete'
 
 export type School = {
   id: string
@@ -221,7 +90,7 @@ export type School = {
 
 - [ ] **Step 3: Loosen the `schools` insert type**
 
-In `types/db.ts`, the `schools` line in the `Tables` block currently is:
+In `types/db.ts`, the `schools` line in the `Tables` block is currently:
 
 ```ts
 schools: TableDef<School, Omit<School, 'id' | 'created_at'>, Partial<School>>
@@ -236,99 +105,154 @@ schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'cr
 - [ ] **Step 4: Verify types compile**
 
 Run: `pnpm exec tsc --noEmit`
-Expected: PASS — no type errors. (`provisionOrganizer`'s `insert({ name: schoolName })` still type-checks.)
+Expected: PASS — no type errors (`provisionOrganizer`'s `insert({ name })` and `createExchange`'s `insert({ name })` still type-check).
 
 - [ ] **Step 5: Apply the migration**
 
 Run: `supabase db push`
-Expected: migration `20260701000002_billing_columns` applied. (If IPv6 hangs, use the IPv4 session-pooler `--db-url` per the WSL2 note.)
+Expected: migration `20260701000002_billing_columns` applied. (If IPv6 hangs, use the IPv4 session-pooler `--db-url` per the WSL2 note in memory.)
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add supabase/migrations/20260701000002_billing_columns.sql types/db.ts
-git commit -m "feat(billing): add school billing columns + types"
+git commit -m "feat(billing): add school billing columns + column-privilege hardening"
 ```
 
 ---
 
-### Task 3: Entitlement function
+### Task 3: Plan caps & active-plan logic
 
 **Files:**
-- Create: `lib/billing/entitlement.ts`
-- Test: `lib/billing/__tests__/entitlement.test.ts`
+- Create: `lib/billing/limits.ts`
+- Test: `lib/billing/__tests__/limits.test.ts`
 
 **Interfaces:**
-- Consumes: `School`, `SubscriptionStatus` from `@/types/db`.
-- Produces: `isEntitled(school: Pick<School, 'subscription_status' | 'grace_until'>, now?: Date): boolean`
+- Consumes: `School`, `SubscriptionStatus` from `@/types/db`; `PlanKey` from `@/lib/billing/plans`.
+- Produces:
+  - `TRIAL_EXCHANGE_CAP: number`
+  - `PLAN_EXCHANGE_CAP: Record<PlanKey, number>`
+  - `type BillingState = Pick<School, 'subscription_status' | 'plan' | 'grace_until'>`
+  - `isInGrace(school: BillingState, now?: Date): boolean`
+  - `hasActivePlan(school: BillingState, now?: Date): boolean`
+  - `exchangeCap(school: BillingState, now?: Date): number`
+  - `canCreateExchange(school: BillingState, currentCount: number, now?: Date): boolean`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `lib/billing/__tests__/entitlement.test.ts`:
+Create `lib/billing/__tests__/limits.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest'
-import { isEntitled } from '@/lib/billing/entitlement'
+import {
+  TRIAL_EXCHANGE_CAP, PLAN_EXCHANGE_CAP,
+  isInGrace, hasActivePlan, exchangeCap, canCreateExchange,
+} from '@/lib/billing/limits'
 
 const NOW = new Date('2026-07-01T00:00:00Z')
 const future = new Date('2026-07-05T00:00:00Z').toISOString()
 const past = new Date('2026-06-25T00:00:00Z').toISOString()
 
-describe('isEntitled', () => {
-  it('trialing and active are entitled', () => {
-    expect(isEntitled({ subscription_status: 'trialing', grace_until: null }, NOW)).toBe(true)
-    expect(isEntitled({ subscription_status: 'active', grace_until: null }, NOW)).toBe(true)
+const trial = { subscription_status: null, plan: null, grace_until: null } as const
+const starter = { subscription_status: 'active', plan: 'starter', grace_until: null } as const
+const growth = { subscription_status: 'active', plan: 'growth', grace_until: null } as const
+const scale = { subscription_status: 'active', plan: 'scale', grace_until: null } as const
+
+describe('limits', () => {
+  it('exposes caps', () => {
+    expect(TRIAL_EXCHANGE_CAP).toBe(1)
+    expect(PLAN_EXCHANGE_CAP).toEqual({ starter: 2, growth: 6, scale: Infinity })
   })
 
-  it('past_due/unpaid entitled only within grace window', () => {
-    expect(isEntitled({ subscription_status: 'past_due', grace_until: future }, NOW)).toBe(true)
-    expect(isEntitled({ subscription_status: 'past_due', grace_until: past }, NOW)).toBe(false)
-    expect(isEntitled({ subscription_status: 'unpaid', grace_until: null }, NOW)).toBe(false)
+  it('isInGrace only within the window for past_due/unpaid', () => {
+    expect(isInGrace({ subscription_status: 'past_due', plan: 'starter', grace_until: future }, NOW)).toBe(true)
+    expect(isInGrace({ subscription_status: 'past_due', plan: 'starter', grace_until: past }, NOW)).toBe(false)
+    expect(isInGrace({ subscription_status: 'unpaid', plan: 'starter', grace_until: null }, NOW)).toBe(false)
+    expect(isInGrace(starter, NOW)).toBe(false)
   })
 
-  it('canceled/incomplete/null are never entitled', () => {
-    expect(isEntitled({ subscription_status: 'canceled', grace_until: future }, NOW)).toBe(false)
-    expect(isEntitled({ subscription_status: 'incomplete', grace_until: null }, NOW)).toBe(false)
-    expect(isEntitled({ subscription_status: null, grace_until: null }, NOW)).toBe(false)
+  it('hasActivePlan for active or in-grace', () => {
+    expect(hasActivePlan(starter, NOW)).toBe(true)
+    expect(hasActivePlan({ subscription_status: 'past_due', plan: 'growth', grace_until: future }, NOW)).toBe(true)
+    expect(hasActivePlan(trial, NOW)).toBe(false)
+    expect(hasActivePlan({ subscription_status: 'canceled', plan: 'growth', grace_until: null }, NOW)).toBe(false)
+  })
+
+  it('exchangeCap reflects plan when active, else trial', () => {
+    expect(exchangeCap(trial, NOW)).toBe(1)
+    expect(exchangeCap(starter, NOW)).toBe(2)
+    expect(exchangeCap(growth, NOW)).toBe(6)
+    expect(exchangeCap(scale, NOW)).toBe(Infinity)
+    expect(exchangeCap({ subscription_status: 'canceled', plan: 'scale', grace_until: null }, NOW)).toBe(1)
+  })
+
+  it('canCreateExchange compares count to cap', () => {
+    expect(canCreateExchange(trial, 0, NOW)).toBe(true)
+    expect(canCreateExchange(trial, 1, NOW)).toBe(false)
+    expect(canCreateExchange(starter, 1, NOW)).toBe(true)
+    expect(canCreateExchange(starter, 2, NOW)).toBe(false)
+    expect(canCreateExchange(scale, 999, NOW)).toBe(true)
   })
 })
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `pnpm test lib/billing/__tests__/entitlement.test.ts`
-Expected: FAIL — cannot resolve `@/lib/billing/entitlement`.
+Run: `pnpm test lib/billing/__tests__/limits.test.ts`
+Expected: FAIL — cannot resolve `@/lib/billing/limits`.
 
-- [ ] **Step 3: Implement `isEntitled`**
+- [ ] **Step 3: Implement `limits.ts`**
 
-Create `lib/billing/entitlement.ts`:
+Create `lib/billing/limits.ts`:
 
 ```ts
 import type { School } from '@/types/db'
+import type { PlanKey } from './plans'
 
-export function isEntitled(
-  school: Pick<School, 'subscription_status' | 'grace_until'>,
+export const TRIAL_EXCHANGE_CAP = 1
+
+export const PLAN_EXCHANGE_CAP: Record<PlanKey, number> = {
+  starter: 2,
+  growth: 6,
+  scale: Infinity,
+}
+
+export type BillingState = Pick<School, 'subscription_status' | 'plan' | 'grace_until'>
+
+export function isInGrace(school: BillingState, now: Date = new Date()): boolean {
+  const s = school.subscription_status
+  if (s !== 'past_due' && s !== 'unpaid') return false
+  return !!school.grace_until && now < new Date(school.grace_until)
+}
+
+export function hasActivePlan(school: BillingState, now: Date = new Date()): boolean {
+  return school.subscription_status === 'active' || isInGrace(school, now)
+}
+
+export function exchangeCap(school: BillingState, now: Date = new Date()): number {
+  if (hasActivePlan(school, now) && school.plan) return PLAN_EXCHANGE_CAP[school.plan]
+  return TRIAL_EXCHANGE_CAP
+}
+
+export function canCreateExchange(
+  school: BillingState,
+  currentCount: number,
   now: Date = new Date(),
 ): boolean {
-  const s = school.subscription_status
-  if (s === 'trialing' || s === 'active') return true
-  if (s === 'past_due' || s === 'unpaid') {
-    return !!school.grace_until && now < new Date(school.grace_until)
-  }
-  return false
+  return currentCount < exchangeCap(school, now)
 }
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `pnpm test lib/billing/__tests__/entitlement.test.ts`
+Run: `pnpm test lib/billing/__tests__/limits.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/billing/entitlement.ts lib/billing/__tests__/entitlement.test.ts
-git commit -m "feat(billing): add isEntitled entitlement function"
+git add lib/billing/limits.ts lib/billing/__tests__/limits.test.ts
+git commit -m "feat(billing): plan exchange caps + active-plan/grace logic"
 ```
 
 ---
@@ -340,7 +264,7 @@ git commit -m "feat(billing): add isEntitled entitlement function"
 - Test: `lib/billing/__tests__/webhook.test.ts`
 
 **Interfaces:**
-- Consumes: `Stripe.Event` (type-only import), `coercePlan` from `@/lib/billing/plans`, `School`/`SubscriptionStatus` from `@/types/db`.
+- Consumes: `Stripe.Event` (type-only), `coercePlan` from `@/lib/billing/plans`, `School`/`SubscriptionStatus` from `@/types/db`.
 - Produces:
   - `type SchoolBillingPatch = Partial<Pick<School, 'stripe_customer_id' | 'stripe_subscription_id' | 'subscription_status' | 'plan' | 'current_period_end' | 'grace_until'>>`
   - `type BillingUpdate = { customerId: string; patch: SchoolBillingPatch; setGraceIfNull?: boolean }`
@@ -360,7 +284,7 @@ function evt(type: string, object: unknown): Stripe.Event {
 }
 
 describe('resolveBillingUpdate', () => {
-  it('checkout.session.completed → trialing + ids + plan', () => {
+  it('checkout.session.completed → active + ids + plan', () => {
     const r = resolveBillingUpdate(evt('checkout.session.completed', {
       customer: 'cus_1', subscription: 'sub_1', metadata: { plan: 'scale' },
     }))
@@ -370,7 +294,7 @@ describe('resolveBillingUpdate', () => {
         stripe_customer_id: 'cus_1',
         stripe_subscription_id: 'sub_1',
         plan: 'scale',
-        subscription_status: 'trialing',
+        subscription_status: 'active',
       },
     })
   })
@@ -458,7 +382,7 @@ export function resolveBillingUpdate(event: Stripe.Event): BillingUpdate | null 
           stripe_customer_id: String(s.customer),
           stripe_subscription_id: String(s.subscription),
           plan: coercePlan(s.metadata?.plan),
-          subscription_status: 'trialing',
+          subscription_status: 'active',
         },
       }
     }
@@ -490,7 +414,7 @@ export function resolveBillingUpdate(event: Stripe.Event): BillingUpdate | null 
 }
 ```
 
-Note: if your installed stripe types no longer expose `current_period_end` on `Stripe.Subscription` (some API versions moved it under items), cast: `(sub as unknown as { current_period_end?: number }).current_period_end`.
+Note: if your installed stripe types no longer expose `current_period_end` on `Stripe.Subscription`, cast: `(sub as unknown as { current_period_end?: number }).current_period_end`.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -515,7 +439,7 @@ git commit -m "feat(billing): map stripe events to school billing patches"
 - Consumes: `getStripe`, `resolveBillingUpdate`, `createAdminClient`.
 - Produces: `POST` handler at `/api/stripe/webhook`.
 
-This task has no unit test (thin I/O glue over the tested `resolveBillingUpdate`); it is verified manually with the Stripe CLI in Step 3 and by `pnpm build`.
+No unit test (thin I/O glue over the tested `resolveBillingUpdate`); verified by `pnpm build` and Task 11.
 
 - [ ] **Step 1: Implement the route**
 
@@ -570,23 +494,27 @@ export async function POST(req: Request) {
 }
 ```
 
-- [ ] **Step 2: Verify the build**
+- [ ] **Step 2: Exempt the webhook from middleware auth**
+
+The webhook is an unauthenticated POST from Stripe. In `middleware.ts`, add it to the public routes so it isn't bounced to `/login`. Change the `isPublicRoute` block:
+
+```ts
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/apply') ||
+    pathname.startsWith('/invite') ||
+    pathname.startsWith('/api/stripe')
+```
+
+- [ ] **Step 3: Verify the build**
 
 Run: `pnpm build`
 Expected: build succeeds; `/api/stripe/webhook` listed as a route.
 
-- [ ] **Step 3: Manual smoke test (documented, run when Stripe keys are configured)**
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-stripe trigger checkout.session.completed
-```
-Expected: handler returns 200; no crash. (Full end-to-end verified in Task 11.)
-
 - [ ] **Step 4: Commit**
 
 ```bash
-git add app/api/stripe/webhook/route.ts
+git add app/api/stripe/webhook/route.ts middleware.ts
 git commit -m "feat(billing): stripe webhook route writes school subscription state"
 ```
 
@@ -600,9 +528,9 @@ git commit -m "feat(billing): stripe webhook route writes school subscription st
 
 **Interfaces:**
 - Consumes: `createClient` (server), `createAdminClient`, `getStripe`, `resolveCheckoutPlan`, `priceIdForPlan`.
-- Produces: `GET /billing/checkout` (302→Stripe Checkout), `GET /billing/portal` (302→Stripe Customer Portal).
+- Produces: `GET /billing/checkout` (303→Stripe Checkout), `GET /billing/portal` (303→Stripe Customer Portal).
 
-No unit test — I/O glue over already-tested `resolveCheckoutPlan`/`priceIdForPlan`. Verified by `pnpm build` and Task 11.
+No unit test — I/O glue over already-tested helpers. Verified by `pnpm build` and Task 11.
 
 - [ ] **Step 1: Implement the checkout route**
 
@@ -638,13 +566,12 @@ export async function GET(request: NextRequest) {
   const plan = resolveCheckoutPlan({
     query: request.nextUrl.searchParams.get('plan'),
     schoolPlan: school.plan,
-    metadataPlan: (user.user_metadata as Record<string, unknown> | undefined)?.plan,
   })
 
   const stripe = getStripe()
 
   // Create the Stripe customer once and persist it, so the webhook can always
-  // resolve the school by stripe_customer_id (including on the very first
+  // resolve the school by stripe_customer_id (including the first
   // checkout.session.completed event).
   let customerId = school.stripe_customer_id
   if (!customerId) {
@@ -660,7 +587,7 @@ export async function GET(request: NextRequest) {
     mode: 'subscription',
     customer: customerId,
     line_items: [{ price: priceIdForPlan(plan), quantity: 1 }],
-    subscription_data: { trial_period_days: 14, metadata: { school_id: school.id, plan } },
+    subscription_data: { metadata: { school_id: school.id, plan } },
     client_reference_id: school.id,
     metadata: { school_id: school.id, plan },
     success_url: `${appUrl}/billing/return?session_id={CHECKOUT_SESSION_ID}`,
@@ -720,356 +647,151 @@ git commit -m "feat(billing): checkout + customer portal route handlers"
 
 ---
 
-### Task 7: Middleware billing gate
+### Task 7: Enforce the exchange cap in `createExchange`
 
 **Files:**
-- Create: `lib/billing/gate.ts`
-- Test: `lib/billing/__tests__/gate.test.ts`
-- Modify: `middleware.ts`
+- Modify: `actions/exchanges.ts` (`createExchange`)
+- Test: `actions/__tests__/create-exchange.test.ts` (extend)
 
 **Interfaces:**
-- Consumes: `isEntitled` (in middleware), `Database` type.
-- Produces: `shouldGateForBilling(input: { pathname: string; role: string | null | undefined; entitled: boolean }): boolean`
+- Consumes: `canCreateExchange` from `@/lib/billing/limits`.
+- Produces: `createExchange` throws when the school is at its exchange cap.
 
-- [ ] **Step 1: Write the failing test for the gate decision**
+- [ ] **Step 1: Write the failing tests**
 
-Create `lib/billing/__tests__/gate.test.ts`:
+Extend `actions/__tests__/create-exchange.test.ts`. First, update the mock so the `schools` select returns billing fields and the `exchanges` table supports a count query. Replace the `schools` and `exchanges` branches of `makeClient`'s `from(table)`:
 
 ```ts
-import { describe, it, expect } from 'vitest'
-import { shouldGateForBilling } from '@/lib/billing/gate'
-
-describe('shouldGateForBilling', () => {
-  it('gates an unentitled organizer on an app route', () => {
-    expect(shouldGateForBilling({ pathname: '/dashboard', role: 'organizer', entitled: false })).toBe(true)
-  })
-  it('does not gate when entitled', () => {
-    expect(shouldGateForBilling({ pathname: '/dashboard', role: 'organizer', entitled: true })).toBe(false)
-  })
-  it('never gates students', () => {
-    expect(shouldGateForBilling({ pathname: '/my-forms', role: 'student', entitled: false })).toBe(false)
-  })
-  it('never gates the billing routes themselves', () => {
-    expect(shouldGateForBilling({ pathname: '/billing', role: 'organizer', entitled: false })).toBe(false)
-    expect(shouldGateForBilling({ pathname: '/billing/checkout', role: 'organizer', entitled: false })).toBe(false)
-  })
-  it('never gates auth routes', () => {
-    expect(shouldGateForBilling({ pathname: '/auth/confirm', role: 'organizer', entitled: false })).toBe(false)
-  })
-})
+      if (table === 'schools') {
+        return {
+          select: () => ({ eq: () => ({ single: async () => ({
+            data: opts.ownSchoolError ? null : {
+              name: opts.ownSchoolName ?? 'Existing High',
+              subscription_status: opts.subStatus ?? null,
+              plan: opts.plan ?? null,
+              grace_until: null,
+            },
+            error: opts.ownSchoolError ?? null,
+          }) }) }),
+          update: (row: any) => { calls.schoolUpdated = row; return { eq: async () => ({ error: null }) } },
+          insert: (row: any) => { calls.partnerInserted = row; return { select: () => ({ single: async () => ({ data: { id: 's-partner' }, error: null }) }) } },
+        }
+      }
+      if (table === 'exchanges') {
+        return {
+          select: () => ({ eq: async () => ({ count: opts.exchangeCount ?? 0, error: null }) }),
+          insert: async (row: any) => { calls.exchangeInserted = row; return { error: null } },
+        }
+      }
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `pnpm test lib/billing/__tests__/gate.test.ts`
-Expected: FAIL — cannot resolve `@/lib/billing/gate`.
-
-- [ ] **Step 3: Implement the gate decision**
-
-Create `lib/billing/gate.ts`:
+And widen the `opts` type near the top of the file:
 
 ```ts
-export function shouldGateForBilling(input: {
-  pathname: string
-  role: string | null | undefined
-  entitled: boolean
-}): boolean {
-  const { pathname, role, entitled } = input
-  if (role !== 'organizer') return false
-  if (entitled) return false
-  if (pathname.startsWith('/billing')) return false
-  if (pathname.startsWith('/auth')) return false
-  return true
+let opts: {
+  role?: string; ownSchoolName?: string; ownSchoolError?: unknown
+  subStatus?: string; plan?: string; exchangeCount?: number
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `pnpm test lib/billing/__tests__/gate.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Exempt the webhook from auth redirects**
-
-In `middleware.ts`, add the Stripe webhook to the public routes so the unauthenticated Stripe POST is not bounced to `/login`. Change the `isPublicRoute` block:
+Then add a new describe block:
 
 ```ts
-  const isPublicRoute =
-    pathname === '/' ||
-    pathname.startsWith('/apply') ||
-    pathname.startsWith('/invite') ||
-    pathname.startsWith('/api/stripe')
-```
+describe('createExchange plan cap', () => {
+  it('allows a trial school to create its first exchange', async () => {
+    opts = { exchangeCount: 0 }
+    await createExchange(form(base))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+  })
 
-- [ ] **Step 6: Add the gate to middleware**
+  it('blocks a trial school at 1 exchange', async () => {
+    opts = { exchangeCount: 1 }
+    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
+    expect(calls.exchangeInserted).toBeNull()
+  })
 
-In `middleware.ts`, add imports at the top:
+  it('allows a Starter school to create a second exchange', async () => {
+    opts = { exchangeCount: 1, subStatus: 'active', plan: 'starter' }
+    await createExchange(form(base))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+  })
 
-```ts
-import { isEntitled } from '@/lib/billing/entitlement'
-import { shouldGateForBilling } from '@/lib/billing/gate'
-```
-
-Then, immediately before the final `return supabaseResponse`, insert the gate. It only runs for a logged-in user on a non-public, non-billing, non-api route:
-
-```ts
-  if (
-    user &&
-    !isPublicRoute &&
-    !pathname.startsWith('/billing') &&
-    !pathname.startsWith('/api/stripe')
-  ) {
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
-    )
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role, schools(subscription_status, grace_until)')
-      .eq('id', user.id)
-      .single<{
-        role: string
-        schools: { subscription_status: string | null; grace_until: string | null } | null
-      }>()
-
-    const school = profile?.schools ?? null
-    const entitled = school
-      ? isEntitled({
-          subscription_status: school.subscription_status as never,
-          grace_until: school.grace_until,
-        })
-      : false
-
-    if (shouldGateForBilling({ pathname, role: profile?.role, entitled })) {
-      return NextResponse.redirect(new URL('/billing', request.url))
-    }
-  }
-
-  return supabaseResponse
-```
-
-- [ ] **Step 7: Run the full test suite + build**
-
-Run: `pnpm test && pnpm build`
-Expected: all tests PASS; build succeeds.
-
-- [ ] **Step 8: Commit**
-
-```bash
-git add lib/billing/gate.ts lib/billing/__tests__/gate.test.ts middleware.ts
-git commit -m "feat(billing): gate organizer routes on subscription entitlement"
-```
-
----
-
-### Task 8: Post-signup redirects → billing checkout
-
-**Files:**
-- Modify: `app/auth/confirm/route.ts`
-- Modify: `app/auth/callback/route.ts`
-
-**Interfaces:**
-- Consumes: existing `provisionOrganizer` / `provisionOrganizerFromOAuth` (unchanged).
-- Produces: after successful organizer provisioning, redirect target is `/billing/checkout` (email path) / honors billing `next` (Google path).
-
-No new unit test — existing auth tests (if any) plus Task 11 manual E2E cover this. Verified by `pnpm build`.
-
-- [ ] **Step 1: Redirect email signups to checkout**
-
-In `app/auth/confirm/route.ts`, the `type === 'signup'` branch currently ends by falling through to `return redirect(safeNext)`. Change the signup branch to send freshly-provisioned organizers to checkout instead of `next`:
-
-```ts
-      if (type === 'signup') {
-        if (!data.user) return redirect('/login?error=signup_failed')
-        const result = await provisionOrganizer(data.user)
-        if (!result.ok) return redirect('/login?error=signup_failed')
-        return redirect('/billing/checkout')
-      }
-      return redirect(safeNext)
-```
-
-- [ ] **Step 2: Redirect Google signups to checkout (carrying the plan)**
-
-In `app/auth/callback/route.ts`, the `intent === 'organizer_signup'` branch currently redirects to `/dashboard`. The signup page will send `next=/billing/checkout?plan=<plan>` (Task 9). Honor that safe next, defaulting to `/billing/checkout`:
-
-```ts
-  if (intent === 'organizer_signup') {
-    const result = await provisionOrganizerFromOAuth(user)
-    if (!result.ok) return redirect('/login?error=signup_failed')
-    return redirect(safeNext.startsWith('/billing') ? safeNext : '/billing/checkout')
-  }
-```
-
-- [ ] **Step 3: Verify the build**
-
-Run: `pnpm build`
-Expected: build succeeds.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add app/auth/confirm/route.ts app/auth/callback/route.ts
-git commit -m "feat(billing): route new organizers to checkout after provisioning"
-```
-
----
-
-### Task 9: Signup plan selector + pricing CTAs
-
-**Files:**
-- Modify: `app/(auth)/signup/page.tsx`
-- Modify: `lib/landing/content.ts` (per-tier CTAs carry `?plan=`)
-- Modify: `components/landing/Pricing.tsx` only if tier CTA href isn't already per-tier (it already uses `tier.cta.href`)
-- Test: `app/(auth)/__tests__/signup.test.tsx` (extend)
-
-**Interfaces:**
-- Consumes: `PLAN_KEYS`, `DEFAULT_PLAN`, `coercePlan` from `@/lib/billing/plans`; `useSearchParams` for the `?plan=` default.
-- Produces: signup form includes `plan` in `signUp` metadata and passes `next="/billing/checkout?plan=<plan>"` to `GoogleButton`.
-
-- [ ] **Step 1: Point each pricing tier CTA at a plan-scoped signup**
-
-In `lib/landing/content.ts`, replace each tier's `cta: SIGNUP` with a plan-scoped link. Update the three tiers:
-
-```ts
-      // Starter tier:
-        cta: { label: 'Get started', href: '/signup?plan=starter' },
-      // Growth tier:
-        cta: { label: 'Get started', href: '/signup?plan=growth' },
-      // Scale tier:
-        cta: { label: 'Get started', href: '/signup?plan=scale' },
-```
-
-(The generic nav/hero `SIGNUP` → `/signup` stays as-is: no plan means the selector defaults to Growth.)
-
-- [ ] **Step 2: Write the failing test for the plan default + metadata**
-
-Extend `app/(auth)/__tests__/signup.test.tsx`. Add a mock for `useSearchParams` at the top (near the existing `vi.mock`) and two assertions:
-
-```ts
-// Add alongside the existing mocks:
-const searchParams = new URLSearchParams()
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => searchParams,
-}))
-
-// Add inside describe('SignupPage', ...):
-it('defaults to the growth plan and submits it in metadata', async () => {
-  const user = userEvent.setup()
-  render(<SignupPage />)
-  await user.type(screen.getByLabelText(/full name/i), 'Jane Doe')
-  await user.type(screen.getByLabelText(/school name/i), 'Lincoln High')
-  await user.type(screen.getByLabelText(/email/i), 'jane@example.com')
-  await user.type(screen.getByLabelText(/password/i), 'supersecret')
-  await user.click(screen.getByRole('button', { name: /create account/i }))
-
-  const arg = signUp.mock.calls[0][0]
-  expect(arg.options.data.plan).toBe('growth')
+  it('blocks a Starter school at 2 exchanges', async () => {
+    opts = { exchangeCount: 2, subStatus: 'active', plan: 'starter' }
+    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
+  })
 })
 ```
 
-Also update the **existing** first test's metadata assertion, which now includes `plan`:
+- [ ] **Step 2: Run the test to verify the new cases fail**
+
+Run: `pnpm test actions/__tests__/create-exchange.test.ts`
+Expected: the four existing tests PASS (billing fields default to trial, count 0 → allowed); the two "blocks" tests FAIL (no cap enforcement yet).
+
+- [ ] **Step 3: Implement the cap check**
+
+In `actions/exchanges.ts`, add the import at the top:
 
 ```ts
-    expect(arg.options.data).toEqual({ full_name: 'Jane Doe', school_name: 'Lincoln High', plan: 'growth' })
+import { canCreateExchange } from '@/lib/billing/limits'
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
-
-Run: `pnpm test "app/(auth)/__tests__/signup.test.tsx"`
-Expected: FAIL — `plan` is undefined in metadata / selector not present.
-
-- [ ] **Step 4: Add the plan selector to the signup page**
-
-In `app/(auth)/signup/page.tsx`:
-
-1. Add imports:
+Extend the existing `ownSchool` select to include billing fields (it currently selects only `name`):
 
 ```ts
-import { useSearchParams } from 'next/navigation'
-import { PLAN_KEYS, DEFAULT_PLAN, coercePlan, type PlanKey } from '@/lib/billing/plans'
+  const { data: ownSchool, error: ownSchoolError } = await supabase
+    .from('schools')
+    .select('name, subscription_status, plan, grace_until')
+    .eq('id', profile.school_id).single()
+  if (ownSchoolError) throw ownSchoolError
 ```
 
-2. Inside the component, derive the initial plan from `?plan=` and hold it in state:
+Then, immediately after that block (before the deferred-name rename or partner-school insert — placement between the `ownSchoolError` throw and the rename block is fine), add the cap enforcement:
 
 ```ts
-  const searchParams = useSearchParams()
-  const [plan, setPlan] = useState<PlanKey>(coercePlan(searchParams.get('plan')))
+  // Enforce the plan's exchange cap (trial = 1). Count only exchanges this
+  // school owns — it is always school_a on exchanges it created.
+  const { count, error: countError } = await supabase
+    .from('exchanges')
+    .select('id', { count: 'exact', head: true })
+    .eq('school_a_id', profile.school_id)
+  if (countError) throw countError
+  if (ownSchool && !canCreateExchange(ownSchool, count ?? 0)) {
+    throw new Error('You have reached your plan’s exchange limit. Subscribe to add more.')
+  }
 ```
 
-3. Include `plan` in the signup metadata (in `handleSignup`, extend `options.data`):
+- [ ] **Step 4: Run the tests to verify they pass**
 
-```ts
-        data: { full_name: name, school_name: school, plan },
-```
+Run: `pnpm test actions/__tests__/create-exchange.test.ts`
+Expected: all PASS (existing 4 + new 4).
 
-4. Pass the plan to the Google button (replace the existing `next="/dashboard"`):
+- [ ] **Step 5: Lint + type-check**
 
-```tsx
-          <GoogleButton
-            intent="organizer_signup"
-            next={`/billing/checkout?plan=${plan}`}
-            label="Sign up with Google"
-          />
-```
+Run: `pnpm lint && pnpm exec tsc --noEmit`
+Expected: clean.
 
-5. Render a compact plan selector above the name field (labels map plan → display name):
-
-```tsx
-            <div className="space-y-1">
-              <Label>Plan</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {PLAN_KEYS.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setPlan(key)}
-                    aria-pressed={plan === key}
-                    className={`rounded-md border p-2 text-sm capitalize ${
-                      plan === key ? 'border-primary bg-primary/5 font-medium' : 'border-input'
-                    }`}
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-            </div>
-```
-
-Note: `DEFAULT_PLAN` is imported for clarity/reuse even though `coercePlan` already applies it; keep the import only if referenced, otherwise drop it to satisfy lint.
-
-- [ ] **Step 5: Run the test to verify it passes**
-
-Run: `pnpm test "app/(auth)/__tests__/signup.test.tsx"`
-Expected: PASS.
-
-- [ ] **Step 6: Lint + build**
-
-Run: `pnpm lint && pnpm build`
-Expected: no lint errors (drop unused `DEFAULT_PLAN` import if flagged); build succeeds.
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add "app/(auth)/signup/page.tsx" lib/landing/content.ts "app/(auth)/__tests__/signup.test.tsx"
-git commit -m "feat(billing): plan selector on signup + plan-scoped pricing CTAs"
+git add actions/exchanges.ts actions/__tests__/create-exchange.test.ts
+git commit -m "feat(billing): enforce plan exchange cap in createExchange"
 ```
 
 ---
 
-### Task 10: `/billing` page, return page, and payment warning banner
+### Task 8: `/billing` page, subscribe selector, return page
 
 **Files:**
 - Create: `app/billing/page.tsx`
 - Create: `app/billing/return/page.tsx`
 - Create: `app/billing/return/ReturnPoller.tsx`
-- Create: `components/billing/PaymentWarningBanner.tsx`
-- Modify: `app/(organizer)/layout.tsx` (mount the banner when in grace)
 
 **Interfaces:**
-- Consumes: `createClient` (server), `createAdminClient`, `isEntitled`, `School`.
-- Produces: `/billing` status/actions page; `/billing/return` confirmation page; `<PaymentWarningBanner grace_until={...} />`.
+- Consumes: `createClient` (server), `createAdminClient`, `hasActivePlan`, `isInGrace`, `PLAN_KEYS`.
+- Produces: `/billing` status + plan selector / portal link; `/billing/return` confirmation page.
 
-No unit test for the pages (server components doing I/O + redirects); the banner is trivial presentational markup. Verified by `pnpm build` + Task 11.
+No unit test (server components doing I/O + redirects). Verified by `pnpm build` + Task 11.
 
 - [ ] **Step 1: Build the `/billing` page**
 
@@ -1080,12 +802,16 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isEntitled } from '@/lib/billing/entitlement'
+import { hasActivePlan, isInGrace, PLAN_EXCHANGE_CAP } from '@/lib/billing/limits'
+import { PLAN_KEYS } from '@/lib/billing/plans'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
 
 export const dynamic = 'force-dynamic'
+
+const PLAN_LABEL: Record<string, string> = { starter: 'Starter', growth: 'Growth', scale: 'Scale' }
+const capLabel = (n: number) => (n === Infinity ? 'unlimited' : String(n))
 
 export default async function BillingPage() {
   const supabase = await createClient()
@@ -1099,64 +825,58 @@ export default async function BillingPage() {
 
   const { data: school } = await admin
     .from('schools')
-    .select('subscription_status, grace_until, stripe_customer_id')
+    .select('subscription_status, plan, grace_until, stripe_customer_id')
     .eq('id', profile.school_id).single()
 
-  const status = school?.subscription_status ?? null
-  const entitled = school ? isEntitled(school) : false
-  const hasCustomer = !!school?.stripe_customer_id
-  const inGrace = (status === 'past_due' || status === 'unpaid') && entitled
+  const active = school ? hasActivePlan(school) : false
+  const grace = school ? isInGrace(school) : false
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-4 py-10">
       <Logo />
-      <Card className="w-full max-w-md">
-        <CardHeader><CardTitle>Billing</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          {!hasCustomer && (
+      <Card className="w-full max-w-lg">
+        <CardHeader><CardTitle>Plans &amp; billing</CardTitle></CardHeader>
+        <CardContent className="space-y-5">
+          {active && school?.plan ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Start your subscription to activate your workspace. Your card won’t be
-                charged during the 14-day trial.
-              </p>
-              <Button asChild className="w-full">
-                <Link href="/billing/checkout">Start subscription</Link>
-              </Button>
-            </>
-          )}
-          {hasCustomer && inGrace && (
-            <>
-              <p className="text-sm text-red-600">
-                Your last payment failed. Update your card to keep access.
-              </p>
-              <Button asChild className="w-full">
-                <Link href="/billing/portal">Update payment</Link>
-              </Button>
-            </>
-          )}
-          {hasCustomer && !inGrace && !entitled && (
-            <>
-              <p className="text-sm text-red-600">
-                Your subscription is inactive. Restart it to regain access.
+                You’re on the <span className="font-medium">{PLAN_LABEL[school.plan]}</span> plan
+                ({capLabel(PLAN_EXCHANGE_CAP[school.plan])} exchanges).
+                {grace && ' Your last payment failed — update your card to avoid losing access.'}
               </p>
               <Button asChild className="w-full">
                 <Link href="/billing/portal">Manage billing</Link>
               </Button>
             </>
-          )}
-          {hasCustomer && entitled && !inGrace && (
+          ) : (
             <>
-              <p className="text-sm text-muted-foreground">Your subscription is active.</p>
-              <div className="flex gap-2">
-                <Button asChild variant="outline" className="flex-1">
+              <p className="text-sm text-muted-foreground">
+                You’re on the free trial (1 exchange). Choose a plan to create more.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {PLAN_KEYS.map((key) => (
+                  <Link
+                    key={key}
+                    href={`/billing/checkout?plan=${key}`}
+                    className="rounded-lg border p-4 text-center hover:border-primary"
+                  >
+                    <div className="font-medium">{PLAN_LABEL[key]}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {capLabel(PLAN_EXCHANGE_CAP[key])} exchanges
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              {school?.stripe_customer_id && (
+                <Button asChild variant="outline" className="w-full">
                   <Link href="/billing/portal">Manage billing</Link>
                 </Button>
-                <Button asChild className="flex-1">
-                  <Link href="/dashboard">Go to dashboard</Link>
-                </Button>
-              </div>
+              )}
             </>
           )}
+          <Button asChild variant="ghost" className="w-full">
+            <Link href="/dashboard">Back to dashboard</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>
@@ -1173,8 +893,8 @@ Create `app/billing/return/ReturnPoller.tsx`:
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// The webhook may lag the redirect by a second. Refresh the server component a
-// few times until it sees `trialing`/`active` and redirects to the dashboard.
+// The webhook may lag the redirect by a second. Refresh the server component
+// until it sees `active` and redirects to the dashboard.
 export function ReturnPoller() {
   const router = useRouter()
   useEffect(() => {
@@ -1193,7 +913,7 @@ Create `app/billing/return/page.tsx`:
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isEntitled } from '@/lib/billing/entitlement'
+import { hasActivePlan } from '@/lib/billing/limits'
 import { Logo } from '@/components/brand/Logo'
 import { ReturnPoller } from './ReturnPoller'
 
@@ -1209,10 +929,10 @@ export default async function BillingReturnPage() {
     .from('users').select('school_id').eq('id', user.id).maybeSingle()
   const { data: school } = profile
     ? await admin.from('schools')
-        .select('subscription_status, grace_until').eq('id', profile.school_id).single()
+        .select('subscription_status, plan, grace_until').eq('id', profile.school_id).single()
     : { data: null }
 
-  if (school && isEntitled(school)) redirect('/dashboard')
+  if (school && hasActivePlan(school)) redirect('/dashboard')
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-4">
@@ -1224,32 +944,130 @@ export default async function BillingReturnPage() {
 }
 ```
 
-- [ ] **Step 4: Build the payment warning banner**
+- [ ] **Step 4: Lint + build**
+
+Run: `pnpm lint && pnpm build`
+Expected: no lint errors; build succeeds; `/billing` and `/billing/return` listed.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/billing/page.tsx app/billing/return/page.tsx app/billing/return/ReturnPoller.tsx
+git commit -m "feat(billing): billing page with plan selector + checkout return"
+```
+
+---
+
+### Task 9: Dashboard cap-aware CTA + grace banner
+
+**Files:**
+- Modify: `app/(organizer)/dashboard/page.tsx`
+- Create: `components/billing/PaymentWarningBanner.tsx`
+- Modify: `app/(organizer)/layout.tsx`
+
+**Interfaces:**
+- Consumes: `exchangeCap`, `isInGrace` from `@/lib/billing/limits`; the organizer's school billing fields.
+- Produces: dashboard "New exchange" points to `/billing` when at cap; grace banner in the organizer layout.
+
+No unit test (server-component rendering); verified by `pnpm build` + Task 11.
+
+- [ ] **Step 1: Make the dashboard CTA cap-aware**
+
+`app/(organizer)/dashboard/page.tsx` currently calls `getExchanges()` and renders a fixed "New exchange" button. Fetch the school's billing state + count, compute the cap, and switch the CTA. Replace the file body:
+
+```tsx
+import { getExchanges } from '@/actions/exchanges'
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { exchangeCap } from '@/lib/billing/limits'
+
+export default async function DashboardPage() {
+  const exchanges = await getExchanges()
+
+  // Count only exchanges this school owns (it is always school_a on those).
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('users').select('school_id').eq('id', user.id).single()
+    : { data: null }
+  const { data: school } = profile
+    ? await supabase.from('schools')
+        .select('subscription_status, plan, grace_until').eq('id', profile.school_id).single()
+    : { data: null }
+  const ownedCount = profile
+    ? exchanges.filter((ex) => ex.school_a_id === profile.school_id).length
+    : exchanges.length
+  const atCap = school ? ownedCount >= exchangeCap(school) : ownedCount >= 1
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Exchanges</h1>
+        {atCap ? (
+          <Button asChild variant="outline"><Link href="/billing">Subscribe to add more</Link></Button>
+        ) : (
+          <Button asChild><Link href="/exchanges/new">New exchange</Link></Button>
+        )}
+      </div>
+      {exchanges.length === 0 && (
+        <p className="text-muted-foreground">No exchanges yet. Create your first one.</p>
+      )}
+      <div className="grid gap-4">
+        {exchanges.map(ex => (
+          <Card key={ex.id}>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{ex.name}</CardTitle>
+                <Badge variant="outline">{ex.year}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {(ex.school_a as any)?.name} ↔ {(ex.school_b as any)?.name}
+              </p>
+              <Button asChild variant="outline" size="sm" className="mt-3">
+                <Link href={`/exchanges/${ex.id}`}>View →</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+Note: `getExchanges()` already selects `*` (so `school_a_id` is present on each row). Keep its existing return shape.
+
+- [ ] **Step 2: Build the payment warning banner**
 
 Create `components/billing/PaymentWarningBanner.tsx`:
 
 ```tsx
 import Link from 'next/link'
 
-export function PaymentWarningBanner({ graceUntil }: { graceUntil: string }) {
-  const date = new Date(graceUntil).toLocaleDateString()
+export function PaymentWarningBanner() {
   return (
     <div className="bg-red-600 px-4 py-2 text-center text-sm text-white">
-      Payment failed — access ends {date}.{' '}
+      Your last payment failed — update your card to keep your plan.{' '}
       <Link href="/billing/portal" className="underline font-medium">Update payment</Link>
     </div>
   )
 }
 ```
 
-- [ ] **Step 5: Mount the banner in the organizer layout when in grace**
+- [ ] **Step 3: Mount the banner in the organizer layout when in grace**
 
-In `app/(organizer)/layout.tsx`, extend the profile fetch to include the school's grace state and render the banner. Replace the body:
+In `app/(organizer)/layout.tsx`, extend the profile fetch to include the school's billing state and render the banner while in grace. Replace the body:
 
 ```tsx
 import { OrganizerNav } from '@/components/OrganizerNav'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isInGrace } from '@/lib/billing/limits'
 import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 
 export default async function OrganizerLayout({ children }: { children: React.ReactNode }) {
@@ -1259,23 +1077,20 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, schools(subscription_status, grace_until)')
+    .select('role, schools(subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<{
       role: string
-      schools: { subscription_status: string | null; grace_until: string | null } | null
+      schools: { subscription_status: string | null; plan: string | null; grace_until: string | null } | null
     }>()
   if (profile?.role !== 'organizer') redirect('/my-forms')
 
   const school = profile?.schools ?? null
-  const showGrace =
-    !!school?.grace_until &&
-    (school.subscription_status === 'past_due' || school.subscription_status === 'unpaid') &&
-    new Date() < new Date(school.grace_until)
+  const showGrace = school ? isInGrace(school as never) : false
 
   return (
     <div className="min-h-screen bg-background">
-      {showGrace && school?.grace_until && <PaymentWarningBanner graceUntil={school.grace_until} />}
+      {showGrace && <PaymentWarningBanner />}
       <OrganizerNav />
       <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
     </div>
@@ -1283,31 +1098,73 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 }
 ```
 
-- [ ] **Step 6: Lint + build + full test suite**
+- [ ] **Step 4: Lint + build + full suite**
 
 Run: `pnpm lint && pnpm test && pnpm build`
 Expected: no lint errors; all tests PASS; build succeeds.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add app/billing/page.tsx app/billing/return/page.tsx app/billing/return/ReturnPoller.tsx components/billing/PaymentWarningBanner.tsx "app/(organizer)/layout.tsx"
-git commit -m "feat(billing): billing page, checkout return, and grace-period banner"
+git add "app/(organizer)/dashboard/page.tsx" "app/(organizer)/layout.tsx" components/billing/PaymentWarningBanner.tsx
+git commit -m "feat(billing): cap-aware dashboard CTA + grace-period banner"
 ```
+
+---
+
+### Task 10: Update landing pricing copy for the new caps
+
+**Files:**
+- Modify: `lib/landing/content.ts` (pricing tier feature copy)
+- Test: `components/landing/__tests__/Pricing.test.tsx` if it asserts exchange-count strings (update those assertions); otherwise none
+
+**Interfaces:** none (content only).
+
+> **Conflict note:** `lib/landing/content.ts` was also rewritten on branch
+> `wip/landing-refactor`. If that branch is merged, reconcile this copy change
+> there instead.
+
+- [ ] **Step 1: Update the exchange-count feature strings**
+
+In `lib/landing/content.ts`, update each tier's first feature line to match the new caps:
+
+- Starter first feature: `"1 active exchange"` → `"Up to 2 active exchanges"`
+- Growth first feature: `"Up to 2 active exchanges"` → `"Up to 6 active exchanges"`
+- Scale first feature: `"3+ active exchanges"` → `"Unlimited active exchanges"`
+
+Also update the Starter/Growth/Scale `description` lines only if they state a specific exchange count that now contradicts the caps (leave them if generic).
+
+- [ ] **Step 2: Update any test asserting the old strings**
+
+Run: `pnpm test components/landing` — if a Pricing test asserts `"1 active exchange"` or `"3+ active exchanges"`, update those expectations to the new strings. If no such assertion exists, skip.
+
+- [ ] **Step 3: Lint + full suite**
+
+Run: `pnpm lint && pnpm test`
+Expected: clean; all tests PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add lib/landing/content.ts components/landing/__tests__/Pricing.test.tsx
+git commit -m "feat(billing): align landing pricing copy with new exchange caps"
+```
+
+(If no test file changed, commit only `lib/landing/content.ts`.)
 
 ---
 
 ### Task 11: End-to-end verification + env documentation
 
 **Files:**
-- Modify: `CLAUDE.md` (document billing env vars + Stripe setup gotcha)
-- Modify: `.env.local` (local only, not committed) — add the five Stripe vars
+- Modify: `CLAUDE.md` (document billing model + env vars)
+- Modify: `.env.local` (local only, not committed) — add the Stripe vars
 
 **Interfaces:** none (verification + docs).
 
 - [ ] **Step 1: Add the env vars locally**
 
-Add to `.env.local` (test-mode values from the Stripe dashboard):
+Add to `.env.local` (test-mode values from the Stripe dashboard). Create three test-mode recurring (yearly) Prices matching $299/$499/$599 and paste their ids:
 
 ```
 STRIPE_SECRET_KEY=sk_test_...
@@ -1318,47 +1175,41 @@ STRIPE_PRICE_GROWTH=price_...
 STRIPE_PRICE_SCALE=price_...
 ```
 
-Create three test-mode recurring (yearly) Prices in Stripe matching $299/$499/$599 and paste their ids.
-
 - [ ] **Step 2: Document in CLAUDE.md**
 
 Add a "Billing (Stripe)" bullet under **Gotchas & Conventions** in `CLAUDE.md`:
 
 ```markdown
-- **Billing is school-anchored.** Subscription state lives on `schools` (`subscription_status`, `grace_until`, etc.), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser. Entitlement is derived by `lib/billing/entitlement.ts` (`isEntitled`) and enforced in `middleware.ts`. New organizers are routed to `/billing/checkout` after provisioning (14-day trial, 7-day grace then lock). Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the production webhook endpoint at `/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
+- **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` except `name`). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
 ```
 
-- [ ] **Step 3: Manual end-to-end (email path)**
+- [ ] **Step 3: Manual end-to-end**
 
 1. `stripe listen --forward-to localhost:3000/api/stripe/webhook` (copy the `whsec_` into `.env.local`, restart `pnpm dev`).
-2. Sign up at `/signup?plan=starter`, confirm the email link.
-3. Expect redirect to Stripe Checkout → pay with `4242 4242 4242 4242`.
-4. Expect `/billing/return` → `/dashboard`. Confirm `schools.subscription_status = 'trialing'` in the DB.
-5. Visit `/dashboard` in a fresh session → not gated.
+2. Sign up as a new organizer → land on `/dashboard`. Create 1 exchange → succeeds. The CTA now reads "Subscribe to add more"; a 2nd create is blocked.
+3. `/billing` → choose Starter → Stripe Checkout, pay with `4242 4242 4242 4242` → `/billing/return` → `/dashboard`. Confirm `schools.subscription_status='active'`, `plan='starter'`.
+4. Create a 2nd exchange → succeeds (cap 2). A 3rd is blocked.
+5. Cancel via `/billing/portal` (or `stripe trigger customer.subscription.deleted`) → cap reverts to 1; existing exchanges still visible.
+6. `stripe trigger invoice.payment_failed` → `grace_until` set; grace banner shows.
 
-- [ ] **Step 4: Manual end-to-end (gate + grace)**
-
-1. In the DB, set your school's `subscription_status='past_due'`, `grace_until` to a past timestamp → visiting `/dashboard` redirects to `/billing`.
-2. Set `grace_until` to a future timestamp → `/dashboard` loads with the red banner.
-3. Use a Stripe test clock (or `stripe trigger invoice.payment_failed`) to confirm the webhook sets `grace_until` when null.
-
-- [ ] **Step 5: Final verification**
+- [ ] **Step 4: Final verification**
 
 Run: `pnpm lint && pnpm test && pnpm build`
 Expected: all green.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add CLAUDE.md
-git commit -m "docs(billing): document Stripe env + webhook setup"
+git commit -m "docs(billing): document usage-based trial + Stripe env"
 ```
 
 ---
 
 ## Self-Review Notes
 
-- **Spec coverage:** billing model (Tasks 6,8), plans + selection (Tasks 1,9), school-anchored data model (Task 2), flow email+Google (Task 8), webhook state machine (Tasks 4,5), entitlement (Task 3), middleware gate + grace banner (Tasks 7,10), Customer Portal (Task 6), return-page re-check (Task 10), env vars + testing (Task 11). Out-of-scope items (exchange-count enforcement, join-existing-school, grace reminder emails) are intentionally excluded.
-- **Type consistency:** `PlanKey`, `SubscriptionStatus`, `SchoolBillingPatch`, `isEntitled`, `resolveBillingUpdate`, `resolveCheckoutPlan`, `shouldGateForBilling` are defined once and consumed with matching signatures across tasks.
-- **RLS/column-privilege note:** RLS is row-level, so the existing `schools` UPDATE policy (`20260701000001_schools_update_own_name.sql`) would let an organizer set *any* column of their own row — including billing columns — from the browser. Task 2's migration closes this by revoking `UPDATE` on `schools` from `authenticated` and re-granting only `UPDATE (name)`. Billing columns are writable solely via the service-role admin client (BYPASSRLS). The `createExchange` name-update flow still works (it only touches `name`). This must ship in the same migration as the billing columns, never after.
+- **Spec coverage:** plans + caps (Tasks 1,3), school-anchored data model + column hardening (Task 2), webhook state machine (Tasks 4,5), checkout/portal (Task 6), cap enforcement (Task 7), billing/subscribe UI + return (Task 8), dashboard CTA + grace banner (Task 9), landing copy (Task 10), env + E2E (Task 11). Out-of-scope items (join-existing-school, grace reminder emails) intentionally excluded.
+- **Type consistency:** `PlanKey`, `SubscriptionStatus` (no `trialing`), `SchoolBillingPatch`, `BillingState`, `resolveBillingUpdate`, `exchangeCap`/`canCreateExchange`/`hasActivePlan`/`isInGrace`, `resolveCheckoutPlan` defined once and consumed with matching signatures.
+- **RLS/column-privilege:** Task 2 revokes broad `UPDATE` on `schools` and re-grants only `UPDATE (name)`, so an organizer cannot raise their own cap by writing `plan`; billing columns are service-role-only.
+- **wip/landing-refactor conflict:** Task 10 (and any content.ts touch) overlaps the parallel landing refactor branch — reconcile at merge.
 ```
