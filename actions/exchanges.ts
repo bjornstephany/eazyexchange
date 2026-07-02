@@ -220,3 +220,15 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
   if (error) throw error
   revalidatePath(`/exchanges/${exchangeId}`)
 }
+
+export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promise<void> {
+  if (phase !== 1 && phase !== 2) throw new Error('Invalid phase')
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthenticated')
+  await assertExchangeInScope(supabase, user.id, exchangeId)
+
+  const { error } = await supabase.from('exchanges').update({ phase }).eq('id', exchangeId)
+  if (error) throw error
+  revalidatePath('/dashboard')
+}

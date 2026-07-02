@@ -25,6 +25,7 @@ export type Exchange = {
   application_open: boolean
   application_deadline: string | null
   apply_slug: string | null
+  phase: number
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
@@ -84,7 +85,7 @@ export type Database = {
   public: {
     Tables: {
       schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'created_at' | 'name'>>, Partial<School>>
-      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug'>>, Partial<Exchange>>
+      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase'>>, Partial<Exchange>>
       users: TableDef<UserProfile, Omit<UserProfile, 'created_at'>, Partial<UserProfile>>
       exchange_enrollments: TableDef<ExchangeEnrollment, Omit<ExchangeEnrollment, 'id' | 'created_at'>, Partial<ExchangeEnrollment>>
       form_templates: TableDef<FormTemplate, Omit<FormTemplate, 'id' | 'created_at'>, Partial<FormTemplate>>
