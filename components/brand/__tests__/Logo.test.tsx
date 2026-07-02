@@ -5,14 +5,13 @@ import { Logo } from '@/components/brand/Logo'
 describe('Logo', () => {
   it('links home with an accessible name by default', () => {
     render(<Logo />)
-    const link = screen.getByRole('link', { name: 'EazyExchange home' })
+    const link = screen.getByRole('link', { name: 'Eazyexchange home' })
     expect(link).toHaveAttribute('href', '/')
   })
 
   it('shows the wordmark text', () => {
     render(<Logo />)
-    expect(screen.getByText('Eazy')).toBeInTheDocument()
-    expect(screen.getByText('Exchange')).toBeInTheDocument()
+    expect(screen.getByText('Eazyexchange')).toBeInTheDocument()
   })
 
   it('renders no link when href is null', () => {

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { GlobeMark } from './GlobeMark'
+import { Mark } from './Mark'
 
 export function Logo({
   className,
@@ -11,15 +11,15 @@ export function Logo({
 }) {
   const mark = (
     <span className={cn('inline-flex items-center gap-2', className)}>
-      <GlobeMark className="h-7 w-7 shrink-0" />
-      <span className="text-lg font-bold tracking-tight text-foreground">
-        <span className="text-primary">Eazy</span>Exchange
+      <Mark className="h-5 w-7 shrink-0" />
+      <span className="font-display text-lg font-bold tracking-tight text-foreground">
+        Eazyexchange
       </span>
     </span>
   )
   if (href === null) return mark
   return (
-    <Link href={href} aria-label="EazyExchange home" className="inline-flex items-center">
+    <Link href={href} aria-label="Eazyexchange home" className="inline-flex items-center">
       {mark}
     </Link>
   )

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { landingContent } from '@/lib/landing/content'
-import { GlobeMark } from '@/components/brand/GlobeMark'
+import { Mark } from '@/components/brand/Mark'
 
 export function LandingFooter() {
   const { tagline, links, copyright } = landingContent.footer
@@ -9,9 +9,9 @@ export function LandingFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-14 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-xs">
           <span className="inline-flex items-center gap-2">
-            <GlobeMark className="h-7 w-7 shrink-0" />
+            <Mark variant="dark" className="h-5 w-7 shrink-0" />
             <span className="font-display text-lg font-bold tracking-tight">
-              <span className="text-cleared">Eazy</span>Exchange
+              Eazyexchange
             </span>
           </span>
           <p className="mt-3 text-sm leading-relaxed text-white/50">{tagline}</p>

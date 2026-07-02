@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const FROM = process.env.EMAIL_FROM ?? 'EazyExchange <onboarding@resend.dev>'
+const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 // Returns a Resend client, or null if no API key is configured (e.g. local dev).
@@ -99,7 +99,7 @@ export async function sendRejectionEmail(opts: {
 }
 
 const APP_FOOTER = "You're receiving this because you applied (or were invited to apply) to a student exchange."
-const ORG_FOOTER = "You're receiving this because you're an organizer for this exchange on EazyExchange."
+const ORG_FOOTER = "You're receiving this because you're an organizer for this exchange on Eazyexchange."
 
 export async function sendApplicationResumeEmail(opts: { to: string; exchangeName: string; resumeUrl: string }): Promise<void> {
   const html = layout(`
