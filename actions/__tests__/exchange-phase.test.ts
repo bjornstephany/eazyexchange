@@ -3,10 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const updateEq = vi.fn().mockResolvedValue({ error: null })
 const update = vi.fn(() => ({ eq: updateEq }))
 
+// Switchable role for testing
+let role = 'organizer'
+
 // Chainable query stub: users profile lookup + exchanges scope lookup + update
 const from = vi.fn((table: string) => {
   if (table === 'users') {
-    return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { school_id: 'school-1' } }) }) }) }
+    return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { school_id: 'school-1', role } }) }) }) }
   }
   // exchanges
   return {
@@ -26,7 +29,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 import { setExchangePhase } from '@/actions/exchanges'
 
 describe('setExchangePhase', () => {
-  beforeEach(() => { update.mockClear(); updateEq.mockClear() })
+  beforeEach(() => { update.mockClear(); updateEq.mockClear(); role = 'organizer' })
 
   it('updates the phase for an in-scope exchange', async () => {
     await setExchangePhase('ex-1', 2)
@@ -37,6 +40,12 @@ describe('setExchangePhase', () => {
   it('rejects an invalid phase value', async () => {
     // @ts-expect-error deliberately invalid
     await expect(setExchangePhase('ex-1', 3)).rejects.toThrow()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('rejects when caller is a student (not organizer)', async () => {
+    role = 'student'
+    await expect(setExchangePhase('ex-1', 2)).rejects.toThrow(/Unauthorized/)
     expect(update).not.toHaveBeenCalled()
   })
 })

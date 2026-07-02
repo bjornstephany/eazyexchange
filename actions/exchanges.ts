@@ -226,6 +226,9 @@ export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promis
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
+  const { data: profile } = await supabase
+    .from('users').select('school_id, role').eq('id', user.id).single()
+  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   await assertExchangeInScope(supabase, user.id, exchangeId)
 
   const { error } = await supabase.from('exchanges').update({ phase }).eq('id', exchangeId)
