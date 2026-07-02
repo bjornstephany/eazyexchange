@@ -41,19 +41,21 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <ApplicationsCard
-        exchangeId={id}
-        applySlug={exchange.apply_slug}
-        open={exchange.application_open}
-        deadline={exchange.application_deadline}
-        counts={counts}
-      />
+      <div id="invite">
+        <ApplicationsCard
+          exchangeId={id}
+          applySlug={exchange.apply_slug}
+          open={exchange.application_open}
+          deadline={exchange.application_deadline}
+          counts={counts}
+        />
+      </div>
 
       {templates.length === 0 && (
         <p className="text-muted-foreground text-sm mb-6">No form templates yet. Create one to get started.</p>
       )}
 
-      <div id="invite">
+      <div>
         {students.length === 0 && (
           <p className="text-muted-foreground text-sm mb-6">No students invited yet.</p>
         )}

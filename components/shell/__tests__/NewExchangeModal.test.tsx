@@ -62,6 +62,30 @@ describe('NewExchangeModal', () => {
     expect(screen.getByRole('button', { name: "Créer l'échange" })).not.toBeDisabled()
   })
 
+  it('shows the upgrade CTA link when the limit error is hit', async () => {
+    createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
+    const onOpenChange = vi.fn()
+    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+
+    const user = await fillRequiredFields()
+    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+
+    const cta = await screen.findByRole('link', { name: /Voir les offres/ })
+    expect(cta).toHaveAttribute('href', '/billing')
+  })
+
+  it('does not show the upgrade CTA link for other errors', async () => {
+    createExchange.mockRejectedValueOnce(new Error('Autre erreur'))
+    const onOpenChange = vi.fn()
+    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+
+    const user = await fillRequiredFields()
+    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+
+    expect(await screen.findByText('Autre erreur')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Voir les offres/ })).toBeNull()
+  })
+
   it('closes the dialog and navigates to the dashboard on successful submit', async () => {
     createExchange.mockResolvedValueOnce(undefined)
     const onOpenChange = vi.fn()

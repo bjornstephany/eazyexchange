@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createExchange } from '@/actions/exchanges'
 import {
   Dialog,
@@ -12,6 +13,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+
+const LIMIT_ERROR = "Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter."
 
 export function NewExchangeModal({
   open,
@@ -94,7 +97,16 @@ export function NewExchangeModal({
               <Input id="school_a_name" name="school_a_name" required className="h-12" />
             </div>
           )}
-          {error && <p className="text-sm text-danger-text">{error}</p>}
+          {error && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm text-danger-text">{error}</p>
+              {error === LIMIT_ERROR && (
+                <Link href="/billing" className="text-sm font-semibold text-brand hover:text-brand-hover">
+                  Voir les offres →
+                </Link>
+              )}
+            </div>
+          )}
           <div className="mt-1.5 flex justify-end gap-3">
             <Button
               type="button"
