@@ -249,6 +249,12 @@ describe('copy builders', () => {
     expect(frShortDate(null)).toBe('')
     expect(frShortDate('')).toBe('')
   })
+  it('frShortDate accepts timestamptz input (full ISO with time + timezone)', () => {
+    expect(frShortDate('2026-09-12T18:23:45.123+00:00')).toBe('12 sept')
+  })
+  it('frShortDate guards invalid dates', () => {
+    expect(frShortDate('not-a-date')).toBe('')
+  })
   it('p pluralizes only above 1', () => {
     expect(p(0)).toBe(''); expect(p(1)).toBe(''); expect(p(2)).toBe('s')
   })
