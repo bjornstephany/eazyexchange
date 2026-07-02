@@ -30,6 +30,11 @@ export type OverviewProps = {
   cellMap: CellMap
 }
 
+// Labels for filter keys that only exist on action cards, not as funnel tiles.
+const ACTION_ONLY_FILTER_LABELS: Record<string, string> = {
+  maybe: 'Hésitent',
+}
+
 const P1_GRID = 'grid-cols-[1.7fr_1fr_1.15fr_1fr_22px]'
 const P2_GRID = 'grid-cols-[1.7fr_1fr_1.1fr_.9fr_1fr_22px]'
 
@@ -51,7 +56,8 @@ export function OverviewView(props: OverviewProps) {
 
   const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
-  const filterLabel = activeStage?.label ?? null
+  const filterLabel =
+    filter && filter !== 'all' ? activeStage?.label ?? ACTION_ONLY_FILTER_LABELS[filter] ?? filter : null
 
   const filteredApps = phase === 1 ? p1Filter(apps, filter) : []
   const filteredRollups = phase === 2 ? p2Filter(rollups, filter) : []

@@ -34,6 +34,21 @@ describe('OverviewView phase 1', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Examiner' }))
     expect(screen.queryByText('Camille Laurent')).toBeNull()
   })
+  it('action-card-only filter key (maybe) shows a dismissible chip and filters the table', () => {
+    const maybeApps: AppRow[] = [
+      { id: '1', status: 'maybe', submitted_at: '2026-09-12', data: { first_name: 'Inès', last_name: 'Petit' }, email: 'i@p.fr' },
+      { id: '2', status: 'submitted', submitted_at: '2026-09-10', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
+    ]
+    render(<OverviewView {...base} apps={maybeApps} phase={1} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Relancer' }))
+    expect(screen.getByText('Inès Petit')).toBeInTheDocument()
+    expect(screen.queryByText('Camille Laurent')).toBeNull()
+    const chip = screen.getByRole('button', { name: /Filtre : Hésitent/ })
+    expect(chip).toBeInTheDocument()
+    fireEvent.click(chip)
+    expect(screen.getByText('Inès Petit')).toBeInTheDocument()
+    expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
+  })
 })
 
 describe('OverviewView phase 2', () => {
