@@ -1,6 +1,14 @@
 import { APPLICATION_SECTIONS } from '@/lib/application-form'
 
-export function ApplicationReadView({ data, photoUrl }: { data: Record<string, string>; photoUrl: string | null }) {
+export function ApplicationReadView({
+  data,
+  photoUrl,
+  lang = 'en',
+}: {
+  data: Record<string, string>
+  photoUrl: string | null
+  lang?: 'en' | 'fr'
+}) {
   return (
     <div className="space-y-8">
       {photoUrl && (
@@ -9,11 +17,11 @@ export function ApplicationReadView({ data, photoUrl }: { data: Record<string, s
       )}
       {APPLICATION_SECTIONS.map(section => (
         <section key={section.id}>
-          <h2 className="text-sm font-semibold text-foreground border-b border-border pb-1 mb-3">{section.title.en}</h2>
+          <h2 className="font-display text-[17px] font-bold tracking-tight border-b pb-2 mb-4">{section.title[lang]}</h2>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {section.fields.map(f => (
               <div key={f.id}>
-                <dt className="text-xs text-muted-foreground">{f.label.en}</dt>
+                <dt className="text-xs text-muted-foreground">{f.label[lang]}</dt>
                 <dd className="text-sm text-foreground whitespace-pre-wrap">{data[f.id]?.trim() || '—'}</dd>
               </div>
             ))}

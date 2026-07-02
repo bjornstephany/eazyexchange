@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 interface Props { applicationId: string; exchangeId: string; status: string; response: string | null; note: string | null }
 
-export function ApplicationReviewActions({ applicationId, exchangeId, status, response, note }: Props) {
+export function ApplicationReviewActions({ applicationId, status, response, note }: Props) {
   const [busy, setBusy] = useState(false)
   const [rejecting, setRejecting] = useState(false)
   const [rejectNote, setRejectNote] = useState('')
@@ -17,7 +17,7 @@ export function ApplicationReviewActions({ applicationId, exchangeId, status, re
 
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(null)
-    try { await fn(); router.push(`/exchanges/${exchangeId}/applications`) }
+    try { await fn(); router.push('/applications') }
     catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); setBusy(false) }
   }
 

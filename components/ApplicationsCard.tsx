@@ -56,7 +56,7 @@ export function ApplicationsCard({ exchangeId, applySlug, open, deadline, counts
       <p className="text-sm text-muted-foreground mb-3">
         {counts.submitted} submitted · {counts.accepted} accepted
       </p>
-      <Button asChild size="sm"><Link href={`/exchanges/${exchangeId}/applications`}>Review applications</Link></Button>
+      <Button asChild size="sm"><Link href="/applications">Review applications</Link></Button>
     </Card>
   )
 }
