@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +18,20 @@ function initials(name: string) {
     .slice(0, 2)
     .map((w) => w[0]!.toUpperCase())
     .join('')
+}
+
+function NewExchangeAutoOpen({ onOpen }: { onOpen: () => void }) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  useEffect(() => {
+    if (searchParams.get('new-exchange') === '1') {
+      onOpen()
+      router.replace(pathname)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+  return null
 }
 
 function RailItem({
@@ -64,15 +78,6 @@ export function OrganizerShell({
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    if (searchParams.get('new-exchange') === '1') {
-      setNewExchangeOpen(true)
-      router.replace(pathname)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -101,6 +106,9 @@ export function OrganizerShell({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      <Suspense fallback={null}>
+        <NewExchangeAutoOpen onOpen={() => setNewExchangeOpen(true)} />
+      </Suspense>
       <nav className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
         <div className="mb-[26px]">
           <Mark variant="dark" className="h-[19px] w-[26px]" />

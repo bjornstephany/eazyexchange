@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createExchange } from '@/actions/exchanges'
 import {
@@ -25,6 +25,13 @@ export function NewExchangeModal({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (open) {
+      setError(null)
+      setLoading(false)
+    }
+  }, [open])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
