@@ -191,7 +191,17 @@ describe('copy builders', () => {
   it('reminder line P2 counts missingdocs + pendingforms', () => {
     const rollups = [rollupStudent(student, T, cell('', ''), TODAY)]
     expect(reminderLine(2, [], rollups))
-      .toBe('Relance automatique demain 8h — 2 élèves relancés sur les documents manquants, avec la date limite.')
+      .toBe('Relance automatique demain 8h — 1 élève relancé sur les documents manquants, avec la date limite.')
+  })
+  it('reminder line P2 counts distinct students: one missing both forms and docs is one distinct student', () => {
+    const s1 = { id: 's1', full_name: 'Alice' }
+    const s2 = { id: 's2', full_name: 'Bob' }
+    const rollups = [
+      rollupStudent(s1, T, cell('', ''), TODAY), // missing both forms and docs
+      rollupStudent(s2, T, { 's2:f1': { assignmentId: 'a1', status: 'approved' }, 's2:d1': { assignmentId: 'a2', status: 'approved' } }, TODAY), // complete
+    ]
+    expect(reminderLine(2, [], rollups))
+      .toBe('Relance automatique demain 8h — 1 élève relancé sur les documents manquants, avec la date limite.')
   })
   it('progress P1', () => {
     expect(progress(1, [app('submitted'), app('enrolled')], []))

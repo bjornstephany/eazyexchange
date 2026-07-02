@@ -231,8 +231,7 @@ export function reminderLine(phase: 1 | 2, apps: AppRow[], rollups: DossierRollu
     const n = countP1(apps, 'waiting') + countP1(apps, 'maybe')
     return `Relance automatique demain 8h — ${n} élève${p(n)} relancé${p(n)} sur leur candidature ou leur réponse, avec la date limite.`
   }
-  const n = rollups.filter(r => r.docs === 'missing' || r.docs === 'pending').length
-    + rollups.filter(r => r.forms !== 'complete').length
+  const n = rollups.filter(r => (r.docs === 'missing' || r.docs === 'pending') || r.forms !== 'complete').length
   return `Relance automatique demain 8h — ${n} élève${p(n)} relancé${p(n)} sur les documents manquants, avec la date limite.`
 }
 
