@@ -1,0 +1,47 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }) }))
+vi.mock('@/actions/exchanges', () => ({ setExchangePhase: vi.fn() }))
+vi.mock('@/actions/applications', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
+
+import { OverviewView } from '@/components/dashboard/OverviewView'
+import type { AppRow } from '@/lib/dashboard/rollup'
+
+const apps: AppRow[] = [
+  { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
+  { id: '2', status: 'enrolled', submitted_at: '2026-09-10', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
+]
+const base = { exchangeId: 'ex1', apps, rollups: [], templates: [], cellMap: {} }
+
+describe('OverviewView phase 1', () => {
+  it('renders heading, funnel counts and table rows', () => {
+    render(<OverviewView {...base} phase={1} />)
+    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.getByText('Reçues')).toBeInTheDocument()
+    expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
+    expect(screen.getByText('Confirmé')).toBeInTheDocument()
+  })
+  it('funnel tile filters the table and shows a dismissible chip', () => {
+    render(<OverviewView {...base} phase={1} />)
+    fireEvent.click(screen.getByRole('button', { name: /À examiner/ }))
+    expect(screen.queryByText('Camille Laurent')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Filtre :/ }))
+    expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
+  })
+  it('action card click applies its filter', () => {
+    render(<OverviewView {...base} phase={1} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Examiner' }))
+    expect(screen.queryByText('Camille Laurent')).toBeNull()
+  })
+})
+
+describe('OverviewView phase 2', () => {
+  it('renders dossier columns from rollups', () => {
+    render(<OverviewView {...base} phase={2} rollups={[{ studentId: 's1', name: 'Manon Girard', forms: 'pending', docs: 'missing', due: '2026-10-03', late: true, overall: { kind: 'bad', label: 'En retard' } }]} />)
+    expect(screen.getByText('Formulaires')).toBeInTheDocument()
+    expect(screen.getByText('Manon Girard')).toBeInTheDocument()
+    // 'En retard' legitimately appears twice (funnel stage label + row pill) — assert presence, not uniqueness.
+    expect(screen.getAllByText('En retard').length).toBeGreaterThan(0)
+  })
+})

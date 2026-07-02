@@ -1,0 +1,234 @@
+'use client'
+import { useState } from 'react'
+import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard } from '@/lib/dashboard/rollup'
+import {
+  p1Funnel,
+  p1Filter,
+  p1StatusPill,
+  p1ResponsePill,
+  p2Funnel,
+  p2Filter,
+  formsPill,
+  docsPill,
+  actionCards,
+  reminderLine,
+  overviewSubline,
+  progress as computeProgress,
+  nextDeadline,
+  frShortDate,
+} from '@/lib/dashboard/rollup'
+import { applicantName } from '@/lib/application-form'
+import { StatusPill } from '@/components/dashboard/StatusPill'
+import { PhaseStepper } from '@/components/dashboard/PhaseStepper'
+
+export type OverviewProps = {
+  exchangeId: string
+  phase: 1 | 2
+  apps: AppRow[]
+  rollups: DossierRollup[]
+  templates: TemplateInfo[]
+  cellMap: CellMap
+}
+
+const P1_GRID = 'grid-cols-[1.7fr_1fr_1.15fr_1fr_22px]'
+const P2_GRID = 'grid-cols-[1.7fr_1fr_1.1fr_.9fr_1fr_22px]'
+
+const ACTION_BORDER: Record<ActionCard['tone'], string> = {
+  accent: 'border-l-brand',
+  warn: 'border-l-[#B7791F]',
+  bad: 'border-l-[#C0392B]',
+}
+const ACTION_CTA: Record<ActionCard['tone'], string> = {
+  accent: 'bg-brand text-white',
+  warn: 'bg-warn text-warn-text',
+  bad: 'bg-danger text-danger-text',
+}
+
+export function OverviewView(props: OverviewProps) {
+  const { exchangeId, phase, apps, rollups } = props
+  const [filter, setFilter] = useState<string | null>(null)
+  const [selected, setSelected] = useState<AppRow | DossierRollup | null>(null)
+
+  const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
+  const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
+  const filterLabel = activeStage?.label ?? null
+
+  const filteredApps = phase === 1 ? p1Filter(apps, filter) : []
+  const filteredRollups = phase === 2 ? p2Filter(rollups, filter) : []
+
+  const cards = actionCards(phase, apps, rollups)
+  const next = nextDeadline(rollups)
+  const prog = computeProgress(phase, apps, rollups)
+  const subline = overviewSubline(phase, apps, rollups)
+  const reminder = reminderLine(phase, apps, rollups)
+
+  function handleStageClick(key: string) {
+    if (key === 'all' || key === 'p2all') {
+      setFilter(null)
+      return
+    }
+    setFilter((cur) => (cur === key ? null : key))
+  }
+
+  return (
+    <div>
+      <div className="mb-[22px]">
+        <h1 className="font-display text-[26px] font-bold tracking-tight">Vue d&apos;ensemble</h1>
+        <p className="text-sm text-muted-foreground">{subline}</p>
+      </div>
+
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        {/* Main column */}
+        <div className="flex-1 min-w-0 flex flex-col gap-5">
+          {/* Funnel card */}
+          <div className="bg-card border rounded-[14px] p-[18px] px-5">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
+                {phase === 1 ? 'Progression des candidatures' : 'Progression des dossiers'}
+              </span>
+              {filterLabel && (
+                <button
+                  type="button"
+                  onClick={() => setFilter(null)}
+                  className="border bg-hint rounded-pill px-[11px] py-1 text-[11px] font-medium text-muted-foreground"
+                >
+                  Filtre : {filterLabel} ✕
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2.5 mt-3">
+              {funnel.map((stage) => {
+                const isActive = filter === stage.key
+                return (
+                  <button
+                    key={stage.key}
+                    type="button"
+                    onClick={() => handleStageClick(stage.key)}
+                    className={`flex flex-col items-start gap-1 rounded-[10px] border px-3.5 py-2.5 min-w-[96px] ${
+                      isActive ? 'border-brand bg-tint/40' : ''
+                    }`}
+                  >
+                    <span className={`font-display text-[22px] font-bold leading-none ${isActive ? 'text-brand' : 'text-navy'}`}>
+                      {stage.count}
+                    </span>
+                    <span className="text-[11.5px] text-muted-foreground">{stage.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Table card */}
+          <div className="bg-card border rounded-[14px] overflow-hidden">
+            {phase === 1 ? (
+              <div className={`grid ${P1_GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
+                <span>Élève</span>
+                <span>Candidature</span>
+                <span>Statut</span>
+                <span>Réponse</span>
+                <span>&rsaquo;</span>
+              </div>
+            ) : (
+              <div className={`grid ${P2_GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
+                <span>Élève</span>
+                <span>Formulaires</span>
+                <span>Documents</span>
+                <span>Échéance</span>
+                <span>Statut</span>
+                <span>&rsaquo;</span>
+              </div>
+            )}
+
+            {phase === 1 && filteredApps.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">Aucun élève ne correspond à ce filtre.</p>
+            )}
+            {phase === 1 &&
+              filteredApps.map((app) => {
+                const responsePill = p1ResponsePill(app.status)
+                return (
+                  <div
+                    key={app.id}
+                    onClick={() => setSelected(app)}
+                    className={`grid ${P1_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
+                  >
+                    <span className="font-medium text-navy">{applicantName(app.data) || app.email}</span>
+                    <span className="text-muted-foreground text-[13px]">{frShortDate(app.submitted_at)}</span>
+                    <span>
+                      <StatusPill pill={p1StatusPill(app.status)} />
+                    </span>
+                    <span>{responsePill ? <StatusPill pill={responsePill} /> : '—'}</span>
+                    <span className="text-placeholder">&rsaquo;</span>
+                  </div>
+                )
+              })}
+
+            {phase === 2 && filteredRollups.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">Aucun élève ne correspond à ce filtre.</p>
+            )}
+            {phase === 2 &&
+              filteredRollups.map((rollup) => (
+                <div
+                  key={rollup.studentId}
+                  onClick={() => setSelected(rollup)}
+                  className={`grid ${P2_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
+                >
+                  <span className="font-medium text-navy">{rollup.name}</span>
+                  <span>
+                    <StatusPill pill={formsPill(rollup.forms)} />
+                  </span>
+                  <span>
+                    <StatusPill pill={docsPill(rollup.docs)} />
+                  </span>
+                  <span className="text-muted-foreground text-[13px]">{frShortDate(rollup.due)}</span>
+                  <span>
+                    <StatusPill pill={rollup.overall} />
+                  </span>
+                  <span className="text-placeholder">&rsaquo;</span>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Right rail */}
+        <div className="w-full xl:w-[344px] flex-none flex flex-col gap-5">
+          <PhaseStepper exchangeId={exchangeId} phase={phase} progress={prog} />
+
+          <div className="flex flex-col gap-3">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
+              À faire maintenant
+            </span>
+            {cards.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Tout est à jour ✓{next ? ` — prochaine échéance le ${frShortDate(next)}.` : ''}
+              </p>
+            ) : (
+              cards.map((card) => (
+                <div
+                  key={card.filterKey}
+                  className={`bg-card border rounded-[12px] p-[17px] pl-[19px] flex flex-col gap-1.5 border-l-[3px] ${ACTION_BORDER[card.tone]}`}
+                >
+                  <span className="text-sm font-semibold text-navy">{card.title}</span>
+                  <span className="text-[12.5px] text-muted-foreground">{card.desc}</span>
+                  <button
+                    type="button"
+                    onClick={() => setFilter(card.filterKey)}
+                    className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
+                  >
+                    {card.cta}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="bg-card border rounded-[14px] p-[15px] flex gap-2.5 items-start">
+            <span className="text-brand">&#8635;</span>
+            <span className="text-[12.5px] text-muted-foreground">{reminder}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* drawer: Task 6 */}
+    </div>
+  )
+}
