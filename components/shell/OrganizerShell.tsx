@@ -1,0 +1,164 @@
+'use client'
+import Link from 'next/link'
+import { useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { Mark } from '@/components/brand/Mark'
+import { IconOverview, IconExchanges, IconApplications } from './RailIcons'
+import { SessionSelector } from './SessionSelector'
+
+export type ExchangeOption = { id: string; name: string; year: number }
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join('')
+}
+
+function RailItem({
+  href,
+  label,
+  active,
+  children,
+}: {
+  href: string
+  label: string
+  active: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium',
+        active ? 'bg-white/10 text-white' : 'text-rail-inactive hover:bg-white/5 hover:text-white'
+      )}
+    >
+      {children}
+      <span>{label}</span>
+    </Link>
+  )
+}
+
+export function OrganizerShell({
+  exchanges,
+  activeExchangeId,
+  organizerName,
+  needsSchoolName,
+  children,
+}: {
+  exchanges: ExchangeOption[]
+  activeExchangeId: string | null
+  organizerName: string
+  needsSchoolName: boolean
+  children: React.ReactNode
+}) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [newExchangeOpen, setNewExchangeOpen] = useState(false)
+  const active = exchanges.find((e) => e.id === activeExchangeId) ?? null
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      <nav className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
+        <div className="mb-[26px]">
+          <Mark variant="dark" className="h-[19px] w-[26px]" />
+        </div>
+        <div className="flex w-full flex-col items-center gap-1.5">
+          <RailItem href="/dashboard" label="Aperçu" active={pathname === '/dashboard'}>
+            <IconOverview />
+          </RailItem>
+          {activeExchangeId && (
+            <>
+              <RailItem
+                href={`/exchanges/${activeExchangeId}`}
+                label="Échanges"
+                active={pathname.startsWith('/exchanges/') && !pathname.includes('/applications')}
+              >
+                <IconExchanges />
+              </RailItem>
+              <RailItem
+                href={`/exchanges/${activeExchangeId}/applications`}
+                label="Candid."
+                active={pathname.includes('/applications')}
+              >
+                <IconApplications />
+              </RailItem>
+            </>
+          )}
+        </div>
+        <div className="relative mt-auto">
+          {menuOpen && (
+            <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Compte"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-mono text-[11px] text-white"
+          >
+            {initials(organizerName)}
+          </button>
+        </div>
+      </nav>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-[66px] flex-none items-center justify-between gap-5 border-b bg-card px-7">
+          <div className="flex items-center gap-3.5">
+            {active ? (
+              <>
+                <SessionSelector
+                  exchanges={exchanges}
+                  active={active}
+                  onNewExchange={() => setNewExchangeOpen(true)}
+                />
+                <span className="rounded-pill bg-tint px-3 py-1 font-mono text-[11px] font-semibold text-tint-text">
+                  {active.year}
+                </span>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setNewExchangeOpen(true)}
+                className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
+              >
+                <span className="text-base leading-none">+</span> Nouvel échange
+              </button>
+            )}
+          </div>
+          {activeExchangeId && (
+            <Link
+              href={`/exchanges/${activeExchangeId}#invite`}
+              className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
+            >
+              <span className="text-base leading-none">+</span> Inviter des élèves
+            </Link>
+          )}
+        </header>
+        <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
+          <div className="mx-auto max-w-6xl">{children}</div>
+        </main>
+      </div>
+    </div>
+  )
+}
