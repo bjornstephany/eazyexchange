@@ -40,4 +40,18 @@ describe('StudentDrawer', () => {
     fireEvent.click(screen.getByTestId('drawer-backdrop'))
     expect(onClose).toHaveBeenCalled()
   })
+  it('Escape collapses the reject step first, then closes the drawer on a second Escape', () => {
+    const onClose = vi.fn()
+    render(<StudentDrawer subject={{ kind: 'application', app }} onClose={onClose} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Refuser' }))
+    expect(screen.getByRole('button', { name: 'Confirmer le refus' })).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('button', { name: 'Confirmer le refus' })).toBeNull()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
 })

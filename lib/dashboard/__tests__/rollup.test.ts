@@ -87,8 +87,22 @@ describe('rollupStudent', () => {
     const r = rollupStudent(student, [], {}, TODAY)
     expect(r.overall).toEqual({ kind: 'ok', label: 'Complet' })
   })
-  it('rejected submission counts as incomplete/not-started', () => {
+  it('rejected submission counts as incomplete for due/late, but as started for forms/docs', () => {
     const r = rollupStudent(student, T, cell('rejected', 'rejected'), TODAY)
+    expect(r.forms).toBe('pending'); expect(r.docs).toBe('pending')
+    // still incomplete for due/late purposes
+    expect(r.due).toBe('2026-10-10')
+  })
+  it('draft submission on a data_entry template → forms pending (started, not complete)', () => {
+    const r = rollupStudent(student, T, cell('draft', ''), TODAY)
+    expect(r.forms).toBe('pending')
+  })
+  it('rejected submission on a document_upload template → docs pending (started, not complete)', () => {
+    const r = rollupStudent(student, T, cell('', 'rejected'), TODAY)
+    expect(r.docs).toBe('pending')
+  })
+  it('truly no submission rows → missing', () => {
+    const r = rollupStudent(student, T, cell('', ''), TODAY)
     expect(r.forms).toBe('missing'); expect(r.docs).toBe('missing')
   })
   it('pending: some but not all forms submitted/approved', () => {

@@ -49,7 +49,15 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
   useEffect(() => {
     if (!subject) return
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      // First Escape while the reject-confirm step is open just collapses that step
+      // (so it doesn't silently discard an in-progress note); only a second Escape,
+      // with the reject step already closed, closes the drawer.
+      setRejecting((wasRejecting) => {
+        if (wasRejecting) return false
+        onClose()
+        return wasRejecting
+      })
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
@@ -146,7 +154,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                       type="button"
                       disabled={busy}
                       onClick={() => setRejecting(true)}
-                      className="flex-1 rounded-[9px] border border-frame-dashed bg-card text-navy disabled:opacity-60"
+                      className="flex-1 rounded-[9px] border border-frame-dashed bg-card text-navy py-[11px] text-[13px] font-semibold disabled:opacity-60"
                     >
                       {busy ? 'Envoi…' : 'Refuser'}
                     </button>

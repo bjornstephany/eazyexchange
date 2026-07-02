@@ -89,6 +89,14 @@ function assignmentState(cellMap: CellMap, studentId: string, templateId: string
   return 'incomplete'
 }
 
+// Whether any submission row exists for the assignment (draft|submitted|approved|rejected),
+// regardless of completion. Used to distinguish "missing" (nothing started) from "pending"
+// (started but not complete) — the rollup's completion states above stay unchanged.
+function assignmentStarted(cellMap: CellMap, studentId: string, templateId: string): boolean {
+  const entry = cellMap[`${studentId}:${templateId}`]
+  return !!entry?.status
+}
+
 function sameDate(a: Date, b: Date): number {
   const da = new Date(a.getFullYear(), a.getMonth(), a.getDate())
   const db = new Date(b.getFullYear(), b.getMonth(), b.getDate())
@@ -102,18 +110,20 @@ export function rollupStudent(
   const docTemplates = templates.filter(t => t.type === 'document_upload')
 
   const formsStates = dataTemplates.map(t => assignmentState(cellMap, student.id, t.id))
+  const formsStarted = dataTemplates.map(t => assignmentStarted(cellMap, student.id, t.id))
   const forms: DossierRollup['forms'] =
     dataTemplates.length === 0 ? 'complete'
     : formsStates.every(s => s === 'done' || s === 'awaiting') ? 'complete'
-    : formsStates.every(s => s === 'incomplete') ? 'missing'
+    : formsStarted.every(started => !started) ? 'missing'
     : 'pending'
 
   const docsStates = docTemplates.map(t => assignmentState(cellMap, student.id, t.id))
+  const docsStarted = docTemplates.map(t => assignmentStarted(cellMap, student.id, t.id))
   const docs: DossierRollup['docs'] =
     docTemplates.length === 0 ? 'complete'
     : docsStates.some(s => s === 'awaiting') ? 'review'
     : docsStates.every(s => s === 'done') ? 'complete'
-    : docsStates.every(s => s === 'incomplete') ? 'missing'
+    : docsStarted.every(started => !started) ? 'missing'
     : 'pending'
 
   // earliest deadline among assignments not submitted|approved (i.e. state === 'incomplete')
