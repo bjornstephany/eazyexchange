@@ -1,0 +1,80 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
+import { listApplications } from '@/actions/applications'
+import { hasActivePlan, isInGrace, exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
+import { rollupStudent, progress, type AppRow } from '@/lib/dashboard/rollup'
+import { ExchangesView, type ExchangeCardData, type BillingBlock } from '@/components/exchanges/ExchangesView'
+
+const PLAN_LABEL: Record<string, string> = { starter: 'Starter', growth: 'Growth', scale: 'Scale' }
+
+export default async function ExchangesPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('school_id, schools(name, subscription_status, plan, grace_until)')
+    .eq('id', user.id)
+    .single<{
+      school_id: string
+      schools: {
+        name: string
+        subscription_status: string | null
+        plan: string | null
+        grace_until: string | null
+      } | null
+    }>()
+  if (!profile) redirect('/login')
+
+  const school = profile.schools ?? null
+
+  const exchanges = await getExchanges()
+
+  const exchangesData: ExchangeCardData[] = await Promise.all(
+    exchanges.map(async (exchange: any) => {
+      const phase = (exchange.phase ?? 1) as 1 | 2
+      const [applications, grid] = await Promise.all([
+        listApplications(exchange.id),
+        getExchangeGrid(exchange.id),
+      ])
+      const apps: AppRow[] = applications.map((a: any) => ({
+        id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
+      }))
+      const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
+      const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
+
+      const prog = phase === 1 ? progress(1, apps, []) : progress(2, [], rollups)
+      const pct = prog.total === 0 ? null : Math.round((prog.done / prog.total) * 100)
+      const pctLabel = pct === null ? '—' : prog.label
+
+      return {
+        id: exchange.id,
+        name: exchange.name,
+        year: exchange.year,
+        phase,
+        pct,
+        pctLabel,
+      }
+    }),
+  )
+
+  // isInGrace is checked first: hasActivePlan(school) is also true while a
+  // school is in its post-failure grace window (it delegates to isInGrace
+  // internally), so the grace branch must take priority or it becomes
+  // unreachable and a failed payment silently renders as "active".
+  let billing: BillingBlock = { kind: 'trial' }
+  if (school) {
+    if (isInGrace(school as never)) {
+      billing = { kind: 'grace' }
+    } else if (hasActivePlan(school as never) && school.plan) {
+      billing = { kind: 'active', planLabel: PLAN_LABEL[school.plan] ?? school.plan }
+    }
+  }
+
+  const ownedCount = exchanges.filter((e: any) => e.school_a_id === profile.school_id).length
+  const atCap = ownedCount >= (school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP)
+
+  return <ExchangesView billing={billing} exchangesData={exchangesData} atCap={atCap} />
+}
