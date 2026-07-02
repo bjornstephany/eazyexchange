@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard } from '@/lib/dashboard/rollup'
+import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill } from '@/lib/dashboard/rollup'
 import {
   p1Funnel,
   p1Filter,
@@ -20,6 +20,7 @@ import {
 import { applicantName } from '@/lib/application-form'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { PhaseStepper } from '@/components/dashboard/PhaseStepper'
+import { StudentDrawer, type DrawerSubject } from '@/components/dashboard/StudentDrawer'
 
 export type OverviewProps = {
   exchangeId: string
@@ -49,10 +50,26 @@ const ACTION_CTA: Record<ActionCard['tone'], string> = {
   bad: 'bg-danger text-danger-text',
 }
 
+function checklistItemPill(group: 'form' | 'doc', status: string | undefined): Pill {
+  if (status === 'approved') return { kind: 'ok', label: group === 'form' ? 'Reçu' : 'Fourni' }
+  if (status === 'submitted') return { kind: 'info', label: 'À vérifier' }
+  if (status === 'draft' || status === 'rejected') return { kind: 'warn', label: 'En cours' }
+  return { kind: 'bad', label: 'Manquant' }
+}
+
 export function OverviewView(props: OverviewProps) {
-  const { exchangeId, phase, apps, rollups } = props
+  const { exchangeId, phase, apps, rollups, templates, cellMap } = props
   const [filter, setFilter] = useState<string | null>(null)
-  const [selected, setSelected] = useState<AppRow | DossierRollup | null>(null)
+  const [selected, setSelected] = useState<DrawerSubject | null>(null)
+
+  function studentSubject(rollup: DossierRollup): DrawerSubject {
+    const items = templates.map((t) => {
+      const group: 'form' | 'doc' = t.type === 'data_entry' ? 'form' : 'doc'
+      const status = cellMap[`${rollup.studentId}:${t.id}`]?.status
+      return { label: t.name, group, pill: checklistItemPill(group, status) }
+    })
+    return { kind: 'student', rollup, items }
+  }
 
   const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
@@ -154,7 +171,7 @@ export function OverviewView(props: OverviewProps) {
                 return (
                   <div
                     key={app.id}
-                    onClick={() => setSelected(app)}
+                    onClick={() => setSelected({ kind: 'application', app })}
                     className={`grid ${P1_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
                   >
                     <span className="font-medium text-navy">{applicantName(app.data) || app.email}</span>
@@ -175,7 +192,7 @@ export function OverviewView(props: OverviewProps) {
               filteredRollups.map((rollup) => (
                 <div
                   key={rollup.studentId}
-                  onClick={() => setSelected(rollup)}
+                  onClick={() => setSelected(studentSubject(rollup))}
                   className={`grid ${P2_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
                 >
                   <span className="font-medium text-navy">{rollup.name}</span>
@@ -234,7 +251,7 @@ export function OverviewView(props: OverviewProps) {
         </div>
       </div>
 
-      {/* drawer: Task 6 */}
+      <StudentDrawer subject={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

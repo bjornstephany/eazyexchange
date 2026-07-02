@@ -95,6 +95,17 @@
   }
 }
 
+@keyframes drwIn {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 @layer base {
   :root {
     --background: 220 36% 95%;
