@@ -441,3 +441,28 @@ export async function respondToInvitation(
     .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
   if (finalErr) throw finalErr
 }
+
+// ---- Bulk organizer actions (dashboard Candidatures view) ----
+
+// Bulk review from the Candidatures view. Loops the single-item actions so all
+// side effects (invitation email, status guards, ownership assertion) stay in
+// one place; per-id failures don't abort the batch.
+export async function acceptApplications(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+  let succeeded = 0
+  let failed = 0
+  for (const id of ids) {
+    try { await acceptApplication(id); succeeded++ } catch { failed++ }
+  }
+  revalidatePath('/applications')
+  return { succeeded, failed }
+}
+
+export async function rejectApplications(ids: string[], note: string, sendEmail: boolean): Promise<{ succeeded: number; failed: number }> {
+  let succeeded = 0
+  let failed = 0
+  for (const id of ids) {
+    try { await rejectApplication(id, note, sendEmail); succeeded++ } catch { failed++ }
+  }
+  revalidatePath('/applications')
+  return { succeeded, failed }
+}
