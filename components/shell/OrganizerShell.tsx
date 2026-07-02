@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
 import { IconOverview, IconExchanges, IconApplications } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
+import { NewExchangeModal } from './NewExchangeModal'
 
 export type ExchangeOption = { id: string; name: string; year: number }
 
@@ -63,6 +64,15 @@ export function OrganizerShell({
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('new-exchange') === '1') {
+      setNewExchangeOpen(true)
+      router.replace(pathname)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -180,6 +190,11 @@ export function OrganizerShell({
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>
       </div>
+      <NewExchangeModal
+        open={newExchangeOpen}
+        onOpenChange={setNewExchangeOpen}
+        needsSchoolName={needsSchoolName}
+      />
     </div>
   )
 }

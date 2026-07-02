@@ -1,8 +1,10 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
 import { canCreateExchange } from '@/lib/billing/limits'
+import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -36,7 +38,7 @@ export async function createExchange(formData: FormData) {
   const year = parseInt(formData.get('year') as string)
   const schoolBName = (formData.get('school_b_name') as string ?? '').trim()
   if (!name || !schoolBName || Number.isNaN(year)) {
-    throw new Error('Please provide an exchange name, year, and partner school name')
+    throw new Error("Veuillez renseigner le nom de l'échange, l'année et l'établissement partenaire")
   }
 
   // Deferred school-name capture: organizers who signed up with Google start
@@ -56,12 +58,12 @@ export async function createExchange(formData: FormData) {
     .eq('school_a_id', profile.school_id)
   if (countError) throw countError
   if (ownSchool && !canCreateExchange(ownSchool, count ?? 0)) {
-    throw new Error('You have reached your plan’s exchange limit. Subscribe to add more.')
+    throw new Error("Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter.")
   }
 
   if (ownSchool && ownSchool.name === '') {
     const schoolAName = (formData.get('school_a_name') as string ?? '').trim()
-    if (!schoolAName) throw new Error('Please provide your school name')
+    if (!schoolAName) throw new Error('Veuillez renseigner le nom de votre établissement')
     const { error: renameError } = await supabase
       .from('schools').update({ name: schoolAName }).eq('id', profile.school_id)
     if (renameError) throw renameError
@@ -78,14 +80,27 @@ export async function createExchange(formData: FormData) {
   if (createError) throw createError
   const schoolBId = created.id
 
-  const { error } = await supabase.from('exchanges').insert({
-    name,
-    year,
-    school_a_id: profile.school_id,
-    school_b_id: schoolBId,
-    apply_slug: applySlug(name),
-  })
+  const { data: createdExchange, error } = await supabase
+    .from('exchanges')
+    .insert({
+      name,
+      year,
+      school_a_id: profile.school_id,
+      school_b_id: schoolBId,
+      apply_slug: applySlug(name),
+    })
+    .select('id')
+    .single()
   if (error) throw error
+
+  const cookieStore = await cookies()
+  cookieStore.set(ACTIVE_EXCHANGE_COOKIE, createdExchange.id, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 365,
+  })
+
   revalidatePath('/dashboard')
 }
 

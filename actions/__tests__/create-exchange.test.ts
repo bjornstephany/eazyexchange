@@ -32,7 +32,10 @@ function makeClient() {
       if (table === 'exchanges') {
         return {
           select: () => ({ eq: async () => ({ count: opts.exchangeCount ?? 0, error: null }) }),
-          insert: async (row: any) => { calls.exchangeInserted = row; return { error: null } },
+          insert: (row: any) => {
+            calls.exchangeInserted = row
+            return { select: () => ({ single: async () => ({ data: { id: 'new-ex' }, error: null }) }) }
+          },
         }
       }
       throw new Error('unexpected table ' + table)
@@ -41,6 +44,7 @@ function makeClient() {
 }
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/headers', () => ({ cookies: async () => ({ set: vi.fn() }) }))
 
 import { createExchange } from '../exchanges'
 
@@ -65,7 +69,7 @@ describe('createExchange deferred school name', () => {
 
   it('throws when the school name is empty and none was provided', async () => {
     opts = { ownSchoolName: '' }
-    await expect(createExchange(form(base))).rejects.toThrow('Please provide your school name')
+    await expect(createExchange(form(base))).rejects.toThrow('Veuillez renseigner le nom de votre établissement')
   })
 
   it('does not touch the school name when it is already set', async () => {
@@ -91,7 +95,7 @@ describe('createExchange plan cap', () => {
 
   it('blocks a trial school at 1 exchange', async () => {
     opts = { exchangeCount: 1 }
-    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
+    await expect(createExchange(form(base))).rejects.toThrow(/limite d'échanges/i)
     expect(calls.exchangeInserted).toBeNull()
   })
 
@@ -103,6 +107,6 @@ describe('createExchange plan cap', () => {
 
   it('blocks a Starter school at 2 exchanges', async () => {
     opts = { exchangeCount: 2, subStatus: 'active', plan: 'starter' }
-    await expect(createExchange(form(base))).rejects.toThrow(/exchange limit/i)
+    await expect(createExchange(form(base))).rejects.toThrow(/limite d'échanges/i)
   })
 })

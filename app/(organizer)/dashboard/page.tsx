@@ -31,7 +31,7 @@ export default async function DashboardPage() {
         {atCap ? (
           <Button asChild variant="outline"><Link href="/billing">Subscribe to add more</Link></Button>
         ) : (
-          <Button asChild><Link href="/exchanges/new">New exchange</Link></Button>
+          <Button asChild><Link href="/dashboard?new-exchange=1">New exchange</Link></Button>
         )}
       </div>
       {exchanges.length === 0 && (
