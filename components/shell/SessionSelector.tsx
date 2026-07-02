@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { setActiveExchange } from '@/actions/session'
 import type { ExchangeOption } from './OrganizerShell'
@@ -17,6 +17,25 @@ export function SessionSelector({
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleOutside(e: Event) {
+      if (wrapperRef.current && e.target instanceof Node && !wrapperRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', handleOutside)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [open])
 
   async function select(id: string) {
     setOpen(false)
@@ -28,11 +47,12 @@ export function SessionSelector({
   }
 
   return (
-    <div className="relative">
+    <div ref={wrapperRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2"
+        aria-haspopup="menu"
         aria-expanded={open}
       >
         <span className="font-display text-base font-semibold text-navy">{active.name}</span>

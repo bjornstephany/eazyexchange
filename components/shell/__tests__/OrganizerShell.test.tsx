@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
@@ -49,5 +49,27 @@ describe('OrganizerShell', () => {
     )
     expect(screen.getByText('MB')).toBeInTheDocument()
     expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
+  })
+
+  it('falls back to the first exchange when activeExchangeId matches none (stale data)', () => {
+    render(
+      <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" needsSchoolName={false}>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
+    expect(screen.getByText('Échanges')).toBeInTheDocument()
+  })
+
+  it('dismisses the session selector panel on outside click', () => {
+    render(
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    fireEvent.click(screen.getByText('France–Canada 2026'))
+    expect(screen.getByText('+ Nouvel échange')).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByText('+ Nouvel échange')).toBeNull()
   })
 })

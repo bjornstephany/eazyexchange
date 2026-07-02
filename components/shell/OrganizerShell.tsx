@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -61,7 +61,26 @@ export function OrganizerShell({
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
-  const active = exchanges.find((e) => e.id === activeExchangeId) ?? null
+  const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleOutside(e: Event) {
+      if (menuRef.current && e.target instanceof Node && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', handleOutside)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [menuOpen])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -80,17 +99,17 @@ export function OrganizerShell({
           <RailItem href="/dashboard" label="Aperçu" active={pathname === '/dashboard'}>
             <IconOverview />
           </RailItem>
-          {activeExchangeId && (
+          {active && (
             <>
               <RailItem
-                href={`/exchanges/${activeExchangeId}`}
+                href={`/exchanges/${active.id}`}
                 label="Échanges"
                 active={pathname.startsWith('/exchanges/') && !pathname.includes('/applications')}
               >
                 <IconExchanges />
               </RailItem>
               <RailItem
-                href={`/exchanges/${activeExchangeId}/applications`}
+                href={`/exchanges/${active.id}/applications`}
                 label="Candid."
                 active={pathname.includes('/applications')}
               >
@@ -99,7 +118,7 @@ export function OrganizerShell({
             </>
           )}
         </div>
-        <div className="relative mt-auto">
+        <div ref={menuRef} className="relative mt-auto">
           {menuOpen && (
             <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
               <button
@@ -115,6 +134,8 @@ export function OrganizerShell({
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Compte"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-mono text-[11px] text-white"
           >
             {initials(organizerName)}
@@ -146,9 +167,9 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {activeExchangeId && (
+          {active && (
             <Link
-              href={`/exchanges/${activeExchangeId}#invite`}
+              href={`/exchanges/${active.id}#invite`}
               className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
             >
               <span className="text-base leading-none">+</span> Inviter des élèves
