@@ -8,8 +8,9 @@ import { Mark } from '@/components/brand/Mark'
 import { IconOverview, IconExchanges, IconApplications } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
+import { ShellUiContext } from './ShellUiContext'
 
-export type ExchangeOption = { id: string; name: string; year: number }
+export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2 }
 
 function initials(name: string) {
   return name
@@ -109,7 +110,7 @@ export function OrganizerShell({
       <Suspense fallback={null}>
         <NewExchangeAutoOpen onOpen={() => setNewExchangeOpen(true)} />
       </Suspense>
-      <nav className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
+      <nav data-noprint className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
         <div className="mb-[26px]">
           <Mark variant="dark" className="h-[19px] w-[26px]" />
         </div>
@@ -117,23 +118,17 @@ export function OrganizerShell({
           <RailItem href="/dashboard" label="Aperçu" active={pathname === '/dashboard'}>
             <IconOverview />
           </RailItem>
+          <RailItem
+            href="/exchanges"
+            label="Échanges"
+            active={pathname === '/exchanges' || (pathname.startsWith('/exchanges/') && !pathname.includes('/applications'))}
+          >
+            <IconExchanges />
+          </RailItem>
           {active && (
-            <>
-              <RailItem
-                href={`/exchanges/${active.id}`}
-                label="Échanges"
-                active={pathname.startsWith('/exchanges/') && !pathname.includes('/applications')}
-              >
-                <IconExchanges />
-              </RailItem>
-              <RailItem
-                href={`/exchanges/${active.id}/applications`}
-                label="Candid."
-                active={pathname.includes('/applications')}
-              >
-                <IconApplications />
-              </RailItem>
-            </>
+            <RailItem href="/applications" label="Candid." active={pathname.startsWith('/applications')}>
+              <IconApplications />
+            </RailItem>
           )}
         </div>
         <div ref={menuRef} className="relative mt-auto">
@@ -162,7 +157,7 @@ export function OrganizerShell({
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[66px] flex-none items-center justify-between gap-5 border-b bg-card px-7">
+        <header data-noprint className="flex h-[66px] flex-none items-center justify-between gap-5 border-b bg-card px-7">
           <div className="flex items-center gap-3.5">
             {active ? (
               <>
@@ -172,7 +167,7 @@ export function OrganizerShell({
                   onNewExchange={() => setNewExchangeOpen(true)}
                 />
                 <span className="rounded-pill bg-tint px-3 py-1 font-mono text-[11px] font-semibold text-tint-text">
-                  {active.year}
+                  {active.phase === 1 ? 'Phase 1 · Recrutement' : 'Phase 2 · Préparation'}
                 </span>
               </>
             ) : (
@@ -195,7 +190,11 @@ export function OrganizerShell({
           )}
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
-          <div className="mx-auto max-w-6xl">{children}</div>
+          <div className="mx-auto max-w-6xl">
+            <ShellUiContext.Provider value={{ openNewExchange: () => setNewExchangeOpen(true) }}>
+              {children}
+            </ShellUiContext.Provider>
+          </div>
         </main>
       </div>
       <NewExchangeModal

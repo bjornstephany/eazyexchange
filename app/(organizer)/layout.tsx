@@ -33,10 +33,10 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const { data: exchangeRows } = await supabase
     .from('exchanges')
-    .select('id, name, year')
+    .select('id, name, year, phase')
     .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
     .order('created_at', { ascending: false })
-  const exchanges: ExchangeOption[] = exchangeRows ?? []
+  const exchanges: ExchangeOption[] = (exchangeRows ?? []) as ExchangeOption[]
 
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)

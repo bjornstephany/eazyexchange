@@ -12,7 +12,7 @@ vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
-const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026 }]
+const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const }]
 
 describe('OrganizerShell', () => {
   it('renders the French rail items when an exchange is active', () => {
@@ -30,13 +30,33 @@ describe('OrganizerShell', () => {
     )
   })
 
-  it('hides exchange-scoped items and offers creation when no exchanges exist', () => {
+  it('rail points at the session-scoped top-level routes', () => {
+    render(
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByRole('link', { name: /Échanges/ })).toHaveAttribute('href', '/exchanges')
+    expect(screen.getByRole('link', { name: /Candid\./ })).toHaveAttribute('href', '/applications')
+    expect(screen.getByText('Phase 1 · Recrutement')).toBeInTheDocument()
+  })
+
+  it('Échanges stays visible with zero exchanges', () => {
+    render(
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" needsSchoolName={false}>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByRole('link', { name: /Échanges/ })).toBeInTheDocument()
+    expect(screen.queryByText('Candid.')).toBeNull()
+  })
+
+  it('hides Candid. but offers creation when no exchanges exist', () => {
     render(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
-    expect(screen.queryByText('Échanges')).toBeNull()
     expect(screen.queryByText('Candid.')).toBeNull()
     expect(screen.getByRole('button', { name: /Nouvel échange/ })).toBeInTheDocument()
   })
