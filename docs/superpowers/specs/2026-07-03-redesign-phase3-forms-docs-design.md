@@ -22,7 +22,7 @@ Rail (`components/shell/OrganizerShell.tsx`): unhide **Formul.** → `/forms` an
 
 Old routes:
 - `/exchanges/[id]/forms/new` → `redirect('/forms')`; `/exchanges/[id]/forms/[formId]` → `redirect('/forms/<formId>')` (redirect can't set the session cookie — same accepted transition behavior as Phase 2).
-- `/exchanges/[id]` is **slimmed** to the exchange header + `ApplicationsCard` (still the `#invite` anchor target until Phase 4). The per-student × per-template grid, the « New form » button, and the now-unused `getExchangeGrid` action are deleted.
+- `/exchanges/[id]` is **slimmed** to the exchange header + `ApplicationsCard` (still the `#invite` anchor target until Phase 4). The per-student × per-template grid and the « New form » button are deleted. `getExchangeGrid` **stays** — `/dashboard` consumes it for the Phase-2 rollups.
 - `/exchanges/[id]/submissions/[assignmentId]` (review page) **stays as-is**: « À vérifier » rows in the doc drawer link to it. The designed review surface arrives with Élèves (Phase 4).
 
 ## 2 · Data model
