@@ -26,7 +26,7 @@ export function DocDrawer({
 
   useEffect(() => {
     setBusy(false); setError(null); setPicking(false); setChosen([]); setRemindResult(null)
-  }, [vm])
+  }, [vm?.id])
   useEffect(() => {
     if (!vm) return
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }

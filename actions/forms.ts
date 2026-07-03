@@ -255,6 +255,27 @@ export async function deleteTemplate(id: string): Promise<void> {
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
   if (tmpl.standard_key) throw new Error('Les modèles standard ne peuvent pas être supprimés.')
 
+  // Families' uploaded documents live in the `documents` bucket and aren't
+  // touched by the DB cascade on the template row — clean them up too, best
+  // effort, same as the template PDF removal below.
+  const { data: assignmentRows } = await supabase
+    .from('assignments').select('id').eq('template_id', id)
+  const assignmentIds = (assignmentRows ?? []).map((a: any) => a.id)
+  if (assignmentIds.length > 0) {
+    const { data: submissionRows } = await supabase
+      .from('submissions').select('id').in('assignment_id', assignmentIds)
+    const submissionIds = (submissionRows ?? []).map((s: any) => s.id)
+    if (submissionIds.length > 0) {
+      const { data: uploadRows } = await supabase
+        .from('document_uploads').select('storage_path').in('submission_id', submissionIds)
+      const paths = (uploadRows ?? []).map((u: any) => u.storage_path as string)
+      for (let i = 0; i < paths.length; i += 100) {
+        // Best effort — an orphaned file must not block the delete.
+        await supabase.storage.from('documents').remove(paths.slice(i, i + 100))
+      }
+    }
+  }
+
   if (tmpl.template_file_path) {
     // Best effort — an orphaned file must not block the delete.
     await supabase.storage.from('form-templates').remove([tmpl.template_file_path])
@@ -276,7 +297,7 @@ async function notifyIncompleteAssignees(
 ): Promise<{ reminded: number; skipped: number; failed: number }> {
   const { data: rows } = await supabase
     .from('assignments')
-    .select('id, last_reminded_at, submissions(status), users!assignments_student_id_fkey(email, full_name)')
+    .select('id, last_reminded_at, submissions(status), users!student_id(email, full_name)')
     .eq('template_id', tmpl.id)
   const cutoff = Date.now() - cooldownMs
   let reminded = 0, skipped = 0, failed = 0

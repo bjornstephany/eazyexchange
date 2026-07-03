@@ -41,9 +41,14 @@ async function send(to: string, subject: string, html: string, label: string): P
     console.warn(`[email] RESEND_API_KEY not set — skipping ${label}`)
     return false
   }
-  const { error } = await resend.emails.send({ from: FROM, to, subject, html })
-  if (error) { logSendError(label, error); return false }
-  return true
+  try {
+    const { error } = await resend.emails.send({ from: FROM, to, subject, html })
+    if (error) { logSendError(label, error); return false }
+    return true
+  } catch {
+    console.error(`[email] ${label} failed: send threw`)
+    return false
+  }
 }
 
 // Log only the error category/status — never the raw error message, which can

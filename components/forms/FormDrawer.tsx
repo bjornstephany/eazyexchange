@@ -13,7 +13,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { setBusy(false); setError(null) }, [vm])
+  useEffect(() => { setBusy(false); setError(null) }, [vm?.id])
   useEffect(() => {
     if (!vm) return
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
