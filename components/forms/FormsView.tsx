@@ -66,7 +66,7 @@ export function FormsView({
 
       {showAdd && (
         <AddFormPanel exchangeId={exchangeId} onClose={() => setShowAdd(false)}
-          onCreated={(id) => setOpenId(id)} />
+          onCreated={(id) => { setShowAdd(false); setOpenId(id) }} />
       )}
 
       <div className="flex flex-col gap-3">

@@ -37,7 +37,6 @@ export function AddFormPanel({
       const id = await createDraftTemplate(fd)
       router.refresh()
       onCreated(id)
-      setBusy(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
       setBusy(false)

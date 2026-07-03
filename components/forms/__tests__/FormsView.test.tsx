@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ShellUiContext, type ShellUi } from '@/components/shell/ShellUiContext'
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
@@ -53,7 +53,10 @@ describe('FormsView', () => {
     fireEvent.click(screen.getByText('Créer un formulaire en ligne'))
     fireEvent.change(screen.getByLabelText('Nom du formulaire'), { target: { value: 'Mon form' } })
     fireEvent.click(screen.getByRole('button', { name: 'Créer le brouillon' }))
-    await screen.findByRole('button', { name: 'Créer le brouillon' }) // settles
+    // On success, onCreated closes the add panel — the button legitimately unmounts.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Créer le brouillon' })).toBeNull()
+    )
     expect(createDraft).toHaveBeenCalled()
     const fd = createDraft.mock.calls[0][0] as FormData
     expect(fd.get('kind')).toBe('online')
