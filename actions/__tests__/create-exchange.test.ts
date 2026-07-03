@@ -4,13 +4,14 @@ let opts: {
   role?: string; ownSchoolName?: string; ownSchoolError?: unknown
   subStatus?: string; plan?: string; exchangeCount?: number
 }
-let calls: { schoolUpdated: any; partnerInserted: any; exchangeInserted: any }
+let calls: { schoolUpdated: any; partnerInserted: any; exchangeInserted: any; fromTables: string[] }
 
 function makeClient() {
-  calls = { schoolUpdated: null, partnerInserted: null, exchangeInserted: null }
+  calls = { schoolUpdated: null, partnerInserted: null, exchangeInserted: null, fromTables: [] }
   return {
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) },
     from(table: string) {
+      calls.fromTables.push(table)
       if (table === 'users') {
         return { select: () => ({ eq: () => ({ single: async () => ({ data: { school_id: 's-own', role: opts.role ?? 'organizer' } }) }) }) }
       }
@@ -37,6 +38,12 @@ function makeClient() {
             return { select: () => ({ single: async () => ({ data: { id: 'new-ex' }, error: null }) }) }
           },
         }
+      }
+      if (table === 'form_templates') {
+        return { insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'tpl-1' }, error: null }) }) }) }
+      }
+      if (table === 'document_slots' || table === 'form_fields') {
+        return { insert: async () => ({ error: null }) }
       }
       throw new Error('unexpected table ' + table)
     },
@@ -65,6 +72,7 @@ describe('createExchange deferred school name', () => {
     expect(calls.schoolUpdated).toEqual({ name: 'Lincoln High' })
     expect(calls.partnerInserted).toEqual({ name: 'Partner Lycée' })
     expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada', year: 2026, school_a_id: 's-own', school_b_id: 's-partner' })
+    expect(calls.fromTables).toContain('form_templates')
   })
 
   it('throws when the school name is empty and none was provided', async () => {

@@ -1,14 +1,14 @@
 'use client'
 import Link from 'next/link'
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
-import { ShellUiContext } from './ShellUiContext'
+import { ShellUiContext, type ShellUi } from './ShellUiContext'
 
 export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2 }
 
@@ -79,6 +79,22 @@ export function OrganizerShell({
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
+  const [listSearch, setListSearch] = useState('')
+  const [addRequestId, setAddRequestId] = useState(0)
+
+  // Contextual search is page-scoped: leaving the page clears it.
+  useEffect(() => { setListSearch('') }, [pathname])
+
+  const listPage = pathname.startsWith('/forms') ? 'forms'
+    : pathname.startsWith('/documents') ? 'docs' : null
+
+  const shellUi = useMemo<ShellUi>(() => ({
+    openNewExchange: () => setNewExchangeOpen(true),
+    listSearch,
+    setListSearch,
+    addRequestId,
+    requestAdd: () => setAddRequestId(n => n + 1),
+  }), [listSearch, addRequestId])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -126,9 +142,17 @@ export function OrganizerShell({
             <IconExchanges />
           </RailItem>
           {active && (
-            <RailItem href="/applications" label="Candid." active={pathname.startsWith('/applications')}>
-              <IconApplications />
-            </RailItem>
+            <>
+              <RailItem href="/applications" label="Candid." active={pathname.startsWith('/applications')}>
+                <IconApplications />
+              </RailItem>
+              <RailItem href="/forms" label="Formul." active={pathname.startsWith('/forms')}>
+                <IconForms />
+              </RailItem>
+              <RailItem href="/documents" label="Docs" active={pathname.startsWith('/documents')}>
+                <IconDocs />
+              </RailItem>
+            </>
           )}
         </div>
         <div ref={menuRef} className="relative mt-auto">
@@ -180,7 +204,7 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {active && (
+          {active && listPage === null && (
             <Link
               href={`/exchanges/${active.id}#invite`}
               className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
@@ -188,10 +212,28 @@ export function OrganizerShell({
               <span className="text-base leading-none">+</span> Inviter des élèves
             </Link>
           )}
+          {active && listPage !== null && (
+            <div className="flex items-center gap-3">
+              <input
+                type="search"
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                placeholder={listPage === 'forms' ? 'Rechercher un formulaire…' : 'Rechercher un document…'}
+                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={shellUi.requestAdd}
+                className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
+              >
+                <span className="text-base leading-none">+</span> {listPage === 'forms' ? 'Nouveau formulaire' : 'Demander un document'}
+              </button>
+            </div>
+          )}
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
           <div className="mx-auto max-w-6xl">
-            <ShellUiContext.Provider value={{ openNewExchange: () => setNewExchangeOpen(true) }}>
+            <ShellUiContext.Provider value={shellUi}>
               {children}
             </ShellUiContext.Provider>
           </div>

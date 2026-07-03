@@ -1,98 +1,91 @@
 'use client'
 import { useState } from 'react'
-import { addField, addSlot, removeField, removeSlot } from '@/actions/forms'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { FormField, DocumentSlot, FieldType } from '@/types/db'
+import { useRouter } from 'next/navigation'
+import { addField, removeField } from '@/actions/forms'
+import type { FormField, FieldType } from '@/types/db'
 
-interface Props {
-  templateId: string
-  type: 'data_entry' | 'document_upload'
-  fields: FormField[]
-  slots: DocumentSlot[]
+const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+  text: 'Texte', textarea: 'Texte long', date: 'Date', checkbox: 'Case à cocher', select: 'Choix',
 }
 
-export function FormBuilder({ templateId, type, fields, slots }: Props) {
+// Field list editor. `questions` = online form questions (typed fields);
+// `checklist` = informational paper checklist of a PDF form (plain labels).
+export function FormBuilder({
+  templateId, mode, fields,
+}: {
+  templateId: string
+  mode: 'questions' | 'checklist'
+  fields: FormField[]
+}) {
+  const router = useRouter()
   const [label, setLabel] = useState('')
   const [fieldType, setFieldType] = useState<FieldType>('text')
-  const [description, setDescription] = useState('')
-  const [required, setRequired] = useState(true)
-  const [loading, setLoading] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleAddField() {
-    if (!label.trim()) return
-    setLoading(true)
-    await addField(templateId, label, fieldType, required)
-    setLabel(''); setLoading(false)
+  async function run(fn: () => Promise<unknown>) {
+    setBusy(true)
+    setError(null)
+    try { await fn(); router.refresh() } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+    }
+    setBusy(false)
   }
 
-  async function handleAddSlot() {
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault()
     if (!label.trim()) return
-    setLoading(true)
-    await addSlot(templateId, label, description || null, required)
-    setLabel(''); setDescription(''); setLoading(false)
+    await run(() => addField(templateId, label.trim(), mode === 'questions' ? fieldType : 'text', true))
+    setLabel('')
   }
 
   return (
-    <div className="space-y-6">
-      {type === 'data_entry' && (
-        <div>
-          <h3 className="font-medium mb-3">Fields ({fields.length})</h3>
-          <ul className="space-y-2 mb-4">
-            {fields.map(f => (
-              <li key={f.id} className="flex items-center justify-between bg-muted px-3 py-2 rounded text-sm">
-                <span>{f.label} <span className="text-muted-foreground">({f.field_type}){f.required ? ' *' : ''}</span></span>
-                <button onClick={() => removeField(f.id)} className="text-red-500 hover:text-red-700 text-xs">Remove</button>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <div className="flex-1 space-y-1">
-              <Label>Label</Label>
-              <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Emergency contact name" />
+    <div>
+      <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
+        {mode === 'questions' ? 'Questions du formulaire' : 'Champs à renseigner (sur papier)'} · {fields.length}
+      </div>
+      {fields.length > 0 && (
+        <div className="mb-4 flex flex-col overflow-hidden rounded-xl border">
+          {fields.map(f => (
+            <div key={f.id} className="flex items-center justify-between gap-3 border-b px-3.5 py-[11px] last:border-0">
+              <span className="text-[13px] font-medium text-navy">
+                {f.label}
+                {mode === 'questions' && <span className="ml-2 text-placeholder">({FIELD_TYPE_LABELS[f.field_type]})</span>}
+              </span>
+              <button type="button" disabled={busy} onClick={() => run(() => removeField(f.id))}
+                className="text-xs font-semibold text-danger-text disabled:opacity-60">
+                Retirer
+              </button>
             </div>
-            <div className="w-full sm:w-32 space-y-1">
-              <Label>Type</Label>
-              <Select value={fieldType} onValueChange={v => setFieldType(v as FieldType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(['text','textarea','date','checkbox','select'] as FieldType[]).map(t => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleAddField} disabled={loading}>Add field</Button>
-          </div>
+          ))}
         </div>
       )}
-
-      {type === 'document_upload' && (
-        <div>
-          <h3 className="font-medium mb-3">Document slots ({slots.length})</h3>
-          <ul className="space-y-2 mb-4">
-            {slots.map(s => (
-              <li key={s.id} className="flex items-center justify-between bg-muted px-3 py-2 rounded text-sm">
-                <span>{s.label}{s.required ? ' *' : ''}</span>
-                <button onClick={() => removeSlot(s.id)} className="text-red-500 hover:text-red-700 text-xs">Remove</button>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <div className="flex-1 space-y-1">
-              <Label>Slot name</Label>
-              <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Passport copy" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <Label>Description (optional)</Label>
-              <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Clear scan of photo page" />
-            </div>
-            <Button onClick={handleAddSlot} disabled={loading}>Add slot</Button>
-          </div>
+      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-2.5">
+        <div className="flex min-w-[220px] flex-1 flex-col gap-1">
+          <label htmlFor="builder-label" className="text-[13px] font-semibold text-navy">
+            {mode === 'questions' ? 'Nouvelle question' : 'Nouveau champ'}
+          </label>
+          <input id="builder-label" value={label} onChange={e => setLabel(e.target.value)}
+            placeholder={mode === 'questions' ? 'Personne à prévenir' : 'Signature du représentant légal'}
+            className="h-11 rounded-[10px] border border-frame bg-card px-3 text-[15px] placeholder:text-placeholder focus:border-brand focus:outline-none" />
         </div>
-      )}
+        {mode === 'questions' && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="builder-type" className="text-[13px] font-semibold text-navy">Type</label>
+            <select id="builder-type" value={fieldType} onChange={e => setFieldType(e.target.value as FieldType)}
+              className="h-11 rounded-[10px] border border-frame bg-card px-3 text-[14px]">
+              {(Object.keys(FIELD_TYPE_LABELS) as FieldType[]).map(t => (
+                <option key={t} value={t}>{FIELD_TYPE_LABELS[t]}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <button type="submit" disabled={busy || !label.trim()}
+          className="h-11 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
+          Ajouter
+        </button>
+      </form>
+      {error && <p className="mt-3 text-sm text-danger-text">{error}</p>}
     </div>
   )
 }

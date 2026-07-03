@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { frShortDate } from '@/lib/dashboard/rollup'
 
 const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -34,14 +35,20 @@ function layout(body: string, footer = "You're receiving this because you have f
   `
 }
 
-async function send(to: string, subject: string, html: string, label: string): Promise<void> {
+async function send(to: string, subject: string, html: string, label: string): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
     console.warn(`[email] RESEND_API_KEY not set — skipping ${label}`)
-    return
+    return false
   }
-  const { error } = await resend.emails.send({ from: FROM, to, subject, html })
-  if (error) logSendError(label, error)
+  try {
+    const { error } = await resend.emails.send({ from: FROM, to, subject, html })
+    if (error) { logSendError(label, error); return false }
+    return true
+  } catch {
+    console.error(`[email] ${label} failed: send threw`)
+    return false
+  }
 }
 
 // Log only the error category/status — never the raw error message, which can
@@ -148,4 +155,35 @@ export async function sendApplicationRejectionEmail(opts: { to: string; applican
     <p>We wish you all the best.</p>
   `, APP_FOOTER)
   await send(opts.to, `Update on your application — ${opts.exchangeName}`, html, 'application rejection email')
+}
+
+const STUDENT_FOOTER = 'Tu reçois cet e-mail car ton dossier d’échange scolaire est en cours de préparation sur Eazyexchange.'
+
+export async function sendTemplateReminderEmail(opts: {
+  to: string; studentName: string; templateName: string; exchangeName: string; deadline: string | null
+}): Promise<boolean> {
+  const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
+  const due = opts.deadline ? ` avant le <strong>${esc(frShortDate(opts.deadline))}</strong>` : ''
+  const html = layout(`
+    <p>${greeting}</p>
+    <p>Il manque encore « <strong>${esc(opts.templateName)}</strong> » à ton dossier pour <strong>${esc(opts.exchangeName)}</strong>. Merci de le compléter${due}.</p>
+    <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Compléter mon dossier</a></p>
+  `, STUDENT_FOOTER)
+  return send(opts.to, `Rappel : ${opts.templateName} — ${opts.exchangeName}`, html, 'template reminder email')
+}
+
+export async function sendPhase2ChecklistEmail(opts: {
+  to: string; studentName: string; exchangeName: string; items: { name: string; deadline: string | null }[]
+}): Promise<boolean> {
+  const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
+  const rows = opts.items.map(i =>
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+  ).join('')
+  const html = layout(`
+    <p>${greeting}</p>
+    <p>La préparation de <strong>${esc(opts.exchangeName)}</strong> commence ! Voici ce qu’il reste à compléter dans ton dossier :</p>
+    <ul>${rows}</ul>
+    <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Ouvrir mon dossier</a></p>
+  `, STUDENT_FOOTER)
+  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email')
 }

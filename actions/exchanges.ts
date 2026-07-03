@@ -5,6 +5,8 @@ import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
 import { canCreateExchange } from '@/lib/billing/limits'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { seedStandardTemplates } from '@/lib/forms/standard-library'
+import { sendPhase2ChecklistEmail } from '@/lib/email'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -92,6 +94,12 @@ export async function createExchange(formData: FormData) {
     .select('id')
     .single()
   if (error) throw error
+
+  await seedStandardTemplates(supabase, {
+    exchangeId: createdExchange.id,
+    schoolId: profile.school_id,
+    userId: user.id,
+  })
 
   const cookieStore = await cookies()
   cookieStore.set(ACTIVE_EXCHANGE_COOKIE, createdExchange.id, {
@@ -236,5 +244,76 @@ export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promis
 
   const { error } = await supabase.from('exchanges').update({ phase }).eq('id', exchangeId)
   if (error) throw error
+
+  if (phase === 2) {
+    await sendPhase2ChecklistOnce(supabase, exchangeId, profile.school_id)
+  }
+
   revalidatePath('/dashboard')
+}
+
+// One-shot checklist when an exchange first enters Phase 2: each enrolled
+// student with pending active items gets ONE email listing them. The
+// phase2_checklist_sent_at stamp guarantees toggling 1↔2 never re-spams.
+async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, schoolId: string): Promise<void> {
+  const { data: exchange } = await supabase
+    .from('exchanges').select('name, phase2_checklist_sent_at').eq('id', exchangeId).single()
+  if (!exchange || exchange.phase2_checklist_sent_at) return
+
+  // Both audiences included — conditional docs already carry their chosen
+  // assignments, and students without one simply have nothing pending.
+  const { data: templates } = await supabase
+    .from('form_templates')
+    .select('id, name, deadline')
+    .eq('exchange_id', exchangeId)
+    .eq('school_id', schoolId)
+    .eq('status', 'active')
+
+  const templateById = new Map<string, { name: string; deadline: string | null }>(
+    (templates ?? []).map((t: any) => [t.id, t])
+  )
+  if (templateById.size === 0) { await stampChecklist(supabase, exchangeId); return }
+
+  const { data: enrollments } = await supabase
+    .from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId)
+  const enrolledIds = (enrollments ?? []).map((e: any) => e.user_id)
+  const students: any[] = enrolledIds.length > 0
+    ? ((await supabase
+        .from('users').select('id, full_name, email')
+        .in('id', enrolledIds).eq('school_id', schoolId).eq('role', 'student')).data ?? [])
+    : []
+
+  const { data: assignments } = await supabase
+    .from('assignments')
+    .select('id, template_id, student_id, submissions(status)')
+    .in('template_id', Array.from(templateById.keys()))
+
+  const pendingByStudent = new Map<string, { name: string; deadline: string | null }[]>()
+  for (const a of (assignments ?? []) as any[]) {
+    const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
+    const status = submission?.status ?? null
+    if (status === 'submitted' || status === 'approved') continue
+    const t = templateById.get(a.template_id)
+    if (!t) continue
+    const list = pendingByStudent.get(a.student_id) ?? []
+    list.push({ name: t.name, deadline: t.deadline })
+    pendingByStudent.set(a.student_id, list)
+  }
+
+  for (const student of students) {
+    const items = pendingByStudent.get(student.id)
+    if (!items || items.length === 0 || !student.email) continue
+    await sendPhase2ChecklistEmail({
+      to: student.email, studentName: student.full_name ?? '',
+      exchangeName: exchange.name, items,
+    })
+  }
+
+  await stampChecklist(supabase, exchangeId)
+}
+
+async function stampChecklist(supabase: any, exchangeId: string): Promise<void> {
+  await supabase.from('exchanges')
+    .update({ phase2_checklist_sent_at: new Date().toISOString() })
+    .eq('id', exchangeId)
 }
