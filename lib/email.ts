@@ -176,9 +176,9 @@ export async function sendPhase2ChecklistEmail(opts: {
   ).join('')
   const html = layout(`
     <p>${greeting}</p>
-    <p>La préparation de <strong>${esc(opts.exchangeName)}</strong> commence ! Voici ce qu'il reste à compléter dans ton dossier :</p>
+    <p>La préparation de <strong>${esc(opts.exchangeName)}</strong> commence ! Voici ce qu’il reste à compléter dans ton dossier :</p>
     <ul>${rows}</ul>
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Ouvrir mon dossier</a></p>
   `, STUDENT_FOOTER)
-  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c'est parti !`, html, 'phase-2 checklist email')
+  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email')
 }
