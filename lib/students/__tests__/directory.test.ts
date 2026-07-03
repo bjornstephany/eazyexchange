@@ -164,11 +164,11 @@ describe('list helpers', () => {
     expect(reminderNote(done)).toBe('Dossier complet — aucune relance prévue pour Camille.')
     const pending = { ...mk('b', 'Yanis Benali', 'incomplet'), dueLabel: 'Échéance 10 oct' }
     expect(reminderNote(pending)).toBe(
-      "Relances automatiques par e-mail jusqu'à réception — Yanis et ses parents reçoivent la liste des pièces attendues (Échéance 10 oct)."
+      "Relances automatiques par e-mail jusqu’à réception — Yanis et ses parents reçoivent la liste des pièces attendues (Échéance 10 oct)."
     )
     const noDue = mk('c', 'Léa C', 'incomplet')
     expect(reminderNote(noDue)).toBe(
-      "Relances automatiques par e-mail jusqu'à réception — Léa et ses parents reçoivent la liste des pièces attendues."
+      "Relances automatiques par e-mail jusqu’à réception — Léa et ses parents reçoivent la liste des pièces attendues."
     )
   })
 

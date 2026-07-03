@@ -61,7 +61,7 @@ const CHECK_PILLS: Record<string, Pill> = {
 const MISSING_PILL: Pill = { kind: 'bad', label: 'Manquant' }
 
 export function normalize(t: string): string {
-  return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036F]/g, '')
 }
 
 function initialsOf(name: string): string {
@@ -205,5 +205,5 @@ export function reminderNote(vm: StudentVM): string {
     return `Dossier complet — aucune relance prévue pour ${vm.firstName}.`
   }
   const due = vm.dueLabel ? ` (${vm.dueLabel})` : ''
-  return `Relances automatiques par e-mail jusqu'à réception — ${vm.firstName} et ses parents reçoivent la liste des pièces attendues${due}.`
+  return `Relances automatiques par e-mail jusqu’à réception — ${vm.firstName} et ses parents reçoivent la liste des pièces attendues${due}.`
 }
