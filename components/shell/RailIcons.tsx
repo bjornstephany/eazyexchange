@@ -26,3 +26,21 @@ export function IconApplications() {
     </div>
   )
 }
+
+export function IconForms() {
+  return (
+    <div className="flex h-[17px] w-3.5 flex-col justify-center gap-[2.5px] rounded-[2px] border-[1.5px] border-current px-[3px]">
+      <div className="h-[5px] w-[5px] rounded-[1px] border-[1.5px] border-current" />
+      <div className="h-[1.5px] w-[80%] bg-current" />
+    </div>
+  )
+}
+
+export function IconDocs() {
+  return (
+    <div className="relative h-[17px] w-4">
+      <div className="absolute left-0 top-0 h-3.5 w-[11px] rounded-[2px] border-[1.5px] border-current" />
+      <div className="absolute bottom-0 right-0 h-3.5 w-[11px] rounded-[2px] border-[1.5px] border-current bg-rail" />
+    </div>
+  )
+}

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
+let mockPathname = '/dashboard'
+
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/dashboard',
+  usePathname: () => mockPathname,
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }))
@@ -13,6 +15,15 @@ vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
 const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const }]
+
+function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
+  mockPathname = pathname
+  return render(
+    <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+      <p>page</p>
+    </OrganizerShell>
+  )
+}
 
 describe('OrganizerShell', () => {
   it('renders the French rail items when an exchange is active', () => {
@@ -91,5 +102,32 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('+ Nouvel échange')).toBeInTheDocument()
     fireEvent.pointerDown(document.body)
     expect(screen.queryByText('+ Nouvel échange')).toBeNull()
+  })
+
+  it('shows Formul. and Docs rail items when an exchange is active', () => {
+    renderShell({ pathname: '/dashboard' })
+    expect(screen.getByText('Formul.')).toBeInTheDocument()
+    expect(screen.getByText('Docs')).toBeInTheDocument()
+    expect(screen.getByText('Formul.').closest('a')).toHaveAttribute('href', '/forms')
+    expect(screen.getByText('Docs').closest('a')).toHaveAttribute('href', '/documents')
+  })
+
+  it('shows the contextual search + CTA on /forms instead of the invite button', () => {
+    renderShell({ pathname: '/forms' })
+    expect(screen.getByPlaceholderText('Rechercher un formulaire…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Nouveau formulaire/ })).toBeInTheDocument()
+    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
+  })
+
+  it('shows the documents CTA on /documents', () => {
+    renderShell({ pathname: '/documents' })
+    expect(screen.getByPlaceholderText('Rechercher un document…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Demander un document/ })).toBeInTheDocument()
+  })
+
+  it('keeps the invite button elsewhere', () => {
+    renderShell({ pathname: '/dashboard' })
+    expect(screen.getByText(/Inviter des élèves/)).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText(/Rechercher/)).toBeNull()
   })
 })
