@@ -153,6 +153,9 @@ export async function getExchangeGrid(exchangeId: string) {
       .select('id, name, type, deadline')
       .eq('exchange_id', exchangeId)
       .eq('school_id', profile.school_id)
+      // Drafts must never reach the grid/rollups: they have no assignments and
+      // may have a null deadline (active ⇒ deadline not null is DB-enforced).
+      .eq('status', 'active')
       .order('created_at'),
     supabase
       .from('exchange_enrollments')
