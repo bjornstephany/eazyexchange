@@ -343,6 +343,19 @@ export async function remindTemplate(id: string): Promise<{ reminded: number; sk
   return notifyIncompleteAssignees(supabase, tmpl, exchange?.name ?? '', REMIND_COOLDOWN_MS)
 }
 
+export async function getTemplateFileUrl(id: string): Promise<string> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthenticated')
+  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  if (!tmpl.template_file_path) throw new Error('Aucun PDF pour ce modèle.')
+  const { data, error } = await supabase.storage
+    .from('form-templates')
+    .createSignedUrl(tmpl.template_file_path, 3600)
+  if (error || !data?.signedUrl) throw new Error('Impossible de générer le lien de téléchargement.')
+  return data.signedUrl
+}
+
 export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'docs'): Promise<{
   templates: TemplateVM[]
   studentCount: number

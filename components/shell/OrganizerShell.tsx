@@ -191,7 +191,11 @@ export function OrganizerShell({
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
           <div className="mx-auto max-w-6xl">
-            <ShellUiContext.Provider value={{ openNewExchange: () => setNewExchangeOpen(true) }}>
+            <ShellUiContext.Provider value={{
+              openNewExchange: () => setNewExchangeOpen(true),
+              listSearch: '', setListSearch: () => {},
+              addRequestId: 0, requestAdd: () => {},
+            }}>
               {children}
             </ShellUiContext.Provider>
           </div>
