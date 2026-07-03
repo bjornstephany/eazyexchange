@@ -39,6 +39,11 @@ export async function createTemplate(formData: FormData) {
     school_id: schoolId,
     name, description: description || null, type, deadline,
     created_by: user.id,
+    // Matches the column defaults ('doc' / 'active' / 'all') — kept explicit
+    // because the phase-3 Insert type no longer defaults these.
+    kind: type === 'data_entry' ? 'online' : 'doc',
+    status: 'active',
+    audience: 'all',
   }).select('id').single()
   if (error) throw error
   revalidatePath(`/exchanges/${exchangeId}`)

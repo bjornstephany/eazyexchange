@@ -1,5 +1,8 @@
 export type Role = 'organizer' | 'student'
 export type FormType = 'data_entry' | 'document_upload'
+export type TemplateKind = 'online' | 'pdf' | 'doc'
+export type TemplateStatus = 'draft' | 'active'
+export type TemplateAudience = 'all' | 'conditional'
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
 export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
 export type ApplicationStatus =
@@ -26,6 +29,7 @@ export type Exchange = {
   application_deadline: string | null
   apply_slug: string | null
   phase: number
+  phase2_checklist_sent_at: string | null
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
@@ -35,7 +39,10 @@ export type ExchangeEnrollment = { id: string; exchange_id: string; user_id: str
 export type FormTemplate = {
   id: string; exchange_id: string; school_id: string
   name: string; description: string | null; type: FormType
-  deadline: string; created_by: string; created_at: string
+  deadline: string | null; created_by: string; created_at: string
+  kind: TemplateKind; status: TemplateStatus; audience: TemplateAudience
+  standard_key: string | null; condition_label: string | null
+  template_file_path: string | null
 }
 export type FormField = {
   id: string; template_id: string; label: string
@@ -85,10 +92,10 @@ export type Database = {
   public: {
     Tables: {
       schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'created_at' | 'name'>>, Partial<School>>
-      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase'>>, Partial<Exchange>>
+      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at'>>, Partial<Exchange>>
       users: TableDef<UserProfile, Omit<UserProfile, 'created_at'>, Partial<UserProfile>>
       exchange_enrollments: TableDef<ExchangeEnrollment, Omit<ExchangeEnrollment, 'id' | 'created_at'>, Partial<ExchangeEnrollment>>
-      form_templates: TableDef<FormTemplate, Omit<FormTemplate, 'id' | 'created_at'>, Partial<FormTemplate>>
+      form_templates: TableDef<FormTemplate, Omit<FormTemplate, 'id' | 'created_at' | 'deadline' | 'standard_key' | 'condition_label' | 'template_file_path'> & Partial<Pick<FormTemplate, 'deadline' | 'standard_key' | 'condition_label' | 'template_file_path'>>, Partial<FormTemplate>>
       form_fields: TableDef<FormField, Omit<FormField, 'id'>, Partial<FormField>>
       document_slots: TableDef<DocumentSlot, Omit<DocumentSlot, 'id'>, Partial<DocumentSlot>>
       assignments: TableDef<Assignment, Omit<Assignment, 'id' | 'assigned_at'>, Partial<Assignment>>

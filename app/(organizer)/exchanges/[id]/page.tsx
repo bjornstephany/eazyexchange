@@ -75,7 +75,7 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
                         {t.name}
                       </Link>
                       <p className="text-xs font-normal text-muted-foreground mt-0.5">
-                        Due {new Date(t.deadline).toLocaleDateString()}
+                        Due {new Date(t.deadline!).toLocaleDateString()}
                       </p>
                     </th>
                   ))}
