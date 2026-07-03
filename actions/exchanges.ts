@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
 import { canCreateExchange } from '@/lib/billing/limits'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { seedStandardTemplates } from '@/lib/forms/standard-library'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -92,6 +93,12 @@ export async function createExchange(formData: FormData) {
     .select('id')
     .single()
   if (error) throw error
+
+  await seedStandardTemplates(supabase, {
+    exchangeId: createdExchange.id,
+    schoolId: profile.school_id,
+    userId: user.id,
+  })
 
   const cookieStore = await cookies()
   cookieStore.set(ACTIVE_EXCHANGE_COOKIE, createdExchange.id, {
