@@ -56,7 +56,10 @@ export type DocumentSlot = {
   id: string; template_id: string; label: string
   description: string | null; required: boolean; order: number
 }
-export type Assignment = { id: string; template_id: string; student_id: string; assigned_at: string }
+export type Assignment = {
+  id: string; template_id: string; student_id: string; assigned_at: string
+  last_reminded_at?: string | null
+}
 export type Submission = {
   id: string; assignment_id: string; status: SubmissionStatus
   submitted_at: string | null; reviewed_at: string | null

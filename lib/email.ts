@@ -172,6 +172,24 @@ export async function sendTemplateReminderEmail(opts: {
   return send(opts.to, `Rappel : ${opts.templateName} — ${opts.exchangeName}`, html, 'template reminder email')
 }
 
+export async function sendStudentReminderEmail(opts: {
+  to: string; studentName: string; exchangeName: string
+  items: { name: string; deadline: string | null }[]
+}): Promise<boolean> {
+  const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
+  const n = opts.items.length
+  const rows = opts.items.map(i =>
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+  ).join('')
+  const html = layout(`
+    <p>${greeting}</p>
+    <p>Il manque encore ${n === 1 ? 'cet élément' : 'ces éléments'} à ton dossier pour <strong>${esc(opts.exchangeName)}</strong> :</p>
+    <ul>${rows}</ul>
+    <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Compléter mon dossier</a></p>
+  `, STUDENT_FOOTER)
+  return send(opts.to, `Rappel : ton dossier pour ${opts.exchangeName}`, html, 'student reminder email')
+}
+
 export async function sendPhase2ChecklistEmail(opts: {
   to: string; studentName: string; exchangeName: string; items: { name: string; deadline: string | null }[]
 }): Promise<boolean> {
