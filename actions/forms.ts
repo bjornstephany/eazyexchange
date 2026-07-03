@@ -72,36 +72,6 @@ export async function removeField(fieldId: string) {
   revalidatePath(`/exchanges`)
 }
 
-export async function addSlot(templateId: string, label: string, description: string | null, required: boolean) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsTemplate(supabase, user.id, templateId)
-
-  const { data: existing } = await supabase
-    .from('document_slots').select('order').eq('template_id', templateId).order('order', { ascending: false }).limit(1).single()
-  const nextOrder = (existing?.order ?? -1) + 1
-  const { error } = await supabase.from('document_slots').insert({
-    template_id: templateId, label, description: description || null, required, order: nextOrder,
-  })
-  if (error) throw error
-  revalidatePath(`/exchanges`)
-}
-
-export async function removeSlot(slotId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthenticated')
-  const { data: slot } = await supabase
-    .from('document_slots').select('template_id').eq('id', slotId).maybeSingle()
-  if (!slot) throw new Error('Slot not found')
-  await assertOrganizerOwnsTemplate(supabase, user.id, slot.template_id)
-
-  const { error } = await supabase.from('document_slots').delete().eq('id', slotId)
-  if (error) throw error
-  revalidatePath(`/exchanges`)
-}
-
 // Fetch a template the caller's school owns (with fields), or throw.
 async function getOwnedTemplate(supabase: SupabaseClient, userId: string, templateId: string) {
   const schoolId = await assertOrganizer(supabase, userId)
