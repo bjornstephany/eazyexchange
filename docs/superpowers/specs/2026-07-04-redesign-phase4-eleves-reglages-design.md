@@ -9,7 +9,7 @@
   - *Alternatives considered:* (a) full owner/admin/read-only with RLS enforcement across all tables — too large and regression-prone to ride along; (b) store-but-don't-enforce — dishonest; (c) defer the whole section — leaves a designed section unbuilt for little savings.
 - **Deferred rows in Compte:** the **2FA toggle** (a toggle without a TOTP enroll/verify flow is meaningless; full flow is its own project), **« Langue de l'interface »** select (no i18n infrastructure; app is mid-FR-migration), **« Changer la photo »** (the design itself renders initials avatars everywhere; needs a bucket + column for no visible payoff), and **e-mail change** (Supabase requires a confirmation round-trip; the field renders read-only with a hint). Password change **is** built.
 - **Plan display names go French app-wide** (display-only; keys stay `starter/growth/scale`): Essai gratuit / **Essentiel** / **Association** / **Réseau** — applied in the new Facturation section *and* retrofitted to `ExchangesView` plan tiles + `/exchanges` page + `/billing` so no page contradicts another.
-- **Prices: keep the app's current price points (in $).** The design shows 199 / 499 / 799 € **/an**; the app displays $299 / $499 / $599 and Stripe prices are env-configured (go-live pending). Currency/pricing is a business decision — **open question for the user**; code keeps `$299/$499/$599` until decided.
+- **Prices: adopt the design's € prices (user-approved 2026-07-04): 199 € / 499 € / 799 € par an** for Essentiel/Association/Réseau. Retrofit everywhere prices display (`ExchangesView` plan tiles, `/billing` page, new Facturation section). The Stripe Prices (go-live pending) must be created in **EUR** at these amounts.
 - **Archive** = `exchanges.archived_at` + a server-side write guard on mutating actions + UI affordances (« Archivé » pill, restore). Archiving does **not** free plan quota (the cap counts all owned exchanges — no archive-to-recreate loophole).
 - **Status precedence on Élèves reuses `rollupStudent`** (dashboard's logic: À vérifier > Complet > En retard > Incomplet) rather than the demo script's (En retard first). Cross-page consistency with the Phase-2 dashboard wins; accepted deviation.
 - **Submission review keeps the legacy page** (`/exchanges/[id]/submissions/[assignmentId]`). The handoff contains no review screen; checklist rows that have a submission deep-link to the legacy page. (Phase 3 note said "the designed review surface arrives with Élèves" — there is in fact no such design; the deep link is the resolution.)
@@ -134,7 +134,7 @@ Left nav (222px, client state): Compte personnel · Équipe & rôles · Facturat
 
 ### Facturation (owner-only)
 
-- Plan card: FR plan pill (Essai gratuit / Essentiel / Association / Réseau), price (current $ points; trial = « 0 € », no per), description lines from the design, usage bar + label `{n} / {cap} échanges utilisés` (n = count of `school_a_id` exchanges — the exact number `createExchange` gates on; Réseau/scale → « {n} échange(s) actif(s) · échanges illimités », 6% bar).
+- Plan card: FR plan pill (Essai gratuit / Essentiel / Association / Réseau), price (199 € / 499 € / 799 € « / an »; trial = « 0 € », no per), description lines from the design, usage bar + label `{n} / {cap} échanges utilisés` (n = count of `school_a_id` exchanges — the exact number `createExchange` gates on; Réseau/scale → « {n} échange(s) actif(s) · échanges illimités », 6% bar).
 - « Voir les forfaits » → `/billing`.
 - **Moyen de paiement** row: when a Stripe customer with an active/grace subscription exists, fetch the default payment method server-side (brand + last4 + expiry, e.g. « Visa •••• 4421 — expire 08/27 ») and « Modifier » → `/billing/portal`; otherwise « Aucun moyen de paiement enregistré. » + « Ajouter une carte » → `/billing`.
 
@@ -189,6 +189,6 @@ actions/settings.ts                      updateProfile, changePassword, getTeam,
 
 Branch `redesign/phase-4-eleves-reglages`. The migration is additive and backward-compatible (defaults keep prod behavior unchanged until the UI lands: everyone stays effectively admin-equal except the backfilled owner, nothing is archived). Apply migration + deploy the updated edge function at merge time, same as Phases 2–3. Gates: `pnpm lint`, `pnpm test`, `tsc --noEmit` (local build has placeholder env), pre-push hook.
 
-**Open questions for the user (do not block implementation start; affect copy only):**
-1. Pricing display — adopt the design's € prices (199/499/799 €/an) or keep $299/$499/$599 until Stripe go-live decides currency?
-2. The new organizer-invite e-mail is written in French (recipient is a colleague of a French organizer) while transactional student e-mails remain English pending the cross-phase decision — OK?
+**Resolved by user (2026-07-04):**
+1. Pricing display: the design's € prices — 199 / 499 / 799 € par an (Stripe Prices to be created in EUR at go-live).
+2. Organizer-invite e-mail in French: approved (student transactional e-mails remain English pending the cross-phase decision).
