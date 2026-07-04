@@ -15,7 +15,7 @@ function friendlyMessage(message: string): string {
     case 'Assignment not found':
       return "Nous n’avons pas trouvé ce que vous cherchiez."
     default:
-      return "Une erreur est survenue de notre côté — vos données sont en sécurité. Réessayez, ou revenez au tableau de bord."
+      return "Une erreur est survenue de notre côté — vos données sont en sécurité. Réessayez, ou revenez en lieu sûr."
   }
 }
 

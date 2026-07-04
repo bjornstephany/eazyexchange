@@ -4,7 +4,7 @@ export function LoadingState() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-[30px] bg-background">
       <div className="relative h-[60px] w-20">
-        <span className="ee-mark-l absolute left-0 top-0 h-12 w-12 rounded-full bg-[#10203F]" />
+        <span className="ee-mark-l absolute left-0 top-0 h-12 w-12 rounded-full bg-navy" />
         <span className="ee-mark-r absolute bottom-0 right-0 h-12 w-12 rounded-full bg-brand mix-blend-multiply" />
       </div>
       <span className="font-display text-[28px] font-bold text-navy">Eazyexchange</span>
