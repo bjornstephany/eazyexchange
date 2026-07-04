@@ -6,8 +6,8 @@ export type BadgeVariant = 'success' | 'info' | 'neutral' | 'danger'
 // (used by both the my-forms list and the assignment detail page). A status
 // with no submission row yet is rendered as "Not started" by the caller.
 export const SUBMISSION_STATUS_BADGE: Record<SubmissionStatus, { label: string; variant: BadgeVariant }> = {
-  approved: { label: 'Approved', variant: 'success' },
-  submitted: { label: 'Under review', variant: 'info' },
-  rejected: { label: 'Rejected — action needed', variant: 'danger' },
-  draft: { label: 'In progress', variant: 'neutral' },
+  approved: { label: 'Validé', variant: 'success' },
+  submitted: { label: 'En vérification', variant: 'info' },
+  rejected: { label: 'À corriger', variant: 'danger' },
+  draft: { label: 'Brouillon', variant: 'neutral' },
 }
