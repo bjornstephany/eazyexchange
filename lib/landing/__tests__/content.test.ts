@@ -2,23 +2,20 @@ import { describe, it, expect } from 'vitest'
 import { landingContent } from '@/lib/landing/content'
 
 describe('landingContent', () => {
-  it('routes the primary CTAs to /signup and /login', () => {
-    expect(landingContent.hero.primaryCta.href).toBe('/signup')
-    expect(landingContent.hero.secondaryCta.href).toBe('/login')
-    expect(landingContent.nav.getStarted.href).toBe('/signup')
-    expect(landingContent.nav.login.href).toBe('/login')
+  it('fr and en share the same shape', () => {
+    const { fr, en } = landingContent
+    expect(Object.keys(fr.nav).sort()).toEqual(Object.keys(en.nav).sort())
+    expect(fr.features.pillars).toHaveLength(3)
+    expect(en.features.pillars).toHaveLength(3)
+    expect(fr.how.steps).toHaveLength(4)
+    expect(en.how.steps).toHaveLength(4)
+    expect(fr.hero.mock.rows).toHaveLength(5)
+    expect(en.hero.mock.rows).toHaveLength(5)
+    expect(Object.keys(fr.hero.mock.statusLabels).sort())
+      .toEqual(Object.keys(en.hero.mock.statusLabels).sort())
   })
 
-  it('every pricing tier has a /signup CTA and at least one feature', () => {
-    expect(landingContent.pricing.tiers.length).toBeGreaterThanOrEqual(2)
-    for (const tier of landingContent.pricing.tiers) {
-      expect(tier.cta.href).toBe('/signup')
-      expect(tier.features.length).toBeGreaterThan(0)
-    }
-  })
-
-  it('exposes feature and step lists for rendering', () => {
-    expect(landingContent.features.items.length).toBeGreaterThan(0)
-    expect(landingContent.howItWorks.steps.length).toBe(4)
+  it('fr copy uses typographic apostrophes', () => {
+    expect(landingContent.fr.features.title).toContain('’')
   })
 })

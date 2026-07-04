@@ -1,50 +1,31 @@
-import { Plane } from 'lucide-react'
-import { landingContent } from '@/lib/landing/content'
+import type { LandingContent } from '@/lib/landing/content'
 
-export function HowItWorks() {
-  const { eyebrow, title, subtitle, steps } = landingContent.howItWorks
+export function HowItWorks({ how }: { how: LandingContent['how'] }) {
   return (
-    <section className="bg-paper">
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <div className="max-w-2xl">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-cleared-soft">
-            {eyebrow}
-          </span>
-          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            {title}
-          </h2>
-          <p className="mt-3 text-ink-muted">{subtitle}</p>
-        </div>
-
-        <ol className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {steps.map((step, i) => {
-            const isLast = i === steps.length - 1
-            return (
-              <li key={step.number} className="relative">
-                <div className="relative flex items-center">
-                  <span className="relative z-10 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-sm font-bold text-white ring-4 ring-paper">
-                    {String(step.number).padStart(2, '0')}
-                  </span>
-                  {/* Route line to the next stop */}
-                  {!isLast && (
-                    <span
-                      aria-hidden
-                      className="absolute left-12 top-1/2 hidden h-px w-[calc(100%-1rem)] border-t border-dashed border-ink/25 lg:block"
-                    />
-                  )}
-                  {isLast && (
-                    <Plane
-                      aria-hidden
-                      className="ml-3 hidden h-4 w-4 -rotate-12 text-cleared-soft lg:block"
-                    />
-                  )}
-                </div>
-                <h3 className="mt-5 font-display text-lg font-bold text-ink">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.description}</p>
-              </li>
-            )
-          })}
-        </ol>
+    <section className="mx-auto max-w-[1180px] px-6 pb-20 sm:px-10">
+      <p className="mb-4 font-mono text-[12px] font-semibold uppercase tracking-[.14em] text-[#2456E6]">
+        {how.eyebrow}
+      </p>
+      <h2 className="mb-10 max-w-[640px] font-display text-[34px] font-bold leading-[1.1] tracking-[-.02em] text-[#10203F]">
+        {how.title}
+      </h2>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {how.steps.map((st) => (
+          <div key={st.n} className="border-t-2 border-[#2456E6] pt-[18px]">
+            <p className="mb-3.5 font-mono text-[13px] font-semibold text-[#9AA6C0]">{st.n}</p>
+            <h3 className="mb-2 font-display text-[18px] font-semibold text-[#10203F]">{st.title}</h3>
+            <p className="text-[14px] leading-[1.55] text-[#5B6B8C]">{st.body}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 flex items-center gap-4 rounded-[14px] border border-[#E4E9F2] bg-[#F5F7FC] px-[26px] py-[22px]">
+        <span
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] bg-[#2456E6] text-[18px] font-semibold text-white"
+          aria-hidden
+        >
+          &#8635;
+        </span>
+        <p className="max-w-[820px] text-[15px] font-medium leading-[1.5] text-[#10203F]">{how.note}</p>
       </div>
     </section>
   )

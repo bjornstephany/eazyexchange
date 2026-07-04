@@ -1,38 +1,14 @@
-import Link from 'next/link'
-import { landingContent } from '@/lib/landing/content'
-import { Mark } from '@/components/brand/Mark'
+import { Logo } from './Logo'
+import type { LandingContent } from '@/lib/landing/content'
 
-export function LandingFooter() {
-  const { tagline, links, copyright } = landingContent.footer
+export function LandingFooter({ footerTag }: { footerTag: LandingContent['footerTag'] }) {
   return (
-    <footer className="bg-ink text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-14 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-xs">
-          <span className="inline-flex items-center gap-2">
-            <Mark variant="dark" className="h-5 w-7 shrink-0" />
-            <span className="font-display text-lg font-bold tracking-tight">
-              Eazyexchange
-            </span>
-          </span>
-          <p className="mt-3 text-sm leading-relaxed text-white/50">{tagline}</p>
-        </div>
-        <nav className="flex gap-6 font-mono text-[12px] uppercase tracking-[0.16em]">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-white/60 transition-colors hover:text-cleared"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+    <footer className="mx-auto flex max-w-[1180px] flex-col items-center gap-3 px-6 py-7 text-center sm:flex-row sm:justify-between sm:px-10 sm:text-left">
+      <div className="flex items-center gap-2.5">
+        <Logo size="footer" />
+        <span className="font-display text-[14px] font-semibold text-[#10203F]">Eazyexchange</span>
       </div>
-      <div className="border-t border-white/10">
-        <p className="mx-auto max-w-6xl px-4 py-6 font-mono text-[11px] uppercase tracking-[0.14em] text-white/35">
-          © {new Date().getFullYear()} {copyright}
-        </p>
-      </div>
+      <span className="text-[13px] text-[#8A97B2]">{footerTag}</span>
     </footer>
   )
 }

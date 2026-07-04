@@ -1,47 +1,24 @@
-import { landingContent } from '@/lib/landing/content'
+import type { LandingContent } from '@/lib/landing/content'
 
-export function Features() {
-  const { eyebrow, title, subtitle, items } = landingContent.features
+export function Features({ features }: { features: LandingContent['features'] }) {
   return (
-    <section className="border-y border-paper-line bg-paper-card">
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <div className="max-w-2xl">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-cleared-soft">
-            {eyebrow}
-          </span>
-          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            {title}
-          </h2>
-          <p className="mt-3 text-ink-muted">{subtitle}</p>
-        </div>
-
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => {
-            const Icon = item.icon
-            return (
-              <article
-                key={item.title}
-                className="group relative flex flex-col rounded-xl border border-paper-line bg-paper py-6 pl-7 pr-6 transition-shadow hover:shadow-md"
-              >
-                {/* Boarding-pass stub perforation */}
-                <span
-                  aria-hidden
-                  className="absolute inset-y-4 left-3 border-l border-dashed border-paper-line"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-ink text-cleared">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted/70">
-                    {item.code}
-                  </span>
-                </div>
-                <h3 className="mt-4 font-display text-lg font-bold text-ink">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.description}</p>
-              </article>
-            )
-          })}
-        </div>
+    <section id="features" className="mx-auto max-w-[1180px] scroll-mt-20 px-6 pb-[72px] pt-6 sm:px-10">
+      <p className="mb-4 font-mono text-[12px] font-semibold uppercase tracking-[.14em] text-[#2456E6]">
+        {features.eyebrow}
+      </p>
+      <h2 className="mb-11 max-w-[640px] font-display text-[34px] font-bold leading-[1.1] tracking-[-.02em] text-[#10203F]">
+        {features.title}
+      </h2>
+      <div className="grid gap-6 sm:grid-cols-3">
+        {features.pillars.map((p, i) => (
+          <div key={p.title} className="rounded-[14px] border border-[#E4E9F2] bg-[#FBFCFE] p-[30px]">
+            <p className="mb-[18px] font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-[#2456E6]">
+              {String(i + 1).padStart(2, '0')} · {p.tag}
+            </p>
+            <h3 className="mb-2.5 font-display text-[21px] font-semibold text-[#10203F]">{p.title}</h3>
+            <p className="text-[15px] leading-[1.6] text-[#5B6B8C]">{p.body}</p>
+          </div>
+        ))}
       </div>
     </section>
   )
