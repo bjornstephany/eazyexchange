@@ -59,10 +59,12 @@ export async function acceptOrganizerInvite(
   const admin = createAdminClient()
 
   // Claim the token first (single-use): losing a race means the other request won.
+  // Exclude revoked_at so an owner revoking in the window between lookupInvite
+  // and this claim cannot be raced into provisioning an account.
   const { data: claimed } = await admin
     .from('organizer_invites')
     .update({ accepted_at: new Date().toISOString() })
-    .eq('id', row.id).is('accepted_at', null)
+    .eq('id', row.id).is('accepted_at', null).is('revoked_at', null)
     .select('id')
   if (!claimed || claimed.length === 0) throw new Error(JOIN_STATE_MESSAGES.accepted)
 
