@@ -1,282 +1,143 @@
-import type { LucideIcon } from 'lucide-react'
-import {
-  ClipboardList,
-  LayoutDashboard,
-  BellRing,
-  FileUp,
-  CheckCircle2,
-} from 'lucide-react'
+export type Lang = 'fr' | 'en'
+export type MockStatus = 'complete' | 'pending' | 'review' | 'missing'
 
-export interface CtaLink {
-  label: string
-  href: string
-}
-
-export interface FeatureItem {
-  icon: LucideIcon
-  code: string
-  title: string
-  description: string
-}
-
-export interface HowItWorksStep {
-  number: number
-  title: string
-  description: string
-}
-
-export interface PricingTier {
+export interface MockRow {
   name: string
-  price: string
-  period: string
-  description: string
-  features: string[]
-  cta: CtaLink
-  highlighted: boolean
-}
-
-export interface ManifestRow {
-  student: string
-  form: string
-  due: string
+  app: MockStatus
+  forms: MockStatus
+  docs: MockStatus
+  status: MockStatus
 }
 
 export interface LandingContent {
-  nav: {
-    brand: string
-    login: CtaLink
-    getStarted: CtaLink
-  }
+  nav: { features: string; login: string; demo: string }
   hero: {
     eyebrow: string
-    headline: string
-    subhead: string
-    primaryCta: CtaLink
-    secondaryCta: CtaLink
-    manifest: {
-      programLabel: string
-      columns: { student: string; form: string; due: string; status: string }
-      rows: ManifestRow[]
-      pendingLabel: string
-      clearedLabel: string
-      readyLine: string
-    }
-  }
-  problemSolution: {
-    problemLabel: string
-    problemTitle: string
-    problemBody: string
-    solutionLabel: string
-    solutionTitle: string
-    solutionBody: string
-  }
-  features: {
-    eyebrow: string
     title: string
-    subtitle: string
-    items: FeatureItem[]
-  }
-  howItWorks: {
-    eyebrow: string
-    title: string
-    subtitle: string
-    steps: HowItWorksStep[]
-  }
-  pricing: {
-    eyebrow: string
-    title: string
-    subtitle: string
-    popularLabel: string
-    valueProp: {
-      headline: string
-      body: string
-    }
-    tiers: PricingTier[]
+    sub: string
+    ctaPrimary: string
     note: string
+    trust: string
+    mock: {
+      title: string
+      countLabel: string
+      cols: string[]
+      rows: MockRow[]
+      statusLabels: Record<MockStatus, string>
+    }
   }
-  footer: {
-    brand: string
-    tagline: string
-    links: CtaLink[]
-    copyright: string
-  }
+  features: { eyebrow: string; title: string; pillars: { tag: string; title: string; body: string }[] }
+  how: { eyebrow: string; title: string; steps: { n: string; title: string; body: string }[]; note: string }
+  testimonial: { quote: string; name: string; org: string }
+  cta: { title: string; body: string; primary: string }
+  footerTag: string
 }
 
-const SIGNUP: CtaLink = { label: 'Get started', href: '/signup' }
-const LOGIN: CtaLink = { label: 'Log in', href: '/login' }
+const rows: MockRow[] = [
+  { name: "Camille Laurent", app: "complete", forms: "complete", docs: "complete", status: "complete" },
+  { name: "Yanis Benali", app: "complete", forms: "pending", docs: "missing", status: "pending" },
+  { name: "Léa Moreau", app: "complete", forms: "complete", docs: "review", status: "review" },
+  { name: "Tom Rousseau", app: "complete", forms: "missing", docs: "missing", status: "missing" },
+  { name: "Inès Garcia", app: "complete", forms: "complete", docs: "complete", status: "complete" },
+]
 
-export const landingContent: LandingContent = {
-  nav: {
-    brand: 'EazyExchange',
-    login: LOGIN,
-    getStarted: SIGNUP,
-  },
-  hero: {
-    eyebrow: 'Pre-departure paperwork, handled',
-    headline: 'Every student, cleared for departure.',
-    subhead:
-      "EazyExchange turns pre-trip forms into a live boarding manifest. Students get a personal checklist with deadlines and automatic reminders — you get one board showing exactly who's cleared and who still needs a nudge.",
-    primaryCta: SIGNUP,
-    secondaryCta: LOGIN,
-    manifest: {
-      programLabel: 'Spring Exchange · 2026',
-      columns: { student: 'Student', form: 'Form', due: 'Due', status: 'Status' },
-      rows: [
-        { student: 'M. Dubois', form: 'Parental consent', due: 'MAR 14' },
-        { student: 'L. Okonkwo', form: 'Passport copy', due: 'MAR 14' },
-        { student: 'S. Bianchi', form: 'Medical form', due: 'MAR 16' },
-        { student: 'A. Novak', form: 'Code of conduct', due: 'MAR 16' },
-        { student: 'R. Haddad', form: 'Emergency contact', due: 'MAR 18' },
-        { student: 'J. Fischer', form: 'Travel insurance', due: 'MAR 18' },
+export const landingContent: Record<Lang, LandingContent> = {
+  fr: {
+    nav: { features: "Fonctionnalités", login: "Connexion", demo: "Démarrer gratuitement" },
+    hero: {
+      eyebrow: "Pour les organisateurs d’échanges scolaires",
+      title: "Arrêtez de courir après les dossiers.",
+      sub: "Eazyexchange centralise les candidatures, les formulaires et les documents de vos lycéens — pour que chaque dossier soit complet, à temps, sans relances sans fin.",
+      ctaPrimary: "Démarrer gratuitement",
+      note: "Premier échange offert · sans carte bancaire",
+      trust: "Adopté par les organisateurs d’échanges partout en France.",
+      mock: {
+        title: "Session · Automne 2026",
+        countLabel: "5 élèves",
+        cols: ["Élève", "Candidature", "Formulaires", "Documents", "Statut"],
+        rows,
+        statusLabels: { complete: "Complet", pending: "En attente", review: "À vérifier", missing: "Manquant" },
+      },
+    },
+    features: {
+      eyebrow: "Ce que vous gérez",
+      title: "Tout le dossier de l’élève, au même endroit.",
+      pillars: [
+        { tag: "Candidatures", title: "Candidatures", body: "Collectez et suivez chaque candidature du premier contact à la sélection, sans tableur." },
+        { tag: "Formulaires", title: "Formulaires", body: "Des formulaires en ligne que les familles remplissent correctement du premier coup, avec validation automatique." },
+        { tag: "Documents", title: "Documents", body: "Passeports, autorisations parentales, visas : demandés, reçus, vérifiés et validés sans effort." },
       ],
-      pendingLabel: 'Pending',
-      clearedLabel: 'Cleared',
-      readyLine: '6 / 6 cleared · Ready for departure',
     },
-  },
-  problemSolution: {
-    problemLabel: 'Before EazyExchange',
-    problemTitle: "Chasing paperwork shouldn't be your job",
-    problemBody:
-      "Before every trip, organizers lose hours emailing students and parents for the same forms, re-sending deadlines, and hunting through inboxes to figure out what's still missing.",
-    solutionLabel: 'After EazyExchange',
-    solutionTitle: 'A single place to collect it all',
-    solutionBody:
-      'Students get a personal checklist with deadlines and automatic reminders. You get a live completion board — so you always know exactly where things stand.',
-  },
-  features: {
-    eyebrow: 'What you get',
-    title: 'Everything you need to run forms collection',
-    subtitle: 'Built for exchange organizers, not paperwork.',
-    items: [
-      {
-        icon: ClipboardList,
-        code: 'CHK',
-        title: 'Per-student checklists',
-        description:
-          'Each student sees exactly which forms and documents they owe, with clear deadlines.',
-      },
-      {
-        icon: LayoutDashboard,
-        code: 'BRD',
-        title: 'Master dashboard',
-        description:
-          'Track completion across every student at a glance — drafts, submitted, approved.',
-      },
-      {
-        icon: BellRing,
-        code: 'RMD',
-        title: 'Automated reminders',
-        description:
-          "Paced email reminders ramp up as deadlines approach, so you don't have to nag.",
-      },
-      {
-        icon: FileUp,
-        code: 'DOC',
-        title: 'Document collection',
-        description:
-          'Named upload slots make sure you get the right file for every requirement.',
-      },
-      {
-        icon: CheckCircle2,
-        code: 'APR',
-        title: 'Review & approve',
-        description:
-          'Approve good submissions or reject with a reason — students are notified instantly.',
-      },
-    ],
-  },
-  howItWorks: {
-    eyebrow: 'The route',
-    title: 'How it works',
-    subtitle: 'Set up in minutes and let the reminders do the rest.',
-    steps: [
-      {
-        number: 1,
-        title: 'Create your exchange',
-        description: 'Name your program and link the two participating schools.',
-      },
-      {
-        number: 2,
-        title: 'Build your forms',
-        description: 'Add data-entry forms and document-upload requirements from templates.',
-      },
-      {
-        number: 3,
-        title: 'Invite students',
-        description: 'Invite students and parents by email — they get their checklist instantly.',
-      },
-      {
-        number: 4,
-        title: 'Track completion',
-        description: 'Watch the board fill in while automated reminders chase stragglers.',
-      },
-    ],
-  },
-  pricing: {
-    eyebrow: 'Fares',
-    title: 'Pricing that pays for itself',
-    subtitle: 'Pick the plan that matches how many exchanges you run.',
-    popularLabel: 'Most popular',
-    valueProp: {
-      headline: 'Organizers spend an average of 60 hours per exchange chasing down forms.',
-      body:
-        "At a modest $10/hour, that's $600 of your time gone — for a single exchange. EazyExchange does the chasing for you, cutting that cost in half or more. Every plan pays for itself before the first deadline.",
+    how: {
+      eyebrow: "Comment ça marche",
+      title: "Quatre étapes, aucune relance oubliée.",
+      steps: [
+        { n: "01", title: "Envoyez", body: "Diffusez la candidature via un lien unique." },
+        { n: "02", title: "Sélectionnez", body: "Étudiez les candidats et acceptez ou refusez." },
+        { n: "03", title: "Collectez", body: "Recevez formulaires et documents des élèves acceptés." },
+        { n: "04", title: "Validez", body: "Vérifiez et validez le dossier complet." },
+      ],
+      note: "À chaque étape, les élèves sont relancés automatiquement — avec la liste précise de ce qui manque et des échéances claires.",
     },
-    note: 'Annual billing. Prices in USD. Cancel anytime.',
-    tiers: [
-      {
-        name: 'Starter',
-        price: '$299',
-        period: '/ year',
-        description: 'For the organizer running a single exchange program.',
-        features: [
-          'Up to 2 active exchanges',
-          'Unlimited students & parents',
-          'Form templates & document slots',
-          'Automated reminders',
-        ],
-        cta: SIGNUP,
-        highlighted: false,
-      },
-      {
-        name: 'Growth',
-        price: '$499',
-        period: '/ year',
-        description: 'For organizers juggling a pair of programs each year.',
-        features: [
-          'Up to 6 active exchanges',
-          'Unlimited students & parents',
-          'Form templates & document slots',
-          'Automated reminders',
-          'Priority email support',
-        ],
-        cta: SIGNUP,
-        highlighted: true,
-      },
-      {
-        name: 'Scale',
-        price: '$599',
-        period: '/ year',
-        description: 'For schools and agencies coordinating several exchanges.',
-        features: [
-          'Unlimited active exchanges',
-          'Unlimited students & parents',
-          'Form templates & document slots',
-          'Automated reminders',
-          'Priority email support',
-        ],
-        cta: SIGNUP,
-        highlighted: false,
-      },
-    ],
+    testimonial: {
+      quote: "Avant, je passais mes soirées à relancer les familles. Aujourd’hui, je vois d’un coup d’œil quels dossiers sont complets.",
+      name: "Coordinatrice d’échanges",
+      org: "Association d’échanges scolaires",
+    },
+    cta: {
+      title: "Prêt à simplifier votre prochaine session ?",
+      body: "Votre premier échange est offert — testez Eazyexchange sur une session complète. Sans carte bancaire, sans engagement.",
+      primary: "Démarrer gratuitement",
+    },
+    footerTag: "La plateforme des organisateurs d’échanges scolaires.",
   },
-  footer: {
-    brand: 'EazyExchange',
-    tagline: 'Form and document collection for student exchange organizers.',
-    links: [LOGIN, SIGNUP],
-    // The year is prepended at render time (LandingFooter) so it never freezes
-    // at the value captured when this module was first imported.
-    copyright: 'EazyExchange. All rights reserved.',
+  en: {
+    nav: { features: "Features", login: "Log in", demo: "Start free" },
+    hero: {
+      eyebrow: "For school exchange program organizers",
+      title: "Stop chasing down student files.",
+      sub: "Eazyexchange centralizes your students’ applications, forms, and documents — so every file is complete, on time, without endless follow-ups.",
+      ctaPrimary: "Start free",
+      note: "First exchange free · no credit card",
+      trust: "Trusted by exchange organizers across France.",
+      mock: {
+        title: "Session · Fall 2026",
+        countLabel: "5 students",
+        cols: ["Student", "Application", "Forms", "Documents", "Status"],
+        rows,
+        statusLabels: { complete: "Complete", pending: "Pending", review: "Review", missing: "Missing" },
+      },
+    },
+    features: {
+      eyebrow: "What you manage",
+      title: "The whole student file, in one place.",
+      pillars: [
+        { tag: "Applications", title: "Applications", body: "Collect and track every application from first contact to selection — no spreadsheet." },
+        { tag: "Forms", title: "Forms", body: "Online forms families fill out correctly the first time, with automatic validation." },
+        { tag: "Documents", title: "Documents", body: "Passports, parental consent, visas: requested, received, checked, and approved effortlessly." },
+      ],
+    },
+    how: {
+      eyebrow: "How it works",
+      title: "Four steps, not a single missed follow-up.",
+      steps: [
+        { n: "01", title: "Send", body: "Share the application via a unique link." },
+        { n: "02", title: "Review", body: "Review applicants and accept or decline." },
+        { n: "03", title: "Collect", body: "Receive forms and documents from accepted students." },
+        { n: "04", title: "Approve", body: "Check and approve the completed file." },
+      ],
+      note: "At every step, students are reminded automatically — with the exact list of what’s missing and clear deadlines.",
+    },
+    testimonial: {
+      quote: "I used to spend my evenings chasing families. Now I can see at a glance which files are complete.",
+      name: "Exchange Coordinator",
+      org: "School exchange association",
+    },
+    cta: {
+      title: "Ready to simplify your next session?",
+      body: "Your first exchange is on us — try Eazyexchange across a full session. No credit card, no commitment.",
+      primary: "Start free",
+    },
+    footerTag: "The platform for school exchange organizers.",
   },
 }
