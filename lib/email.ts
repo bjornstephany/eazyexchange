@@ -172,6 +172,24 @@ export async function sendTemplateReminderEmail(opts: {
   return send(opts.to, `Rappel : ${opts.templateName} — ${opts.exchangeName}`, html, 'template reminder email')
 }
 
+export async function sendStudentReminderEmail(opts: {
+  to: string; studentName: string; exchangeName: string
+  items: { name: string; deadline: string | null }[]
+}): Promise<boolean> {
+  const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
+  const n = opts.items.length
+  const rows = opts.items.map(i =>
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+  ).join('')
+  const html = layout(`
+    <p>${greeting}</p>
+    <p>Il manque encore ${n === 1 ? 'cet élément' : 'ces éléments'} à ton dossier pour <strong>${esc(opts.exchangeName)}</strong> :</p>
+    <ul>${rows}</ul>
+    <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Compléter mon dossier</a></p>
+  `, STUDENT_FOOTER)
+  return send(opts.to, `Rappel : ton dossier pour ${opts.exchangeName}`, html, 'student reminder email')
+}
+
 export async function sendPhase2ChecklistEmail(opts: {
   to: string; studentName: string; exchangeName: string; items: { name: string; deadline: string | null }[]
 }): Promise<boolean> {
@@ -186,4 +204,19 @@ export async function sendPhase2ChecklistEmail(opts: {
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Ouvrir mon dossier</a></p>
   `, STUDENT_FOOTER)
   return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email')
+}
+
+const ORGANIZER_FOOTER = "Vous recevez cet e-mail car un collègue vous invite à rejoindre son équipe sur Eazyexchange."
+
+export async function sendOrganizerInviteEmail(opts: {
+  to: string; inviterName: string; schoolName: string; joinUrl: string
+}): Promise<boolean> {
+  const school = opts.schoolName.trim() ? esc(opts.schoolName) : "son établissement"
+  const html = layout(`
+    <p>Bonjour,</p>
+    <p><strong>${esc(opts.inviterName)}</strong> vous invite à rejoindre <strong>${school}</strong> sur Eazyexchange pour gérer ensemble les échanges scolaires : élèves, candidatures, formulaires et documents.</p>
+    <p><a href="${opts.joinUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon compte</a></p>
+    <p style="font-size:13px;">Ce lien est valable 14 jours.</p>
+  `, ORGANIZER_FOOTER)
+  return send(opts.to, `${opts.inviterName} vous invite sur Eazyexchange`, html, 'organizer invite email')
 }

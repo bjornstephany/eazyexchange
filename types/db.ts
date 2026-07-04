@@ -1,4 +1,5 @@
 export type Role = 'organizer' | 'student'
+export type OrgRole = 'owner' | 'admin'
 export type FormType = 'data_entry' | 'document_upload'
 export type TemplateKind = 'online' | 'pdf' | 'doc'
 export type TemplateStatus = 'draft' | 'active'
@@ -30,10 +31,12 @@ export type Exchange = {
   apply_slug: string | null
   phase: number
   phase2_checklist_sent_at: string | null
+  archived_at: string | null
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
   full_name: string; email: string; created_at: string
+  org_role: OrgRole
 }
 export type ExchangeEnrollment = { id: string; exchange_id: string; user_id: string; created_at: string }
 export type FormTemplate = {
@@ -53,7 +56,10 @@ export type DocumentSlot = {
   id: string; template_id: string; label: string
   description: string | null; required: boolean; order: number
 }
-export type Assignment = { id: string; template_id: string; student_id: string; assigned_at: string }
+export type Assignment = {
+  id: string; template_id: string; student_id: string; assigned_at: string
+  last_reminded_at?: string | null
+}
 export type Submission = {
   id: string; assignment_id: string; status: SubmissionStatus
   submitted_at: string | null; reviewed_at: string | null
@@ -79,6 +85,11 @@ export type Application = {
   reviewer_id: string | null; review_note: string | null
   created_at: string; updated_at: string
 }
+export type OrganizerInvite = {
+  id: string; school_id: string; email: string; token: string
+  invited_by: string | null; created_at: string; expires_at: string
+  accepted_at: string | null; revoked_at: string | null
+}
 export type RateLimit = { key: string; hits: number; window_start: string }
 
 type TableDef<Row, Insert, Update> = {
@@ -92,8 +103,19 @@ export type Database = {
   public: {
     Tables: {
       schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'created_at' | 'name'>>, Partial<School>>
-      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at'>>, Partial<Exchange>>
-      users: TableDef<UserProfile, Omit<UserProfile, 'created_at'>, Partial<UserProfile>>
+      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'>>, Partial<Exchange>>
+      users: TableDef<
+        UserProfile,
+        Omit<UserProfile, 'created_at' | 'org_role'> &
+          Partial<Pick<UserProfile, 'org_role'>>,
+        Partial<UserProfile>
+      >
+      organizer_invites: TableDef<
+        OrganizerInvite,
+        Omit<OrganizerInvite, 'id' | 'created_at' | 'expires_at' | 'accepted_at' | 'revoked_at'> &
+          Partial<Pick<OrganizerInvite, 'expires_at'>>,
+        Partial<OrganizerInvite>
+      >
       exchange_enrollments: TableDef<ExchangeEnrollment, Omit<ExchangeEnrollment, 'id' | 'created_at'>, Partial<ExchangeEnrollment>>
       form_templates: TableDef<FormTemplate, Omit<FormTemplate, 'id' | 'created_at' | 'deadline' | 'standard_key' | 'condition_label' | 'template_file_path'> & Partial<Pick<FormTemplate, 'deadline' | 'standard_key' | 'condition_label' | 'template_file_path'>>, Partial<FormTemplate>>
       form_fields: TableDef<FormField, Omit<FormField, 'id'>, Partial<FormField>>

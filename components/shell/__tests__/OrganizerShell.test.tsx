@@ -14,12 +14,18 @@ vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
-const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const }]
+const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, archived: false }]
 
 function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
   mockPathname = pathname
   return render(
-    <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+    <OrganizerShell
+      exchanges={exchanges}
+      activeExchangeId="ex1"
+      organizerName="Marie Bernard"
+      schoolName="Lycée Mistral"
+      needsSchoolName={false}
+    >
       <p>page</p>
     </OrganizerShell>
   )
@@ -28,7 +34,7 @@ function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
 describe('OrganizerShell', () => {
   it('renders the French rail items when an exchange is active', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -43,7 +49,7 @@ describe('OrganizerShell', () => {
 
   it('rail points at the session-scoped top-level routes', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -54,7 +60,7 @@ describe('OrganizerShell', () => {
 
   it('Échanges stays visible with zero exchanges', () => {
     render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" needsSchoolName={false}>
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -64,7 +70,7 @@ describe('OrganizerShell', () => {
 
   it('hides Candid. but offers creation when no exchanges exist', () => {
     render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -74,7 +80,7 @@ describe('OrganizerShell', () => {
 
   it('shows organizer initials and the session name', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -84,7 +90,7 @@ describe('OrganizerShell', () => {
 
   it('falls back to the first exchange when activeExchangeId matches none (stale data)', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -94,7 +100,7 @@ describe('OrganizerShell', () => {
 
   it('dismisses the session selector panel on outside click', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
         <p>page</p>
       </OrganizerShell>
     )
@@ -129,5 +135,56 @@ describe('OrganizerShell', () => {
     renderShell({ pathname: '/dashboard' })
     expect(screen.getByText(/Inviter des élèves/)).toBeInTheDocument()
     expect(screen.queryByPlaceholderText(/Rechercher/)).toBeNull()
+  })
+
+  it('shows the school name and no session controls on /settings', () => {
+    renderShell({ pathname: '/settings' })
+    expect(screen.getByText('Lycée Mistral')).toBeInTheDocument()
+    expect(screen.queryByText('France–Canada 2026')).toBeNull()
+    expect(screen.queryByPlaceholderText(/Rechercher/)).toBeNull()
+    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
+  })
+
+  it('shows the students search placeholder and invite link on /students', () => {
+    renderShell({ pathname: '/students' })
+    expect(screen.getByPlaceholderText('Rechercher un élève…')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Inviter des élèves/ })).toHaveAttribute(
+      'href',
+      '/exchanges/ex1#invite'
+    )
+  })
+
+  it('shows an Archivé pill for an archived active exchange', () => {
+    mockPathname = '/dashboard'
+    render(
+      <OrganizerShell
+        exchanges={[{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, archived: true }]}
+        activeExchangeId="ex1"
+        organizerName="Marie Bernard"
+        schoolName="Lycée Mistral"
+        needsSchoolName={false}
+      >
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByText('Archivé')).toBeInTheDocument()
+    expect(screen.queryByText('Phase 1 · Recrutement')).toBeNull()
+  })
+
+  it('rail contains Élèves and Réglages when an exchange is active', () => {
+    renderShell({ pathname: '/dashboard' })
+    expect(screen.getByRole('link', { name: /Élèves/ })).toHaveAttribute('href', '/students')
+    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
+  })
+
+  it('Réglages stays visible with zero exchanges but Élèves does not', () => {
+    mockPathname = '/dashboard'
+    render(
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByRole('link', { name: /Réglages/ })).toBeInTheDocument()
+    expect(screen.queryByText('Élèves')).toBeNull()
   })
 })

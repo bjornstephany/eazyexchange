@@ -37,6 +37,7 @@ async function createOrganizerAccount(
     id: user.id,
     school_id: school.id,
     role: 'organizer' as const,
+    org_role: 'owner' as const,
     full_name: fullName,
     email,
   })

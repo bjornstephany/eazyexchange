@@ -70,7 +70,12 @@ export function SessionSelector({
                 ex.id === active.id && 'bg-subtle font-semibold'
               )}
             >
-              <span>{ex.name}</span>
+              <span className="flex items-center gap-2">
+                {ex.name}
+                {ex.archived && (
+                  <span className="rounded-pill bg-subtle px-2 py-px text-[10px] font-semibold text-muted-foreground">Archivé</span>
+                )}
+              </span>
               <span className="text-muted-foreground">{ex.year}</span>
             </button>
           ))}

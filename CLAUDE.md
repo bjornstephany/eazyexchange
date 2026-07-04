@@ -67,6 +67,14 @@ pnpm build       # catches type errors + build breakage
 - Default to committing small changes to `main`; suggest a branch when a change is big or risky.
 - **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
 
+## Session & Token Hygiene (multi-stage features)
+
+Large features run in stages: brainstorm → spec → plan → execution → merge. Conversation history from a finished stage is dead weight once its artifact is committed — carrying it into the next stage multiplies token spend for no benefit.
+
+- **At every stage boundary** (spec committed and approved; plan committed; final merge done), do NOT roll into the next stage in the same conversation. Instead: (1) make the work resumable from disk — update the auto-memory phase entry and the `.superpowers/sdd/progress.md` ledger so a fresh session needs zero conversation history; then (2) end the turn by telling Bjorn this is a `/clear` point, with the exact one-line resume prompt to paste afterwards (e.g. « resume Phase N execution from .superpowers/sdd/progress.md »). Only continue in-session if he explicitly says to.
+- Execution must always be resumable from files alone: plan file + task briefs/reports + progress ledger. Never rely on conversation memory for execution state.
+- During execution, keep subagent artifacts (briefs, reports, diffs) as file handoffs, and pick the cheapest model that can do each dispatch (plans containing complete code → transcription-tier implementers).
+
 ## Database
 
 Migrations live in `supabase/migrations/`. Run with:

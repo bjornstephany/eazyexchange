@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FieldType } from '@/types/db'
 import type { TemplateVM, AssigneeRow, TemplateKind } from '@/lib/forms/rollup'
 import { sendTemplateReminderEmail } from '@/lib/email'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(supabase: SupabaseClient, userId: string): Promise<string> {
@@ -17,11 +18,12 @@ async function assertOrganizer(supabase: SupabaseClient, userId: string): Promis
 // Throw unless the caller is an organizer for the school that owns the template.
 async function assertOrganizerOwnsTemplate(
   supabase: SupabaseClient, userId: string, templateId: string,
-): Promise<void> {
+): Promise<{ exchangeId: string }> {
   const schoolId = await assertOrganizer(supabase, userId)
   const { data: tmpl } = await supabase
-    .from('form_templates').select('school_id').eq('id', templateId).maybeSingle()
+    .from('form_templates').select('school_id, exchange_id').eq('id', templateId).maybeSingle()
   if (!tmpl || tmpl.school_id !== schoolId) throw new Error('Unauthorized')
+  return { exchangeId: tmpl.exchange_id as string }
 }
 
 export async function getTemplate(id: string) {
@@ -45,7 +47,8 @@ export async function addField(templateId: string, label: string, fieldType: Fie
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsTemplate(supabase, user.id, templateId)
+  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, user.id, templateId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { data: existing } = await supabase
     .from('form_fields').select('order').eq('template_id', templateId).order('order', { ascending: false }).limit(1).single()
@@ -65,7 +68,8 @@ export async function removeField(fieldId: string) {
   const { data: field } = await supabase
     .from('form_fields').select('template_id').eq('id', fieldId).maybeSingle()
   if (!field) throw new Error('Field not found')
-  await assertOrganizerOwnsTemplate(supabase, user.id, field.template_id)
+  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, user.id, field.template_id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase.from('form_fields').delete().eq('id', fieldId)
   if (error) throw error
@@ -108,6 +112,7 @@ export async function createDraftTemplate(formData: FormData): Promise<string> {
   const schoolId = await assertOrganizer(supabase, user.id)
 
   const exchangeId = formData.get('exchange_id') as string
+  await assertExchangeWritable(supabase, exchangeId)
   const kind = formData.get('kind') as TemplateKind
   const name = ((formData.get('name') as string) ?? '').trim()
   const deadline = ((formData.get('deadline') as string) ?? '').trim() || null
@@ -170,6 +175,7 @@ export async function updateTemplateMeta(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  await assertExchangeWritable(supabase, tmpl.exchange_id)
 
   const name = meta.name.trim()
   if (!name) throw new Error('Le nom ne peut pas être vide.')
@@ -192,6 +198,7 @@ export async function replaceTemplateFile(formData: FormData): Promise<void> {
   const id = formData.get('template_id') as string
   const file = formData.get('file') as File | null
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.kind !== 'pdf') throw new Error('Ce modèle n’a pas de PDF.')
   if (!file || file.size === 0) throw new Error('Choisissez un fichier PDF.')
 
@@ -206,6 +213,7 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.status === 'active') return
 
   if (!tmpl.deadline) throw new Error('Ajoutez une échéance avant d’activer.')
@@ -253,6 +261,7 @@ export async function deleteTemplate(id: string): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.standard_key) throw new Error('Les modèles standard ne peuvent pas être supprimés.')
 
   // Families' uploaded documents live in the `documents` bucket and aren't
@@ -328,6 +337,7 @@ export async function remindTemplate(id: string): Promise<{ reminded: number; sk
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.status !== 'active') throw new Error('Activez le modèle avant de relancer.')
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', tmpl.exchange_id).single()

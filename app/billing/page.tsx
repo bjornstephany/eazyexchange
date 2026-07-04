@@ -7,10 +7,10 @@ import { PLAN_KEYS } from '@/lib/billing/plans'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
+import { PLAN_LABEL_FR } from '@/lib/billing/display'
 
 export const dynamic = 'force-dynamic'
 
-const PLAN_LABEL: Record<string, string> = { starter: 'Starter', growth: 'Growth', scale: 'Scale' }
 const capLabel = (n: number) => (n === Infinity ? 'unlimited' : String(n))
 
 export default async function BillingPage() {
@@ -40,7 +40,7 @@ export default async function BillingPage() {
           {active && school?.plan ? (
             <>
               <p className="text-sm text-muted-foreground">
-                You’re on the <span className="font-medium">{PLAN_LABEL[school.plan]}</span> plan
+                You’re on the <span className="font-medium">{PLAN_LABEL_FR[school.plan]}</span> plan
                 ({capLabel(PLAN_EXCHANGE_CAP[school.plan])} exchanges).
                 {grace && ' Your last payment failed — update your card to avoid losing access.'}
               </p>
@@ -60,7 +60,7 @@ export default async function BillingPage() {
                     href={`/billing/checkout?plan=${key}`}
                     className="rounded-lg border p-4 text-center hover:border-primary"
                   >
-                    <div className="font-medium">{PLAN_LABEL[key]}</div>
+                    <div className="font-medium">{PLAN_LABEL_FR[key]}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
                       {capLabel(PLAN_EXCHANGE_CAP[key])} exchanges
                     </div>

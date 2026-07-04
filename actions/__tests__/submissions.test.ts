@@ -13,8 +13,12 @@ function makeClient() {
         update: () => builder,
         // assignment ownership check + existing-submission lookup both resolve here
         maybeSingle: async () => {
-          if (table === 'assignments') return { data: { id: 'a1' }, error: null }
+          if (table === 'assignments') {
+            return { data: { id: 'a1', form_templates: { exchange_id: 'ex1' } }, error: null }
+          }
           if (table === 'submissions') return { data: { id: 's1' }, error: null }
+          // exchange-guard's read: no archived_at means the exchange is live.
+          if (table === 'exchanges') return { data: { archived_at: null }, error: null }
           return { data: null, error: null }
         },
         single: async () => ({ data: { id: 's1' }, error: null }),

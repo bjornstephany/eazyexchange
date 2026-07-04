@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
     pathname === '/' ||
     pathname.startsWith('/apply') ||
     pathname.startsWith('/invite') ||
+    pathname.startsWith('/join') ||
     pathname.startsWith('/api/stripe')
 
   if (!user && !isAuthRoute && !isPublicRoute) {

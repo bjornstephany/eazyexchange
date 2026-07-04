@@ -7,6 +7,7 @@ import { canCreateExchange } from '@/lib/billing/limits'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { seedStandardTemplates } from '@/lib/forms/standard-library'
 import { sendPhase2ChecklistEmail } from '@/lib/email'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -223,6 +224,7 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
     .from('users').select('school_id, role').eq('id', user.id).single()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   await assertExchangeInScope(supabase, user.id, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase
     .from('exchanges')
@@ -241,6 +243,7 @@ export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promis
     .from('users').select('school_id, role').eq('id', user.id).single()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   await assertExchangeInScope(supabase, user.id, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase.from('exchanges').update({ phase }).eq('id', exchangeId)
   if (error) throw error

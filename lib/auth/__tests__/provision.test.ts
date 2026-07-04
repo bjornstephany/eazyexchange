@@ -58,7 +58,7 @@ describe('provisionOrganizer', () => {
     expect(result).toEqual({ ok: true })
     expect(admin.calls.schoolsInserted).toEqual([{ name: 'Lincoln High' }])
     expect(admin.calls.usersInserted).toEqual([
-      { id: 'u1', school_id: 'school-1', role: 'organizer', full_name: 'Jane Doe', email: 'org@example.com' },
+      { id: 'u1', school_id: 'school-1', role: 'organizer', org_role: 'owner', full_name: 'Jane Doe', email: 'org@example.com' },
     ])
   })
 
@@ -96,7 +96,7 @@ describe('provisionOrganizerFromOAuth', () => {
     expect(result).toEqual({ ok: true })
     expect(admin.calls.schoolsInserted).toEqual([{ name: '' }])
     expect(admin.calls.usersInserted).toEqual([
-      { id: 'g1', school_id: 'school-1', role: 'organizer', full_name: 'Jane Google', email: 'org@example.com' },
+      { id: 'g1', school_id: 'school-1', role: 'organizer', org_role: 'owner', full_name: 'Jane Google', email: 'org@example.com' },
     ])
   })
 
