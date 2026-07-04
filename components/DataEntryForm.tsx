@@ -32,20 +32,28 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
     try {
       await saveFormAnswers(assignmentId, answers, submit)
       if (submit) router.push('/my-forms')
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to save')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Échec de l’enregistrement')
     } finally {
       setLoading(null)
     }
   }
 
+  const inputClass = 'h-11 focus-visible:border-brand'
+
   return (
     <div className="space-y-6">
+      {!readOnly && (
+        <p className="rounded-[10px] bg-hoverrow px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+          Tes réponses restent confidentielles — elles ne sont partagées qu’avec ta famille d’accueil si nécessaire.
+        </p>
+      )}
+
       {fields.map(field => (
-        <div key={field.id} className="space-y-1">
-          <Label htmlFor={field.id}>
+        <div key={field.id} className="space-y-1.5">
+          <Label htmlFor={field.id} className="text-[12px] font-semibold text-foreground">
             {field.label}
-            {field.required && <span className="text-red-500 ml-1">*</span>}
+            {field.required && <span className="ml-1 text-danger-text">*</span>}
           </Label>
           {field.field_type === 'textarea' && (
             <Textarea
@@ -54,6 +62,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
               onChange={e => setValue(field.id, e.target.value)}
               disabled={readOnly}
               required={field.required}
+              className="focus-visible:border-brand"
             />
           )}
           {(field.field_type === 'text' || field.field_type === 'date') && (
@@ -64,10 +73,11 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
               onChange={e => setValue(field.id, e.target.value)}
               disabled={readOnly}
               required={field.required}
+              className={inputClass}
             />
           )}
           {field.field_type === 'checkbox' && (
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={answers[field.id] === 'true'}
@@ -85,7 +95,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
               disabled={readOnly}
             >
               <SelectTrigger id={field.id}>
-                <SelectValue placeholder="Select an option" />
+                <SelectValue placeholder="Choisis une option" />
               </SelectTrigger>
               <SelectContent>
                 {field.options.map(opt => (
@@ -97,15 +107,15 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
         </div>
       ))}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger-text">{error}</p>}
 
       {!readOnly && (
         <div className="flex gap-3 pt-2">
           <Button variant="outline" onClick={() => handleSave(false)} disabled={loading !== null}>
-            {loading === 'draft' ? 'Saving…' : 'Save draft'}
+            {loading === 'draft' ? 'Enregistrement…' : 'Enregistrer le brouillon'}
           </Button>
-          <Button onClick={() => handleSave(true)} disabled={loading !== null}>
-            {loading === 'submit' ? 'Submitting…' : 'Submit'}
+          <Button onClick={() => handleSave(true)} disabled={loading !== null} className="bg-brand hover:bg-brand-hover">
+            {loading === 'submit' ? 'Envoi…' : 'Envoyer'}
           </Button>
         </div>
       )}

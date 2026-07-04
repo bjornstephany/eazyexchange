@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { StudentNav } from '@/components/StudentNav'
+import { StudentTopBar } from '@/components/student/StudentTopBar'
+import { getStudentContext } from '@/actions/student-context'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -11,10 +12,12 @@ export default async function StudentLayout({ children }: { children: React.Reac
     .from('users').select('role').eq('id', user.id).single()
   if (profile?.role !== 'student') redirect('/dashboard')
 
+  const ctx = await getStudentContext()
+
   return (
     <div className="min-h-screen bg-background">
-      <StudentNav />
-      <main className="max-w-3xl mx-auto px-6 py-8">{children}</main>
+      <StudentTopBar initials={ctx.initials} exchangeLabel={ctx.exchangeLabel} />
+      <main className="mx-auto max-w-[920px] px-7 pb-[70px] pt-[34px]">{children}</main>
     </div>
   )
 }
