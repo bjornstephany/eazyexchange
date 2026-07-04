@@ -8,6 +8,7 @@ import {
   type StudentVM, type DirectoryTemplate,
 } from '@/lib/students/directory'
 import { sendStudentReminderEmail } from '@/lib/email'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 // Throw unless the caller is an organizer whose school is on this exchange.
 // Returns the school id. (Same shape as getTemplatesPage's scope check.)
@@ -107,6 +108,7 @@ export async function remindStudent(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
   const schoolId = await assertOrganizerInExchange(supabase, user.id, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { data: student } = await supabase
     .from('users').select('email, full_name')

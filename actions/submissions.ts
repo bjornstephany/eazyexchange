@@ -4,32 +4,35 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendRejectionEmail } from '@/lib/email'
 import { hasOverlongAnswer, hasMissingRequired, MAX_ANSWER_LENGTH } from '@/lib/validation'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 // Verify the assignment belongs to the calling student. Throws if not.
+// Returns the assignment's exchange id (via its template) for the write guard.
 async function assertStudentOwnsAssignment(
   supabase: SupabaseClient,
   assignmentId: string,
   userId: string,
-) {
+): Promise<{ exchangeId: string }> {
   const { data: assignment } = await supabase
     .from('assignments')
-    .select('id')
+    .select('id, form_templates!inner(exchange_id)')
     .eq('id', assignmentId)
     .eq('student_id', userId)
-    .maybeSingle()
+    .maybeSingle() as any
   if (!assignment) throw new Error('Assignment not found')
+  return { exchangeId: assignment.form_templates.exchange_id as string }
 }
 
 // Verify the caller is an organizer for the school that owns the assignment's
-// form template. Throws if not.
+// form template. Throws if not. Returns the assignment's exchange id.
 async function assertOrganizerOwnsAssignment(
   supabase: SupabaseClient,
   assignmentId: string,
   userId: string,
-) {
+): Promise<{ exchangeId: string }> {
   const { data: ctx } = await supabase
     .from('assignments')
-    .select('form_templates!inner(school_id)')
+    .select('form_templates!inner(school_id, exchange_id)')
     .eq('id', assignmentId)
     .maybeSingle() as any
   if (!ctx) throw new Error('Assignment not found')
@@ -42,6 +45,7 @@ async function assertOrganizerOwnsAssignment(
   if (profile?.role !== 'organizer' || profile.school_id !== ctx.form_templates.school_id) {
     throw new Error('Unauthorized')
   }
+  return { exchangeId: ctx.form_templates.exchange_id as string }
 }
 
 export async function getAssignmentDetails(assignmentId: string) {
@@ -83,7 +87,8 @@ export async function saveFormAnswers(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   // L5: cap answer length (storage-abuse guard) and, on submit, enforce required
   // fields server-side — the form inputs' `required` attribute isn't enforced on
@@ -175,7 +180,8 @@ export async function recordDocumentUpload(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   // Storage key must stay within this assignment/slot prefix (no traversal).
   // Match only a real `..` path segment so legitimate filenames that merely
@@ -284,7 +290,8 @@ export async function approveSubmission(assignmentId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
     .from('submissions')
@@ -306,7 +313,8 @@ export async function rejectSubmission(assignmentId: string, note: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
     .from('submissions')
@@ -354,7 +362,8 @@ export async function submitDocumentAssignment(assignmentId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { data: existing } = await supabase
     .from('submissions')

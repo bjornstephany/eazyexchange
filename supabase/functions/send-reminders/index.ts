@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
   const { data: rows, error } = await supabase
     .from('assignments')
     .select(
-      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline), submissions(status)',
+      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline, exchanges!inner(archived_at)), submissions(status)',
     )
 
   if (error) {
@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
     const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
     const status: string | undefined = submission?.status
     if (status === 'approved' || status === 'submitted') continue
+    if (row.form_templates?.exchanges?.archived_at) continue
 
     const deadline: string | undefined = row.form_templates?.deadline
     if (!deadline) continue

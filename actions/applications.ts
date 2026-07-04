@@ -11,6 +11,7 @@ import {
   sendInvitationEmail, sendApplicationRejectionEmail,
 } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 const PHOTO_BUCKET = 'application-photos'
@@ -60,6 +61,7 @@ export async function startApplication(
     .maybeSingle()
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
+  await assertExchangeWritable(admin, exchange.id)
 
   const token = randomToken()
   const { error } = await admin.from('applications').insert({
@@ -146,10 +148,11 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status, resume_token_expires_at').eq('resume_token', token).maybeSingle()
+    .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  await assertExchangeWritable(admin, app.exchange_id)
   const { error } = await admin
     .from('applications').update({ data }).eq('resume_token', token)
   if (error) throw error
@@ -178,6 +181,7 @@ export async function submitApplication(token: string, data: Record<string, stri
     .eq('id', app.exchange_id).maybeSingle()
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
+  await assertExchangeWritable(admin, app.exchange_id)
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
@@ -208,10 +212,11 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status, resume_token_expires_at').eq('resume_token', token).maybeSingle()
+    .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  await assertExchangeWritable(admin, app.exchange_id)
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
   const path = `${app.id}/photo.${ext}`
@@ -279,6 +284,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   if (app.status !== 'submitted' && app.status !== 'rejected') {
     throw new Error('Only a submitted application can be accepted')
   }
+  await assertExchangeWritable(supabase, app.exchange_id)
   const inviteToken = randomToken()
   const { error } = await supabase.from('applications').update({
     status: 'accepted', invite_token: inviteToken,
@@ -308,6 +314,7 @@ export async function rejectApplication(applicationId: string, note: string, sen
   if (!['submitted', 'accepted', 'maybe'].includes(app.status)) {
     throw new Error('This application can no longer be rejected.')
   }
+  await assertExchangeWritable(supabase, app.exchange_id)
   const { error } = await supabase.from('applications').update({
     status: 'rejected', reviewed_at: new Date().toISOString(),
     reviewer_id: user.id, review_note: note || null,
@@ -347,9 +354,10 @@ export async function respondToInvitation(
   // Reject an expired invite link up front with a clear message (the atomic
   // updates below would otherwise just report "no longer open").
   const { data: pre } = await admin
-    .from('applications').select('id, invite_token_expires_at').eq('invite_token', token).maybeSingle()
+    .from('applications').select('id, invite_token_expires_at, exchange_id').eq('invite_token', token).maybeSingle()
   if (!pre) throw new Error('Invitation not found')
   if (tokenExpired(pre.invite_token_expires_at)) throw new Error('This invitation has expired.')
+  await assertExchangeWritable(admin, pre.exchange_id)
 
   const base = {
     invite_response: response, invite_response_note: note || null,

@@ -240,3 +240,67 @@ export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
   revalidatePath('/settings')
 }
 
+export type ProgramInfo = {
+  id: string; name: string; year: number; phase: 1 | 2; archived: boolean
+  enrolled: number; applications: number; earliestDeadline: string | null
+}
+
+// Scope check: the exchange must belong to the caller's school (either side).
+async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exchangeId: string) {
+  const { data: exchange } = await supabase
+    .from('exchanges')
+    .select('id, name, year, phase, archived_at, school_a_id, school_b_id')
+    .eq('id', exchangeId).maybeSingle()
+  if (!exchange || (exchange.school_a_id !== schoolId && exchange.school_b_id !== schoolId)) {
+    throw new Error('Unauthorized')
+  }
+  return exchange
+}
+
+export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+  const exchange = await getScopedExchange(supabase, ctx.schoolId, exchangeId)
+
+  const [{ count: enrolled }, { count: applications }, { data: firstDeadline }] = await Promise.all([
+    supabase.from('exchange_enrollments')
+      .select('id', { count: 'exact', head: true }).eq('exchange_id', exchangeId),
+    supabase.from('applications')
+      .select('id', { count: 'exact', head: true }).eq('exchange_id', exchangeId),
+    supabase.from('form_templates')
+      .select('deadline').eq('exchange_id', exchangeId).eq('school_id', ctx.schoolId)
+      .eq('status', 'active').not('deadline', 'is', null)
+      .order('deadline', { ascending: true }).limit(1).maybeSingle(),
+  ])
+
+  return {
+    id: exchange.id, name: exchange.name, year: exchange.year,
+    phase: (exchange.phase ?? 1) as 1 | 2, archived: !!exchange.archived_at,
+    enrolled: enrolled ?? 0, applications: applications ?? 0,
+    earliestDeadline: (firstDeadline?.deadline as string | null) ?? null,
+  }
+}
+
+export async function archiveExchange(exchangeId: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+  await getScopedExchange(supabase, ctx.schoolId, exchangeId)
+  const { error } = await supabase.from('exchanges')
+    .update({ archived_at: new Date().toISOString() }).eq('id', exchangeId)
+  if (error) throw new Error('Le programme n’a pas pu être archivé. Réessayez.')
+  revalidatePath('/settings'); revalidatePath('/dashboard')
+}
+
+export async function restoreExchange(exchangeId: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+  await getScopedExchange(supabase, ctx.schoolId, exchangeId)
+  const { error } = await supabase.from('exchanges')
+    .update({ archived_at: null }).eq('id', exchangeId)
+  if (error) throw new Error('Le programme n’a pas pu être restauré. Réessayez.')
+  revalidatePath('/settings'); revalidatePath('/dashboard')
+}
+
