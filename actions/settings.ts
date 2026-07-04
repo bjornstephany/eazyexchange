@@ -12,6 +12,9 @@ import { getStripe } from '@/lib/billing/stripe'
 import {
   PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
 } from '@/lib/billing/display'
+import { normalizeEmail, isValidEmail } from '@/lib/validation'
+import { randomToken } from '@/lib/tokens'
+import { sendOrganizerInviteEmail } from '@/lib/email'
 import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
@@ -144,5 +147,96 @@ export async function getBillingOverview(): Promise<BillingOverview> {
         planLabel: TRIAL_LABEL, price: TRIAL_PRICE, per: '',
         desc: TRIAL_DESC, usageLabel: usage.label, usagePct: usage.pct, payment,
       }
+}
+
+export type TeamMember = { id: string; name: string; email: string; isOwner: boolean; isYou: boolean }
+export type PendingInvite = { id: string; email: string }
+
+export async function getTeam(): Promise<{ members: TeamMember[]; pending: PendingInvite[] }> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+
+  const [{ data: users }, { data: invites }] = await Promise.all([
+    supabase.from('users')
+      .select('id, full_name, email, org_role')
+      .eq('school_id', ctx.schoolId).eq('role', 'organizer')
+      .order('created_at'),
+    supabase.from('organizer_invites')
+      .select('id, email, expires_at')
+      .eq('school_id', ctx.schoolId)
+      .is('accepted_at', null).is('revoked_at', null)
+      .order('created_at'),
+  ])
+
+  const now = Date.now()
+  return {
+    members: (users ?? []).map((u: any) => ({
+      id: u.id, name: u.full_name, email: u.email,
+      isOwner: u.org_role === 'owner', isYou: u.id === ctx.userId,
+    })),
+    pending: (invites ?? [])
+      .filter((i: any) => new Date(i.expires_at).getTime() > now)
+      .map((i: any) => ({ id: i.id, email: i.email })),
+  }
+}
+
+export async function inviteOrganizer(rawEmail: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+
+  const email = normalizeEmail(rawEmail)
+  if (!isValidEmail(email)) throw new Error('Adresse e-mail invalide.')
+  await enforceRateLimit(`team-invite:${ctx.schoolId}`, 10, 3600)
+
+  const admin = createAdminClient()
+  const { data: existingMember } = await admin
+    .from('users').select('id')
+    .eq('school_id', ctx.schoolId).eq('email', email).maybeSingle()
+  if (existingMember) throw new Error('Cette personne fait déjà partie de votre équipe.')
+
+  const { data: existingInvite } = await admin
+    .from('organizer_invites').select('id, expires_at')
+    .eq('school_id', ctx.schoolId).eq('email', email)
+    .is('accepted_at', null).is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle()
+  if (existingInvite) throw new Error('Une invitation est déjà en attente pour cette adresse.')
+
+  const { data: school } = await admin
+    .from('schools').select('name').eq('id', ctx.schoolId).single()
+
+  const token = randomToken()
+  const { data: invite, error: insertError } = await admin
+    .from('organizer_invites')
+    .insert({ school_id: ctx.schoolId, email, token, invited_by: ctx.userId })
+    .select('id').single()
+  if (insertError || !invite) throw new Error('L’invitation n’a pas pu être créée. Réessayez.')
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const ok = await sendOrganizerInviteEmail({
+    to: email, inviterName: ctx.fullName, schoolName: school?.name ?? '',
+    joinUrl: `${appUrl}/join/${token}`,
+  })
+  if (!ok) {
+    // No orphan pending rows for e-mails that never went out.
+    await admin.from('organizer_invites').delete().eq('id', invite.id)
+    throw new Error('L’e-mail d’invitation n’a pas pu être envoyé. Réessayez.')
+  }
+  revalidatePath('/settings')
+}
+
+export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('organizer_invites')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', inviteId).eq('school_id', ctx.schoolId).is('accepted_at', null)
+  if (error) throw new Error('L’invitation n’a pas pu être révoquée.')
+  revalidatePath('/settings')
 }
 

@@ -205,3 +205,18 @@ export async function sendPhase2ChecklistEmail(opts: {
   `, STUDENT_FOOTER)
   return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email')
 }
+
+const ORGANIZER_FOOTER = "Vous recevez cet e-mail car un collègue vous invite à rejoindre son équipe sur Eazyexchange."
+
+export async function sendOrganizerInviteEmail(opts: {
+  to: string; inviterName: string; schoolName: string; joinUrl: string
+}): Promise<boolean> {
+  const school = opts.schoolName.trim() ? esc(opts.schoolName) : "son établissement"
+  const html = layout(`
+    <p>Bonjour,</p>
+    <p><strong>${esc(opts.inviterName)}</strong> vous invite à rejoindre <strong>${school}</strong> sur Eazyexchange pour gérer ensemble les échanges scolaires : élèves, candidatures, formulaires et documents.</p>
+    <p><a href="${opts.joinUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon compte</a></p>
+    <p style="font-size:13px;">Ce lien est valable 14 jours.</p>
+  `, ORGANIZER_FOOTER)
+  return send(opts.to, `${opts.inviterName} vous invite sur Eazyexchange`, html, 'organizer invite email')
+}
