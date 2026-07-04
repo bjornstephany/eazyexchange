@@ -3,6 +3,9 @@ import { useState } from 'react'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
+import { TeamCard } from './TeamCard'
+import { BillingCard } from './BillingCard'
+import { ProgramCard } from './ProgramCard'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; phone: string; title: string; schoolName: string }
@@ -13,12 +16,15 @@ export type SettingsProps = {
   program: ProgramInfo | null
 }
 
-type SectionKey = 'compte' // Task 12 widens this to 'compte' | 'equipe' | 'fact' | 'prog'
+type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog'
 
 export function SettingsView(props: SettingsProps) {
   const [section, setSection] = useState<SectionKey>('compte')
   const sections: { key: SectionKey; label: string }[] = [
     { key: 'compte', label: 'Compte personnel' },
+    { key: 'equipe', label: 'Équipe & rôles' },
+    ...(props.isOwner ? [{ key: 'fact' as const, label: 'Facturation' }] : []),
+    ...(props.isOwner && props.program ? [{ key: 'prog' as const, label: 'Programme' }] : []),
   ]
 
   return (
@@ -49,6 +55,9 @@ export function SettingsView(props: SettingsProps) {
               <SecurityCard canChangePassword={props.canChangePassword} />
             </>
           )}
+          {section === 'equipe' && <TeamCard team={props.team} isOwner={props.isOwner} />}
+          {section === 'fact' && props.billing && <BillingCard billing={props.billing} />}
+          {section === 'prog' && props.program && <ProgramCard program={props.program} />}
         </div>
       </div>
     </div>

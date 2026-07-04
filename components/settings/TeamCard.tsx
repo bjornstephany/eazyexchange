@@ -1,0 +1,123 @@
+'use client'
+import { useState } from 'react'
+import { inviteOrganizer, revokeOrganizerInvite, type TeamMember, type PendingInvite } from '@/actions/settings'
+
+const MEMBER_AVATARS = ['linear-gradient(135deg,#3B6EF6,#0E1B38)', '#7C5CE0', '#0F8A6D', '#C2543A', '#B0468C']
+
+function initialsOf(name: string): string {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
+}
+
+export function TeamCard({ team, isOwner }: {
+  team: { members: TeamMember[]; pending: PendingInvite[] }
+  isOwner: boolean
+}) {
+  const [invite, setInvite] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [flash, setFlash] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function handleInvite() {
+    setBusy(true); setError(null); setFlash(null)
+    try {
+      await inviteOrganizer(invite)
+      setInvite('')
+      setFlash('Invitation envoyée.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+    }
+    setBusy(false)
+  }
+
+  async function handleRevoke(id: string) {
+    setError(null)
+    try { await revokeOrganizerInvite(id) }
+    catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue.') }
+  }
+
+  return (
+    <div className="rounded-2xl border bg-card px-7 py-[26px]">
+      <div className="mb-1 font-display text-[15px] font-bold tracking-[-.01em] text-foreground">Équipe & rôles</div>
+      <p className="mb-[18px] text-[12.5px] text-tertiary">
+        Invitez des collègues à gérer vos échanges. Seul le propriétaire accède à la facturation.
+      </p>
+
+      {isOwner && (
+        <div className="flex gap-2.5">
+          <input
+            value={invite} onChange={e => setInvite(e.target.value)}
+            placeholder="adresse@etablissement.fr"
+            className="h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13.5px] focus:border-brand focus:outline-none"
+          />
+          <button
+            type="button" onClick={handleInvite} disabled={busy}
+            className="h-10 flex-none rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+          >
+            Inviter
+          </button>
+        </div>
+      )}
+      {(error || flash) && (
+        <p className={`mt-2 text-[12.5px] font-medium ${error ? 'text-danger-text' : 'text-success-text'}`}>
+          {error ?? flash}
+        </p>
+      )}
+
+      <div className="mt-4 overflow-hidden rounded-xl border border-subtle">
+        {team.members.map((m, i) => (
+          <div key={m.id} className="flex items-center gap-3 border-b border-subtle px-4 py-3 last:border-b-0">
+            <span
+              className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-xs font-semibold text-white"
+              style={{ background: MEMBER_AVATARS[i % MEMBER_AVATARS.length] }}
+            >
+              {initialsOf(m.name)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="text-[13.5px] font-semibold text-foreground">{m.name}</span>
+                {m.isYou && (
+                  <span className="rounded-pill bg-tint px-2 py-px font-mono text-[10px] font-semibold text-tint-text">VOUS</span>
+                )}
+              </span>
+              <span className="mt-px block truncate text-xs text-tertiary">{m.email}</span>
+            </span>
+            {m.isOwner ? (
+              <span className="rounded-pill bg-navy px-3 py-[5px] text-[11.5px] font-semibold text-white">Propriétaire</span>
+            ) : (
+              <span className="rounded-pill bg-subtle px-3 py-[5px] text-[11.5px] font-semibold text-muted-foreground">Administrateur</span>
+            )}
+          </div>
+        ))}
+        {team.pending.map(p => (
+          <div key={p.id} className="flex items-center gap-3 border-b border-subtle bg-hoverrow px-4 py-3 last:border-b-0">
+            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full border-[1.5px] border-dashed border-placeholder text-[13px] font-semibold text-placeholder">@</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13.5px] font-medium text-muted-foreground">{p.email}</span>
+              <span className="mt-px block text-xs text-tertiary">Administrateur</span>
+            </span>
+            <span className="rounded-pill bg-warn px-2.5 py-[3px] text-[11px] font-semibold text-warn-text">Invitation envoyée</span>
+            {isOwner && (
+              <button
+                type="button" onClick={() => handleRevoke(p.id)}
+                className="px-1.5 py-1 text-xs font-semibold text-tertiary hover:text-danger-text"
+              >
+                Révoquer
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-[11px] border border-subtle px-[15px] py-[13px]">
+          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">Propriétaire</div>
+          <div className="text-[11.5px] leading-[1.45] text-tertiary">Tout gérer, y compris l’équipe et la facturation.</div>
+        </div>
+        <div className="rounded-[11px] border border-subtle px-[15px] py-[13px]">
+          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">Administrateur</div>
+          <div className="text-[11.5px] leading-[1.45] text-tertiary">Gérer élèves, candidatures, formulaires et documents.</div>
+        </div>
+      </div>
+    </div>
+  )
+}

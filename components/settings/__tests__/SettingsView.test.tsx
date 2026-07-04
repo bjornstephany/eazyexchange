@@ -6,8 +6,10 @@ const changePassword = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/settings', () => ({
   updateProfile: (...a: unknown[]) => updateProfile(...a),
   changePassword: (...a: unknown[]) => changePassword(...a),
-  inviteOrganizer: vi.fn(), revokeOrganizerInvite: vi.fn(),
-  archiveExchange: vi.fn(), restoreExchange: vi.fn(),
+  inviteOrganizer: vi.fn().mockResolvedValue(undefined),
+  revokeOrganizerInvite: vi.fn().mockResolvedValue(undefined),
+  archiveExchange: vi.fn().mockResolvedValue(undefined),
+  restoreExchange: vi.fn().mockResolvedValue(undefined),
 }))
 import { SettingsView } from '@/components/settings/SettingsView'
 
@@ -73,5 +75,89 @@ describe('SettingsView — Compte', () => {
     render(<SettingsView {...baseProps} canChangePassword={false} />)
     expect(screen.queryByRole('button', { name: 'Modifier le mot de passe' })).toBeNull()
     expect(screen.getByText('Connexion via Google — la gestion du mot de passe ne s’applique pas à votre compte.')).toBeInTheDocument()
+  })
+})
+
+const owner = {
+  ...baseProps,
+  isOwner: true,
+  team: {
+    members: [
+      { id: 'u1', name: 'Marie Blanchet', email: 'm.blanchet@lycee-mistral.fr', isOwner: true, isYou: true },
+      { id: 'u2', name: 'Antoine Dubois', email: 'a.dubois@lycee-mistral.fr', isOwner: false, isYou: false },
+    ],
+    pending: [{ id: 'i1', email: 'j.moreau@lycee-mistral.fr' }],
+  },
+  billing: {
+    planLabel: 'Essai gratuit', price: '0 €', per: '', desc: 'Votre premier échange est offert — aucun paiement requis.',
+    usageLabel: '1 / 1 échange utilisé', usagePct: 100,
+    payment: { note: 'Aucun moyen de paiement enregistré.', cta: 'Ajouter une carte', href: '/billing' },
+  },
+  program: {
+    id: 'ex1', name: 'Programme Espagne', year: 2026, phase: 2 as const, archived: false,
+    enrolled: 10, applications: 12, earliestDeadline: '2026-10-10',
+  },
+}
+
+describe('SettingsView — owner sections', () => {
+  it('admin sees only Compte + Équipe in the nav', () => {
+    render(<SettingsView {...baseProps} />)
+    expect(screen.getByRole('button', { name: 'Compte personnel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Équipe & rôles' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Facturation' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Programme' })).toBeNull()
+  })
+
+  it('team: members, VOUS + Propriétaire pills, pending invite with revoke (owner only)', async () => {
+    const { inviteOrganizer, revokeOrganizerInvite } = await import('@/actions/settings')
+    render(<SettingsView {...owner} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Équipe & rôles' }))
+    expect(screen.getByText('VOUS')).toBeInTheDocument()
+    expect(screen.getAllByText('Propriétaire').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Antoine Dubois')).toBeInTheDocument()
+    expect(screen.getByText('Invitation envoyée')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Révoquer' }))
+    expect(revokeOrganizerInvite).toHaveBeenCalledWith('i1')
+    fireEvent.change(screen.getByPlaceholderText('adresse@etablissement.fr'), { target: { value: 'x@lycee.fr' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Inviter' }))
+    expect(inviteOrganizer).toHaveBeenCalledWith('x@lycee.fr')
+  })
+
+  it('team as admin: list visible, no invite row, no revoke', () => {
+    render(<SettingsView {...baseProps} team={owner.team} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Équipe & rôles' }))
+    expect(screen.getByText('Antoine Dubois')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('adresse@etablissement.fr')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Révoquer' })).toBeNull()
+  })
+
+  it('billing: plan card, usage, payment CTA', () => {
+    render(<SettingsView {...owner} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Facturation' }))
+    expect(screen.getByText('Essai gratuit')).toBeInTheDocument()
+    expect(screen.getByText('0 €')).toBeInTheDocument()
+    expect(screen.getByText('1 / 1 échange utilisé')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Voir les forfaits' })).toHaveAttribute('href', '/billing')
+    expect(screen.getByRole('link', { name: 'Ajouter une carte' })).toHaveAttribute('href', '/billing')
+  })
+
+  it('program: stats line, archive modal confirm', async () => {
+    const { archiveExchange } = await import('@/actions/settings')
+    render(<SettingsView {...owner} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
+    expect(screen.getByText('10 élèves confirmés · 12 candidatures · échéance dossiers 10 oct')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme…' }))
+    expect(screen.getByText('Archiver ce programme ?')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme' }))
+    expect(archiveExchange).toHaveBeenCalledWith('ex1')
+  })
+
+  it('program: archived state shows Restaurer', async () => {
+    const { restoreExchange } = await import('@/actions/settings')
+    render(<SettingsView {...owner} program={{ ...owner.program, archived: true }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
+    expect(screen.getByText('Archivé')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurer' }))
+    expect(restoreExchange).toHaveBeenCalledWith('ex1')
   })
 })
