@@ -126,6 +126,12 @@
   100% { transform: translateX(168px); }
 }
 
+.ee-spin { animation: ee-spin 0.9s linear infinite; }
+
+@keyframes ee-spin {
+  to { transform: rotate(360deg); }
+}
+
 @layer base {
   :root {
     --background: 220 36% 95%;
