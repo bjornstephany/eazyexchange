@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ApplicationStartForm } from '@/components/ApplicationStartForm'
 import { Logo } from '@/components/brand/Logo'
+import { InvalidLinkState } from '@/components/InvalidLinkState'
 
 // Reads live exchange state (application_open/deadline) via the cookie-less admin
 // client, which is otherwise eligible for Next's Data Cache — force dynamic so the
@@ -20,7 +21,10 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
     (exchange.application_deadline != null && new Date().toISOString().slice(0, 10) > exchange.application_deadline)
 
   if (!exchange) return (
-    <main className="mx-auto max-w-[720px] px-4 pt-[52px]"><p className="text-[15px] text-[#5B6B8C]">Ce lien de candidature n’est pas valide.</p></main>
+    <InvalidLinkState
+      title="Ce lien n’est plus valide"
+      body="Il a peut-être expiré — c’est normal, les liens expirent pour protéger ton dossier. Vérifie l’adresse dans ton e-mail, ou demande à ton organisateur de t’en renvoyer un nouveau."
+    />
   )
   if (closed) return (
     <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
