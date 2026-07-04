@@ -1,5 +1,6 @@
 import { getApplicationDraft } from '@/actions/applications'
 import { ApplicationForm } from '@/components/ApplicationForm'
+import { InvalidLinkState } from '@/components/InvalidLinkState'
 
 // Reads the live draft (autosaved answers + submitted/expired state) via the
 // cookie-less admin client — force dynamic so it is never served from cache.
@@ -10,10 +11,16 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
   const draft = await getApplicationDraft(token)
 
   if (!draft) return (
-    <main className="mx-auto max-w-[720px] px-4 py-16"><p className="text-[15px] text-[#5B6B8C]">Ce lien de candidature n’est pas valide.</p></main>
+    <InvalidLinkState
+      title="Ce lien n’est plus valide"
+      body="Il a peut-être expiré — c’est normal, les liens expirent pour protéger ton dossier. Vérifie l’adresse dans ton e-mail, ou demande à ton organisateur de t’en renvoyer un nouveau."
+    />
   )
   if (draft.expired) return (
-    <main className="mx-auto max-w-[720px] px-4 py-16"><p className="text-[15px] text-[#5B6B8C]">Ce lien de candidature a expiré. Contacte l’organisateur si tu dois encore compléter ta candidature.</p></main>
+    <InvalidLinkState
+      title="Ce lien a expiré"
+      body="Les liens de candidature expirent au bout d’un moment pour protéger ton dossier. Demande à ton organisateur de t’en renvoyer un nouveau."
+    />
   )
   if (draft.submitted) return (
     <main className="mx-auto max-w-[720px] px-4 py-16">

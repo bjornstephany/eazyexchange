@@ -2,5 +2,5 @@
 import { ErrorState } from '@/components/ErrorState'
 
 export default function StudentError({ error, reset }: { error: Error; reset: () => void }) {
-  return <ErrorState error={error} reset={reset} />
+  return <ErrorState error={error} reset={reset} home={{ href: '/my-forms', label: 'Mon dossier' }} />
 }

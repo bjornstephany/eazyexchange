@@ -63,6 +63,18 @@ export function DossierView({ dossier, firstName }: { dossier: Dossier; firstNam
       <h1 className="mb-1.5 font-display text-[30px] font-bold leading-[1.1] tracking-tight text-navy">Bonjour {firstName},</h1>
       <p className="mb-6 text-[14.5px] leading-relaxed text-muted-foreground">{dossierSubline(dossier)}</p>
 
+      {total === 0 && (
+        <div className="flex items-center gap-4 rounded-[22px] border border-tint-border bg-tint px-[34px] py-[30px]">
+          <div className="flex h-[66px] w-[66px] flex-none items-center justify-center rounded-[18px] bg-brand-hover text-2xl font-bold text-white">✓</div>
+          <div className="min-w-0 flex-1">
+            <div className="font-display text-[22px] font-semibold text-navy">Tout est à jour</div>
+            <p className="mt-1 text-[16px] leading-relaxed text-foreground">
+              Aucun formulaire ne t’attend pour l’instant. On te préviendra par e-mail dès qu’il y a du nouveau — profite de ta journée.
+            </p>
+          </div>
+        </div>
+      )}
+
       {total > 0 && (
         <>
           {allApproved && (
