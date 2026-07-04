@@ -1,10 +1,8 @@
 -- Phase 4 (Élèves + Réglages): organizer profile fields, team roles + invites,
 -- exchange archiving.
 
--- 1 · users: profile fields + org_role ---------------------------------------
+-- 1 · users: org_role ---------------------------------------------------------
 alter table users
-  add column phone text,
-  add column title text,
   add column org_role text not null default 'admin' check (org_role in ('owner', 'admin'));
 
 -- Backfill BEFORE the trigger below pins org_role: the earliest organizer of

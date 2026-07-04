@@ -37,7 +37,7 @@ function assertOwner(ctx: OrganizerCtx): void {
 }
 
 export async function updateProfile(input: {
-  fullName: string; phone: string; title: string; schoolName: string
+  fullName: string; schoolName: string
 }): Promise<void> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx(supabase)
@@ -47,8 +47,6 @@ export async function updateProfile(input: {
 
   const { error: userError } = await supabase.from('users').update({
     full_name: fullName,
-    phone: input.phone.trim() || null,
-    title: input.title.trim() || null,
   }).eq('id', ctx.userId)
   if (userError) throw userError
 

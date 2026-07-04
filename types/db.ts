@@ -36,7 +36,7 @@ export type Exchange = {
 export type UserProfile = {
   id: string; school_id: string; role: Role
   full_name: string; email: string; created_at: string
-  phone: string | null; title: string | null; org_role: OrgRole
+  org_role: OrgRole
 }
 export type ExchangeEnrollment = { id: string; exchange_id: string; user_id: string; created_at: string }
 export type FormTemplate = {
@@ -106,8 +106,8 @@ export type Database = {
       exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'>>, Partial<Exchange>>
       users: TableDef<
         UserProfile,
-        Omit<UserProfile, 'created_at' | 'phone' | 'title' | 'org_role'> &
-          Partial<Pick<UserProfile, 'phone' | 'title' | 'org_role'>>,
+        Omit<UserProfile, 'created_at' | 'org_role'> &
+          Partial<Pick<UserProfile, 'org_role'>>,
         Partial<UserProfile>
       >
       organizer_invites: TableDef<

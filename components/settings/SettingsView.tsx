@@ -8,7 +8,7 @@ import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
 
 export type SettingsProps = {
-  profile: { fullName: string; email: string; phone: string; title: string; schoolName: string }
+  profile: { fullName: string; email: string; schoolName: string }
   isOwner: boolean
   canChangePassword: boolean
   team: { members: TeamMember[]; pending: PendingInvite[] }

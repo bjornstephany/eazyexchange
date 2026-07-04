@@ -9,12 +9,11 @@ function initialsOf(name: string): string {
 }
 
 export function ProfileCard({ profile, isOwner }: {
-  profile: { fullName: string; email: string; phone: string; title: string; schoolName: string }
+  profile: { fullName: string; email: string; schoolName: string }
   isOwner: boolean
 }) {
   const [f, setF] = useState({
-    fullName: profile.fullName, phone: profile.phone,
-    title: profile.title, schoolName: profile.schoolName,
+    fullName: profile.fullName, schoolName: profile.schoolName,
   })
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,8 +36,6 @@ export function ProfileCard({ profile, isOwner }: {
   const fields: { key: keyof typeof f | 'email'; label: string; disabled?: boolean; hint?: string }[] = [
     { key: 'fullName', label: 'Nom complet' },
     { key: 'email', label: 'Adresse e-mail', disabled: true, hint: 'Contactez le support pour changer d’adresse.' },
-    { key: 'phone', label: 'Téléphone' },
-    { key: 'title', label: 'Fonction' },
     {
       key: 'schoolName', label: 'Établissement', disabled: !isOwner,
       hint: isOwner ? undefined : 'Seul le propriétaire peut modifier le nom de l’établissement.',
@@ -57,7 +54,7 @@ export function ProfileCard({ profile, isOwner }: {
         <div>
           <div className="font-display text-[17px] font-bold tracking-[-.01em] text-foreground">{f.fullName}</div>
           <div className="mt-0.5 text-[13px] text-tertiary">
-            {[f.title, f.schoolName].filter(Boolean).join(' · ')}
+            {f.schoolName}
           </div>
         </div>
       </div>

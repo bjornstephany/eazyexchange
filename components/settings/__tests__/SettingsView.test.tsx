@@ -16,7 +16,7 @@ import { SettingsView } from '@/components/settings/SettingsView'
 const baseProps = {
   profile: {
     fullName: 'Marie Blanchet', email: 'm.blanchet@lycee-mistral.fr',
-    phone: '06 12 45 78 90', title: 'Coordinatrice des échanges', schoolName: 'Lycée Frédéric Mistral',
+    schoolName: 'Lycée Frédéric Mistral',
   },
   isOwner: false,
   canChangePassword: true,
@@ -34,7 +34,6 @@ describe('SettingsView — Compte', () => {
     expect(screen.getByText('Votre compte, votre équipe et votre abonnement.')).toBeInTheDocument()
     expect(screen.getByLabelText('Nom complet')).toHaveValue('Marie Blanchet')
     expect(screen.getByLabelText('Adresse e-mail')).toBeDisabled()
-    expect(screen.getByLabelText('Fonction')).toHaveValue('Coordinatrice des échanges')
     expect(screen.getByLabelText('Établissement')).toHaveValue('Lycée Frédéric Mistral')
   })
 
@@ -48,12 +47,11 @@ describe('SettingsView — Compte', () => {
 
   it('saves the profile and flashes confirmation', async () => {
     render(<SettingsView {...baseProps} />)
-    fireEvent.change(screen.getByLabelText('Téléphone'), { target: { value: '06 00 00 00 00' } })
+    fireEvent.change(screen.getByLabelText('Nom complet'), { target: { value: 'Marie B. Blanchet' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     expect(await screen.findByText('✓ Modifications enregistrées')).toBeInTheDocument()
     expect(updateProfile).toHaveBeenCalledWith({
-      fullName: 'Marie Blanchet', phone: '06 00 00 00 00',
-      title: 'Coordinatrice des échanges', schoolName: 'Lycée Frédéric Mistral',
+      fullName: 'Marie B. Blanchet', schoolName: 'Lycée Frédéric Mistral',
     })
   })
 

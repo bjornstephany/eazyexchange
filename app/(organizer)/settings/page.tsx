@@ -18,9 +18,9 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('full_name, email, phone, title, org_role, schools(name)')
+    .select('full_name, email, org_role, schools(name)')
     .eq('id', user.id)
-    .single<{ full_name: string; email: string; phone: string | null; title: string | null; org_role: string; schools: { name: string } | null }>()
+    .single<{ full_name: string; email: string; org_role: string; schools: { name: string } | null }>()
   if (!profile) redirect('/login')
 
   const isOwner = profile.org_role === 'owner'
@@ -44,7 +44,6 @@ export default async function SettingsPage() {
     <SettingsView
       profile={{
         fullName: profile.full_name, email: profile.email,
-        phone: profile.phone ?? '', title: profile.title ?? '',
         schoolName: profile.schools?.name ?? '',
       }}
       isOwner={isOwner}
