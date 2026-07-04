@@ -30,7 +30,7 @@ export default function AcceptInvitePage() {
     setError(null)
     const { data: { user }, error: updateError } = await supabase.auth.updateUser({ password })
     if (updateError || !user) {
-      setError(updateError?.message ?? 'Ton lien d\’invitation est invalide ou a expiré — demande à ton organisateur de te le renvoyer.')
+      setError(updateError?.message ?? 'Ton lien d’invitation est invalide ou a expiré — demande à ton organisateur de te le renvoyer.')
       setLoading(false)
       return
     }
@@ -64,7 +64,7 @@ export default function AcceptInvitePage() {
         </div>
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
         <Button type="submit" disabled={loading} className="h-[50px] w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">
-          {loading ? 'Configuration…' : 'C\’est parti'}
+          {loading ? 'Configuration…' : 'C’est parti'}
         </Button>
       </form>
     </CenteredCard>
