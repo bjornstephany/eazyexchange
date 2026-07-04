@@ -61,4 +61,11 @@ describe('DossierView', () => {
     expect(screen.getByText('Espagne 2026')).toBeTruthy()
     expect(screen.getByText('Italie 2026')).toBeTruthy()
   })
+
+  it('renders the "up to date" banner and no progress bar when nothing is assigned', () => {
+    const d = buildDossier([], NOW)
+    render(<DossierView dossier={d} firstName="Léa" />)
+    expect(screen.getByText(/Tout est . jour/)).toBeTruthy()  // accent-agnostic (à)
+    expect(screen.queryByText(/envoyés/)).toBeNull()          // no progress row
+  })
 })
