@@ -1,5 +1,6 @@
 import { getInvitation } from '@/actions/applications'
 import { InviteResponseForm } from '@/components/InviteResponseForm'
+import { CenteredCard } from '@/components/auth/CenteredCard'
 
 // Reads live invitation state (accepted / already-answered) via the cookie-less
 // admin client — force dynamic so the response page is never served stale.
@@ -9,24 +10,20 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const { token } = await params
   const invite = await getInvitation(token)
 
-  if (!invite) {
-    return <main className="max-w-lg mx-auto px-4 py-12"><p className="text-muted-foreground">This invitation link is not valid.</p></main>
-  }
-  if (invite.expired) {
-    return <main className="max-w-lg mx-auto px-4 py-12"><p className="text-muted-foreground">This invitation has expired. Contact the organizer to ask for a new one.</p></main>
-  }
+  if (!invite) return (
+    <CenteredCard maxWidth={520}><p className="m-0 text-[15px] text-[#5B6B8C]">Ce lien d’invitation n’est pas valide.</p></CenteredCard>
+  )
+  if (invite.expired) return (
+    <CenteredCard maxWidth={520}><p className="m-0 text-[15px] text-[#5B6B8C]">Cette invitation a expiré. Contacte ton organisateur pour en recevoir une nouvelle.</p></CenteredCard>
+  )
   const closed = !['accepted', 'maybe'].includes(invite.status)
+  if (closed) return (
+    <CenteredCard maxWidth={520}><p className="m-0 text-[15px] text-[#5B6B8C]">Cette invitation a déjà reçu une réponse.</p></CenteredCard>
+  )
+  const firstName = (invite.applicantName ?? '').trim().split(/\s+/)[0] ?? ''
   return (
-    <main className="max-w-lg mx-auto px-4 py-12">
-      <h1 className="text-2xl font-semibold mb-2">You&apos;re invited to {invite.exchangeName}!</h1>
-      {closed ? (
-        <p className="text-muted-foreground">This invitation has already been answered.</p>
-      ) : (
-        <>
-          <p className="text-muted-foreground mb-6">{invite.applicantName ? `Hi ${invite.applicantName}, ` : ''}you&apos;ve been accepted. Will you join the exchange?</p>
-          <InviteResponseForm token={token} />
-        </>
-      )}
-    </main>
+    <CenteredCard maxWidth={520}>
+      <InviteResponseForm token={token} firstName={firstName} exchangeName={invite.exchangeName} />
+    </CenteredCard>
   )
 }

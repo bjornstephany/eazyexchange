@@ -4,7 +4,7 @@ import { respondToInvitation } from '@/actions/applications'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
-export function InviteResponseForm({ token }: { token: string }) {
+export function InviteResponseForm({ token, firstName, exchangeName }: { token: string; firstName: string; exchangeName: string }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   const [result, setResult] = useState<'yes' | 'no' | 'maybe' | null>(null)
@@ -13,24 +13,29 @@ export function InviteResponseForm({ token }: { token: string }) {
   async function respond(response: 'yes' | 'no' | 'maybe') {
     setBusy(true); setError(null)
     try { await respondToInvitation(token, response, response === 'maybe' ? note : ''); setResult(response) }
-    catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong'); setBusy(false) }
+    catch (e) { setError(e instanceof Error ? e.message : 'Une erreur est survenue.'); setBusy(false) }
   }
 
-  if (result === 'yes') return <p className="text-emerald-700">Wonderful! Check your email for a link to set up your account and get started.</p>
-  if (result === 'no') return <p className="text-foreground">Thanks for letting us know. We wish you all the best.</p>
-  if (result === 'maybe') return <p className="text-foreground">Thanks &mdash; we&apos;ve noted your response and the organizer will follow up.</p>
+  if (result === 'yes') return <p className="text-[15px] leading-relaxed text-[#0F7A3D]">Parfait ! Regarde ta boîte mail pour le lien d’activation de ton compte.</p>
+  if (result === 'no') return <p className="text-[15px] leading-relaxed text-[#10203F]">Merci de nous avoir prévenus. Nous te souhaitons le meilleur.</p>
+  if (result === 'maybe') return <p className="text-[15px] leading-relaxed text-[#10203F]">Merci — nous avons noté ta réponse, l’organisateur reviendra vers toi.</p>
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2">
-        <Button disabled={busy} onClick={() => respond('yes')}>Yes, I&apos;d like to join</Button>
-        <Button variant="outline" disabled={busy} onClick={() => respond('no')}>No, thank you</Button>
+    <div className="flex flex-col gap-5">
+      <div>
+        <span className="mb-3.5 inline-flex rounded-full bg-[#DCF3E6] px-3 py-1 text-[13px] font-semibold text-[#0F7A3D]">Candidature acceptée 🎉</span>
+        <h3 className="m-0 mb-2 font-display text-[26px] font-bold leading-[1.25] tracking-[-0.02em] text-[#10203F]">{firstName ? `${firstName}, ` : ''}tu es invitée à l’échange {exchangeName} !</h3>
+        <p className="m-0 text-[15.5px] leading-relaxed text-[#5B6B8C]">Ta candidature a été retenue. Veux-tu participer ?</p>
       </div>
-      <div className="space-y-2">
-        <Textarea placeholder="If you're unsure, add a note (optional)" value={note} onChange={e => setNote(e.target.value)} />
-        <Button variant="ghost" disabled={busy} onClick={() => respond('maybe')}>Maybe &mdash; I need more time</Button>
+      <div className="flex flex-col gap-2.5">
+        <Button disabled={busy} onClick={() => respond('yes')} className="h-[50px] w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">Oui, je veux participer</Button>
+        <Button variant="outline" disabled={busy} onClick={() => respond('no')} className="h-[50px] w-full rounded-[11px] border-[#C4CDE0] text-base font-semibold">Non merci</Button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex flex-col gap-2.5 border-t border-[#E4E9F2] pt-[18px]">
+        <Textarea placeholder="Si tu hésites, laisse une note (facultatif)" value={note} onChange={e => setNote(e.target.value)} className="min-h-16 rounded-[10px] border-[#C4CDE0]" />
+        <Button variant="ghost" disabled={busy} onClick={() => respond('maybe')} className="self-start px-0 font-semibold text-[#5B6B8C] underline underline-offset-[3px] hover:bg-transparent hover:text-[#10203F]">Peut-être — j’ai besoin de temps</Button>
+      </div>
+      {error && <p className="text-sm text-[#C0392B]">{error}</p>}
     </div>
   )
 }
