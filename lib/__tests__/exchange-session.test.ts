@@ -23,3 +23,19 @@ describe('resolveActiveExchange', () => {
     expect(ACTIVE_EXCHANGE_COOKIE).toBe('ee_active_exchange')
   })
 })
+
+describe('resolveActiveExchange (archived-aware fallback)', () => {
+  const ex = [
+    { id: 'newest', archived: true },
+    { id: 'older', archived: false },
+  ]
+  it('cookie selection wins even when archived', () => {
+    expect(resolveActiveExchange(ex, 'newest')?.id).toBe('newest')
+  })
+  it('fallback prefers the most recent non-archived exchange', () => {
+    expect(resolveActiveExchange(ex, undefined)?.id).toBe('older')
+  })
+  it('all archived → most recent anyway', () => {
+    expect(resolveActiveExchange([{ id: 'a', archived: true }], undefined)?.id).toBe('a')
+  })
+})

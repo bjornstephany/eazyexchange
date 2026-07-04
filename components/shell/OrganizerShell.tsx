@@ -5,12 +5,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents, IconSettings } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
 
-export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2 }
+export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2; archived: boolean }
 
 function initials(name: string) {
   return name
@@ -64,12 +64,14 @@ export function OrganizerShell({
   exchanges,
   activeExchangeId,
   organizerName,
+  schoolName,
   needsSchoolName,
   children,
 }: {
   exchanges: ExchangeOption[]
   activeExchangeId: string | null
   organizerName: string
+  schoolName: string
   needsSchoolName: boolean
   children: React.ReactNode
 }) {
@@ -86,7 +88,9 @@ export function OrganizerShell({
   useEffect(() => { setListSearch('') }, [pathname])
 
   const listPage = pathname.startsWith('/forms') ? 'forms'
-    : pathname.startsWith('/documents') ? 'docs' : null
+    : pathname.startsWith('/documents') ? 'docs'
+    : pathname.startsWith('/students') ? 'students' : null
+  const isSettings = pathname.startsWith('/settings')
 
   const shellUi = useMemo<ShellUi>(() => ({
     openNewExchange: () => setNewExchangeOpen(true),
@@ -152,8 +156,14 @@ export function OrganizerShell({
               <RailItem href="/documents" label="Docs" active={pathname.startsWith('/documents')}>
                 <IconDocs />
               </RailItem>
+              <RailItem href="/students" label="Élèves" active={pathname.startsWith('/students')}>
+                <IconStudents />
+              </RailItem>
             </>
           )}
+          <RailItem href="/settings" label="Réglages" active={pathname.startsWith('/settings')}>
+            <IconSettings />
+          </RailItem>
         </div>
         <div ref={menuRef} className="relative mt-auto">
           {menuOpen && (
@@ -183,15 +193,24 @@ export function OrganizerShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header data-noprint className="flex h-[66px] flex-none items-center justify-between gap-5 border-b bg-card px-7">
           <div className="flex items-center gap-3.5">
-            {active ? (
+            {isSettings ? (
+              <span className="font-display text-base font-semibold text-navy">{schoolName}</span>
+            ) : active ? (
               <>
                 <SessionSelector
                   exchanges={exchanges}
                   active={active}
                   onNewExchange={() => setNewExchangeOpen(true)}
                 />
-                <span className="rounded-pill bg-tint px-3 py-1 font-mono text-[11px] font-semibold text-tint-text">
-                  {active.phase === 1 ? 'Phase 1 · Recrutement' : 'Phase 2 · Préparation'}
+                <span
+                  className={cn(
+                    'rounded-pill px-3 py-1 font-mono text-[11px] font-semibold',
+                    active.archived ? 'bg-subtle text-muted-foreground' : 'bg-tint text-tint-text'
+                  )}
+                >
+                  {active.archived
+                    ? 'Archivé'
+                    : active.phase === 1 ? 'Phase 1 · Recrutement' : 'Phase 2 · Préparation'}
                 </span>
               </>
             ) : (
@@ -204,7 +223,7 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {active && listPage === null && (
+          {!isSettings && active && listPage === null && (
             <Link
               href={`/exchanges/${active.id}#invite`}
               className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
@@ -212,7 +231,24 @@ export function OrganizerShell({
               <span className="text-base leading-none">+</span> Inviter des élèves
             </Link>
           )}
-          {active && listPage !== null && (
+          {!isSettings && active && listPage === 'students' && (
+            <div className="flex items-center gap-3">
+              <input
+                type="search"
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                placeholder="Rechercher un élève…"
+                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
+              />
+              <Link
+                href={`/exchanges/${active.id}#invite`}
+                className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
+              >
+                <span className="text-base leading-none">+</span> Inviter des élèves
+              </Link>
+            </div>
+          )}
+          {!isSettings && active && (listPage === 'forms' || listPage === 'docs') && (
             <div className="flex items-center gap-3">
               <input
                 type="search"

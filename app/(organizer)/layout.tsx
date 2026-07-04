@@ -33,10 +33,12 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const { data: exchangeRows } = await supabase
     .from('exchanges')
-    .select('id, name, year, phase')
+    .select('id, name, year, phase, archived_at')
     .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
     .order('created_at', { ascending: false })
-  const exchanges: ExchangeOption[] = (exchangeRows ?? []) as ExchangeOption[]
+  const exchanges: ExchangeOption[] = ((exchangeRows ?? []) as any[]).map(e => ({
+    id: e.id, name: e.name, year: e.year, phase: e.phase, archived: !!e.archived_at,
+  }))
 
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
@@ -46,6 +48,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       exchanges={exchanges}
       activeExchangeId={active?.id ?? null}
       organizerName={profile.full_name}
+      schoolName={school?.name ?? ''}
       needsSchoolName={school?.name === ''}
     >
       {showGrace && <PaymentWarningBanner />}
