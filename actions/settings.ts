@@ -43,9 +43,7 @@ export async function updateProfile(input: {
   const ctx = await getOrganizerCtx(supabase)
 
   const fullName = input.fullName.trim()
-  const schoolName = input.schoolName.trim()
   if (!fullName) throw new Error('Le nom ne peut pas être vide.')
-  if (!schoolName) throw new Error('Le nom de l’établissement ne peut pas être vide.')
 
   const { error: userError } = await supabase.from('users').update({
     full_name: fullName,
@@ -54,11 +52,17 @@ export async function updateProfile(input: {
   }).eq('id', ctx.userId)
   if (userError) throw userError
 
-  // schools.name is the only client-updatable school column (column grant
-  // from 20260701000001) — RLS scopes the row to the caller's school.
-  const { error: schoolError } = await supabase.from('schools')
-    .update({ name: schoolName }).eq('id', ctx.schoolId)
-  if (schoolError) throw schoolError
+  // Only the owner may rename the school. schools.name is the only
+  // client-updatable school column (column grant from 20260701000001) — RLS
+  // scopes the row to the caller's school. Admins can edit their own profile
+  // fields above but their submitted schoolName is ignored here.
+  if (ctx.orgRole === 'owner') {
+    const schoolName = input.schoolName.trim()
+    if (!schoolName) throw new Error('Le nom de l’établissement ne peut pas être vide.')
+    const { error: schoolError } = await supabase.from('schools')
+      .update({ name: schoolName }).eq('id', ctx.schoolId)
+    if (schoolError) throw schoolError
+  }
 
   revalidatePath('/settings')
 }

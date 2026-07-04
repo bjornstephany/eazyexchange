@@ -51,7 +51,7 @@ export function SettingsView(props: SettingsProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-[18px]">
           {section === 'compte' && (
             <>
-              <ProfileCard profile={props.profile} />
+              <ProfileCard profile={props.profile} isOwner={props.isOwner} />
               <SecurityCard canChangePassword={props.canChangePassword} />
             </>
           )}

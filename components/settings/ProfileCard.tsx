@@ -8,8 +8,9 @@ function initialsOf(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
 }
 
-export function ProfileCard({ profile }: {
+export function ProfileCard({ profile, isOwner }: {
   profile: { fullName: string; email: string; phone: string; title: string; schoolName: string }
+  isOwner: boolean
 }) {
   const [f, setF] = useState({
     fullName: profile.fullName, phone: profile.phone,
@@ -38,7 +39,10 @@ export function ProfileCard({ profile }: {
     { key: 'email', label: 'Adresse e-mail', disabled: true, hint: 'Contactez le support pour changer d’adresse.' },
     { key: 'phone', label: 'Téléphone' },
     { key: 'title', label: 'Fonction' },
-    { key: 'schoolName', label: 'Établissement' },
+    {
+      key: 'schoolName', label: 'Établissement', disabled: !isOwner,
+      hint: isOwner ? undefined : 'Seul le propriétaire peut modifier le nom de l’établissement.',
+    },
   ]
 
   return (

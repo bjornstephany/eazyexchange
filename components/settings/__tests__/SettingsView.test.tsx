@@ -38,6 +38,14 @@ describe('SettingsView — Compte', () => {
     expect(screen.getByLabelText('Établissement')).toHaveValue('Lycée Frédéric Mistral')
   })
 
+  it('Établissement is editable only for the owner', () => {
+    const { rerender } = render(<SettingsView {...baseProps} />) // admin
+    expect(screen.getByLabelText('Établissement')).toBeDisabled()
+    expect(screen.getByText('Seul le propriétaire peut modifier le nom de l’établissement.')).toBeInTheDocument()
+    rerender(<SettingsView {...baseProps} isOwner={true} />)
+    expect(screen.getByLabelText('Établissement')).toBeEnabled()
+  })
+
   it('saves the profile and flashes confirmation', async () => {
     render(<SettingsView {...baseProps} />)
     fireEvent.change(screen.getByLabelText('Téléphone'), { target: { value: '06 00 00 00 00' } })
