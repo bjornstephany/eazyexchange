@@ -5,6 +5,14 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { enforceRateLimit } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyError, PWNED_MESSAGE } from '@/lib/auth/hibp'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
+import { isPlanKey } from '@/lib/billing/plans'
+import { getStripe } from '@/lib/billing/stripe'
+import {
+  PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
+} from '@/lib/billing/display'
+import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
 
@@ -76,5 +84,65 @@ export async function changePassword(currentPassword: string, newPassword: strin
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
   if (error) throw new Error('Le mot de passe n’a pas pu être mis à jour. Réessayez.')
+}
+
+export type BillingOverview = {
+  planLabel: string; price: string; per: string; desc: string
+  usageLabel: string; usagePct: number
+  payment: { note: string; cta: string; href: string }
+}
+
+export async function getBillingOverview(): Promise<BillingOverview> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+
+  const admin = createAdminClient()
+  const { data: school } = await admin
+    .from('schools')
+    .select('subscription_status, plan, grace_until, stripe_customer_id')
+    .eq('id', ctx.schoolId).single()
+  if (!school) throw new Error('École introuvable.')
+
+  const { count } = await supabase
+    .from('exchanges')
+    .select('id', { count: 'exact', head: true })
+    .eq('school_a_id', ctx.schoolId)
+  const used = count ?? 0
+
+  const active = hasActivePlan(school)
+  const planKey = active && isPlanKey(school.plan) ? school.plan : null
+  const cap = exchangeCap(school)
+  const usage = usageLine(used, cap)
+
+  let payment = { note: 'Aucun moyen de paiement enregistré.', cta: 'Ajouter une carte', href: '/billing' }
+  if (planKey && school.stripe_customer_id && process.env.STRIPE_SECRET_KEY) {
+    try {
+      const customer = await getStripe().customers.retrieve(school.stripe_customer_id, {
+        expand: ['invoice_settings.default_payment_method'],
+      })
+      const card = !('deleted' in customer && customer.deleted)
+        ? ((customer as Stripe.Customer).invoice_settings
+            ?.default_payment_method as Stripe.PaymentMethod | null)?.card
+        : null
+      if (card) {
+        const brand = card.brand.charAt(0).toUpperCase() + card.brand.slice(1)
+        const exp = `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
+        payment = { note: `${brand} •••• ${card.last4} — expire ${exp}`, cta: 'Modifier', href: '/billing/portal' }
+      }
+    } catch {
+      // Stripe unavailable/misconfigured: fall through to the no-card note.
+    }
+  }
+
+  return planKey
+    ? {
+        planLabel: PLAN_LABEL_FR[planKey], price: PLAN_PRICE_FR[planKey], per: '/ an',
+        desc: PLAN_DESC_FR[planKey], usageLabel: usage.label, usagePct: usage.pct, payment,
+      }
+    : {
+        planLabel: TRIAL_LABEL, price: TRIAL_PRICE, per: '',
+        desc: TRIAL_DESC, usageLabel: usage.label, usagePct: usage.pct, payment,
+      }
 }
 

@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { PLAN_KEYS } from '@/lib/billing/plans'
+import { PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel } from '@/lib/billing/display'
 import { useShellUi } from '@/components/shell/ShellUiContext'
 
 export type ExchangeCardData = {
@@ -16,22 +17,6 @@ export type BillingBlock =
   | { kind: 'trial' }
   | { kind: 'active'; planLabel: string }
   | { kind: 'grace' }
-
-const PLAN_LABEL: Record<(typeof PLAN_KEYS)[number], string> = {
-  starter: 'Starter',
-  growth: 'Growth',
-  scale: 'Scale',
-}
-const PLAN_PRICE: Record<(typeof PLAN_KEYS)[number], string> = {
-  starter: '$299',
-  growth: '$499',
-  scale: '$599',
-}
-const PLAN_CAP_LABEL: Record<(typeof PLAN_KEYS)[number], string> = {
-  starter: '2 échanges',
-  growth: '6 échanges',
-  scale: 'Échanges illimités',
-}
 
 const PHASE_LABEL: Record<1 | 2, string> = {
   1: 'Phase 1 · Recrutement',
@@ -56,14 +41,14 @@ function PlanTiles() {
                 POPULAIRE
               </span>
             )}
-            <div className="font-display text-[17px] font-bold">{PLAN_LABEL[key]}</div>
+            <div className="font-display text-[17px] font-bold">{PLAN_LABEL_FR[key]}</div>
             <div>
-              <span className="text-navy font-semibold text-lg">{PLAN_PRICE[key]}</span>{' '}
+              <span className="text-navy font-semibold text-lg">{PLAN_PRICE_FR[key]}</span>{' '}
               <span className="text-muted-foreground text-[12.5px]">/ an</span>
             </div>
-            <div className="text-[13.5px] text-muted-foreground">{PLAN_CAP_LABEL[key]}</div>
+            <div className="text-[13.5px] text-muted-foreground">{planCapLabel(key)}</div>
             <Link href={`/billing/checkout?plan=${key}`} className={isGrowth ? PRIMARY_CTA : SECONDARY_CTA}>
-              Choisir {PLAN_LABEL[key]}
+              Choisir {PLAN_LABEL_FR[key]}
             </Link>
           </div>
         )

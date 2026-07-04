@@ -9,13 +9,13 @@ describe('ExchangesView', () => {
   it('trial state shows the banner and the three plans', () => {
     render(<ExchangesView billing={{ kind: 'trial' }} exchangesData={[ex]} atCap={false} />)
     expect(screen.getByText(/Essai gratuit — votre premier échange est offert/)).toBeInTheDocument()
-    expect(screen.getByText('Starter')).toBeInTheDocument()
+    expect(screen.getByText('Essentiel')).toBeInTheDocument()
     expect(screen.getByText('POPULAIRE')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Choisir Growth' })).toHaveAttribute('href', '/billing/checkout?plan=growth')
+    expect(screen.getByRole('link', { name: 'Choisir Association' })).toHaveAttribute('href', '/billing/checkout?plan=growth')
   })
   it('active plan state shows the manage link instead of tiles', () => {
-    render(<ExchangesView billing={{ kind: 'active', planLabel: 'Growth' }} exchangesData={[ex]} atCap={false} />)
-    expect(screen.getByText('Forfait Growth')).toBeInTheDocument()
+    render(<ExchangesView billing={{ kind: 'active', planLabel: 'Association' }} exchangesData={[ex]} atCap={false} />)
+    expect(screen.getByText('Forfait Association')).toBeInTheDocument()
     expect(screen.queryByText('POPULAIRE')).toBeNull()
   })
   it('exchange card shows name, phase tag and progress', () => {

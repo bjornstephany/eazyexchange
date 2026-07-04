@@ -5,8 +5,7 @@ import { listApplications } from '@/actions/applications'
 import { hasActivePlan, isInGrace, exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { rollupStudent, progress, type AppRow } from '@/lib/dashboard/rollup'
 import { ExchangesView, type ExchangeCardData, type BillingBlock } from '@/components/exchanges/ExchangesView'
-
-const PLAN_LABEL: Record<string, string> = { starter: 'Starter', growth: 'Growth', scale: 'Scale' }
+import { PLAN_LABEL_FR } from '@/lib/billing/display'
 
 export default async function ExchangesPage() {
   const supabase = await createClient()
@@ -69,7 +68,7 @@ export default async function ExchangesPage() {
     if (isInGrace(school as never)) {
       billing = { kind: 'grace' }
     } else if (hasActivePlan(school as never) && school.plan) {
-      billing = { kind: 'active', planLabel: PLAN_LABEL[school.plan] ?? school.plan }
+      billing = { kind: 'active', planLabel: PLAN_LABEL_FR[school.plan as keyof typeof PLAN_LABEL_FR] ?? school.plan }
     }
   }
 
