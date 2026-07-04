@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Logo } from '@/components/brand/Logo'
+import { CenteredCard } from '@/components/auth/CenteredCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function LoginPage() {
@@ -17,17 +16,16 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Surface flags set by /auth/confirm.
   useEffect(() => {
     const err = new URLSearchParams(window.location.search).get('error')
     if (err === 'invite_invalid') {
-      setError('That invite link is invalid or has expired — ask your organizer to resend it.')
+      setError('Ce lien d’invitation est invalide ou a expiré — demandez à votre organisateur de vous le renvoyer.')
     } else if (err === 'signup_failed') {
-      setError('We couldn’t finish creating your account. Please try signing up again.')
+      setError('Nous n’avons pas pu terminer la création de votre compte. Réessayez de vous inscrire.')
     } else if (err === 'oauth_failed') {
-      setError('We couldn’t sign you in with Google. Please try again.')
+      setError('La connexion avec Google a échoué. Veuillez réessayer.')
     } else if (err === 'not_invited') {
-      setError('We couldn’t match your Google account to an invitation. Use the same email your organizer invited you with, or set a password from your invite link instead.')
+      setError('Nous n’avons pas pu associer votre compte Google à une invitation. Utilisez l’adresse e-mail avec laquelle vous avez été invité, ou définissez un mot de passe depuis votre lien d’invitation.')
     }
   }, [])
 
@@ -42,35 +40,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background">
-      <Logo />
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Sign in to EazyExchange</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GoogleButton />
-          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email}
-                onChange={e => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password}
-                onChange={e => setPassword(e.target.value)} required />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <CenteredCard maxWidth={460} className="flex flex-col gap-[22px]">
+      <h3 className="m-0 font-display text-2xl font-bold tracking-[-0.02em] text-[#10203F]">Connexion</h3>
+      <GoogleButton label="Continuer avec Google" />
+      <div className="flex items-center gap-3.5 font-mono text-[13px] font-medium text-[#8A97B2]">
+        <span className="flex-1 border-t border-[#E4E9F2]" />ou<span className="flex-1 border-t border-[#E4E9F2]" />
+      </div>
+      <form onSubmit={handleLogin} className="flex flex-col gap-[22px]">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email" className="text-sm font-semibold text-[#42506E]">E-mail</Label>
+          <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required
+            className="h-[50px] rounded-[11px] border-[#C4CDE0] text-base" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password" className="text-sm font-semibold text-[#42506E]">Mot de passe</Label>
+          <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required
+            className="h-[50px] rounded-[11px] border-[#C4CDE0] text-base" />
+        </div>
+        {error && <p className="text-sm text-[#C0392B]">{error}</p>}
+        <Button type="submit" disabled={loading}
+          className="h-[50px] w-full rounded-[11px] bg-[#2456E6] text-[17px] font-semibold hover:bg-[#1D48C7]">
+          {loading ? 'Connexion…' : 'Se connecter'}
+        </Button>
+      </form>
+    </CenteredCard>
   )
 }

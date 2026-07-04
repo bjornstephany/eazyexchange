@@ -12,6 +12,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const fr = lang === 'fr'
 
   async function start() {
     setLoading(true); setError(null)
@@ -19,34 +20,40 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       const { token } = await startApplication(slug, { ...form, language: lang })
       router.push(`/apply/resume/${token}`)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong'); setLoading(false)
+      setError(e instanceof Error ? e.message : (fr ? 'Une erreur est survenue.' : 'Something went wrong')); setLoading(false)
     }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end gap-1 text-sm">
-        <button onClick={() => setLang('en')} className={lang === 'en' ? 'font-semibold underline' : 'text-muted-foreground'}>EN</button>
-        <span className="text-muted-foreground">/</span>
-        <button onClick={() => setLang('fr')} className={lang === 'fr' ? 'font-semibold underline' : 'text-muted-foreground'}>FR</button>
+    <div className="flex flex-col gap-5">
+      <div className="flex justify-end">
+        <div className="flex overflow-hidden rounded-[9px] border border-[#C4CDE0]">
+          <button type="button" onClick={() => setLang('en')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'en' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>EN</button>
+          <button type="button" onClick={() => setLang('fr')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'fr' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>FR</button>
+        </div>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="first_name">{lang === 'fr' ? 'Prénom' : 'First name'}</Label>
-        <Input id="first_name" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
+      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'Apply to join this student exchange. Start by entering your details below.'}</p>
+      <div className="flex flex-col gap-4 rounded-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="first_name" className="text-[13.5px] font-semibold text-[#42506E]">{fr ? 'Prénom' : 'First name'}</Label>
+            <Input id="first_name" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="last_name" className="text-[13.5px] font-semibold text-[#42506E]">{fr ? 'Nom' : 'Last name'}</Label>
+            <Input id="last_name" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email" className="text-[13.5px] font-semibold text-[#42506E]">E-mail</Label>
+          <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
+          <p className="m-0 text-xs text-[#8A97B2]">{fr ? 'Tu pourras compléter ta candidature maintenant ou cliquer sur « Terminer plus tard » pour recevoir par e-mail un lien pour la reprendre.' : 'You can complete your application now, or click “Finish later” to email yourself a private link to continue.'}</p>
+        </div>
+        {error && <p className="text-sm text-[#C0392B]">{error}</p>}
+        <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name} className="h-12 self-start rounded-[11px] bg-[#2456E6] px-6 text-base font-semibold hover:bg-[#1D48C7]">
+          {loading ? '…' : (fr ? 'Commencer ma candidature' : 'Start my application')}
+        </Button>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="last_name">{lang === 'fr' ? 'Nom' : 'Last name'}</Label>
-        <Input id="last_name" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="email">E-mail</Label>
-        <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-        <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Vous pourrez compléter votre candidature maintenant ou cliquer sur « Terminer plus tard » pour recevoir par e-mail un lien pour la reprendre.' : "You can complete your application now, or click “Finish later” to email yourself a private link to continue."}</p>
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name}>
-        {loading ? '…' : (lang === 'fr' ? 'Commencer ma candidature' : 'Start my application')}
-      </Button>
     </div>
   )
 }

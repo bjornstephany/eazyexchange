@@ -5,8 +5,8 @@ import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/brand/Logo'
+import { AuthCard } from '@/components/auth/AuthCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function SignupPage() {
@@ -22,13 +22,11 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-
     const name = fullName.trim()
     const school = schoolName.trim()
     const cleanEmail = normalizeEmail(email)
-    if (!name || !school) { setError('Please fill in all fields.'); return }
-    if (!isValidEmail(cleanEmail)) { setError('Please enter a valid email address.'); return }
-
+    if (!name || !school) { setError('Veuillez remplir tous les champs.'); return }
+    if (!isValidEmail(cleanEmail)) { setError('Veuillez saisir une adresse e-mail valide.'); return }
     setLoading(true)
     const { error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
@@ -39,69 +37,63 @@ export default function SignupPage() {
       },
     })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
-
     setSubmitted(true)
     setLoading(false)
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background">
-        <Logo />
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Check your email</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              We sent a confirmation link to your email. Click it to finish setting up your account.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-[#EEF1F7] px-4 py-10">
+        <Logo href="/" />
+        <AuthCard maxWidth={460} className="flex flex-col gap-3">
+          <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Vérifiez votre e-mail</h3>
+          <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">Nous avons envoyé un lien de confirmation à votre adresse e-mail. Cliquez dessus pour finaliser la création de votre compte.</p>
+        </AuthCard>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background">
-      <Logo />
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Create your EazyExchange account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GoogleButton intent="organizer_signup" next="/dashboard" label="Sign up with Google" />
-          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+    <div className="flex min-h-screen items-center justify-center bg-[#EEF1F7] px-4 py-10">
+      <div className="flex w-full max-w-[860px] flex-col items-center gap-[60px] md:flex-row md:items-center">
+        <div className="flex w-full flex-col gap-5 md:w-[340px]">
+          <Logo href="/" />
+          <h3 className="m-0 font-display text-[30px] font-bold leading-[1.2] tracking-[-0.02em] text-[#10203F]">Organisez vos échanges scolaires sans tableur.</h3>
+          <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">Candidatures, formulaires et dossiers élèves — au même endroit, pour les deux établissements.</p>
+          <span className="font-mono text-[13px] font-medium text-[#8A97B2]">ESSAI GRATUIT · 1 ÉCHANGE</span>
+        </div>
+        <AuthCard maxWidth={460} className="flex flex-col gap-4">
+          <h3 className="m-0 mb-1 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Créer votre compte</h3>
+          <GoogleButton intent="organizer_signup" next="/dashboard" label="S’inscrire avec Google" />
+          <div className="flex items-center gap-3.5 font-mono text-xs font-medium text-[#8A97B2]">
+            <span className="flex-1 border-t border-[#E4E9F2]" />ou<span className="flex-1 border-t border-[#E4E9F2]" />
           </div>
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" value={fullName}
-                onChange={e => setFullName(e.target.value)} required />
+          <form onSubmit={handleSignup} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
+                <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="schoolName" className="text-[13px] font-semibold text-[#42506E]">Établissement</Label>
+                <Input id="schoolName" value={schoolName} onChange={e => setSchoolName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="schoolName">School name</Label>
-              <Input id="schoolName" value={schoolName}
-                onChange={e => setSchoolName(e.target.value)} required />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email" className="text-[13px] font-semibold text-[#42506E]">E-mail</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email}
-                onChange={e => setEmail(e.target.value)} required />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password" className="text-[13px] font-semibold text-[#42506E]">Mot de passe</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="8 caractères minimum" className="h-11 rounded-[10px] border-[#C4CDE0]" />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password}
-                onChange={e => setPassword(e.target.value)} required minLength={8} />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account…' : 'Create account'}
+            {error && <p className="text-sm text-[#C0392B]">{error}</p>}
+            <Button type="submit" disabled={loading} className="h-11 w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">
+              {loading ? 'Création…' : 'Créer mon compte'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </AuthCard>
+      </div>
     </div>
   )
 }
