@@ -11,21 +11,21 @@ describe('LoginPage error banner (French)', () => {
   it('surfaces the signup_failed message', async () => {
     window.history.pushState({}, '', '/login?error=signup_failed')
     render(<LoginPage />)
-    expect(await screen.findByText(/pas pu terminer la creation/i)).toBeInTheDocument()
+    expect(await screen.findByText(/pas pu terminer la création/i)).toBeInTheDocument()
   })
   it('surfaces the invite_invalid message', async () => {
     window.history.pushState({}, '', '/login?error=invite_invalid')
     render(<LoginPage />)
-    expect(await screen.findByText(/invitation est invalide ou a expire/i)).toBeInTheDocument()
+    expect(await screen.findByText(/invitation est invalide ou a expiré/i)).toBeInTheDocument()
   })
   it('surfaces the oauth_failed message', async () => {
     window.history.pushState({}, '', '/login?error=oauth_failed')
     render(<LoginPage />)
-    expect(await screen.findByText(/connexion avec google a echoue/i)).toBeInTheDocument()
+    expect(await screen.findByText(/connexion avec google a échoué/i)).toBeInTheDocument()
   })
   it('surfaces the not_invited message', async () => {
     window.history.pushState({}, '', '/login?error=not_invited')
     render(<LoginPage />)
-    expect(await screen.findByText(/associer votre compte google a une invitation/i)).toBeInTheDocument()
+    expect(await screen.findByText(/associer votre compte google à une invitation/i)).toBeInTheDocument()
   })
 })

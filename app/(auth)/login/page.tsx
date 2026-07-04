@@ -19,13 +19,13 @@ export default function LoginPage() {
   useEffect(() => {
     const err = new URLSearchParams(window.location.search).get('error')
     if (err === 'invite_invalid') {
-      setError('Ce lien d\'invitation est invalide ou a expire — demandez a votre organisateur de vous le renvoyer.')
+      setError('Ce lien d’invitation est invalide ou a expiré — demandez à votre organisateur de vous le renvoyer.')
     } else if (err === 'signup_failed') {
-      setError('Nous n\'avons pas pu terminer la creation de votre compte. Reessayez de vous inscrire.')
+      setError('Nous n’avons pas pu terminer la création de votre compte. Réessayez de vous inscrire.')
     } else if (err === 'oauth_failed') {
-      setError('La connexion avec Google a echoue. Veuillez reessayer.')
+      setError('La connexion avec Google a échoué. Veuillez réessayer.')
     } else if (err === 'not_invited') {
-      setError('Nous n\'avons pas pu associer votre compte Google a une invitation. Utilisez l\'adresse e-mail avec laquelle vous avez ete invite, ou definissez un mot de passe depuis votre lien d\'invitation.')
+      setError('Nous n’avons pas pu associer votre compte Google à une invitation. Utilisez l’adresse e-mail avec laquelle vous avez été invité, ou définissez un mot de passe depuis votre lien d’invitation.')
     }
   }, [])
 
