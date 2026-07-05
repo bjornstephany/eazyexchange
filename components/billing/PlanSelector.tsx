@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { PLAN_KEYS, type PlanKey } from '@/lib/billing/plans'
-import { PLAN_LABEL_FR, planCapLabel } from '@/lib/billing/display'
+import { PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel } from '@/lib/billing/display'
 
 export function PlanSelector() {
   const [selected, setSelected] = useState<PlanKey>('growth')
@@ -22,6 +22,7 @@ export function PlanSelector() {
                 <span className="absolute -top-2.5 left-4 rounded-full bg-[#2456E6] px-2.5 py-[3px] font-mono text-[11px] font-semibold tracking-[0.08em] text-white">POPULAIRE</span>
               )}
               <span className="font-display text-[17px] font-bold tracking-[-0.02em] text-[#10203F]">{PLAN_LABEL_FR[key]}</span>
+              <span className="text-[15px] font-semibold text-[#10203F]">{PLAN_PRICE_FR[key]} <span className="text-[13px] font-normal text-[#5B6B8C]">/ an</span></span>
               <span className="text-[13.5px] text-[#5B6B8C]">{planCapLabel(key)}</span>
             </button>
           )

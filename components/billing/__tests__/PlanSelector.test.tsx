@@ -15,4 +15,10 @@ describe('PlanSelector', () => {
     await user.click(screen.getByText('Essentiel'))
     expect(screen.getByRole('link', { name: /continuer avec Essentiel/i })).toBeInTheDocument()
   })
+  it('shows the yearly price for each tier', () => {
+    render(<PlanSelector />)
+    expect(screen.getByText('199 €')).toBeInTheDocument()
+    expect(screen.getByText('499 €')).toBeInTheDocument()
+    expect(screen.getByText('799 €')).toBeInTheDocument()
+  })
 })
