@@ -21,6 +21,7 @@ import { applicantName } from '@/lib/application-form'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { PhaseStepper } from '@/components/dashboard/PhaseStepper'
 import { StudentDrawer, type DrawerSubject } from '@/components/dashboard/StudentDrawer'
+import { InviteModal } from '@/components/dashboard/InviteModal'
 
 export type OverviewProps = {
   exchangeId: string
@@ -29,6 +30,9 @@ export type OverviewProps = {
   rollups: DossierRollup[]
   templates: TemplateInfo[]
   cellMap: CellMap
+  applicationOpen: boolean
+  applicationDeadline: string | null
+  applySlug: string
 }
 
 // Labels for filter keys that only exist on action cards, not as funnel tiles.
@@ -58,9 +62,10 @@ function checklistItemPill(group: 'form' | 'doc', status: string | undefined): P
 }
 
 export function OverviewView(props: OverviewProps) {
-  const { exchangeId, phase, apps, rollups, templates, cellMap } = props
+  const { exchangeId, phase, apps, rollups, templates, cellMap, applicationOpen, applicationDeadline, applySlug } = props
   const [filter, setFilter] = useState<string | null>(null)
   const [selected, setSelected] = useState<DrawerSubject | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   function studentSubject(rollup: DossierRollup): DrawerSubject {
     const items = templates.map((t) => {
@@ -69,6 +74,28 @@ export function OverviewView(props: OverviewProps) {
       return { label: t.name, group, pill: checklistItemPill(group, status) }
     })
     return { kind: 'student', rollup, items }
+  }
+
+  const neverOpened = phase === 1 && !applicationOpen && applicationDeadline == null
+  if (neverOpened) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+        <h1 className="font-display text-[26px] font-bold tracking-tight text-navy">
+          Commencez votre échange
+        </h1>
+        <p className="mt-2 max-w-[420px] text-[15px] text-muted-foreground">
+          Commencez votre échange en invitant vos élèves à postuler.
+        </p>
+        <button
+          type="button"
+          onClick={() => setInviteOpen(true)}
+          className="mt-6 flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
+        >
+          <span className="text-base leading-none">+</span> Inviter vos élèves à postuler
+        </button>
+        <InviteModal exchangeId={exchangeId} applySlug={applySlug} open={inviteOpen} onOpenChange={setInviteOpen} />
+      </div>
+    )
   }
 
   const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
