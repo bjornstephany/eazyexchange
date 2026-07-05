@@ -56,7 +56,7 @@ describe('provisionOrganizer', () => {
   it('creates a school and organizer profile when none exists', async () => {
     const result = await provisionOrganizer(baseUser)
     expect(result).toEqual({ ok: true })
-    expect(admin.calls.schoolsInserted).toEqual([{ name: 'Lincoln High' }])
+    expect(admin.calls.schoolsInserted).toEqual([{ name: '' }])
     expect(admin.calls.usersInserted).toEqual([
       { id: 'u1', school_id: 'school-1', role: 'organizer', org_role: 'owner', full_name: 'Jane Doe', email: 'org@example.com' },
     ])
@@ -77,7 +77,7 @@ describe('provisionOrganizer', () => {
     expect(admin.calls.schoolsDeleted).toEqual(['school-1'])
   })
 
-  it('fails without creating anything when metadata is missing', async () => {
+  it('fails without creating anything when the full name is missing', async () => {
     const result = await provisionOrganizer({ id: 'u1', email: 'a@b.com', user_metadata: {} })
     expect(result).toEqual({ ok: false, reason: 'missing_metadata' })
     expect(admin.calls.schoolsInserted).toEqual([])

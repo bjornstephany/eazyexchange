@@ -24,7 +24,6 @@ function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
       activeExchangeId="ex1"
       organizerName="Marie Bernard"
       schoolName="Lycée Mistral"
-      needsSchoolName={false}
     >
       <p>page</p>
     </OrganizerShell>
@@ -34,7 +33,7 @@ function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
 describe('OrganizerShell', () => {
   it('renders the French rail items when an exchange is active', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -45,7 +44,7 @@ describe('OrganizerShell', () => {
 
   it('rail points at the session-scoped top-level routes', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -56,7 +55,7 @@ describe('OrganizerShell', () => {
 
   it('Échanges stays visible with zero exchanges', () => {
     render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -66,7 +65,7 @@ describe('OrganizerShell', () => {
 
   it('hides Candid. but offers creation when no exchanges exist', () => {
     render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -76,7 +75,7 @@ describe('OrganizerShell', () => {
 
   it('shows organizer initials and the session name', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -86,7 +85,7 @@ describe('OrganizerShell', () => {
 
   it('falls back to the first exchange when activeExchangeId matches none (stale data)', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -96,7 +95,7 @@ describe('OrganizerShell', () => {
 
   it('dismisses the session selector panel on outside click', () => {
     render(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
@@ -155,7 +154,6 @@ describe('OrganizerShell', () => {
         activeExchangeId="ex1"
         organizerName="Marie Bernard"
         schoolName="Lycée Mistral"
-        needsSchoolName={false}
       >
         <p>page</p>
       </OrganizerShell>
@@ -173,7 +171,7 @@ describe('OrganizerShell', () => {
   it('Réglages stays visible with zero exchanges but Élèves does not', () => {
     mockPathname = '/dashboard'
     render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" needsSchoolName={false}>
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )

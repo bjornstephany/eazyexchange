@@ -65,30 +65,19 @@ const base = { name: 'France–Canada', year: '2026', school_b_name: 'Partner Ly
 
 beforeEach(() => { opts = {} })
 
-describe('createExchange deferred school name', () => {
-  it('persists the organizer school name on the first exchange when it is empty', async () => {
+describe('createExchange own-school fetch', () => {
+  it('creates the exchange without ever renaming the organizer school', async () => {
     opts = { ownSchoolName: '' }
-    await createExchange(form({ ...base, school_a_name: 'Lincoln High' }))
-    expect(calls.schoolUpdated).toEqual({ name: 'Lincoln High' })
+    await createExchange(form(base))
+    expect(calls.schoolUpdated).toBeNull()
     expect(calls.partnerInserted).toEqual({ name: 'Partner Lycée' })
     expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada', year: 2026, school_a_id: 's-own', school_b_id: 's-partner' })
     expect(calls.fromTables).toContain('form_templates')
   })
 
-  it('throws when the school name is empty and none was provided', async () => {
-    opts = { ownSchoolName: '' }
-    await expect(createExchange(form(base))).rejects.toThrow('Veuillez renseigner le nom de votre établissement')
-  })
-
-  it('does not touch the school name when it is already set', async () => {
-    opts = { ownSchoolName: 'Existing High' }
-    await createExchange(form({ ...base, school_a_name: 'Ignored' }))
-    expect(calls.schoolUpdated).toBeNull()
-  })
-
   it('surfaces a read error instead of silently proceeding', async () => {
     opts = { ownSchoolError: { message: 'db down' } }
-    await expect(createExchange(form({ ...base, school_a_name: 'Lincoln High' }))).rejects.toThrow('db down')
+    await expect(createExchange(form(base))).rejects.toThrow('db down')
     expect(calls.schoolUpdated).toBeNull()
     expect(calls.exchangeInserted).toBeNull()
   })

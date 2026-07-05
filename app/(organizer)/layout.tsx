@@ -17,6 +17,9 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   const supabase = await createClient()
 
   const school = profile?.schools ?? null
+  // Hard gate: no organizer page renders with an empty school name. A fresh
+  // organizer (email/password or Google) lands here and is sent to onboarding.
+  if (school && school.name === '') redirect('/onboarding')
   const showGrace = school ? isInGrace(school as never) : false
 
   const { data: exchangeRows } = await supabase
@@ -37,7 +40,6 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       activeExchangeId={active?.id ?? null}
       organizerName={profile.full_name}
       schoolName={school?.name ?? ''}
-      needsSchoolName={school?.name === ''}
     >
       {showGrace && <PaymentWarningBanner />}
       {children}

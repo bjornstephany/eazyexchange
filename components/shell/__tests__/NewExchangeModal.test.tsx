@@ -35,7 +35,7 @@ describe('NewExchangeModal', () => {
   })
 
   it('renders the French form', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} needsSchoolName={false} />)
+    render(<NewExchangeModal open onOpenChange={() => {}} />)
     expect(screen.getByText('Nouvel échange')).toBeInTheDocument()
     expect(screen.getByLabelText("Nom de l'échange")).toBeInTheDocument()
     expect(screen.getByLabelText('Année')).toBeInTheDocument()
@@ -44,15 +44,10 @@ describe('NewExchangeModal', () => {
     expect(screen.getByRole('button', { name: "Créer l'échange" })).toBeInTheDocument()
   })
 
-  it('shows the school-name field when needed', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} needsSchoolName />)
-    expect(screen.getByLabelText('Votre établissement')).toBeInTheDocument()
-  })
-
   it('shows the French error and keeps the dialog open with the submit button re-enabled on failed submit', async () => {
     createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
@@ -65,7 +60,7 @@ describe('NewExchangeModal', () => {
   it('shows the upgrade CTA link when the limit error is hit', async () => {
     createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
@@ -77,7 +72,7 @@ describe('NewExchangeModal', () => {
   it('does not show the upgrade CTA link for other errors', async () => {
     createExchange.mockRejectedValueOnce(new Error('Autre erreur'))
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
@@ -89,7 +84,7 @@ describe('NewExchangeModal', () => {
   it('closes the dialog and navigates to the dashboard on successful submit', async () => {
     createExchange.mockResolvedValueOnce(undefined)
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
@@ -103,15 +98,15 @@ describe('NewExchangeModal', () => {
     createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
     const onOpenChange = vi.fn()
     const { rerender } = render(
-      <NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />
+      <NewExchangeModal open onOpenChange={onOpenChange} />
     )
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
     expect(await screen.findByText(LIMIT_ERROR)).toBeInTheDocument()
 
-    rerender(<NewExchangeModal open={false} onOpenChange={onOpenChange} needsSchoolName={false} />)
-    rerender(<NewExchangeModal open onOpenChange={onOpenChange} needsSchoolName={false} />)
+    rerender(<NewExchangeModal open={false} onOpenChange={onOpenChange} />)
+    rerender(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     expect(screen.queryByText(LIMIT_ERROR)).toBeNull()
   })
