@@ -11,7 +11,6 @@ import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
-  const [schoolName, setSchoolName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -23,16 +22,15 @@ export default function SignupPage() {
     e.preventDefault()
     setError(null)
     const name = fullName.trim()
-    const school = schoolName.trim()
     const cleanEmail = normalizeEmail(email)
-    if (!name || !school) { setError('Veuillez remplir tous les champs.'); return }
+    if (!name) { setError('Veuillez remplir tous les champs.'); return }
     if (!isValidEmail(cleanEmail)) { setError('Veuillez saisir une adresse e-mail valide.'); return }
     setLoading(true)
     const { error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
-        data: { full_name: name, school_name: school },
+        data: { full_name: name },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       },
     })
@@ -69,15 +67,9 @@ export default function SignupPage() {
             <span className="flex-1 border-t border-[#E4E9F2]" />ou<span className="flex-1 border-t border-[#E4E9F2]" />
           </div>
           <form onSubmit={handleSignup} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
-                <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="schoolName" className="text-[13px] font-semibold text-[#42506E]">Établissement</Label>
-                <Input id="schoolName" value={schoolName} onChange={e => setSchoolName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
-              </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
+              <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-[13px] font-semibold text-[#42506E]">E-mail</Label>

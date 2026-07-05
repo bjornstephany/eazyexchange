@@ -11,11 +11,15 @@ import SignupPage from '@/app/(auth)/signup/page'
 beforeEach(() => { signUp.mockClear() })
 
 describe('SignupPage (French)', () => {
-  it('submits signUp with name + school and shows the check-email state', async () => {
+  it('does not render an Établissement field', () => {
+    render(<SignupPage />)
+    expect(screen.queryByLabelText(/établissement/i)).toBeNull()
+  })
+
+  it('submits signUp with only the full name and shows the check-email state', async () => {
     const user = userEvent.setup()
     render(<SignupPage />)
     await user.type(screen.getByLabelText(/nom complet/i), 'Jane Doe')
-    await user.type(screen.getByLabelText(/établissement/i), 'Lincoln High')
     await user.type(screen.getByLabelText(/e-mail/i), 'jane@example.com')
     await user.type(screen.getByLabelText(/mot de passe/i), 'supersecret')
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }))
@@ -23,7 +27,7 @@ describe('SignupPage (French)', () => {
     expect(signUp).toHaveBeenCalledTimes(1)
     const arg = signUp.mock.calls[0][0]
     expect(arg.email).toBe('jane@example.com')
-    expect(arg.options.data).toEqual({ full_name: 'Jane Doe', school_name: 'Lincoln High' })
+    expect(arg.options.data).toEqual({ full_name: 'Jane Doe' })
     expect(await screen.findByText(/vérifiez votre e-mail/i)).toBeInTheDocument()
   })
 
@@ -31,7 +35,6 @@ describe('SignupPage (French)', () => {
     const user = userEvent.setup()
     render(<SignupPage />)
     await user.type(screen.getByLabelText(/nom complet/i), 'Jane')
-    await user.type(screen.getByLabelText(/établissement/i), 'Lincoln')
     await user.type(screen.getByLabelText(/e-mail/i), 'a@b')
     await user.type(screen.getByLabelText(/mot de passe/i), 'supersecret')
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }))
