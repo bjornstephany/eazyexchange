@@ -249,7 +249,9 @@ export async function listApplications(exchangeId: string) {
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data, error } = await supabase
     .from('applications')
-    .select('*')
+    // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
+    // Avoids shipping the private resume_token / invite_token to the browser.
+    .select('id, status, submitted_at, data, email')
     .eq('exchange_id', exchangeId)
     .neq('status', 'draft')
     .order('submitted_at', { ascending: false })
