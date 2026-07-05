@@ -65,14 +65,12 @@ export function OrganizerShell({
   activeExchangeId,
   organizerName,
   schoolName,
-  needsSchoolName,
   children,
 }: {
   exchanges: ExchangeOption[]
   activeExchangeId: string | null
   organizerName: string
   schoolName: string
-  needsSchoolName: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -262,7 +260,6 @@ export function OrganizerShell({
       <NewExchangeModal
         open={newExchangeOpen}
         onOpenChange={setNewExchangeOpen}
-        needsSchoolName={needsSchoolName}
       />
     </div>
   )

@@ -43,9 +43,7 @@ export async function createExchange(formData: FormData) {
     throw new Error("Veuillez renseigner le nom de l'échange, l'année et l'établissement partenaire")
   }
 
-  // Deferred school-name capture: organizers who signed up with Google start
-  // with an empty school name (nothing displays it until their first exchange).
-  // Collect and persist it now, alongside the partner-school name.
+  // Fetch the school's subscription state for the plan cap check below.
   const { data: ownSchool, error: ownSchoolError } = await supabase
     .from('schools')
     .select('name, subscription_status, plan, grace_until')
@@ -61,14 +59,6 @@ export async function createExchange(formData: FormData) {
   if (countError) throw countError
   if (ownSchool && !canCreateExchange(ownSchool, count ?? 0)) {
     throw new Error("Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter.")
-  }
-
-  if (ownSchool && ownSchool.name === '') {
-    const schoolAName = (formData.get('school_a_name') as string ?? '').trim()
-    if (!schoolAName) throw new Error('Veuillez renseigner le nom de votre établissement')
-    const { error: renameError } = await supabase
-      .from('schools').update({ name: schoolAName }).eq('id', profile.school_id)
-    if (renameError) throw renameError
   }
 
   // Always create a fresh partner-school record. Never bind to an existing

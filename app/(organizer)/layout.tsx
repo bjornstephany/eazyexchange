@@ -40,7 +40,6 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       activeExchangeId={active?.id ?? null}
       organizerName={profile.full_name}
       schoolName={school?.name ?? ''}
-      needsSchoolName={school?.name === ''}
     >
       {showGrace && <PaymentWarningBanner />}
       {children}

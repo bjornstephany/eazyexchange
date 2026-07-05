@@ -19,11 +19,9 @@ const LIMIT_ERROR = "Vous avez atteint la limite d'échanges de votre offre. Abo
 export function NewExchangeModal({
   open,
   onOpenChange,
-  needsSchoolName,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  needsSchoolName: boolean
 }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -90,12 +88,6 @@ export function NewExchangeModal({
               />
             </div>
           </div>
-          {needsSchoolName && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="school_a_name">Votre établissement</Label>
-              <Input id="school_a_name" name="school_a_name" required className="h-12" />
-            </div>
-          )}
           {error && (
             <div className="flex flex-col gap-1.5">
               <p className="text-sm text-danger-text">{error}</p>
