@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createExchange } from '@/actions/exchanges'
 import {
   Dialog,
@@ -13,8 +12,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-
-const LIMIT_ERROR = "Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter."
 
 export function NewExchangeModal({
   open,
@@ -39,11 +36,24 @@ export function NewExchangeModal({
     setLoading(true)
     setError(null)
     try {
-      await createExchange(new FormData(e.currentTarget))
-      onOpenChange(false)
-      router.push('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      const result = await createExchange(new FormData(e.currentTarget))
+      if (result.ok) {
+        onOpenChange(false)
+        router.push('/dashboard')
+        return
+      }
+      if (result.error === 'limit') {
+        // At the plan's exchange cap — send them straight to the offers page.
+        onOpenChange(false)
+        router.push('/billing')
+        return
+      }
+      // Invalid input (expected): show it inline, keep the dialog open.
+      setError(result.message)
+    } catch {
+      // Genuinely unexpected failure. In production Next.js redacts the thrown
+      // message, so surface a clean generic one rather than the opaque digest.
+      setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
@@ -88,16 +98,7 @@ export function NewExchangeModal({
               />
             </div>
           </div>
-          {error && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-sm text-danger-text">{error}</p>
-              {error === LIMIT_ERROR && (
-                <Link href="/billing" className="text-sm font-semibold text-brand hover:text-brand-hover">
-                  Voir les offres →
-                </Link>
-              )}
-            </div>
-          )}
+          {error && <p className="text-sm text-danger-text">{error}</p>}
           <div className="mt-1.5 flex justify-end gap-3">
             <Button
               type="button"

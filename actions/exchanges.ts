@@ -5,6 +5,11 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
 import { canCreateExchange } from '@/lib/billing/limits'
+import {
+  EXCHANGE_LIMIT_MESSAGE,
+  EXCHANGE_INVALID_MESSAGE,
+  type CreateExchangeResult,
+} from '@/lib/billing/exchange-limit'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { seedStandardTemplates } from '@/lib/forms/standard-library'
 import { sendPhase2ChecklistEmail } from '@/lib/email'
@@ -28,7 +33,7 @@ export async function getExchanges() {
   return (data ?? []) as any[]
 }
 
-export async function createExchange(formData: FormData) {
+export async function createExchange(formData: FormData): Promise<CreateExchangeResult> {
   const supabase = await createClient()
   const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
@@ -40,7 +45,9 @@ export async function createExchange(formData: FormData) {
   const year = parseInt(formData.get('year') as string)
   const schoolBName = (formData.get('school_b_name') as string ?? '').trim()
   if (!name || !schoolBName || Number.isNaN(year)) {
-    throw new Error("Veuillez renseigner le nom de l'échange, l'année et l'établissement partenaire")
+    // Expected outcome, not an exception: return so the client can show it.
+    // A thrown message would be redacted in production (see exchange-limit.ts).
+    return { ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE }
   }
 
   // Fetch the school's subscription state for the plan cap check below.
@@ -58,7 +65,8 @@ export async function createExchange(formData: FormData) {
     .eq('school_a_id', profile.school_id)
   if (countError) throw countError
   if (ownSchool && !canCreateExchange(ownSchool, count ?? 0)) {
-    throw new Error("Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter.")
+    // Expected cap outcome — return so the modal can redirect to /billing.
+    return { ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE }
   }
 
   // Always create a fresh partner-school record. Never bind to an existing
@@ -101,6 +109,8 @@ export async function createExchange(formData: FormData) {
 
   // The shell's exchange selector (layout data) must pick up the new exchange.
   revalidatePath('/', 'layout')
+
+  return { ok: true }
 }
 
 // Confirm the caller's school participates in the exchange. Returns the

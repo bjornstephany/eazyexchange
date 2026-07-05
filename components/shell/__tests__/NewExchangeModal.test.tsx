@@ -14,8 +14,7 @@ const createExchange = vi.fn()
 vi.mock('@/actions/exchanges', () => ({ createExchange: (...args: unknown[]) => createExchange(...args) }))
 
 import { NewExchangeModal } from '@/components/shell/NewExchangeModal'
-
-const LIMIT_ERROR = "Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter."
+import { EXCHANGE_LIMIT_MESSAGE, EXCHANGE_INVALID_MESSAGE } from '@/lib/billing/exchange-limit'
 
 async function fillRequiredFields() {
   const user = userEvent.setup()
@@ -44,45 +43,47 @@ describe('NewExchangeModal', () => {
     expect(screen.getByRole('button', { name: "Créer l'échange" })).toBeInTheDocument()
   })
 
-  it('shows the French error and keeps the dialog open with the submit button re-enabled on failed submit', async () => {
-    createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
+  it('shows an invalid-input error inline and keeps the dialog open with the submit button re-enabled', async () => {
+    createExchange.mockResolvedValueOnce({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
 
-    expect(await screen.findByText(LIMIT_ERROR)).toBeInTheDocument()
+    expect(await screen.findByText(EXCHANGE_INVALID_MESSAGE)).toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
     expect(screen.getByRole('button', { name: "Créer l'échange" })).not.toBeDisabled()
   })
 
-  it('shows the upgrade CTA link when the limit error is hit', async () => {
-    createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
+  it('redirects to /billing when the plan cap is hit', async () => {
+    createExchange.mockResolvedValueOnce({ ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE })
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
 
-    const cta = await screen.findByRole('link', { name: /Voir les offres/ })
-    expect(cta).toHaveAttribute('href', '/billing')
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/billing'))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    // The redacted cap message must not linger on screen.
+    expect(screen.queryByText(EXCHANGE_LIMIT_MESSAGE)).toBeNull()
   })
 
-  it('does not show the upgrade CTA link for other errors', async () => {
-    createExchange.mockRejectedValueOnce(new Error('Autre erreur'))
+  it('shows a clean generic message when the action throws unexpectedly', async () => {
+    createExchange.mockRejectedValueOnce(new Error('redacted in prod anyway'))
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
 
-    expect(await screen.findByText('Autre erreur')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Voir les offres/ })).toBeNull()
+    expect(await screen.findByText('Une erreur est survenue. Veuillez réessayer.')).toBeInTheDocument()
+    expect(onOpenChange).not.toHaveBeenCalledWith(false)
   })
 
   it('closes the dialog and navigates to the dashboard on successful submit', async () => {
-    createExchange.mockResolvedValueOnce(undefined)
+    createExchange.mockResolvedValueOnce({ ok: true })
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
@@ -95,7 +96,7 @@ describe('NewExchangeModal', () => {
   })
 
   it('clears a stale error when the dialog is closed and reopened', async () => {
-    createExchange.mockRejectedValueOnce(new Error(LIMIT_ERROR))
+    createExchange.mockResolvedValueOnce({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     const onOpenChange = vi.fn()
     const { rerender } = render(
       <NewExchangeModal open onOpenChange={onOpenChange} />
@@ -103,11 +104,11 @@ describe('NewExchangeModal', () => {
 
     const user = await fillRequiredFields()
     await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
-    expect(await screen.findByText(LIMIT_ERROR)).toBeInTheDocument()
+    expect(await screen.findByText(EXCHANGE_INVALID_MESSAGE)).toBeInTheDocument()
 
     rerender(<NewExchangeModal open={false} onOpenChange={onOpenChange} />)
     rerender(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
-    expect(screen.queryByText(LIMIT_ERROR)).toBeNull()
+    expect(screen.queryByText(EXCHANGE_INVALID_MESSAGE)).toBeNull()
   })
 })

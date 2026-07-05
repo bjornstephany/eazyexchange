@@ -54,6 +54,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ set: vi.fn() }) }))
 
 import { createExchange } from '../exchanges'
+import { EXCHANGE_LIMIT_MESSAGE, EXCHANGE_INVALID_MESSAGE } from '@/lib/billing/exchange-limit'
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData()
@@ -90,9 +91,10 @@ describe('createExchange plan cap', () => {
     expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
   })
 
-  it('blocks a trial school at 1 exchange', async () => {
+  it('blocks a trial school at 1 exchange with a limit result (never throws)', async () => {
     opts = { exchangeCount: 1 }
-    await expect(createExchange(form(base))).rejects.toThrow(/limite d'échanges/i)
+    const result = await createExchange(form(base))
+    expect(result).toEqual({ ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE })
     expect(calls.exchangeInserted).toBeNull()
   })
 
@@ -102,8 +104,24 @@ describe('createExchange plan cap', () => {
     expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
   })
 
-  it('blocks a Starter school at 2 exchanges', async () => {
+  it('blocks a Starter school at 2 exchanges with a limit result', async () => {
     opts = { exchangeCount: 2, subStatus: 'active', plan: 'starter' }
-    await expect(createExchange(form(base))).rejects.toThrow(/limite d'échanges/i)
+    const result = await createExchange(form(base))
+    expect(result).toEqual({ ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE })
+    expect(calls.exchangeInserted).toBeNull()
+  })
+
+  it('returns ok on a successful create', async () => {
+    opts = { exchangeCount: 0 }
+    const result = await createExchange(form(base))
+    expect(result).toEqual({ ok: true })
+  })
+})
+
+describe('createExchange validation', () => {
+  it('returns an invalid result for missing fields instead of throwing', async () => {
+    const result = await createExchange(form({ name: '', year: '', school_b_name: '' }))
+    expect(result).toEqual({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
+    expect(calls.exchangeInserted).toBeNull()
   })
 })
