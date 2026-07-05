@@ -11,7 +11,12 @@ export const dynamic = 'force-dynamic'
 
 const capLabel = (n: number) => (n === Infinity ? 'illimités' : String(n))
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: { error?: string }
+}) {
+  const unavailable = searchParams?.error === 'unavailable'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -31,6 +36,11 @@ export default async function BillingPage() {
 
   return (
     <CenteredCard maxWidth={640} className="flex flex-col gap-[22px]">
+      {unavailable && (
+        <p className="m-0 rounded-[11px] bg-[#FDECEA] px-4 py-3 text-sm text-[#C0392B]">
+          Le paiement en ligne est momentanément indisponible. Merci de réessayer plus tard.
+        </p>
+      )}
       <div>
         <h3 className="m-0 mb-1.5 font-display text-2xl font-bold tracking-[-0.02em] text-[#10203F]">Offres &amp; facturation</h3>
         {active && school?.plan ? (

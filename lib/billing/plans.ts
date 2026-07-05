@@ -24,6 +24,12 @@ export function priceIdForPlan(plan: PlanKey): string {
   return id
 }
 
+// Server-only: has this plan's Stripe price been configured? Lets callers
+// degrade gracefully (redirect back to /billing) instead of hitting the throw.
+export function hasPriceForPlan(plan: PlanKey): boolean {
+  return Boolean(process.env[PRICE_ENV[plan]])
+}
+
 // Precedence: explicit ?plan= query → school's stored plan → signup metadata → default.
 export function resolveCheckoutPlan(input: {
   query?: string | null

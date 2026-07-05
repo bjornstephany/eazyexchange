@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import {
   PLAN_KEYS, DEFAULT_PLAN, isPlanKey, coercePlan, resolveCheckoutPlan,
+  hasPriceForPlan, priceIdForPlan,
 } from '@/lib/billing/plans'
 
 describe('plans', () => {
@@ -26,5 +27,26 @@ describe('plans', () => {
     expect(resolveCheckoutPlan({ query: null, schoolPlan: 'scale', metadataPlan: 'growth' })).toBe('scale')
     expect(resolveCheckoutPlan({ query: 'bad', schoolPlan: null, metadataPlan: 'starter' })).toBe('starter')
     expect(resolveCheckoutPlan({ query: null, schoolPlan: null, metadataPlan: null })).toBe('growth')
+  })
+
+  describe('hasPriceForPlan / priceIdForPlan', () => {
+    const KEY = 'STRIPE_PRICE_STARTER'
+    const original = process.env[KEY]
+    afterEach(() => {
+      if (original === undefined) delete process.env[KEY]
+      else process.env[KEY] = original
+    })
+
+    it('hasPriceForPlan is false when the price env is unset', () => {
+      delete process.env[KEY]
+      expect(hasPriceForPlan('starter')).toBe(false)
+      expect(() => priceIdForPlan('starter')).toThrow(/Missing Stripe price/)
+    })
+
+    it('hasPriceForPlan is true and priceIdForPlan returns the id when set', () => {
+      process.env[KEY] = 'price_test_123'
+      expect(hasPriceForPlan('starter')).toBe(true)
+      expect(priceIdForPlan('starter')).toBe('price_test_123')
+    })
   })
 })
