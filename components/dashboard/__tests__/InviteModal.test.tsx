@@ -46,7 +46,7 @@ describe('InviteModal', () => {
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
   })
 
-  it('closing from the link step shows a warning, then closes and refreshes on confirm', async () => {
+  it('closing from the link step shows a warning, then closes on confirm', async () => {
     const onOpenChange = setup()
     fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir les candidatures' }))
@@ -58,7 +58,7 @@ describe('InviteModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fermer quand même' }))
     expect(onOpenChange).toHaveBeenCalledWith(false)
-    expect(refresh).toHaveBeenCalled()
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it('cancelling the warning keeps the modal on the link step', async () => {

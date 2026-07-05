@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
-import { createServerClient } from '@supabase/ssr'
-import type { Database } from '@/types/db'
 
 export async function middleware(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request)
+  const { supabaseResponse, user, supabase } = await updateSession(request)
   const { pathname } = request.nextUrl
 
   // /auth/* are server-side verification handlers — never gate or bounce them,
@@ -27,11 +25,6 @@ export async function middleware(request: NextRequest) {
 
   if (user && isAuthRoute) {
     // Fetch role + setup state to redirect correctly
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
-    )
     const { data: profile } = await supabase
       .from('users').select('role, full_name').eq('id', user.id)
       .single<{ role: string; full_name: string | null }>()

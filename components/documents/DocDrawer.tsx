@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
 import { reqPill, progressLabel, docDrawerRows, type TemplateVM } from '@/lib/forms/rollup'
@@ -17,7 +16,6 @@ export function DocDrawer({
   enrolledStudents: { id: string; full_name: string }[]
   onClose: () => void
 }) {
-  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [picking, setPicking] = useState(false)
@@ -42,7 +40,7 @@ export function DocDrawer({
   async function run(fn: () => Promise<unknown>) {
     setBusy(true)
     setError(null)
-    try { await fn(); router.refresh() } catch (err) {
+    try { await fn() } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     }
     setBusy(false)
@@ -60,7 +58,6 @@ export function DocDrawer({
     try {
       const res = await remindTemplate(vm!.id)
       setRemindResult(res)
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     }

@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createDraftTemplate } from '@/actions/forms'
 
 type Mode = 'pdf' | 'online'
@@ -14,7 +13,6 @@ export function AddFormPanel({
   onClose: () => void
   onCreated: (id: string) => void
 }) {
-  const router = useRouter()
   const [mode, setMode] = useState<Mode | null>(null)
   const [name, setName] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -35,7 +33,6 @@ export function AddFormPanel({
       if (deadline) fd.set('deadline', deadline)
       if (mode === 'pdf' && file) fd.set('file', file)
       const id = await createDraftTemplate(fd)
-      router.refresh()
       onCreated(id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')

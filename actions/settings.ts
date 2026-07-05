@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -20,10 +21,9 @@ import type Stripe from 'stripe'
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
 
 async function getOrganizerCtx(supabase: SupabaseClient): Promise<OrganizerCtx> {
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role, org_role, email, full_name').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   return {
     userId: user.id, schoolId: profile.school_id,
@@ -292,7 +292,7 @@ export async function archiveExchange(exchangeId: string): Promise<void> {
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: new Date().toISOString() }).eq('id', exchangeId)
   if (error) throw new Error('Le programme n’a pas pu être archivé. Réessayez.')
-  revalidatePath('/settings'); revalidatePath('/dashboard')
+  revalidatePath('/', 'layout')
 }
 
 export async function restoreExchange(exchangeId: string): Promise<void> {
@@ -303,6 +303,6 @@ export async function restoreExchange(exchangeId: string): Promise<void> {
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: null }).eq('id', exchangeId)
   if (error) throw new Error('Le programme n’a pas pu être restauré. Réessayez.')
-  revalidatePath('/settings'); revalidatePath('/dashboard')
+  revalidatePath('/', 'layout')
 }
 

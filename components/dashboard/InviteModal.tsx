@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { setApplicationOpen } from '@/actions/exchanges'
 import {
   Dialog,
@@ -24,7 +23,6 @@ export function InviteModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const router = useRouter()
   const [step, setStep] = useState<'deadline' | 'link'>('deadline')
   const [deadline, setDeadline] = useState('')
   const [saving, setSaving] = useState(false)
@@ -60,7 +58,6 @@ export function InviteModal({
 
   function close() {
     onOpenChange(false)
-    router.refresh()
   }
 
   // Every close path (X, Escape, backdrop, explicit button) routes here so the

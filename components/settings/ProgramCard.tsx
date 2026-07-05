@@ -1,18 +1,16 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { archiveExchange, restoreExchange, type ProgramInfo } from '@/actions/settings'
 import { frShortDate, p } from '@/lib/dashboard/rollup'
 
 export function ProgramCard({ program }: { program: ProgramInfo }) {
-  const router = useRouter()
   const [modal, setModal] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(null)
-    try { await fn(); router.refresh() }
+    try { await fn() }
     catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue.') }
     setBusy(false)
   }

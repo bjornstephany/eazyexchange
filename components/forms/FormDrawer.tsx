@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from './TemplateIcon'
 import { typePill, statusPill, type TemplateVM } from '@/lib/forms/rollup'
@@ -9,7 +8,6 @@ import { activateTemplate, deleteTemplate, getTemplateFileUrl } from '@/actions/
 
 // Right preview drawer (460px) for a form template, per handoff.
 export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: () => void }) {
-  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -28,7 +26,6 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
     setError(null)
     try {
       await fn()
-      router.refresh()
       if (closeAfter) onClose()
       else setBusy(false)
     } catch (err) {

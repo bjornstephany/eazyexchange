@@ -1,6 +1,7 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
@@ -230,9 +231,8 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 
 // ---- Organizer actions (authenticated, RLS-enforced) ----
 
-async function assertOrganizerOwnsApplication(supabase: any, userId: string, applicationId: string) {
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', userId).single()
+async function assertOrganizerOwnsApplication(supabase: any, applicationId: string) {
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data: app } = await supabase
     .from('applications').select('*').eq('id', applicationId).maybeSingle()
@@ -243,10 +243,9 @@ async function assertOrganizerOwnsApplication(supabase: any, userId: string, app
 
 export async function listApplications(exchangeId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { data: profile } = await supabase
-    .from('users').select('role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data, error } = await supabase
     .from('applications')
@@ -260,9 +259,9 @@ export async function listApplications(exchangeId: string) {
 
 export async function getApplicationForReview(applicationId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const application = await assertOrganizerOwnsApplication(supabase, user.id, applicationId)
+  const application = await assertOrganizerOwnsApplication(supabase, applicationId)
 
   let photoUrl: string | null = null
   if (application.photo_path) {
@@ -278,9 +277,9 @@ export async function getApplicationForReview(applicationId: string) {
 
 export async function acceptApplication(applicationId: string): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const app = await assertOrganizerOwnsApplication(supabase, user.id, applicationId)
+  const app = await assertOrganizerOwnsApplication(supabase, applicationId)
   if (app.status !== 'submitted' && app.status !== 'rejected') {
     throw new Error('Only a submitted application can be accepted')
   }
@@ -301,13 +300,15 @@ export async function acceptApplication(applicationId: string): Promise<void> {
     respondUrl: `${APP_URL}/invite/${inviteToken}`,
   }).catch(() => {})
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
+  revalidatePath('/applications')
+  revalidatePath('/dashboard')
 }
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const app = await assertOrganizerOwnsApplication(supabase, user.id, applicationId)
+  const app = await assertOrganizerOwnsApplication(supabase, applicationId)
   // Never reject an application that has already enrolled (which would leave the
   // student's account, enrollment and assignments live while showing rejected),
   // nor one that was never submitted / already declined.
@@ -330,6 +331,8 @@ export async function rejectApplication(applicationId: string, note: string, sen
     }).catch(() => {})
   }
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
+  revalidatePath('/applications')
+  revalidatePath('/dashboard')
 }
 
 // ---- Public invitation response (keyed by invite_token) ----

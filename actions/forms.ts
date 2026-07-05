@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FieldType } from '@/types/db'
@@ -8,18 +9,17 @@ import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
-async function assertOrganizer(supabase: SupabaseClient, userId: string): Promise<string> {
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', userId).single()
+async function assertOrganizer(supabase: SupabaseClient): Promise<string> {
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   return profile.school_id as string
 }
 
 // Throw unless the caller is an organizer for the school that owns the template.
 async function assertOrganizerOwnsTemplate(
-  supabase: SupabaseClient, userId: string, templateId: string,
+  supabase: SupabaseClient, templateId: string,
 ): Promise<{ exchangeId: string }> {
-  const schoolId = await assertOrganizer(supabase, userId)
+  const schoolId = await assertOrganizer(supabase)
   const { data: tmpl } = await supabase
     .from('form_templates').select('school_id, exchange_id').eq('id', templateId).maybeSingle()
   if (!tmpl || tmpl.school_id !== schoolId) throw new Error('Unauthorized')
@@ -28,9 +28,9 @@ async function assertOrganizerOwnsTemplate(
 
 export async function getTemplate(id: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsTemplate(supabase, user.id, id)
+  await assertOrganizerOwnsTemplate(supabase, id)
 
   const { data, error } = await supabase
     .from('form_templates')
@@ -45,9 +45,9 @@ export async function getTemplate(id: string) {
 
 export async function addField(templateId: string, label: string, fieldType: FieldType, required: boolean, options?: string[]) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, user.id, templateId)
+  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, templateId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: existing } = await supabase
@@ -58,27 +58,27 @@ export async function addField(templateId: string, label: string, fieldType: Fie
     required, options: options ?? null, order: nextOrder,
   })
   if (error) throw error
-  revalidatePath(`/exchanges`)
+  revalidatePath('/exchanges', 'layout')
 }
 
 export async function removeField(fieldId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
   const { data: field } = await supabase
     .from('form_fields').select('template_id').eq('id', fieldId).maybeSingle()
   if (!field) throw new Error('Field not found')
-  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, user.id, field.template_id)
+  const { exchangeId } = await assertOrganizerOwnsTemplate(supabase, field.template_id)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase.from('form_fields').delete().eq('id', fieldId)
   if (error) throw error
-  revalidatePath(`/exchanges`)
+  revalidatePath('/exchanges', 'layout')
 }
 
 // Fetch a template the caller's school owns (with fields), or throw.
-async function getOwnedTemplate(supabase: SupabaseClient, userId: string, templateId: string) {
-  const schoolId = await assertOrganizer(supabase, userId)
+async function getOwnedTemplate(supabase: SupabaseClient, templateId: string) {
+  const schoolId = await assertOrganizer(supabase)
   const { data: tmpl } = await supabase
     .from('form_templates')
     .select('id, exchange_id, school_id, name, kind, status, audience, deadline, standard_key, condition_label, template_file_path, form_fields(id)')
@@ -107,9 +107,9 @@ async function uploadTemplatePdf(supabase: SupabaseClient, schoolId: string, tem
 
 export async function createDraftTemplate(formData: FormData): Promise<string> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const schoolId = await assertOrganizer(supabase, user.id)
+  const schoolId = await assertOrganizer(supabase)
 
   const exchangeId = formData.get('exchange_id') as string
   await assertExchangeWritable(supabase, exchangeId)
@@ -163,7 +163,7 @@ export async function createDraftTemplate(formData: FormData): Promise<string> {
     throw err
   }
 
-  revalidatePath(kind === 'doc' ? '/documents' : '/forms')
+  revalidatePath(kind === 'doc' ? '/documents' : '/forms', 'layout')
   return templateId
 }
 
@@ -172,9 +172,9 @@ export async function updateTemplateMeta(
   meta: { name: string; description: string | null; deadline: string | null; condition_label: string | null },
 ): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
 
   const name = meta.name.trim()
@@ -188,16 +188,16 @@ export async function updateTemplateMeta(
     condition_label: tmpl.audience === 'conditional' ? (meta.condition_label?.trim() || null) : null,
   }).eq('id', id)
   if (error) throw error
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms')
+  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
 }
 
 export async function replaceTemplateFile(formData: FormData): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
   const id = formData.get('template_id') as string
   const file = formData.get('file') as File | null
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.kind !== 'pdf') throw new Error('Ce modèle n’a pas de PDF.')
   if (!file || file.size === 0) throw new Error('Choisissez un fichier PDF.')
@@ -205,14 +205,14 @@ export async function replaceTemplateFile(formData: FormData): Promise<void> {
   const path = await uploadTemplatePdf(supabase, tmpl.school_id, id, file)
   const { error } = await supabase.from('form_templates').update({ template_file_path: path }).eq('id', id)
   if (error) throw error
-  revalidatePath('/forms')
+  revalidatePath('/forms', 'layout')
 }
 
 export async function activateTemplate(id: string, studentIds?: string[]): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.status === 'active') return
 
@@ -253,14 +253,14 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
     await notifyIncompleteAssignees(supabase, { ...tmpl, status: 'active' }, exchange.name, 0)
   }
 
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms')
+  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.standard_key) throw new Error('Les modèles standard ne peuvent pas être supprimés.')
 
@@ -291,7 +291,7 @@ export async function deleteTemplate(id: string): Promise<void> {
   }
   const { error } = await supabase.from('form_templates').delete().eq('id', id)
   if (error) throw error
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms')
+  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
 }
 
 const REMIND_COOLDOWN_MS = 24 * 3600 * 1000
@@ -334,9 +334,9 @@ async function notifyIncompleteAssignees(
 
 export async function remindTemplate(id: string): Promise<{ reminded: number; skipped: number; failed: number }> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
   if (tmpl.status !== 'active') throw new Error('Activez le modèle avant de relancer.')
   const { data: exchange } = await supabase
@@ -346,9 +346,9 @@ export async function remindTemplate(id: string): Promise<{ reminded: number; sk
 
 export async function getTemplateFileUrl(id: string): Promise<string> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const tmpl = await getOwnedTemplate(supabase, user.id, id)
+  const tmpl = await getOwnedTemplate(supabase, id)
   if (!tmpl.template_file_path) throw new Error('Aucun PDF pour ce modèle.')
   const { data, error } = await supabase.storage
     .from('form-templates')
@@ -365,9 +365,9 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
   exchangeName: string
 }> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const schoolId = await assertOrganizer(supabase, user.id)
+  const schoolId = await assertOrganizer(supabase)
 
   const { data: exchange } = await supabase
     .from('exchanges').select('name, phase, school_a_id, school_b_id').eq('id', exchangeId).maybeSingle()

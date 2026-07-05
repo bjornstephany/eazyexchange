@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { redirect } from 'next/navigation'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications'
@@ -8,23 +8,10 @@ import { ExchangesView, type ExchangeCardData, type BillingBlock } from '@/compo
 import { PLAN_LABEL_FR } from '@/lib/billing/display'
 
 export default async function ExchangesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('school_id, schools(name, subscription_status, plan, grace_until)')
-    .eq('id', user.id)
-    .single<{
-      school_id: string
-      schools: {
-        name: string
-        subscription_status: string | null
-        plan: string | null
-        grace_until: string | null
-      } | null
-    }>()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
 
   const school = profile.schools ?? null

@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CellMap } from '@/lib/dashboard/rollup'
@@ -13,10 +14,9 @@ import { assertExchangeWritable } from '@/lib/exchange-guard'
 // Throw unless the caller is an organizer whose school is on this exchange.
 // Returns the school id. (Same shape as getTemplatesPage's scope check.)
 async function assertOrganizerInExchange(
-  supabase: SupabaseClient, userId: string, exchangeId: string,
+  supabase: SupabaseClient, exchangeId: string,
 ): Promise<string> {
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', userId).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data: exchange } = await supabase
     .from('exchanges').select('school_a_id, school_b_id').eq('id', exchangeId).maybeSingle()
@@ -28,9 +28,9 @@ async function assertOrganizerInExchange(
 
 export async function getStudentsDirectory(exchangeId: string): Promise<{ students: StudentVM[] }> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const schoolId = await assertOrganizerInExchange(supabase, user.id, exchangeId)
+  const schoolId = await assertOrganizerInExchange(supabase, exchangeId)
 
   const [{ data: templates }, { data: enrollments }] = await Promise.all([
     supabase
@@ -105,9 +105,9 @@ export async function remindStudent(
   exchangeId: string, studentId: string,
 ): Promise<{ reminded: boolean; skipped: boolean }> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const schoolId = await assertOrganizerInExchange(supabase, user.id, exchangeId)
+  const schoolId = await assertOrganizerInExchange(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: student } = await supabase

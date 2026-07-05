@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { setExchangePhase } from '@/actions/exchanges'
 
 const STEPS: { n: 1 | 2; title: string; kicker: string }[] = [
@@ -19,7 +18,6 @@ export function PhaseStepper({
 }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
@@ -29,7 +27,6 @@ export function PhaseStepper({
     setError(null)
     try {
       await setExchangePhase(exchangeId, n)
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     } finally {

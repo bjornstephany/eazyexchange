@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import type { AppRow, DossierRollup, Pill } from '@/lib/dashboard/rollup'
 import { timelineFor, frShortDate, p1StatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
@@ -30,7 +29,6 @@ function initials(name: string): string {
 }
 
 export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | null; onClose: () => void }) {
-  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState(false)
@@ -75,7 +73,6 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
     setError(null)
     try {
       await acceptApplication(drawerSubject.app.id)
-      router.refresh()
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
@@ -89,7 +86,6 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
     setError(null)
     try {
       await rejectApplication(drawerSubject.app.id, note, sendEmail)
-      router.refresh()
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')

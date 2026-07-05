@@ -1,15 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { StudentTopBar } from '@/components/student/StudentTopBar'
 import { getStudentContext } from '@/actions/student-context'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users').select('role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (profile?.role !== 'student') redirect('/dashboard')
 
   const ctx = await getStudentContext()

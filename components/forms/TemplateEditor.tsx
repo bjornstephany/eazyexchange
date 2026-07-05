@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { statusPill } from '@/lib/forms/rollup'
 import { updateTemplateMeta, replaceTemplateFile, getTemplateFileUrl } from '@/actions/forms'
@@ -19,7 +18,6 @@ export function TemplateEditor({
   backHref: string
   backLabel: string
 }) {
-  const router = useRouter()
   const [name, setName] = useState(template.name)
   const [description, setDescription] = useState(template.description ?? '')
   const [deadline, setDeadline] = useState(template.deadline ? template.deadline.slice(0, 10) : '')
@@ -41,7 +39,6 @@ export function TemplateEditor({
         deadline: deadline || null,
         condition_label: template.audience === 'conditional' ? (conditionLabel.trim() || null) : null,
       })
-      router.refresh()
       setSaved(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
@@ -59,7 +56,6 @@ export function TemplateEditor({
       fd.set('template_id', template.id)
       fd.set('file', file)
       await replaceTemplateFile(fd)
-      router.refresh()
       setFile(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')

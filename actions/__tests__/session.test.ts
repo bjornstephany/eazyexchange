@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const set = vi.fn()
 vi.mock('next/headers', () => ({ cookies: async () => ({ set }) }))
+const revalidatePath = vi.fn()
+vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }))
 
 import { setActiveExchange } from '@/actions/session'
 
@@ -15,5 +17,6 @@ describe('setActiveExchange', () => {
       'ex-123',
       expect.objectContaining({ path: '/', httpOnly: true, sameSite: 'lax' })
     )
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
   })
 })

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { isInGrace } from '@/lib/billing/limits'
@@ -7,26 +8,13 @@ import { OrganizerShell, type ExchangeOption } from '@/components/shell/Organize
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 
 export default async function OrganizerLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, full_name, school_id, schools(name, subscription_status, plan, grace_until)')
-    .eq('id', user.id)
-    .single<{
-      role: string
-      full_name: string
-      school_id: string
-      schools: {
-        name: string
-        subscription_status: string | null
-        plan: string | null
-        grace_until: string | null
-      } | null
-    }>()
+  const profile = await getProfile()
   if (profile?.role !== 'organizer') redirect('/my-forms')
+
+  const supabase = await createClient()
 
   const school = profile?.schools ?? null
   const showGrace = school ? isInGrace(school as never) : false
