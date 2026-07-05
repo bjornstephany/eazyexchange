@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 const activate = vi.fn().mockResolvedValue(undefined)
 const remind = vi.fn().mockResolvedValue({ reminded: 2, skipped: 1, failed: 0 })
+const del = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/forms', () => ({
   createDraftTemplate: vi.fn().mockResolvedValue('new-id'),
   activateTemplate: (...a: unknown[]) => activate(...a),
-  deleteTemplate: vi.fn().mockResolvedValue(undefined),
+  deleteTemplate: (...a: unknown[]) => del(...a),
   remindTemplate: (...a: unknown[]) => remind(...a),
 }))
 import { DocsView } from '@/components/documents/DocsView'
@@ -59,5 +60,17 @@ describe('DocsView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
     await screen.findByRole('button', { name: 'Activer' })
     expect(activate).toHaveBeenCalledWith('d2', ['s1'])
+  })
+  it('shows Supprimer only for custom documents', () => {
+    const { rerender } = render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
+    expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
+    rerender(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
+  })
+  it('deletes a custom document when the confirm is accepted', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
+    await waitFor(() => expect(del).toHaveBeenCalledWith('d1'))
   })
 })
