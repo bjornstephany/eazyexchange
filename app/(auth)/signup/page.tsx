@@ -58,7 +58,7 @@ export default function SignupPage() {
       <div className="flex w-full max-w-[860px] flex-col items-center gap-[60px] md:flex-row md:items-center">
         <div className="flex w-full flex-col gap-5 md:w-[340px]">
           <Logo href="/" />
-          <h3 className="m-0 font-display text-[30px] font-bold leading-[1.2] tracking-[-0.02em] text-[#10203F]">Organisez vos échanges scolaires sans tableur.</h3>
+          <h3 className="m-0 font-display text-[30px] font-bold leading-[1.2] tracking-[-0.02em] text-[#10203F]">Organisez vos échanges scolaires facilement.</h3>
           <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">Candidatures, formulaires et dossiers élèves — au même endroit, pour les deux établissements.</p>
           <span className="font-mono text-[13px] font-medium text-[#8A97B2]">ESSAI GRATUIT · 1 ÉCHANGE</span>
         </div>
