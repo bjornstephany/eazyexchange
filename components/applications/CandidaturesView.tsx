@@ -5,6 +5,7 @@ import type { AppRow } from '@/lib/dashboard/rollup'
 import { p1StatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 import { acceptApplications, rejectApplications } from '@/actions/applications'
+import { setApplicationOpen } from '@/actions/exchanges'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 
 type TabKey = 'all' | 'toreview' | 'accepted' | 'rejected'
@@ -28,9 +29,24 @@ function matchesTab(a: AppRow, key: TabKey): boolean {
   }
 }
 
-export function CandidaturesView({ apps, exchangeName }: { apps: AppRow[]; exchangeName: string }) {
+export function CandidaturesView({
+  apps,
+  exchangeName,
+  exchangeId,
+  applicationOpen,
+  applicationDeadline,
+}: {
+  apps: AppRow[]
+  exchangeName: string
+  exchangeId: string
+  applicationOpen: boolean
+  applicationDeadline: string | null
+}) {
   const router = useRouter()
   const [tab, setTab] = useState<TabKey>('all')
+  const [open, setOpen] = useState(applicationOpen)
+  const [deadline, setDeadline] = useState(applicationDeadline ?? '')
+  const [savingState, setSavingState] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [rejecting, setRejecting] = useState(false)
@@ -80,14 +96,62 @@ export function CandidaturesView({ apps, exchangeName }: { apps: AppRow[]; excha
     }
   }
 
+  async function toggleOpen() {
+    const next = !open
+    setSavingState(true)
+    try {
+      await setApplicationOpen(exchangeId, next, deadline || null)
+      setOpen(next)
+      router.refresh()
+    } finally {
+      setSavingState(false)
+    }
+  }
+
+  async function changeDeadline(next: string) {
+    setDeadline(next)
+    setSavingState(true)
+    try {
+      await setApplicationOpen(exchangeId, open, next || null)
+      router.refresh()
+    } finally {
+      setSavingState(false)
+    }
+  }
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold text-navy">Candidatures</h1>
-      <p className="text-sm text-muted-foreground mb-5">
+      <p className="text-sm text-muted-foreground mb-4">
         {apps.length === 0
-          ? "Aucune candidature reçue pour le moment — partagez le lien de candidature depuis la page de l'échange."
+          ? 'Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.'
           : `${apps.length} candidature${p(apps.length)} reçue${p(apps.length)} pour ${exchangeName}.`}
       </p>
+
+      <div className="flex flex-wrap items-center gap-4 bg-card border rounded-[11px] px-4 py-2.5 mb-5">
+        <button
+          type="button"
+          disabled={savingState}
+          onClick={toggleOpen}
+          className={`flex items-center gap-1.5 rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold disabled:opacity-60 ${
+            open ? 'bg-tint text-tint-text' : 'bg-subtle text-muted-foreground'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${open ? 'bg-tint-text' : 'bg-muted-foreground'}`} />
+          {open ? 'Ouvert' : 'Fermé'}
+        </button>
+        <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
+          <span id="candidatures-deadline-label">Échéance</span>
+          <input
+            aria-labelledby="candidatures-deadline-label"
+            type="date"
+            value={deadline}
+            disabled={savingState}
+            onChange={(e) => changeDeadline(e.target.value)}
+            className="h-[34px] rounded-[8px] border px-2.5 text-[13px]"
+          />
+        </label>
+      </div>
 
       <div className="flex gap-1.5 bg-subtle rounded-[11px] p-1 w-fit mb-4">
         {TABS.map(t => {

@@ -23,5 +23,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   const apps: AppRow[] = applications.map((a: any) => ({
     id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
   }))
-  return <CandidaturesView apps={apps} exchangeName={active.name} />
+  return (
+    <CandidaturesView
+      apps={apps}
+      exchangeName={active.name}
+      exchangeId={active.id}
+      applicationOpen={!!active.application_open}
+      applicationDeadline={active.application_deadline ?? null}
+    />
+  )
 }
