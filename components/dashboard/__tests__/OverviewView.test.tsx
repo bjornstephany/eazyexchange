@@ -4,6 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }) }))
 vi.mock('@/actions/exchanges', () => ({ setExchangePhase: vi.fn() }))
 vi.mock('@/actions/applications', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
+vi.mock('@/components/dashboard/InviteModal', () => ({
+  InviteModal: ({ open }: { open: boolean }) => (open ? <div>invite-modal</div> : null),
+}))
 
 import { OverviewView } from '@/components/dashboard/OverviewView'
 import type { AppRow } from '@/lib/dashboard/rollup'
@@ -12,7 +15,7 @@ const apps: AppRow[] = [
   { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
   { id: '2', status: 'enrolled', submitted_at: '2026-09-10', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
 ]
-const base = { exchangeId: 'ex1', apps, rollups: [], templates: [], cellMap: {} }
+const base = { exchangeId: 'ex1', apps, rollups: [], templates: [], cellMap: {}, applicationOpen: true, applicationDeadline: '2026-09-01', applySlug: 'france-canada' }
 
 describe('OverviewView phase 1', () => {
   it('renders heading, funnel counts and table rows', () => {
@@ -48,6 +51,25 @@ describe('OverviewView phase 1', () => {
     fireEvent.click(chip)
     expect(screen.getByText('Inès Petit')).toBeInTheDocument()
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
+  })
+
+  it('shows the empty-state CTA when applications have never opened', () => {
+    render(<OverviewView {...base} phase={1} apps={[]} applicationOpen={false} applicationDeadline={null} />)
+    expect(screen.getByRole('heading', { name: /Commencez votre échange/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ })).toBeInTheDocument()
+    expect(screen.queryByText("Vue d'ensemble")).toBeNull()
+  })
+
+  it('CTA opens the invite modal', () => {
+    render(<OverviewView {...base} phase={1} apps={[]} applicationOpen={false} applicationDeadline={null} />)
+    fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
+    expect(screen.getByText('invite-modal')).toBeInTheDocument()
+  })
+
+  it('shows the normal overview once applications are open, even with zero applicants', () => {
+    render(<OverviewView {...base} phase={1} apps={[]} applicationOpen applicationDeadline="2026-09-01" />)
+    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.queryByText(/Commencez votre échange/)).toBeNull()
   })
 })
 
