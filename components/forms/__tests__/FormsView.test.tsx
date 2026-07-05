@@ -5,10 +5,11 @@ const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
 const createDraft = vi.fn().mockResolvedValue('new-id')
 const activate = vi.fn().mockResolvedValue(undefined)
+const del = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/forms', () => ({
   createDraftTemplate: (...a: unknown[]) => createDraft(...a),
   activateTemplate: (...a: unknown[]) => activate(...a),
-  deleteTemplate: vi.fn().mockResolvedValue(undefined),
+  deleteTemplate: (...a: unknown[]) => del(...a),
   getTemplateFileUrl: vi.fn().mockResolvedValue('https://signed.example/x.pdf'),
 }))
 import { FormsView } from '@/components/forms/FormsView'
@@ -70,5 +71,21 @@ describe('FormsView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
     await screen.findByRole('button', { name: 'Activer' })
     expect(activate).toHaveBeenCalledWith('d1', undefined)
+  })
+  it('shows Supprimer only for custom templates', () => {
+    const { rerender } = renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />)
+    expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
+    rerender(
+      <ShellUiContext.Provider value={{ openNewExchange: vi.fn(), listSearch: '', setListSearch: vi.fn(), addRequestId: 0, requestAdd: vi.fn() }}>
+        <FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />
+      </ShellUiContext.Provider>
+    )
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
+  })
+  it('deletes a custom template when the confirm is accepted', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    renderWith(<FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
+    await waitFor(() => expect(del).toHaveBeenCalledWith('t1'))
   })
 })

@@ -9,6 +9,7 @@ import { StatsCard } from '@/components/forms/StatsCard'
 import { PageBanner } from '@/components/forms/PageBanner'
 import { AddDocPanel } from './AddDocPanel'
 import { DocDrawer } from './DocDrawer'
+import { DeleteTemplateButton } from '@/components/forms/DeleteTemplateButton'
 
 export function DocsView({
   exchangeId, templates, studentCount, enrolledStudents,
@@ -105,6 +106,10 @@ export function DocsView({
                   className="rounded-lg bg-subtle px-3.5 py-2 text-[12.5px] font-semibold text-navy">
                   Modifier
                 </a>
+                {t.standard_key === null && (
+                  <DeleteTemplateButton templateId={t.id}
+                    confirmText="Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés." />
+                )}
               </div>
             </div>
           </div>
