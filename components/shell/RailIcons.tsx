@@ -47,9 +47,10 @@ export function IconDocs() {
 
 export function IconStudents() {
   return (
-    <div className="flex gap-[2px]">
-      <div className="h-2 w-2 rounded-full bg-current" />
-      <div className="h-2 w-2 rounded-full bg-current" />
+    <div className="relative h-4 w-4 rounded-full border-[1.5px] border-current">
+      <div className="absolute left-[4px] top-[5px] h-[2px] w-[2px] rounded-full bg-current" />
+      <div className="absolute right-[4px] top-[5px] h-[2px] w-[2px] rounded-full bg-current" />
+      <div className="absolute bottom-[3px] left-1/2 h-[4px] w-[7px] -translate-x-1/2 rounded-b-full border-b-[1.5px] border-current" />
     </div>
   )
 }
