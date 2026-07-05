@@ -23,7 +23,16 @@ export default async function DashboardPage() {
   const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
 
   return (
-    <OverviewView exchangeId={active.id} phase={(active.phase ?? 1) as 1 | 2}
-      apps={apps} rollups={rollups} templates={templates} cellMap={grid.cellMap} />
+    <OverviewView
+      exchangeId={active.id}
+      phase={(active.phase ?? 1) as 1 | 2}
+      apps={apps}
+      rollups={rollups}
+      templates={templates}
+      cellMap={grid.cellMap}
+      applicationOpen={!!active.application_open}
+      applicationDeadline={active.application_deadline ?? null}
+      applySlug={active.apply_slug}
+    />
   )
 }
