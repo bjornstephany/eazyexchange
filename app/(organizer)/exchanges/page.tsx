@@ -2,10 +2,9 @@ import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { redirect } from 'next/navigation'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications'
-import { hasActivePlan, isInGrace, exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
+import { exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { rollupStudent, progress, type AppRow } from '@/lib/dashboard/rollup'
-import { ExchangesView, type ExchangeCardData, type BillingBlock } from '@/components/exchanges/ExchangesView'
-import { PLAN_LABEL_FR } from '@/lib/billing/display'
+import { ExchangesView, type ExchangeCardData } from '@/components/exchanges/ExchangesView'
 
 export default async function ExchangesPage() {
   const user = await getAuthUser()
@@ -46,21 +45,8 @@ export default async function ExchangesPage() {
     }),
   )
 
-  // isInGrace is checked first: hasActivePlan(school) is also true while a
-  // school is in its post-failure grace window (it delegates to isInGrace
-  // internally), so the grace branch must take priority or it becomes
-  // unreachable and a failed payment silently renders as "active".
-  let billing: BillingBlock = { kind: 'trial' }
-  if (school) {
-    if (isInGrace(school as never)) {
-      billing = { kind: 'grace' }
-    } else if (hasActivePlan(school as never) && school.plan) {
-      billing = { kind: 'active', planLabel: PLAN_LABEL_FR[school.plan as keyof typeof PLAN_LABEL_FR] ?? school.plan }
-    }
-  }
-
   const ownedCount = exchanges.filter((e: any) => e.school_a_id === profile.school_id).length
   const atCap = ownedCount >= (school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP)
 
-  return <ExchangesView billing={billing} exchangesData={exchangesData} atCap={atCap} />
+  return <ExchangesView exchangesData={exchangesData} atCap={atCap} />
 }

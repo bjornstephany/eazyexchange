@@ -6,27 +6,26 @@ import { ExchangesView } from '@/components/exchanges/ExchangesView'
 const ex = { id: 'e1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, pct: 40, pctLabel: '2 / 5 candidatures traitées' }
 
 describe('ExchangesView', () => {
-  it('trial state shows the banner and the three plans', () => {
-    render(<ExchangesView billing={{ kind: 'trial' }} exchangesData={[ex]} atCap={false} />)
-    expect(screen.getByText(/Essai gratuit — votre premier échange est offert/)).toBeInTheDocument()
-    expect(screen.getByText('Essentiel')).toBeInTheDocument()
-    expect(screen.getByText('POPULAIRE')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Choisir Association' })).toHaveAttribute('href', '/billing/checkout?plan=growth')
-  })
-  it('active plan state shows the manage link instead of tiles', () => {
-    render(<ExchangesView billing={{ kind: 'active', planLabel: 'Association' }} exchangesData={[ex]} atCap={false} />)
-    expect(screen.getByText('Forfait Association')).toBeInTheDocument()
+  it('renders no billing block', () => {
+    render(<ExchangesView exchangesData={[ex]} atCap={false} />)
+    expect(screen.queryByText(/Essai gratuit/)).toBeNull()
     expect(screen.queryByText('POPULAIRE')).toBeNull()
+    expect(screen.queryByText(/Forfait/)).toBeNull()
   })
   it('exchange card shows name, phase tag and progress', () => {
-    render(<ExchangesView billing={{ kind: 'trial' }} exchangesData={[ex]} atCap={false} />)
+    render(<ExchangesView exchangesData={[ex]} atCap={false} />)
     expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
     expect(screen.getByText('Phase 1 · Recrutement')).toBeInTheDocument()
     expect(screen.getByText('40%')).toBeInTheDocument()
   })
-  it('at cap swaps the create button for the plan CTA', () => {
-    render(<ExchangesView billing={{ kind: 'trial' }} exchangesData={[ex]} atCap />)
+  it('under cap: create button opens the modal (no /billing link)', () => {
+    render(<ExchangesView exchangesData={[ex]} atCap={false} />)
+    expect(screen.getByRole('button', { name: /Nouvel échange/ })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Nouvel échange/ })).toBeNull()
+  })
+  it('at cap: create button is a silent link to /billing', () => {
+    render(<ExchangesView exchangesData={[ex]} atCap />)
     expect(screen.queryByRole('button', { name: /Nouvel échange/ })).toBeNull()
-    expect(screen.getByRole('link', { name: 'Choisir un forfait' })).toHaveAttribute('href', '/billing')
+    expect(screen.getByRole('link', { name: /Nouvel échange/ })).toHaveAttribute('href', '/billing')
   })
 })
