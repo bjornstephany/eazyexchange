@@ -96,7 +96,7 @@ describe('NewExchangeModal', () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
     expect(push).toHaveBeenCalledWith('/dashboard')
-    expect(refresh).toHaveBeenCalled()
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it('clears a stale error when the dialog is closed and reopened', async () => {

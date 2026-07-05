@@ -44,7 +44,6 @@ export function NewExchangeModal({
       await createExchange(new FormData(e.currentTarget))
       onOpenChange(false)
       router.push('/dashboard')
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     } finally {

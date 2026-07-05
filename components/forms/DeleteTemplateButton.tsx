@@ -1,18 +1,16 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { deleteTemplate } from '@/actions/forms'
 
 // Row-level delete for a custom template. Reuses the drawer's window.confirm
 // pattern; the caller passes family-specific wording via confirmText. On
-// success the parent row unmounts after refresh(), so busy is not cleared.
+// success the action's revalidation unmounts the parent row, so busy is not cleared.
 export function DeleteTemplateButton({
   templateId, confirmText,
 }: {
   templateId: string
   confirmText: string
 }) {
-  const router = useRouter()
   const [busy, setBusy] = useState(false)
 
   async function handleClick() {
@@ -20,7 +18,6 @@ export function DeleteTemplateButton({
     setBusy(true)
     try {
       await deleteTemplate(templateId)
-      router.refresh()
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Une erreur est survenue.')
       setBusy(false)

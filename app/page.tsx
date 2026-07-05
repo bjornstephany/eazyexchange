@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { LandingPage } from '@/components/landing/LandingPage'
 
 export const metadata: Metadata = {
@@ -10,17 +10,10 @@ export const metadata: Metadata = {
 }
 
 export default async function RootPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (user) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const profile = await getProfile()
     redirect(profile?.role === 'organizer' ? '/dashboard' : '/my-forms')
   }
 

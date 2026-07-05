@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendRejectionEmail } from '@/lib/email'
@@ -28,7 +29,6 @@ async function assertStudentOwnsAssignment(
 async function assertOrganizerOwnsAssignment(
   supabase: SupabaseClient,
   assignmentId: string,
-  userId: string,
 ): Promise<{ exchangeId: string }> {
   const { data: ctx } = await supabase
     .from('assignments')
@@ -37,11 +37,7 @@ async function assertOrganizerOwnsAssignment(
     .maybeSingle() as any
   if (!ctx) throw new Error('Assignment not found')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('school_id, role')
-    .eq('id', userId)
-    .single()
+  const profile = await getProfile()
   if (profile?.role !== 'organizer' || profile.school_id !== ctx.form_templates.school_id) {
     throw new Error('Unauthorized')
   }
@@ -50,7 +46,7 @@ async function assertOrganizerOwnsAssignment(
 
 export async function getAssignmentDetails(assignmentId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
   const { data: assignment, error: aErr } = await supabase
@@ -85,7 +81,7 @@ export async function saveFormAnswers(
   submit: boolean
 ) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)
@@ -178,7 +174,7 @@ export async function recordDocumentUpload(
   fileName: string,
 ) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)
@@ -237,9 +233,9 @@ export async function recordDocumentUpload(
 
 export async function getSubmissionForReview(assignmentId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  await assertOrganizerOwnsAssignment(supabase, assignmentId)
 
   const { data: assignment, error: aErr } = await supabase
     .from('assignments')
@@ -288,9 +284,9 @@ export async function getSubmissionForReview(assignmentId: string) {
 
 export async function approveSubmission(assignmentId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
@@ -311,9 +307,9 @@ export async function approveSubmission(assignmentId: string) {
 
 export async function rejectSubmission(assignmentId: string, note: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId, user.id)
+  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
@@ -360,7 +356,7 @@ export async function rejectSubmission(assignmentId: string, note: string) {
 
 export async function submitDocumentAssignment(assignmentId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)

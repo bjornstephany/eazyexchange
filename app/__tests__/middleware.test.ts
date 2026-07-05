@@ -6,17 +6,14 @@ vi.mock('@/lib/supabase/middleware', () => ({
   updateSession: async (request: NextRequest) => ({
     supabaseResponse: NextResponse.next({ request }),
     user,
-  }),
-}))
-
-// Used only by middleware's logged-in isAuthRoute branch to look up role.
-vi.mock('@supabase/ssr', () => ({
-  createServerClient: () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => ({ single: async () => ({ data: { role: 'organizer', full_name: 'Org' } }) }),
+    // Used only by middleware's logged-in isAuthRoute branch to look up role.
+    supabase: {
+      from: () => ({
+        select: () => ({
+          eq: () => ({ single: async () => ({ data: { role: 'organizer', full_name: 'Org' } }) }),
+        }),
       }),
-    }),
+    },
   }),
 }))
 

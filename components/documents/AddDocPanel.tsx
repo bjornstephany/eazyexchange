@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createDraftTemplate } from '@/actions/forms'
 
 type Mode = 'all' | 'conditional'
@@ -14,7 +13,6 @@ export function AddDocPanel({
   onClose: () => void
   onCreated: (id: string) => void
 }) {
-  const router = useRouter()
   const [mode, setMode] = useState<Mode | null>(null)
   const [name, setName] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -36,7 +34,6 @@ export function AddDocPanel({
       if (deadline) fd.set('deadline', deadline)
       if (mode === 'conditional' && condition) fd.set('condition_label', condition)
       const id = await createDraftTemplate(fd)
-      router.refresh()
       onCreated(id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')

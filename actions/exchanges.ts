@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
@@ -11,11 +12,10 @@ import { assertExchangeWritable } from '@/lib/exchange-guard'
 
 export async function getExchanges() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
-  const { data: profile } = await supabase
-    .from('users').select('school_id').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile) throw new Error('No profile')
 
   const { data, error } = await supabase
@@ -30,11 +30,10 @@ export async function getExchanges() {
 
 export async function createExchange(formData: FormData) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
 
   const name = (formData.get('name') as string ?? '').trim()
@@ -110,14 +109,14 @@ export async function createExchange(formData: FormData) {
     maxAge: 60 * 60 * 24 * 365,
   })
 
-  revalidatePath('/dashboard')
+  // The shell's exchange selector (layout data) must pick up the new exchange.
+  revalidatePath('/', 'layout')
 }
 
 // Confirm the caller's school participates in the exchange. Returns the
 // caller's school_id. Throws if the exchange is out of scope.
-async function assertExchangeInScope(supabase: any, userId: string, exchangeId: string) {
-  const { data: profile } = await supabase
-    .from('users').select('school_id').eq('id', userId).single()
+async function assertExchangeInScope(supabase: any, exchangeId: string) {
+  const profile = await getProfile()
   if (!profile) throw new Error('No profile')
 
   const { data: exchange } = await supabase
@@ -134,9 +133,9 @@ async function assertExchangeInScope(supabase: any, userId: string, exchangeId: 
 
 export async function getExchange(exchangeId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  await assertExchangeInScope(supabase, user.id, exchangeId)
+  await assertExchangeInScope(supabase, exchangeId)
 
   const { data, error } = await supabase
     .from('exchanges')
@@ -150,10 +149,10 @@ export async function getExchange(exchangeId: string) {
 
 export async function getExchangeGrid(exchangeId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
-  const schoolId = await assertExchangeInScope(supabase, user.id, exchangeId)
+  const schoolId = await assertExchangeInScope(supabase, exchangeId)
   const profile = { school_id: schoolId }
 
   const [{ data: templates }, { data: enrollments }] = await Promise.all([
@@ -218,12 +217,11 @@ export async function getExchangeGrid(exchangeId: string) {
 
 export async function setApplicationOpen(exchangeId: string, open: boolean, deadline: string | null): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
-  await assertExchangeInScope(supabase, user.id, exchangeId)
+  await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase
@@ -232,17 +230,19 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
     .eq('id', exchangeId)
   if (error) throw error
   revalidatePath(`/exchanges/${exchangeId}`)
+  // Application state also drives the Candidatures page and the Aperçu.
+  revalidatePath('/applications')
+  revalidatePath('/dashboard')
 }
 
 export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promise<void> {
   if (phase !== 1 && phase !== 2) throw new Error('Invalid phase')
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', user.id).single()
+  const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
-  await assertExchangeInScope(supabase, user.id, exchangeId)
+  await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase.from('exchanges').update({ phase }).eq('id', exchangeId)
@@ -252,7 +252,8 @@ export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promis
     await sendPhase2ChecklistOnce(supabase, exchangeId, profile.school_id)
   }
 
-  revalidatePath('/dashboard')
+  // The phase pill lives in the shell (layout), so revalidate from the root.
+  revalidatePath('/', 'layout')
 }
 
 // One-shot checklist when an exchange first enters Phase 2: each enrolled

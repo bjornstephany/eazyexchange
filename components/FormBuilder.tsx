@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { addField, removeField } from '@/actions/forms'
 import type { FormField, FieldType } from '@/types/db'
 
@@ -17,7 +16,6 @@ export function FormBuilder({
   mode: 'questions' | 'checklist'
   fields: FormField[]
 }) {
-  const router = useRouter()
   const [label, setLabel] = useState('')
   const [fieldType, setFieldType] = useState<FieldType>('text')
   const [busy, setBusy] = useState(false)
@@ -26,7 +24,7 @@ export function FormBuilder({
   async function run(fn: () => Promise<unknown>) {
     setBusy(true)
     setError(null)
-    try { await fn(); router.refresh() } catch (err) {
+    try { await fn() } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     }
     setBusy(false)

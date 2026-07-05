@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { deriveName } from '@/lib/student/dossier'
 
 export interface StudentContext {
@@ -11,12 +12,11 @@ export interface StudentContext {
 
 export async function getStudentContext(): Promise<StudentContext> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
 
   // Self read only — no PII logged.
-  const { data: profile } = await supabase
-    .from('users').select('full_name').eq('id', user.id).single<{ full_name: string }>()
+  const profile = await getProfile()
   const fullName = profile?.full_name ?? ''
   const { firstName, initials } = deriveName(fullName)
 

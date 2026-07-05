@@ -1,13 +1,11 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { remindStudent } from '@/actions/students'
 import { reminderNote, type StudentVM } from '@/lib/students/directory'
 
 export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: string }) {
-  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -17,7 +15,6 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
     try {
       const res = await remindStudent(exchangeId, vm.id)
       setFlash(res.reminded ? 'Relance envoyée.' : 'Déjà relancé récemment — réessayez plus tard.')
-      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
     }

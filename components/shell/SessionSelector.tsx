@@ -40,9 +40,10 @@ export function SessionSelector({
   async function select(id: string) {
     setOpen(false)
     if (id !== active.id) {
+      // setActiveExchange revalidates the whole tree; the action response
+      // already re-renders the current page, so only navigate if needed.
       await setActiveExchange(id)
-      if (pathname === '/dashboard') router.refresh()
-      else router.push('/dashboard')
+      if (pathname !== '/dashboard') router.push('/dashboard')
     }
   }
 

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { getExchanges } from '@/actions/exchanges'
 import {
   getTeam, getBillingOverview, getProgramInfo,
@@ -12,15 +12,10 @@ import { SettingsView } from '@/components/settings/SettingsView'
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, email, org_role, schools(name)')
-    .eq('id', user.id)
-    .single<{ full_name: string; email: string; org_role: string; schools: { name: string } | null }>()
+  const profile = await getProfile()
   if (!profile) redirect('/login')
 
   const isOwner = profile.org_role === 'owner'

@@ -77,7 +77,6 @@ export function CandidaturesView({
     try {
       const result = await acceptApplications(selected)
       resetBulkUi()
-      router.refresh()
       setBulkResult(result.failed > 0 ? result : null)
     } finally {
       setBusy(false)
@@ -89,7 +88,6 @@ export function CandidaturesView({
     try {
       const result = await rejectApplications(selected, note, sendEmail)
       resetBulkUi()
-      router.refresh()
       setBulkResult(result.failed > 0 ? result : null)
     } finally {
       setBusy(false)
@@ -102,7 +100,6 @@ export function CandidaturesView({
     try {
       await setApplicationOpen(exchangeId, next, deadline || null)
       setOpen(next)
-      router.refresh()
     } finally {
       setSavingState(false)
     }
@@ -114,7 +111,6 @@ export function CandidaturesView({
     setSavingState(true)
     try {
       await setApplicationOpen(exchangeId, open, next || null)
-      router.refresh()
     } finally {
       setSavingState(false)
     }
