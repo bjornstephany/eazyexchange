@@ -223,30 +223,14 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {!isSettings && active && listPage === null && (
-            <Link
-              href={`/exchanges/${active.id}#invite`}
-              className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
-            >
-              <span className="text-base leading-none">+</span> Inviter des élèves
-            </Link>
-          )}
           {!isSettings && active && listPage === 'students' && (
-            <div className="flex items-center gap-3">
-              <input
-                type="search"
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                placeholder="Rechercher un élève…"
-                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
-              />
-              <Link
-                href={`/exchanges/${active.id}#invite`}
-                className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
-              >
-                <span className="text-base leading-none">+</span> Inviter des élèves
-              </Link>
-            </div>
+            <input
+              type="search"
+              value={listSearch}
+              onChange={(e) => setListSearch(e.target.value)}
+              placeholder="Rechercher un élève…"
+              className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
+            />
           )}
           {!isSettings && active && (listPage === 'forms' || listPage === 'docs') && (
             <div className="flex items-center gap-3">

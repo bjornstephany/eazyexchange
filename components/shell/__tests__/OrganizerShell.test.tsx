@@ -41,10 +41,6 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('Aperçu')).toBeInTheDocument()
     expect(screen.getByText('Échanges')).toBeInTheDocument()
     expect(screen.getByText('Candid.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Inviter des élèves/ })).toHaveAttribute(
-      'href',
-      '/exchanges/ex1#invite'
-    )
   })
 
   it('rail points at the session-scoped top-level routes', () => {
@@ -131,9 +127,9 @@ describe('OrganizerShell', () => {
     expect(screen.getByRole('button', { name: /Demander un document/ })).toBeInTheDocument()
   })
 
-  it('keeps the invite button elsewhere', () => {
+  it('shows no invite button on /dashboard', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByText(/Inviter des élèves/)).toBeInTheDocument()
+    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
     expect(screen.queryByPlaceholderText(/Rechercher/)).toBeNull()
   })
 
@@ -145,13 +141,10 @@ describe('OrganizerShell', () => {
     expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
   })
 
-  it('shows the students search placeholder and invite link on /students', () => {
+  it('shows the students search placeholder and no invite button on /students', () => {
     renderShell({ pathname: '/students' })
     expect(screen.getByPlaceholderText('Rechercher un élève…')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Inviter des élèves/ })).toHaveAttribute(
-      'href',
-      '/exchanges/ex1#invite'
-    )
+    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
   })
 
   it('shows an Archivé pill for an archived active exchange', () => {
