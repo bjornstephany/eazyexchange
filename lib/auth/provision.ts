@@ -49,12 +49,12 @@ async function createOrganizerAccount(
   return { ok: true }
 }
 
-// Email/password signup: full name + school name come from signup metadata.
+// Email/password signup: full name comes from signup metadata; the school name
+// is deferred (empty sentinel) and captured later on the /onboarding page —
+// identical to the Google path.
 export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
   const fullName = metaString(user.user_metadata, 'full_name')
-  const schoolName = metaString(user.user_metadata, 'school_name')
-  if (!schoolName) return { ok: false, reason: 'missing_metadata' }
-  return createOrganizerAccount(user, fullName, schoolName)
+  return createOrganizerAccount(user, fullName, '')
 }
 
 // Google signup: full name comes from the Google identity; the school name is
