@@ -53,4 +53,10 @@ describe('CandidaturesView', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ouvert/ }))
     expect(setApplicationOpen).toHaveBeenCalledWith('ex1', false, '2026-09-01')
   })
+  it('clearing the deadline is ignored (never persists a null deadline)', () => {
+    render(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" />)
+    const callsBefore = setApplicationOpen.mock.calls.length
+    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '' } })
+    expect(setApplicationOpen).toHaveBeenCalledTimes(callsBefore)
+  })
 })

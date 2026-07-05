@@ -109,6 +109,7 @@ export function CandidaturesView({
   }
 
   async function changeDeadline(next: string) {
+    if (!next) return
     setDeadline(next)
     setSavingState(true)
     try {
