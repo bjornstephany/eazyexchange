@@ -12,6 +12,37 @@ the rest are unstarted.
   complete-parent rule; conditional separation address). Photo required + nicer
   upload card. See the spec for locked decisions.
 
+## Parallel brainstorming — session split (added 2026-07-06)
+
+Run one Claude Code session per line, all in this directory. Paste the prompt
+verbatim; each session reads this file and brainstorms only its own scope.
+Boundary rule: **the « Nouvel échange » items below belong to Session B (#3)**,
+not the polish batch — collaborators-in-exchange-creation redesigns that form
+anyway. Sessions commit their spec (a distinct new file each) to the currently
+checked-out branch; that's fine, they're docs.
+
+- **Session A:** « Read docs/feedback-backlog-2026-07-06.md and brainstorm
+  sub-project 2 (UI polish batch) with superpowers:brainstorming. Skip the
+  Nouvel échange items — they belong to sub-project 3. »
+- **Session B:** « Read docs/feedback-backlog-2026-07-06.md and brainstorm
+  sub-project 3 (collaborators) with superpowers:brainstorming. Include the
+  Nouvel échange redesign items from sub-project 2 (field removals, UI). »
+- **Session C:** « Read docs/feedback-backlog-2026-07-06.md and brainstorm
+  sub-project 4 (automatic email controls + acceptance-email terms) with
+  superpowers:brainstorming. »
+- **Session D:** « Read docs/feedback-backlog-2026-07-06.md and brainstorm
+  sub-projects 5 and 6 (organizer 2FA, then the feedback widget) with
+  superpowers:brainstorming — two small specs, one after the other. »
+
+Sub-project 1 is already specced; its next step is a separate session:
+« Write the implementation plan for
+docs/superpowers/specs/2026-07-06-application-dedupe-mandatory-fields-design.md
+with writing-plans » .
+
+Parallelize brainstorming/specs only — run **plans and executions one at a
+time** (they edit real code in this shared checkout and would trample each
+other; the application work also needs its specific branch checked out).
+
 ## 2. UI polish batch (many small items, one pass)
 
 **Landing page**
