@@ -8,20 +8,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
+import { clearResumeToken } from '@/lib/apply-storage'
 
 interface Props {
   token: string
+  slug: string
   exchangeName: string
   initialData: Record<string, string>
   initialLanguage: 'en' | 'fr'
 }
 
 const T = {
-  en: { intro: 'Fill out the form below — your answers are saved automatically, you can finish later.', saved: 'SAVED ✓', saving: 'SAVING…', badge: 'Application', photo: 'Recent photo', submit: 'Submit my application', later: 'Finish later', submitting: 'Sending…', missing: 'Please complete all required fields.', unexpected: 'An unexpected error occurred.', done: 'Thank you! Your application has been submitted.', remind: "We've emailed you a link to continue your application anytime.", yes: 'Yes', no: 'No' },
-  fr: { intro: 'Remplis le formulaire ci-dessous — tes réponses sont enregistrées automatiquement, tu peux terminer plus tard.', saved: 'ENREGISTRÉ ✓', saving: 'ENREGISTREMENT…', badge: 'Candidature', photo: 'Photo récente', submit: 'Envoyer ma candidature', later: 'Terminer plus tard', submitting: 'Envoi…', missing: 'Veuillez remplir tous les champs obligatoires.', unexpected: 'Une erreur est survenue.', done: 'Merci ! Ta candidature a été envoyée.', remind: 'Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.', yes: 'Oui', no: 'Non' },
+  en: { intro: 'Fill out the form below — your answers are saved automatically, you can finish later.', saved: 'SAVED ✓', saving: 'SAVING…', badge: 'Application', photo: 'Recent photo', submit: 'Submit my application', resend: 'Resend link', reassure: 'Progress saved automatically. We emailed you a link in case you switch devices.', submitting: 'Sending…', missing: 'Please complete all required fields.', unexpected: 'An unexpected error occurred.', done: 'Thank you! Your application has been submitted.', remind: "We've emailed you a link to continue your application anytime.", yes: 'Yes', no: 'No' },
+  fr: { intro: 'Remplis le formulaire ci-dessous — tes réponses sont enregistrées automatiquement, tu peux terminer plus tard.', saved: 'ENREGISTRÉ ✓', saving: 'ENREGISTREMENT…', badge: 'Candidature', photo: 'Photo récente', submit: 'Envoyer ma candidature', resend: 'Renvoyer le lien', reassure: 'Progression enregistrée automatiquement. Nous t’avons envoyé un lien par e-mail au cas où tu changes d’appareil.', submitting: 'Envoi…', missing: 'Veuillez remplir tous les champs obligatoires.', unexpected: 'Une erreur est survenue.', done: 'Merci ! Ta candidature a été envoyée.', remind: 'Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.', yes: 'Oui', no: 'Non' },
 }
 
-export function ApplicationForm({ token, exchangeName, initialData, initialLanguage }: Props) {
+export function ApplicationForm({ token, slug, exchangeName, initialData, initialLanguage }: Props) {
   const [lang, setLang] = useState<'en' | 'fr'>(initialLanguage)
   const [data, setData] = useState<Record<string, string>>(initialData)
   const [saving, setSaving] = useState(false)
@@ -47,7 +49,7 @@ export function ApplicationForm({ token, exchangeName, initialData, initialLangu
   }
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current) }, [])
 
-  async function onFinishLater() {
+  async function onResend() {
     setReminding(true); setError(null)
     try {
       await saveApplicationDraft(token, data)
@@ -69,7 +71,7 @@ export function ApplicationForm({ token, exchangeName, initialData, initialLangu
     const missing = missingRequiredApplication(data)
     if (missing.length) { setError(t.missing); return }
     setSubmitting(true); setError(null)
-    try { await submitApplication(token, data); setDone(true) }
+    try { await submitApplication(token, data); clearResumeToken(slug); setDone(true) }
     catch (err: unknown) { setError(err instanceof Error ? err.message : t.unexpected); setSubmitting(false) }
   }
 
@@ -152,10 +154,11 @@ export function ApplicationForm({ token, exchangeName, initialData, initialLangu
 
       {error && <p className="mt-4 text-sm text-[#C0392B]">{error}</p>}
       {remindSent && <p className="mt-4 text-sm text-[#0F7A3D]">{t.remind}</p>}
+      <p className="mt-4 text-[13px] leading-relaxed text-[#8A97B2]">{t.reassure}</p>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-[#E4E9F2] bg-white">
         <div className="mx-auto flex max-w-[720px] items-center justify-between px-4 py-4">
-          <Button variant="ghost" onClick={onFinishLater} disabled={reminding || submitting} className="font-semibold text-[#5B6B8C] hover:bg-transparent hover:text-[#10203F]">{reminding ? '…' : t.later}</Button>
+          <button type="button" onClick={onResend} disabled={reminding || submitting} className="text-[13px] font-semibold text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F] disabled:opacity-50">{reminding ? '…' : t.resend}</button>
           <Button onClick={onSubmit} disabled={submitting || reminding} className="h-12 rounded-[11px] bg-[#2456E6] px-6 text-base font-semibold hover:bg-[#1D48C7]">{submitting ? t.submitting : t.submit}</Button>
         </div>
       </div>
