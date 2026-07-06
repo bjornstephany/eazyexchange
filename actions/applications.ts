@@ -88,9 +88,16 @@ export async function startApplication(
   }).select('id').single()
   if (error) throw error
 
-  // No resume email is sent here: the applicant continues straight to the form.
-  // A resume link is only emailed if they explicitly click "Finish later"
-  // (sendApplicationResumeLink), so we never mail a link they didn't ask for.
+  // Silent cross-device safety net: email the resume link the moment they start,
+  // fire-and-forget so a mail hiccup never blocks entry into the form. The
+  // same-device return path is localStorage (client-side); this covers cleared
+  // storage / a different device. Already gated by the rate limits above.
+  void sendApplicationResumeEmail({
+    to: email,
+    exchangeName: exchange.name,
+    resumeUrl: `${APP_URL}/apply/resume/${token}`,
+  }).catch(() => {})
+
   return { token }
 }
 

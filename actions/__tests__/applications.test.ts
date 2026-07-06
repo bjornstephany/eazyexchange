@@ -77,7 +77,9 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: async () => adminClient 
 vi.mock('next/headers', () => ({ headers: async () => ({ get: () => null }) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/email', () => ({
-  sendApplicationResumeEmail: vi.fn(), sendApplicationConfirmationEmail: vi.fn(),
+  // startApplication now fire-and-forgets this (.catch on the return value), so
+  // the mock must resolve like the real (async) implementation does.
+  sendApplicationResumeEmail: vi.fn().mockResolvedValue(undefined), sendApplicationConfirmationEmail: vi.fn(),
   sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
@@ -113,9 +115,12 @@ describe('startApplication', () => {
     expect(scenario.inserted.table).toBe('applications')
     expect(scenario.inserted.row.status).toBe('draft')
   })
-  it('does not email a resume link on start (only "Finish later" does that)', async () => {
+  it('fire-and-forget emails the resume link on start (cross-device safety net)', async () => {
     await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
-    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+    expect(sendApplicationResumeEmail).toHaveBeenCalledTimes(1)
+    const arg = (sendApplicationResumeEmail as any).mock.calls[0][0]
+    expect(arg.to).toBe('a@b.co')
+    expect(arg.resumeUrl).toContain('/apply/resume/')
   })
   it('rejects when the rate limit is exceeded', async () => {
     scenario.rateLimitAllowed = false
