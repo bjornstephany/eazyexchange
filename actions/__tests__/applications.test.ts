@@ -128,6 +128,11 @@ describe('startApplication', () => {
       .rejects.toThrow('Too many attempts')
     expect(scenario.inserted).toBeNull()
   })
+  it('still resolves with a token when the fire-and-forget resume email rejects', async () => {
+    (sendApplicationResumeEmail as any).mockRejectedValueOnce(new Error('mail down'))
+    await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
+      .resolves.toMatchObject({ token: expect.any(String) })
+  })
 })
 
 describe('saveApplicationDraft', () => {

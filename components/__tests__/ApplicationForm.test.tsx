@@ -28,6 +28,7 @@ describe('ApplicationForm', () => {
     expect(screen.getByRole('button', { name: /envoyer ma candidature/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /terminer plus tard/i })).not.toBeInTheDocument()
     expect(screen.getByText(/lien par e-mail/i)).toBeInTheDocument()
+    expect(screen.getByText('ENREGISTRÉ ✓')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'EN' }))
     expect(screen.getByText('Application')).toBeInTheDocument()
