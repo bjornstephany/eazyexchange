@@ -98,7 +98,7 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name)')
+    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
@@ -117,7 +117,29 @@ export async function getApplicationDraft(token: string) {
     expired: false as const, submitted: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
     photo_path: app.photo_path, exchangeName,
+    slug: (app as any).exchanges?.apply_slug ?? '',
   }
+}
+
+// Read-only "is this stored token still a live draft?" for the same-device
+// welcome-back screen. Ships only a first name + language to the browser — never
+// the rest of the draft PII. No rate limit: the caller already holds the token
+// (it was in their own localStorage); nothing is emailed or enumerable.
+export async function peekApplicationDraft(
+  token: string,
+): Promise<{ live: boolean; firstName: string | null; language: 'en' | 'fr' }> {
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('status, data, language, resume_token_expires_at')
+    .eq('resume_token', token)
+    .maybeSingle()
+  const language: 'en' | 'fr' = (app?.language === 'fr' ? 'fr' : 'en')
+  if (!app || tokenExpired(app.resume_token_expires_at) || app.status !== 'draft') {
+    return { live: false, firstName: null, language }
+  }
+  const first = (app.data as Record<string, unknown> | null)?.first_name
+  return { live: true, firstName: typeof first === 'string' ? first : null, language }
 }
 
 // Emails the applicant their private resume link on demand ("Finish later").

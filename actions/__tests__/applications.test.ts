@@ -81,7 +81,7 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
-import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft, sendApplicationResumeLink } from '../applications'
+import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../applications'
 import { sendApplicationResumeEmail } from '@/lib/email'
 
 const PAST = new Date(Date.now() - 60_000).toISOString()
@@ -227,5 +227,37 @@ describe('respondToInvitation', () => {
     // is released back to 'accepted' so the applicant can retry.
     expect(scenario.updated.row.status).toBe('accepted')
     expect(scenario.updated.row.enrolled_user_id).toBeUndefined()
+  })
+})
+
+describe('peekApplicationDraft', () => {
+  it('reports a live draft with its first name and language (no other PII)', async () => {
+    scenario.application = { status: 'draft', data: { first_name: 'Léa', last_name: 'Martin', email: 'a@b.co' }, language: 'fr', resume_token_expires_at: null }
+    const res = await peekApplicationDraft('tok')
+    expect(res).toEqual({ live: true, firstName: 'Léa', language: 'fr' })
+  })
+  it('reports not-live for a submitted application and leaks no name', async () => {
+    scenario.application = { status: 'submitted', data: { first_name: 'Léa' }, language: 'fr', resume_token_expires_at: null }
+    const res = await peekApplicationDraft('tok')
+    expect(res).toEqual({ live: false, firstName: null, language: 'fr' })
+  })
+  it('reports not-live for an expired resume token', async () => {
+    scenario.application = { status: 'draft', data: { first_name: 'Léa' }, language: 'en', resume_token_expires_at: PAST }
+    const res = await peekApplicationDraft('tok')
+    expect(res.live).toBe(false)
+    expect(res.firstName).toBeNull()
+  })
+  it('reports not-live for a missing token', async () => {
+    scenario.application = null
+    const res = await peekApplicationDraft('tok')
+    expect(res).toEqual({ live: false, firstName: null, language: 'en' })
+  })
+})
+
+describe('getApplicationDraft slug', () => {
+  it('returns the exchange apply_slug for a live draft', async () => {
+    scenario.application = { status: 'draft', data: { first_name: 'A' }, language: 'en', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: null, exchanges: { name: 'France-Canada', apply_slug: 'france-canada' } }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.slug).toBe('france-canada')
   })
 })
