@@ -35,18 +35,21 @@ export function CandidaturesView({
   exchangeId,
   applicationOpen,
   applicationDeadline,
+  applySlug,
 }: {
   apps: AppRow[]
   exchangeName: string
   exchangeId: string
   applicationOpen: boolean
   applicationDeadline: string | null
+  applySlug: string
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<TabKey>('all')
   const [open, setOpen] = useState(applicationOpen)
   const [deadline, setDeadline] = useState(applicationDeadline ?? '')
   const [savingState, setSavingState] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [rejecting, setRejecting] = useState(false)
@@ -55,6 +58,21 @@ export function CandidaturesView({
   const [bulkResult, setBulkResult] = useState<{ succeeded: number; failed: number } | null>(null)
 
   const filtered = apps.filter(a => matchesTab(a, tab))
+
+  const applyUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/apply/${applySlug}`
+      : `/apply/${applySlug}`
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(applyUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* best-effort: field is selectable for manual copy */
+    }
+  }
 
   function toggleOne(id: string) {
     setSelected(sel => (sel.includes(id) ? sel.filter(x => x !== id) : [...sel, id]))
@@ -148,6 +166,26 @@ export function CandidaturesView({
             className="h-[34px] rounded-[8px] border px-2.5 text-[13px]"
           />
         </label>
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <label htmlFor="candidatures-invite-link" className="text-[12.5px] text-muted-foreground whitespace-nowrap">
+            Lien de candidature
+          </label>
+          <input
+            id="candidatures-invite-link"
+            type="text"
+            readOnly
+            value={applyUrl}
+            onFocus={(e) => e.currentTarget.select()}
+            className="h-[34px] w-[220px] max-w-full rounded-[8px] border bg-subtle px-2.5 text-[13px] text-muted-foreground"
+          />
+          <button
+            type="button"
+            onClick={copyLink}
+            className="h-[34px] whitespace-nowrap rounded-[8px] bg-brand px-3.5 text-[12.5px] font-semibold text-white"
+          >
+            {copied ? 'Copié ✓' : 'Copier'}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1.5 bg-subtle rounded-[11px] p-1 w-fit mb-4">

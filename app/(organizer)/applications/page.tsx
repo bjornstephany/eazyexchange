@@ -30,6 +30,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
       exchangeId={active.id}
       applicationOpen={!!active.application_open}
       applicationDeadline={active.application_deadline ?? null}
+      applySlug={active.apply_slug}
     />
   )
 }
