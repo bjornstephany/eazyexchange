@@ -3,7 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 let scenario: {
   exchange: any | null
   application: any | null
+  applicationQueue: any[]          // consumed first by applications maybeSingle (for race tests)
   inserted: any
+  insertError: any | null          // injected error for applications inserts
   updated: any
   enrollError: any | null
   deletedProfileUserId: string | null
@@ -19,12 +21,12 @@ function builder(table: string) {
     order: () => b,
     insert: (row: any) => {
       scenario.inserted = { table, row }
-      // The enrollment insert can be made to fail to exercise the Yes-branch rollback.
-      const error = table === 'exchange_enrollments' ? (scenario.enrollError ?? null) : null
+      const error = table === 'exchange_enrollments' ? (scenario.enrollError ?? null)
+        : table === 'applications' ? (scenario.insertError ?? null) : null
       return {
         error,
         // startApplication chains .select('id').single() on the insert
-        select: () => ({ single: async () => ({ data: { ...row, id: 'app-1' }, error: null }) }),
+        select: () => ({ single: async () => ({ data: error ? null : { ...row, id: 'app-1' }, error }) }),
         // respondToInvitation awaits the insert directly for { error }
         then: (resolve: any) => resolve({ error }),
       }
@@ -50,7 +52,12 @@ function builder(table: string) {
     },
     delete: () => ({ eq: async (_col: string, val: any) => { scenario.deletedProfileUserId = val; return { error: null } } }),
     single: async () => ({ data: rowFor(table), error: rowFor(table) ? null : { message: 'none' } }),
-    maybeSingle: async () => ({ data: rowFor(table), error: null }),
+    maybeSingle: async () => ({
+      data: table === 'applications' && scenario.applicationQueue.length > 0
+        ? scenario.applicationQueue.shift()
+        : rowFor(table),
+      error: null,
+    }),
   }
   return b
 }
@@ -93,13 +100,15 @@ beforeEach(() => {
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_a_id: 's-1', application_open: true, application_deadline: null },
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
-    inserted: null, updated: null,
+    inserted: null, updated: null, insertError: null, applicationQueue: [],
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
     rateLimitAllowed: true,
   }
 })
 
 describe('startApplication', () => {
+  beforeEach(() => { scenario.application = null })
+
   it('rejects an invalid email', async () => {
     await expect(startApplication('slug', { email: 'nope', first_name: 'A', last_name: 'B', language: 'en' }))
       .rejects.toThrow('valid email')
@@ -132,6 +141,57 @@ describe('startApplication', () => {
     (sendApplicationResumeEmail as any).mockRejectedValueOnce(new Error('mail down'))
     await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
       .resolves.toMatchObject({ token: expect.any(String) })
+  })
+
+  it('with an existing draft: no insert, resume email re-sent to the existing token, token never returned', async () => {
+    scenario.application = { id: 'app-9', status: 'draft', resume_token: 'tok-existing' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'draft' })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).toHaveBeenCalledTimes(1)
+    expect((sendApplicationResumeEmail as any).mock.calls[0][0].resumeUrl).toContain('tok-existing')
+    // keeps the re-sent link alive
+    expect(scenario.updated.table).toBe('applications')
+    expect(scenario.updated.row.resume_token_expires_at).toBeTruthy()
+  })
+
+  it('with a submitted application: { existing: "submitted" }, no insert, no email', async () => {
+    scenario.application = { id: 'app-9', status: 'submitted', resume_token: 'tok-existing' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'submitted' })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('with a rejected application: same neutral "submitted" response (rejection is final, never advertised)', async () => {
+    scenario.application = { id: 'app-9', status: 'rejected', resume_token: 'tok-existing' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'submitted' })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('maps a 23505 insert race to the winning row status', async () => {
+    // Pre-check misses (null), insert hits the unique index, re-read finds the winner.
+    scenario.applicationQueue = [null, { status: 'submitted' }]
+    scenario.insertError = { code: '23505', message: 'duplicate key' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'submitted' })
+  })
+
+  it('maps a 23505 race against a draft winner to { existing: "draft" }', async () => {
+    scenario.applicationQueue = [null, { status: 'draft', resume_token: 'tok-winner' }]
+    scenario.insertError = { code: '23505', message: 'duplicate key' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'draft' })
+  })
+
+  it('rate limit still fires before the resend path (no email even when a draft exists)', async () => {
+    scenario.application = { id: 'app-9', status: 'draft', resume_token: 'tok-existing' }
+    scenario.rateLimitAllowed = false
+    await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
+      .rejects.toThrow('Too many attempts')
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
 })
 

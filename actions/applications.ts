@@ -41,10 +41,12 @@ function tokenExpired(expiresAt: string | null): boolean {
   return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
 }
 
+export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' }
+
 export async function startApplication(
   slug: string,
   input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
-): Promise<{ token: string }> {
+): Promise<StartApplicationResult> {
   const email = normalizeEmail(input.email)
   if (!isValidEmail(email)) throw new Error('Please enter a valid email address')
 
@@ -64,6 +66,35 @@ export async function startApplication(
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, exchange.id)
+
+  // One email = one application per exchange. Any existing row blocks a new
+  // insert. Structured results, not thrown errors: prod redacts Server Action
+  // error messages, and the client must branch on the outcome.
+  const { data: existing } = await admin
+    .from('applications')
+    .select('id, status, resume_token')
+    .eq('exchange_id', exchange.id)
+    .eq('email', email)
+    .maybeSingle()
+  if (existing) {
+    if (existing.status !== 'draft') {
+      // Includes rejected: rejection is final and the public screen never
+      // advertises it — same neutral "already submitted" outcome.
+      return { existing: 'submitted' }
+    }
+    // Typing an email is not proof of owning it: never return the existing
+    // token. The inbox is the only recovery channel — re-send the resume link
+    // (already capped by the 3/hr-per-email limit above) and keep it alive.
+    await admin.from('applications')
+      .update({ resume_token_expires_at: resumeExpiry(exchange.application_deadline) })
+      .eq('id', existing.id)
+    void sendApplicationResumeEmail({
+      to: email,
+      exchangeName: exchange.name,
+      resumeUrl: `${APP_URL}/apply/resume/${existing.resume_token}`,
+    }).catch(() => {})
+    return { existing: 'draft' }
+  }
 
   const token = randomToken()
   const { error } = await admin.from('applications').insert({
@@ -87,7 +118,21 @@ export async function startApplication(
     reviewer_id: null,
     review_note: null,
   }).select('id').single()
-  if (error) throw error
+  if (error) {
+    // Two tabs raced past the pre-check; the unique index rejected the loser.
+    // Map to the same structured response by re-reading the winning row (the
+    // winner's own request already sent the resume email).
+    if ((error as { code?: string }).code === '23505') {
+      const { data: winner } = await admin
+        .from('applications')
+        .select('status')
+        .eq('exchange_id', exchange.id)
+        .eq('email', email)
+        .maybeSingle()
+      return { existing: winner?.status === 'draft' ? 'draft' : 'submitted' }
+    }
+    throw error
+  }
 
   // Silent cross-device safety net: email the resume link the moment they start,
   // fire-and-forget so a mail hiccup never blocks entry into the form. The
