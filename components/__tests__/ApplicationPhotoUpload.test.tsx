@@ -66,7 +66,7 @@ describe('ApplicationPhotoUpload', () => {
     vi.mocked(uploadApplicationPhoto).mockRejectedValueOnce(new Error('boom'))
     renderCard()
     pickFile()
-    expect(await screen.findByText(/l'envoi a échoué/i)).toBeInTheDocument()
+    expect(await screen.findByText(/l’envoi a échoué/i)).toBeInTheDocument()
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 

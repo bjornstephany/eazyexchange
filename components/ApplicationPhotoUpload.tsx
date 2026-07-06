@@ -6,7 +6,7 @@ import { ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
 
 const T = {
   en: { label: "Recent photo", choose: "Choose a photo", replace: "Replace the photo", hint: "JPEG, PNG or WebP — 10 MB max.", uploading: "Uploading…", failed: "Upload failed. Please try again.", required: "A photo is required to submit your application." },
-  fr: { label: "Photo récente", choose: "Choisir une photo", replace: "Remplacer la photo", hint: "JPEG, PNG ou WebP — 10 Mo max.", uploading: "Envoi…", failed: "L'envoi a échoué. Réessaie.", required: "Une photo est requise pour envoyer ta candidature." },
+  fr: { label: "Photo récente", choose: "Choisir une photo", replace: "Remplacer la photo", hint: "JPEG, PNG ou WebP — 10 Mo max.", uploading: "Envoi…", failed: "L’envoi a échoué. Réessaie.", required: "Une photo est requise pour envoyer ta candidature." },
 }
 
 interface Props {
