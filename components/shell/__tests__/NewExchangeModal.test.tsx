@@ -43,6 +43,23 @@ describe('NewExchangeModal', () => {
     expect(screen.getByRole('button', { name: "Créer l'échange" })).toBeInTheDocument()
   })
 
+  it('shows the trial notice for trial users', () => {
+    render(<NewExchangeModal open onOpenChange={() => {}} isTrial remaining={1} />)
+    expect(screen.getByRole('note')).toHaveTextContent(/période d’essai/)
+    expect(screen.getByRole('note')).toHaveTextContent(/un seul échange/)
+  })
+
+  it('shows a remaining-count notice for a paid finite plan', () => {
+    render(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={2} />)
+    expect(screen.getByRole('note')).toHaveTextContent(/2 échanges à créer/)
+    expect(screen.getByRole('note')).toHaveTextContent(/consommera un/)
+  })
+
+  it('shows no notice for an unlimited (Scale) plan', () => {
+    render(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={Infinity} />)
+    expect(screen.queryByRole('note')).toBeNull()
+  })
+
   it('shows an invalid-input error inline and keeps the dialog open with the submit button re-enabled', async () => {
     createExchange.mockResolvedValueOnce({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     const onOpenChange = vi.fn()

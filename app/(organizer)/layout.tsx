@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { isInGrace, exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
+import { isInGrace, exchangeCap, hasActivePlan, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 import { OrganizerShell, type ExchangeOption } from '@/components/shell/OrganizerShell'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
@@ -36,7 +36,11 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   // created) to decide whether "+ Nouvel échange" should offer creation or
   // send the organizer to /billing.
   const ownedCount = rows.filter(e => e.school_a_id === profile.school_id).length
-  const atCap = ownedCount >= (school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP)
+  const cap = school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP
+  const atCap = ownedCount >= cap
+  // Feeds the informational banner in the "Nouvel échange" modal.
+  const isTrial = school ? !hasActivePlan(school as never) : true
+  const remaining = cap - ownedCount
 
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
@@ -48,6 +52,8 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       organizerName={profile.full_name}
       schoolName={school?.name ?? ''}
       atCap={atCap}
+      isTrial={isTrial}
+      remaining={remaining}
     >
       {showGrace && <PaymentWarningBanner />}
       {children}

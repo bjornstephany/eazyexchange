@@ -66,6 +66,8 @@ export function OrganizerShell({
   organizerName,
   schoolName,
   atCap = false,
+  isTrial = false,
+  remaining = Infinity,
   children,
 }: {
   exchanges: ExchangeOption[]
@@ -73,6 +75,8 @@ export function OrganizerShell({
   organizerName: string
   schoolName: string
   atCap?: boolean
+  isTrial?: boolean
+  remaining?: number
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -273,6 +277,8 @@ export function OrganizerShell({
       <NewExchangeModal
         open={newExchangeOpen}
         onOpenChange={setNewExchangeOpen}
+        isTrial={isTrial}
+        remaining={remaining}
       />
     </div>
   )

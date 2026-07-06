@@ -12,14 +12,20 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { exchangeNoticeMessage } from '@/lib/billing/exchange-notice'
 
 export function NewExchangeModal({
   open,
   onOpenChange,
+  isTrial = false,
+  remaining = Infinity,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  isTrial?: boolean
+  remaining?: number
 }) {
+  const notice = exchangeNoticeMessage({ isTrial, remaining })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -70,6 +76,18 @@ export function NewExchangeModal({
             Un échange relie votre établissement à un partenaire, pour une session donnée.
           </DialogDescription>
         </DialogHeader>
+        {notice && (
+          <p
+            role="note"
+            className={
+              notice.tone === 'warning'
+                ? 'rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900'
+                : 'rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-muted-foreground'
+            }
+          >
+            {notice.message}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="name">Nom de l&apos;échange</Label>
