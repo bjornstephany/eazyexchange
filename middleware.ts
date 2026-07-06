@@ -29,6 +29,16 @@ export async function middleware(request: NextRequest) {
       .from('users').select('role, full_name').eq('id', user.id)
       .single<{ role: string; full_name: string | null }>()
 
+    // An orphaned/stale session: getClaims() verifies the JWT locally so `user`
+    // is set, but there is no backing users row (account deleted, or the DB was
+    // reset while the browser kept a still-valid access token). getUser() in the
+    // server layouts rejects such a session, so redirecting it to /my-forms or
+    // /dashboard bounces straight back to /login → infinite loop → blank screen.
+    // Let the request reach the auth route so the user can re-authenticate.
+    if (!profile) {
+      return supabaseResponse
+    }
+
     // A freshly-invited user has a session (set by /auth/confirm) but an empty
     // full_name. Let them finish setup on /accept-invite instead of bouncing them
     // to a dashboard for an account that isn't configured yet.
