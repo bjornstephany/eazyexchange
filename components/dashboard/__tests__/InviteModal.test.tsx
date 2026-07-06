@@ -46,7 +46,7 @@ describe('InviteModal', () => {
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
   })
 
-  it('closing from the link step shows a warning, then closes on confirm', async () => {
+  it('closing the link step without copying shows an inline warning, then closes on the second attempt', async () => {
     const onOpenChange = setup()
     fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir les candidatures' }))
@@ -54,21 +54,24 @@ describe('InviteModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(screen.getByText(/Vous ne reverrez plus ce lien/)).toBeInTheDocument()
+    // The link stays visible (inline warning, not a separate screen).
+    expect(screen.getByDisplayValue(/\/apply\/france-canada$/)).toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Fermer quand même' }))
     expect(onOpenChange).toHaveBeenCalledWith(false)
-    expect(refresh).not.toHaveBeenCalled()
   })
 
-  it('cancelling the warning keeps the modal on the link step', async () => {
-    setup()
+  it('closes immediately without warning once the link is copied', async () => {
+    const onOpenChange = setup()
     fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir les candidatures' }))
     await screen.findByDisplayValue(/\/apply\/france-canada$/)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copier' }))
+    await screen.findByRole('button', { name: /Copié/ })
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }))
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
-    expect(screen.getByDisplayValue(/\/apply\/france-canada$/)).toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 })
