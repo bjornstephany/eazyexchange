@@ -120,7 +120,7 @@ describe('startApplication', () => {
   })
   it('creates a draft and returns its resume token', async () => {
     const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
-    expect(res.token).toBeTruthy()
+    expect('token' in res && res.token).toBeTruthy()
     expect(scenario.inserted.table).toBe('applications')
     expect(scenario.inserted.row.status).toBe('draft')
   })

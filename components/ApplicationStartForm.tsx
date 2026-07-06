@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label'
 
 const NOTICE = {
   draft: {
-    en: 'An application is already in progress with this email address — we\'ve re-sent you the link by email so you can continue.',
-    fr: 'Une candidature est déjà en cours avec cette adresse — nous t\'avons renvoyé le lien pour continuer par e-mail.',
+    en: 'An application is already in progress with this email address — we’ve re-sent you the link by email so you can continue.',
+    fr: 'Une candidature est déjà en cours avec cette adresse — nous t’avons renvoyé le lien pour continuer par e-mail.',
   },
   submitted: {
     en: 'An application has already been submitted with this email address.',
