@@ -15,7 +15,7 @@ export type DossierRollup = {
   overall: Pill
 }
 export type FunnelStage = { key: string; label: string; count: number }
-export type ActionCard = { title: string; desc: string; cta: string; tone: 'accent' | 'warn' | 'bad'; filterKey: string }
+export type ActionCard = { title: string; desc: string; cta: string; tone: 'accent' | 'warn' | 'bad'; filterKey: string; href?: string }
 
 // French pluralization helper: 's' when n > 1, else ''.
 export function p(n: number): string {
@@ -188,8 +188,15 @@ function countP1(apps: AppRow[], key: string): number {
   return p1Filter(apps, key).length
 }
 
-export function actionCards(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[]): ActionCard[] {
+export function actionCards(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[], activeTemplateCount?: number): ActionCard[] {
   const cards: ActionCard[] = []
+  if (activeTemplateCount === 0) {
+    cards.push({
+      title: 'Aucun formulaire actif',
+      desc: 'Préparez les documents et formulaires à demander aux familles.',
+      cta: 'Préparer les formulaires', tone: 'accent', filterKey: 'noforms', href: '/forms',
+    })
+  }
   if (phase === 1) {
     const a = countP1(apps, 'toreview')
     if (a > 0) {

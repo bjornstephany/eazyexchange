@@ -198,6 +198,19 @@ describe('copy builders', () => {
       '1 dossier à vérifier', '1 élève : documents manquants', '1 élève en retard',
     ])
   })
+  it('prepends the no-active-forms card when activeTemplateCount is 0 (phase 1)', () => {
+    const cards = actionCards(1, [app('submitted')], [], 0)
+    expect(cards[0].title).toBe('Aucun formulaire actif')
+    expect(cards[0].href).toBe('/forms')
+    expect(cards.some(c => c.title === '1 candidature à examiner')).toBe(true)
+  })
+  it('prepends the no-active-forms card when activeTemplateCount is 0 (phase 2)', () => {
+    expect(actionCards(2, [], [], 0).map(c => c.title)).toEqual(['Aucun formulaire actif'])
+  })
+  it('omits the no-active-forms card when at least one template is active', () => {
+    expect(actionCards(1, [], [], 3)).toEqual([])
+    expect(actionCards(2, [], [])).toEqual([])
+  })
   it('reminder line P1 counts waiting + maybe', () => {
     expect(reminderLine(1, [app('accepted'), app('maybe')], []))
       .toBe('Relance automatique demain 8h — 2 élèves relancés sur leur candidature ou leur réponse, avec la date limite.')
