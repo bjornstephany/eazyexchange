@@ -71,6 +71,20 @@ describe('OverviewView phase 1', () => {
     expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
     expect(screen.queryByText(/Commencez votre échange/)).toBeNull()
   })
+
+  it('keeps the invite modal mounted when opening applications flips neverOpened', () => {
+    // Regression: setApplicationOpen revalidates /dashboard, so the RSC refetch
+    // flips applicationOpen/deadline while the modal is showing the one-time link.
+    // The modal must survive that flip so the organizer can still copy the link.
+    const { rerender } = render(
+      <OverviewView {...base} phase={1} apps={[]} applicationOpen={false} applicationDeadline={null} />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
+    expect(screen.getByText('invite-modal')).toBeInTheDocument()
+
+    rerender(<OverviewView {...base} phase={1} apps={[]} applicationOpen applicationDeadline="2026-09-01" />)
+    expect(screen.getByText('invite-modal')).toBeInTheDocument()
+  })
 })
 
 describe('OverviewView phase 2', () => {

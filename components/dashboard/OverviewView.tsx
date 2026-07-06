@@ -76,27 +76,10 @@ export function OverviewView(props: OverviewProps) {
     return { kind: 'student', rollup, items }
   }
 
+  // Opening applications revalidates /dashboard, which flips these props and so
+  // flips `neverOpened`. The InviteModal is therefore rendered once, outside this
+  // branch (see the return), so that mid-flow flip can't unmount the one-time link.
   const neverOpened = phase === 1 && !applicationOpen && applicationDeadline == null
-  if (neverOpened) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-        <h1 className="font-display text-[26px] font-bold tracking-tight text-navy">
-          Commencez votre échange
-        </h1>
-        <p className="mt-2 max-w-[420px] text-[15px] text-muted-foreground">
-          Commencez votre échange en invitant vos élèves à postuler.
-        </p>
-        <button
-          type="button"
-          onClick={() => setInviteOpen(true)}
-          className="mt-6 flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
-        >
-          <span className="text-base leading-none">+</span> Inviter vos élèves à postuler
-        </button>
-        <InviteModal exchangeId={exchangeId} applySlug={applySlug} open={inviteOpen} onOpenChange={setInviteOpen} />
-      </div>
-    )
-  }
 
   const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
@@ -121,7 +104,25 @@ export function OverviewView(props: OverviewProps) {
   }
 
   return (
-    <div>
+    <>
+      {neverOpened ? (
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <h1 className="font-display text-[26px] font-bold tracking-tight text-navy">
+            Commencez votre échange
+          </h1>
+          <p className="mt-2 max-w-[420px] text-[15px] text-muted-foreground">
+            Commencez votre échange en invitant vos élèves à postuler.
+          </p>
+          <button
+            type="button"
+            onClick={() => setInviteOpen(true)}
+            className="mt-6 flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
+          >
+            <span className="text-base leading-none">+</span> Inviter vos élèves à postuler
+          </button>
+        </div>
+      ) : (
+        <div>
       <div className="mb-[22px]">
         <h1 className="font-display text-[26px] font-bold tracking-tight">Vue d&apos;ensemble</h1>
         <p className="text-sm text-muted-foreground">{subline}</p>
@@ -279,6 +280,9 @@ export function OverviewView(props: OverviewProps) {
       </div>
 
       <StudentDrawer subject={selected} onClose={() => setSelected(null)} />
-    </div>
+        </div>
+      )}
+      <InviteModal exchangeId={exchangeId} applySlug={applySlug} open={inviteOpen} onOpenChange={setInviteOpen} />
+    </>
   )
 }
