@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
 
 let user: { id: string } | null
+// The users-row the middleware's isAuthRoute branch will find. null models an
+// orphaned/stale session: a JWT that still verifies locally (getClaims) but has
+// no backing users row (account deleted or DB reset).
+let profileRow: { role: string; full_name: string | null } | null
 vi.mock('@/lib/supabase/middleware', () => ({
   updateSession: async (request: NextRequest) => ({
     supabaseResponse: NextResponse.next({ request }),
@@ -10,7 +14,7 @@ vi.mock('@/lib/supabase/middleware', () => ({
     supabase: {
       from: () => ({
         select: () => ({
-          eq: () => ({ single: async () => ({ data: { role: 'organizer', full_name: 'Org' } }) }),
+          eq: () => ({ single: async () => ({ data: profileRow }) }),
         }),
       }),
     },
@@ -19,7 +23,7 @@ vi.mock('@/lib/supabase/middleware', () => ({
 
 import { middleware } from '@/middleware'
 
-beforeEach(() => { user = null })
+beforeEach(() => { user = null; profileRow = { role: 'organizer', full_name: 'Org' } })
 
 function req(path: string) {
   return new NextRequest(new URL(`http://localhost${path}`))
@@ -40,6 +44,16 @@ describe('middleware', () => {
     user = { id: 'u1' }
     const res = await middleware(req('/signup'))
     expect(res.headers.get('location')).toContain('/dashboard')
+  })
+
+  it('does NOT redirect an orphaned session (valid JWT, no users row) off /login', async () => {
+    // getClaims accepts the stale JWT so `user` is set, but the users row is
+    // gone. Redirecting to /my-forms would bounce off the getUser()-based
+    // layout back to /login → infinite loop → blank screen. Let /login render.
+    user = { id: 'ghost' }
+    profileRow = null
+    const res = await middleware(req('/login'))
+    expect(res.headers.get('location')).toBeNull()
   })
 
   it('still redirects a logged-out visitor on a gated route to /login', async () => {
