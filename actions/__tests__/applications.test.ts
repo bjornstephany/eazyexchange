@@ -70,7 +70,10 @@ function rowFor(table: string) {
 
 const adminClient = {
   from: (t: string) => builder(t),
-  storage: { from: () => ({ upload: async () => ({ data: { path: 'app-1/photo.png' }, error: null }) }) },
+  storage: { from: () => ({
+    upload: async () => ({ data: { path: 'app-1/photo.png' }, error: null }),
+    createSignedUrl: async (path: string) => ({ data: { signedUrl: `https://signed.example/${path}` }, error: null }),
+  }) },
   auth: { admin: {
     inviteUserByEmail: async () => ({ data: { user: { id: 'new-user' } }, error: null }),
     deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
@@ -351,5 +354,15 @@ describe('getApplicationDraft slug', () => {
     scenario.application = { status: 'draft', data: { first_name: 'A' }, language: 'en', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: null, exchanges: { name: 'France-Canada', apply_slug: 'france-canada' } }
     const res = await getApplicationDraft('tok') as any
     expect(res.slug).toBe('france-canada')
+  })
+  it('returns a signed photo URL for a draft that already has a photo', async () => {
+    scenario.application = { status: 'draft', data: {}, language: 'en', photo_path: 'app-1/photo.jpg', resume_token_expires_at: null, exchanges: { name: 'X', apply_slug: 'x' } }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.photoUrl).toBe('https://signed.example/app-1/photo.jpg')
+  })
+  it('returns a null photo URL when no photo was uploaded yet', async () => {
+    scenario.application = { status: 'draft', data: {}, language: 'en', photo_path: null, resume_token_expires_at: null, exchanges: { name: 'X', apply_slug: 'x' } }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.photoUrl).toBeNull()
   })
 })

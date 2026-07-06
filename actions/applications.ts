@@ -166,10 +166,18 @@ export async function getApplicationDraft(token: string) {
   if (app.status !== 'draft') {
     return { expired: false as const, submitted: true as const, exchangeName }
   }
+  // Signed URL so a returning draft shows its already-uploaded photo (the
+  // application-photos bucket is private; 1 h outlives any editing session).
+  let photoUrl: string | null = null
+  if (app.photo_path) {
+    const { data: signed } = await admin.storage.from(PHOTO_BUCKET)
+      .createSignedUrl(app.photo_path, 3600)
+    photoUrl = signed?.signedUrl ?? null
+  }
   return {
     expired: false as const, submitted: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
-    photo_path: app.photo_path, exchangeName,
+    photo_path: app.photo_path, photoUrl, exchangeName,
     slug: (app as any).exchanges?.apply_slug ?? '',
   }
 }
