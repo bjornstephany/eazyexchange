@@ -86,12 +86,23 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/email', () => ({
   // startApplication now fire-and-forgets this (.catch on the return value), so
   // the mock must resolve like the real (async) implementation does.
-  sendApplicationResumeEmail: vi.fn().mockResolvedValue(undefined), sendApplicationConfirmationEmail: vi.fn(),
-  sendNewApplicationAlertEmail: vi.fn(), sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
+  sendApplicationResumeEmail: vi.fn().mockResolvedValue(undefined),
+  sendApplicationConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  sendNewApplicationAlertEmail: vi.fn().mockResolvedValue(undefined),
+  sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../applications'
 import { sendApplicationResumeEmail } from '@/lib/email'
+import { allApplicationFields } from '@/lib/application-form'
+
+function completeAppData(): Record<string, string> {
+  const data: Record<string, string> = {}
+  for (const f of allApplicationFields()) data[f.id] = 'x'
+  data.email = 'a@b.co'
+  data.family_status = 'married'
+  return data
+}
 
 const PAST = new Date(Date.now() - 60_000).toISOString()
 
@@ -249,6 +260,17 @@ describe('sendApplicationResumeLink', () => {
 describe('submitApplication', () => {
   it('rejects when required fields are missing', async () => {
     await expect(submitApplication('tok', { first_name: 'A' })).rejects.toThrow('required')
+  })
+  it('rejects a complete submission that has no photo', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: null }
+    await expect(submitApplication('tok', completeAppData())).rejects.toThrow('required')
+    expect(scenario.updated).toBeNull()
+  })
+  it('submits a complete application that has a photo', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    await submitApplication('tok', completeAppData())
+    expect(scenario.updated.table).toBe('applications')
+    expect(scenario.updated.row.status).toBe('submitted')
   })
 })
 

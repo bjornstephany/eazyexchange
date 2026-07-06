@@ -236,17 +236,20 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<void> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
-  const missing = missingRequiredApplication(data)
-  if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
 
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('id, status, email, exchange_id, school_id, resume_token_expires_at')
+    .select('id, status, email, exchange_id, school_id, resume_token_expires_at, photo_path')
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted')
+
+  // Server-side backstop of the client submit gate — same policy, including
+  // the photo (which lives on the row, not in `data`).
+  const missing = missingRequiredApplication(data, { hasPhoto: app.photo_path != null })
+  if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
 
   // Re-check the window at submit time: startApplication gated it, but the
   // organizer may have closed applications (or the deadline passed) while this
