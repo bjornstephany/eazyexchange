@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { isInGrace } from '@/lib/billing/limits'
+import { isInGrace, exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 import { OrganizerShell, type ExchangeOption } from '@/components/shell/OrganizerShell'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
@@ -24,12 +24,19 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const { data: exchangeRows } = await supabase
     .from('exchanges')
-    .select('id, name, year, phase, archived_at')
+    .select('id, name, year, phase, archived_at, school_a_id')
     .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
     .order('created_at', { ascending: false })
-  const exchanges: ExchangeOption[] = ((exchangeRows ?? []) as any[]).map(e => ({
+  const rows = (exchangeRows ?? []) as any[]
+  const exchanges: ExchangeOption[] = rows.map(e => ({
     id: e.id, name: e.name, year: e.year, phase: e.phase, archived: !!e.archived_at,
   }))
+
+  // Count only exchanges this school owns (it is always school_a on ones it
+  // created) to decide whether "+ Nouvel échange" should offer creation or
+  // send the organizer to /billing.
+  const ownedCount = rows.filter(e => e.school_a_id === profile.school_id).length
+  const atCap = ownedCount >= (school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP)
 
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
@@ -40,6 +47,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       activeExchangeId={active?.id ?? null}
       organizerName={profile.full_name}
       schoolName={school?.name ?? ''}
+      atCap={atCap}
     >
       {showGrace && <PaymentWarningBanner />}
       {children}

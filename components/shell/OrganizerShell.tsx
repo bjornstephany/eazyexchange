@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -65,12 +65,14 @@ export function OrganizerShell({
   activeExchangeId,
   organizerName,
   schoolName,
+  atCap = false,
   children,
 }: {
   exchanges: ExchangeOption[]
   activeExchangeId: string | null
   organizerName: string
   schoolName: string
+  atCap?: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -90,13 +92,24 @@ export function OrganizerShell({
     : pathname.startsWith('/students') ? 'students' : null
   const isSettings = pathname.startsWith('/settings')
 
+  // Every "+ Nouvel échange" affordance routes through this. At the plan's
+  // exchange cap we redirect straight to /billing instead of opening the modal
+  // (createExchange would only return an { error: 'limit' } result anyway).
+  const handleNewExchange = useCallback(() => {
+    if (atCap) {
+      router.push('/billing')
+      return
+    }
+    setNewExchangeOpen(true)
+  }, [atCap, router])
+
   const shellUi = useMemo<ShellUi>(() => ({
-    openNewExchange: () => setNewExchangeOpen(true),
+    openNewExchange: handleNewExchange,
     listSearch,
     setListSearch,
     addRequestId,
     requestAdd: () => setAddRequestId(n => n + 1),
-  }), [listSearch, addRequestId])
+  }), [handleNewExchange, listSearch, addRequestId])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -126,7 +139,7 @@ export function OrganizerShell({
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Suspense fallback={null}>
-        <NewExchangeAutoOpen onOpen={() => setNewExchangeOpen(true)} />
+        <NewExchangeAutoOpen onOpen={handleNewExchange} />
       </Suspense>
       <nav data-noprint className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
         <div className="mb-[26px]">
@@ -198,7 +211,7 @@ export function OrganizerShell({
                 <SessionSelector
                   exchanges={exchanges}
                   active={active}
-                  onNewExchange={() => setNewExchangeOpen(true)}
+                  onNewExchange={handleNewExchange}
                 />
                 <span
                   className={cn(
@@ -214,7 +227,7 @@ export function OrganizerShell({
             ) : (
               <button
                 type="button"
-                onClick={() => setNewExchangeOpen(true)}
+                onClick={handleNewExchange}
                 className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
               >
                 <span className="text-base leading-none">+</span> Nouvel échange

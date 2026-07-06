@@ -2,10 +2,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 let mockPathname = '/dashboard'
+const push = vi.fn()
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push, refresh: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
@@ -71,6 +72,31 @@ describe('OrganizerShell', () => {
     )
     expect(screen.queryByText('Candid.')).toBeNull()
     expect(screen.getByRole('button', { name: /Nouvel échange/ })).toBeInTheDocument()
+  })
+
+  it('+ Nouvel échange redirects to /billing at cap instead of opening the modal', () => {
+    push.mockClear()
+    render(
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" atCap>
+        <p>page</p>
+      </OrganizerShell>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
+    expect(push).toHaveBeenCalledWith('/billing')
+    // The creation dialog must not open.
+    expect(screen.queryByText("Un échange relie votre établissement à un partenaire, pour une session donnée.")).toBeNull()
+  })
+
+  it('+ Nouvel échange opens the modal when under cap', () => {
+    push.mockClear()
+    render(
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
+        <p>page</p>
+      </OrganizerShell>
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
+    expect(push).not.toHaveBeenCalledWith('/billing')
+    expect(screen.getByText("Un échange relie votre établissement à un partenaire, pour une session donnée.")).toBeInTheDocument()
   })
 
   it('shows organizer initials and the session name', () => {
