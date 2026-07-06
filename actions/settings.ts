@@ -10,6 +10,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
 import { isPlanKey } from '@/lib/billing/plans'
 import { getStripe } from '@/lib/billing/stripe'
+import { getAppUrl } from '@/lib/app-url'
 import {
   PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
 } from '@/lib/billing/display'
@@ -215,7 +216,7 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
     .select('id').single()
   if (insertError || !invite) throw new Error('L’invitation n’a pas pu être créée. Réessayez.')
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const appUrl = getAppUrl()
   const ok = await sendOrganizerInviteEmail({
     to: email, inviterName: ctx.fullName, schoolName: school?.name ?? '',
     joinUrl: `${appUrl}/join/${token}`,

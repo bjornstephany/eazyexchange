@@ -30,7 +30,7 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
   )
   return (
     <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
-      <ApplicationForm token={token} exchangeName={draft.exchangeName} initialData={draft.data} initialLanguage={draft.language === 'fr' ? 'fr' : 'en'} />
+      <ApplicationForm token={token} slug={draft.slug} exchangeName={draft.exchangeName} initialData={draft.data} initialLanguage={draft.language === 'fr' ? 'fr' : 'en'} initialPhotoUrl={draft.photoUrl} />
     </main>
   )
 }

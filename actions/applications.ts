@@ -13,8 +13,9 @@ import {
 } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { getAppUrl } from '@/lib/app-url'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const APP_URL = getAppUrl()
 const PHOTO_BUCKET = 'application-photos'
 
 function applicationsClosed(exchange: { application_open: boolean; application_deadline: string | null }): boolean {
@@ -40,10 +41,12 @@ function tokenExpired(expiresAt: string | null): boolean {
   return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
 }
 
+export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' }
+
 export async function startApplication(
   slug: string,
   input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
-): Promise<{ token: string }> {
+): Promise<StartApplicationResult> {
   const email = normalizeEmail(input.email)
   if (!isValidEmail(email)) throw new Error('Please enter a valid email address')
 
@@ -63,6 +66,35 @@ export async function startApplication(
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, exchange.id)
+
+  // One email = one application per exchange. Any existing row blocks a new
+  // insert. Structured results, not thrown errors: prod redacts Server Action
+  // error messages, and the client must branch on the outcome.
+  const { data: existing } = await admin
+    .from('applications')
+    .select('id, status, resume_token')
+    .eq('exchange_id', exchange.id)
+    .eq('email', email)
+    .maybeSingle()
+  if (existing) {
+    if (existing.status !== 'draft') {
+      // Includes rejected: rejection is final and the public screen never
+      // advertises it — same neutral "already submitted" outcome.
+      return { existing: 'submitted' }
+    }
+    // Typing an email is not proof of owning it: never return the existing
+    // token. The inbox is the only recovery channel — re-send the resume link
+    // (already capped by the 3/hr-per-email limit above) and keep it alive.
+    await admin.from('applications')
+      .update({ resume_token_expires_at: resumeExpiry(exchange.application_deadline) })
+      .eq('id', existing.id)
+    void sendApplicationResumeEmail({
+      to: email,
+      exchangeName: exchange.name,
+      resumeUrl: `${APP_URL}/apply/resume/${existing.resume_token}`,
+    }).catch(() => {})
+    return { existing: 'draft' }
+  }
 
   const token = randomToken()
   const { error } = await admin.from('applications').insert({
@@ -86,11 +118,32 @@ export async function startApplication(
     reviewer_id: null,
     review_note: null,
   }).select('id').single()
-  if (error) throw error
+  if (error) {
+    // Two tabs raced past the pre-check; the unique index rejected the loser.
+    // Map to the same structured response by re-reading the winning row (the
+    // winner's own request already sent the resume email).
+    if ((error as { code?: string }).code === '23505') {
+      const { data: winner } = await admin
+        .from('applications')
+        .select('status')
+        .eq('exchange_id', exchange.id)
+        .eq('email', email)
+        .maybeSingle()
+      return { existing: winner?.status === 'draft' ? 'draft' : 'submitted' }
+    }
+    throw error
+  }
 
-  // No resume email is sent here: the applicant continues straight to the form.
-  // A resume link is only emailed if they explicitly click "Finish later"
-  // (sendApplicationResumeLink), so we never mail a link they didn't ask for.
+  // Silent cross-device safety net: email the resume link the moment they start,
+  // fire-and-forget so a mail hiccup never blocks entry into the form. The
+  // same-device return path is localStorage (client-side); this covers cleared
+  // storage / a different device. Already gated by the rate limits above.
+  void sendApplicationResumeEmail({
+    to: email,
+    exchangeName: exchange.name,
+    resumeUrl: `${APP_URL}/apply/resume/${token}`,
+  }).catch(() => {})
+
   return { token }
 }
 
@@ -98,7 +151,7 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name)')
+    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
@@ -113,11 +166,41 @@ export async function getApplicationDraft(token: string) {
   if (app.status !== 'draft') {
     return { expired: false as const, submitted: true as const, exchangeName }
   }
+  // Signed URL so a returning draft shows its already-uploaded photo (the
+  // application-photos bucket is private; 1 h outlives any editing session).
+  let photoUrl: string | null = null
+  if (app.photo_path) {
+    const { data: signed } = await admin.storage.from(PHOTO_BUCKET)
+      .createSignedUrl(app.photo_path, 3600)
+    photoUrl = signed?.signedUrl ?? null
+  }
   return {
     expired: false as const, submitted: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
-    photo_path: app.photo_path, exchangeName,
+    photo_path: app.photo_path, photoUrl, exchangeName,
+    slug: (app as any).exchanges?.apply_slug ?? '',
   }
+}
+
+// Read-only "is this stored token still a live draft?" for the same-device
+// welcome-back screen. Ships only a first name + language to the browser — never
+// the rest of the draft PII. No rate limit: the caller already holds the token
+// (it was in their own localStorage); nothing is emailed or enumerable.
+export async function peekApplicationDraft(
+  token: string,
+): Promise<{ live: boolean; firstName: string | null; language: 'en' | 'fr' }> {
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('status, data, language, resume_token_expires_at')
+    .eq('resume_token', token)
+    .maybeSingle()
+  const language: 'en' | 'fr' = (app?.language === 'fr' ? 'fr' : 'en')
+  if (!app || tokenExpired(app.resume_token_expires_at) || app.status !== 'draft') {
+    return { live: false, firstName: null, language }
+  }
+  const first = (app.data as Record<string, unknown> | null)?.first_name
+  return { live: true, firstName: typeof first === 'string' ? first : null, language }
 }
 
 // Emails the applicant their private resume link on demand ("Finish later").
@@ -161,17 +244,20 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<void> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
-  const missing = missingRequiredApplication(data)
-  if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
 
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('id, status, email, exchange_id, school_id, resume_token_expires_at')
+    .select('id, status, email, exchange_id, school_id, resume_token_expires_at, photo_path')
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
   if (app.status !== 'draft') throw new Error('This application is already submitted')
+
+  // Server-side backstop of the client submit gate — same policy, including
+  // the photo (which lives on the row, not in `data`).
+  const missing = missingRequiredApplication(data, { hasPhoto: app.photo_path != null })
+  if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
 
   // Re-check the window at submit time: startApplication gated it, but the
   // organizer may have closed applications (or the deadline passed) while this

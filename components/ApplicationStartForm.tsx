@@ -2,23 +2,42 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { startApplication } from '@/actions/applications'
+import { storeResumeToken } from '@/lib/apply-storage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
+const NOTICE = {
+  draft: {
+    en: 'An application is already in progress with this email address — we’ve re-sent you the link by email so you can continue.',
+    fr: 'Une candidature est déjà en cours avec cette adresse — nous t’avons renvoyé le lien pour continuer par e-mail.',
+  },
+  submitted: {
+    en: 'An application has already been submitted with this email address.',
+    fr: 'Une candidature a déjà été envoyée avec cette adresse e-mail.',
+  },
+} as const
 
 export function ApplicationStartForm({ slug }: { slug: string }) {
   const [lang, setLang] = useState<'en' | 'fr'>('en')
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<'draft' | 'submitted' | null>(null)
   const router = useRouter()
   const fr = lang === 'fr'
 
   async function start() {
-    setLoading(true); setError(null)
+    setLoading(true); setError(null); setNotice(null)
     try {
-      const { token } = await startApplication(slug, { ...form, language: lang })
-      router.push(`/apply/resume/${token}`)
+      const res = await startApplication(slug, { ...form, language: lang })
+      if ('token' in res) {
+        storeResumeToken(slug, res.token)
+        router.push(`/apply/resume/${res.token}`)
+        return
+      }
+      setNotice(res.existing)
+      setLoading(false)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : (fr ? 'Une erreur est survenue.' : 'Something went wrong')); setLoading(false)
     }
@@ -47,8 +66,9 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email" className="text-[13.5px] font-semibold text-[#42506E]">E-mail</Label>
           <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
-          <p className="m-0 text-xs text-[#8A97B2]">{fr ? 'Tu pourras compléter ta candidature maintenant ou cliquer sur « Terminer plus tard » pour recevoir par e-mail un lien pour la reprendre.' : 'You can complete your application now, or click “Finish later” to email yourself a private link to continue.'}</p>
+          <p className="m-0 text-xs text-[#8A97B2]">{fr ? 'Tu peux compléter ta candidature maintenant — nous t’enverrons aussi un lien privé par e-mail pour la reprendre sur n’importe quel appareil.' : 'You can complete your application now — we’ll also email you a private link so you can pick up where you left off on any device.'}</p>
         </div>
+        {notice && <p className="m-0 rounded-[10px] bg-[#E6ECFD] px-4 py-3 text-sm leading-relaxed text-[#1D48C7]">{NOTICE[notice][lang]}</p>}
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
         <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name} className="h-12 self-start rounded-[11px] bg-[#2456E6] px-6 text-base font-semibold hover:bg-[#1D48C7]">
           {loading ? '…' : (fr ? 'Commencer ma candidature' : 'Start my application')}

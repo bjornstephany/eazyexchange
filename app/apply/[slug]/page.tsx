@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { ApplicationStartForm } from '@/components/ApplicationStartForm'
+import { ApplyEntry } from '@/components/ApplyEntry'
 import { Logo } from '@/components/brand/Logo'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
 
@@ -37,7 +37,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
       <div className="mb-[26px]"><Logo href={null} /></div>
       <span className="mb-3 inline-flex rounded-full bg-[#E6ECFD] px-3 py-1 text-[13px] font-semibold text-[#1D48C7]">Candidature</span>
       <h1 className="m-0 mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{exchange.name}</h1>
-      <ApplicationStartForm slug={slug} />
+      <ApplyEntry slug={slug} />
     </main>
   )
 }
