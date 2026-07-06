@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { startApplication } from '@/actions/applications'
+import { storeResumeToken } from '@/lib/apply-storage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
     setLoading(true); setError(null)
     try {
       const { token } = await startApplication(slug, { ...form, language: lang })
+      storeResumeToken(slug, token)
       router.push(`/apply/resume/${token}`)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : (fr ? 'Une erreur est survenue.' : 'Something went wrong')); setLoading(false)
