@@ -101,9 +101,10 @@ other; the application work also needs its specific branch checked out).
 - Acceptance email: add a "terms of exchange" notice ("by clicking accept you
   acknowledge …") — wording to be reviewed with Mom before shipping.
 
-## 5. 2FA for organizers (medium feature)
+## 5. 2FA for organizers (DEFERRED — decision 2026-07-06)
 
 - Supabase MFA (TOTP) for organizer accounts. Self-contained.
+- Bjorn decided during the Session D brainstorm: **no 2FA for now.** Revisit later.
 
 ## 6. Feedback widget (small feature)
 
