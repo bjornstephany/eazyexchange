@@ -1,8 +1,9 @@
 import { Resend } from 'resend'
 import { frShortDate } from '@/lib/dashboard/rollup'
+import { getAppUrl } from '@/lib/app-url'
 
 const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const APP_URL = getAppUrl()
 
 // Returns a Resend client, or null if no API key is configured (e.g. local dev).
 // Callers should treat a null client as "email disabled" rather than an error.

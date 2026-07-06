@@ -13,8 +13,9 @@ import {
 } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { getAppUrl } from '@/lib/app-url'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const APP_URL = getAppUrl()
 const PHOTO_BUCKET = 'application-photos'
 
 function applicationsClosed(exchange: { application_open: boolean; application_deadline: string | null }): boolean {
