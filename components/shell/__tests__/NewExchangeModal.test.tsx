@@ -16,12 +16,9 @@ vi.mock('@/actions/exchanges', () => ({ createExchange: (...args: unknown[]) => 
 import { NewExchangeModal } from '@/components/shell/NewExchangeModal'
 import { EXCHANGE_LIMIT_MESSAGE, EXCHANGE_INVALID_MESSAGE } from '@/lib/billing/exchange-limit'
 
-async function fillRequiredFields() {
+async function fillName() {
   const user = userEvent.setup()
-  await user.type(screen.getByLabelText("Nom de l'échange"), 'France–Canada 2026')
-  await user.clear(screen.getByLabelText('Année'))
-  await user.type(screen.getByLabelText('Année'), '2026')
-  await user.type(screen.getByLabelText('Établissement partenaire'), 'Lycée Victor Hugo')
+  await user.type(screen.getByLabelText('Nom de l’échange'), 'Espagne 2026')
   return user
 }
 
@@ -33,14 +30,12 @@ describe('NewExchangeModal', () => {
     createExchange.mockReset()
   })
 
-  it('renders the French form', () => {
+  it('renders a single name field and no partner/year inputs', () => {
     render(<NewExchangeModal open onOpenChange={() => {}} />)
-    expect(screen.getByText('Nouvel échange')).toBeInTheDocument()
-    expect(screen.getByLabelText("Nom de l'échange")).toBeInTheDocument()
-    expect(screen.getByLabelText('Année')).toBeInTheDocument()
-    expect(screen.getByLabelText('Établissement partenaire')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Votre établissement')).toBeNull()
-    expect(screen.getByRole('button', { name: "Créer l'échange" })).toBeInTheDocument()
+    expect(screen.getByLabelText('Nom de l’échange')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Année')).toBeNull()
+    expect(screen.queryByLabelText('Établissement partenaire')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Créer l’échange' })).toBeInTheDocument()
   })
 
   it('shows the trial notice for trial users', () => {
@@ -65,12 +60,12 @@ describe('NewExchangeModal', () => {
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
-    const user = await fillRequiredFields()
-    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+    const user = await fillName()
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
 
     expect(await screen.findByText(EXCHANGE_INVALID_MESSAGE)).toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
-    expect(screen.getByRole('button', { name: "Créer l'échange" })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Créer l’échange' })).not.toBeDisabled()
   })
 
   it('redirects to /billing when the plan cap is hit', async () => {
@@ -78,8 +73,8 @@ describe('NewExchangeModal', () => {
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
-    const user = await fillRequiredFields()
-    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+    const user = await fillName()
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
 
     await waitFor(() => expect(push).toHaveBeenCalledWith('/billing'))
     expect(onOpenChange).toHaveBeenCalledWith(false)
@@ -92,8 +87,8 @@ describe('NewExchangeModal', () => {
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
-    const user = await fillRequiredFields()
-    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+    const user = await fillName()
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
 
     expect(await screen.findByText('Une erreur est survenue. Veuillez réessayer.')).toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
@@ -104,8 +99,8 @@ describe('NewExchangeModal', () => {
     const onOpenChange = vi.fn()
     render(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
-    const user = await fillRequiredFields()
-    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+    const user = await fillName()
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
     expect(push).toHaveBeenCalledWith('/dashboard')
@@ -119,13 +114,44 @@ describe('NewExchangeModal', () => {
       <NewExchangeModal open onOpenChange={onOpenChange} />
     )
 
-    const user = await fillRequiredFields()
-    await user.click(screen.getByRole('button', { name: "Créer l'échange" }))
+    const user = await fillName()
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
     expect(await screen.findByText(EXCHANGE_INVALID_MESSAGE)).toBeInTheDocument()
 
     rerender(<NewExchangeModal open={false} onOpenChange={onOpenChange} />)
     rerender(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     expect(screen.queryByText(EXCHANGE_INVALID_MESSAGE)).toBeNull()
+  })
+
+  it('hides the collaborator section for non-owners', () => {
+    render(<NewExchangeModal open onOpenChange={() => {}} isOwner={false} />)
+    expect(screen.queryByText(/Inviter un collaborateur/)).toBeNull()
+  })
+
+  it('lets an owner add and dedupe collaborator chips and submits them', async () => {
+    createExchange.mockResolvedValueOnce({ ok: true })
+    render(<NewExchangeModal open onOpenChange={() => {}} isOwner />)
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Nom de l’échange'), 'Espagne 2026')
+    await user.click(screen.getByRole('button', { name: /Inviter un collaborateur/ }))
+    const emailInput = screen.getByPlaceholderText('adresse@etablissement.fr')
+    await user.type(emailInput, 'collega@x.fr{Enter}')
+    await user.type(emailInput, 'collega@x.fr{Enter}') // duplicate → ignored
+    expect(screen.getAllByText('collega@x.fr')).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
+    const fd = createExchange.mock.calls[0][0] as FormData
+    expect(fd.getAll('invite_email')).toEqual(['collega@x.fr'])
+  })
+
+  it('shows inviteErrors inline while still closing on ok', async () => {
+    createExchange.mockResolvedValueOnce({ ok: true, inviteErrors: [{ email: 'bad', message: 'Adresse e-mail invalide.' }] })
+    const onOpenChange = vi.fn()
+    render(<NewExchangeModal open onOpenChange={onOpenChange} isOwner />)
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Nom de l’échange'), 'Espagne 2026')
+    await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
+    expect(await screen.findByText(/bad/)).toBeInTheDocument()
+    expect(await screen.findByText(/Adresse e-mail invalide\./)).toBeInTheDocument()
   })
 })
