@@ -1,7 +1,7 @@
 # Test Coverage & Reliability Hardening — Design
 
 **Date:** 2026-07-07
-**Status:** Approved design, pending Bjorn's spec review
+**Status:** Approved by Bjorn 2026-07-07 — implementation plan: `docs/superpowers/plans/2026-07-07-test-reliability.md`
 **Budget:** ~1 day, highest-leverage only. No new infrastructure (no Docker, no local Supabase stack, no paid GitHub features).
 
 ## Context

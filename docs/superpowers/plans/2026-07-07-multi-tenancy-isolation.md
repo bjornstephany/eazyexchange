@@ -18,6 +18,13 @@ Three 2026-07-07 sub-projects touch the same ground. This plan is written to com
 2. **Perf/cold-starts spec, item 2** rewrites the `send-reminders` fetch (filtered + paginated, fixes the 1,000-row truncation). The multi-tenancy spec sequences fair-share **after** that lands. Task 4 has a preflight check; its two edits (add `school_id` to the select embeds; replace the send loop) are the same in both worlds because grouping always happens over the accumulated rows.
 3. **Test-reliability spec** plans its own `.github/workflows/ci.yml` (check + deploy jobs) while W1 creates `ci.yml` with unit + rls jobs. Whichever lands second merges into the existing file — flag it at execution time, don't clobber.
 
+**Bjorn's global sub-project order (2026-07-07, his call):** architecture-scalability → multi-tenancy → security-hardening → perf-cold-starts → test-reliability → debt-guardrails. Two interleaves reconcile that order with this plan's dependencies:
+
+- **W1 pull-forward:** execute Tasks 1–4 here (no harness dependency), then pull **only Phase W1** of the security-hardening plan forward (its Tasks 1–6 are self-contained and end at a phase boundary), then return for Tasks 5–7. Security-hardening W2–W5 stay in their slot.
+- **D4 wrinkle, resolved here (the architecture session left it to this plan):** fair-share (Task 4) may execute *before* the cold-starts reminders rewrite. Verified against the committed cold-starts plan (d3825cd): both keep the same select embeds and group over accumulated rows, so the edits are textually compatible; whichever lands second resolves a small merge in `index.ts`, and if both land unmerged-to-prod together they ship in one edge-function deploy. Deferring Task 4 until after cold-starts is equally fine — it is a preference, not a blocker.
+
+**Growth-shape note (architecture spec, approved 2026-07-07):** the product direction is per-school tenants — partner schools sign up separately and *never share an exchange record*. The pair-scope surface (nullable `school_b_id` + pair-scoped policies) nonetheless remains live in the schema, so Task 5 pins its boundary; if pair-scoping is ever removed, Task 5's positive cases get deleted with it.
+
 ## Global Constraints
 
 - Package manager is **pnpm**; never npm.
@@ -460,7 +467,7 @@ Testing note (per spec §4): `index.ts` is Deno and outside tsconfig — the bud
 
 Run: `grep -n "\.range(" supabase/functions/send-reminders/index.ts`
 
-The spec sequences fair-share **after** the cold-starts pagination rewrite. If the grep finds nothing, the rewrite has not landed: **report this to the controller before proceeding.** Proceeding anyway is acceptable (the edits below are identical in both worlds and were written against the current single-fetch shape); the cost is a small textual merge when the cold-starts work lands, plus both changes must ship in the same manual edge-function deploy if they land together.
+The spec sequences fair-share **after** the cold-starts pagination rewrite, but per the D4-wrinkle resolution in the plan header, proceeding without it is fine: the edits below are identical in both worlds (written against the current single-fetch shape; verified compatible with the cold-starts plan d3825cd). If the grep finds nothing, note in the task report that the cold-starts rewrite hasn't landed — whichever lands second resolves a small merge in this file, and if both land together they ship in one edge-function deploy.
 
 - [ ] **Step 2: Import + budget knob**
 
