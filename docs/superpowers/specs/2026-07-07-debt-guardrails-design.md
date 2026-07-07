@@ -51,7 +51,7 @@ Survey findings that motivated each section:
 - Server-action error redaction: production redacts thrown Server Action/RSC error messages; expected outcomes must be structured return values; never branch client-side on `error.message`.
 
 **`docs/DEPLOY.md`** (operational knowledge; absorb, don't duplicate CLAUDE.md):
-- Preview-deploy loop: per-branch Vercel Preview URLs instead of pushing to prod; record the decision that preview shares prod data (2026-07-06).
+- Preview-deploy loop: per-branch Vercel Preview URLs instead of pushing to prod. Data caveat: previews currently still hit the prod Supabase project; the share-prod-data decision was reversed 2026-07-07 in favor of a separate staging project (see `2026-07-07-architecture-scalability-design.md`) — document the *current* state and point at that spec for the target state.
 - Supabase invite email template must point at `/auth/confirm` — a default template silently breaks all student invites (symptom: "Auth session missing!", GET `/verify` in auth logs).
 - Full env-var inventory across Vercel/local: Supabase keys, Resend (`EMAIL_FROM` must be `Name <mailbox@domain>`, not a bare domain), Stripe set, `FEEDBACK_EMAIL`, `NEXT_PUBLIC_APP_URL` (must be non-sensitive or it bakes empty into the client bundle).
 - Manual dashboard steps not in code: Supabase Site URL + redirect URLs, Google provider config pointer (details already in CLAUDE.md), Stripe webhook registration pointer.
@@ -72,7 +72,7 @@ Rule of thumb going forward: auto-memory holds project *status*; the repo owns *
 
 **Declined:**
 - **components/ directory reorg** (14 legacy root-level components vs newer domain folders). Buys tidiness, not speed; changes don't ripple through placement.
-- **RLS test harness** (local Supabase + policy tests). The June security audit hardened policies and the fix-migration cluster stopped; WSL2 local-Supabase friction makes this expensive. *Revisit trigger:* the next RLS bug that reaches prod.
+- **RLS test harness** (local Supabase + policy tests). The June security audit hardened policies and the fix-migration cluster stopped; WSL2 local-Supabase friction makes this expensive. *Revisit trigger:* the next RLS bug that reaches prod. **Note:** the multi-tenancy isolation spec (8ecd104, same day) proposes a D1 RLS test suite — if that ships, it supersedes this declination; this sprint simply doesn't build one.
 
 **Tripwire (binding on future work):**
 - The next feature that touches `actions/applications.ts` (572 lines, churn leader, mixes public-token / organizer / invitation trust models) **starts by splitting it along trust lines** — `actions/apply.ts` (public token flow), `actions/applications-review.ts` (organizer), `actions/invitations.ts` — before adding behavior.
@@ -81,7 +81,7 @@ Rule of thumb going forward: auto-memory holds project *status*; the repo owns *
 
 - One branch: `chore/debt-guardrails`. Order: §1 → §2 → §3 → §4 (types regen assumes the healed ledger; docs reference the final workflow).
 - No behavior changes anywhere. Gate before merge: `pnpm lint`, `pnpm test` (555/555), `npx tsc --noEmit`.
-- Coordination: the separate "perf cold starts" spec (94f2fb0, awaiting review) touches different files (landing, `send-reminders`); either order works, but merge one before starting the other.
+- Coordination: three sibling specs from 2026-07-07 are also awaiting review — perf cold starts (94f2fb0), test reliability hardening (608e7a2), multi-tenancy isolation (8ecd104). This sprint's files (types/, lib/auth/, lib/supabase/, action preambles, CLAUDE.md, docs/DEPLOY.md, migration renames) barely overlap theirs, but the §4 preamble sweep touches every `actions/*.ts` file, so run this sprint while no other branch is open, and merge specs' implementation branches one at a time.
 
 ## Error handling & testing
 
