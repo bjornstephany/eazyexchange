@@ -5,9 +5,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents, IconFeedback } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
+import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
 
 export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2; archived: boolean }
@@ -85,6 +86,7 @@ export function OrganizerShell({
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
   const [listSearch, setListSearch] = useState('')
@@ -174,7 +176,15 @@ export function OrganizerShell({
             </>
           )}
         </div>
-        <div ref={menuRef} className="relative mt-auto">
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(true)}
+          className="mt-auto flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium text-rail-inactive hover:bg-white/5 hover:text-white"
+        >
+          <IconFeedback />
+          <span>Feedback</span>
+        </button>
+        <div ref={menuRef} className="relative mt-2.5">
           {menuOpen && (
             <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
               <Link
@@ -264,6 +274,7 @@ export function OrganizerShell({
         remaining={remaining}
         isOwner={orgRole === 'owner'}
       />
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   )
 }
