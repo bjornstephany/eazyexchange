@@ -25,7 +25,7 @@ export type School = {
 }
 export type Exchange = {
   id: string; name: string; year: number
-  school_a_id: string; school_b_id: string; created_at: string
+  school_a_id: string; school_b_id: string | null; created_at: string
   application_open: boolean
   application_deadline: string | null
   apply_slug: string | null
