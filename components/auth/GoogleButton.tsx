@@ -24,7 +24,7 @@ export function GoogleButton({
     const redirectTo = `${window.location.origin}/auth/callback${qs ? `?${qs}` : ''}`
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo },
+      options: { redirectTo, queryParams: { prompt: 'select_account' } },
     })
     // On success the browser has already navigated to Google; only reset on error.
     if (error) setLoading(false)

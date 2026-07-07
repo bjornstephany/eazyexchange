@@ -27,7 +27,7 @@ function layout(body: string, footer = "You're receiving this because you have f
   return `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #1F3A30;">
       <h2 style="font-weight: 700; letter-spacing: -0.02em; font-size: 20px;">
-        <span style="color: #3FA277;">Eazy</span>Exchange
+        <span style="color: #2456E6;">Eazy</span>Exchange
       </h2>
       ${body}
       <hr style="border: none; border-top: 1px solid #E7F1EC; margin: 24px 0;" />

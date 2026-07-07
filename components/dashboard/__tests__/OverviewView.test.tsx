@@ -53,6 +53,12 @@ describe('OverviewView phase 1', () => {
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 
+  it('shows the no-active-forms card linking to /forms when there are no active templates', () => {
+    render(<OverviewView {...base} phase={1} templates={[]} />)
+    expect(screen.getByText('Aucun formulaire actif')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Préparer les formulaires' })).toHaveAttribute('href', '/forms')
+  })
+
   it('shows the empty-state CTA when applications have never opened', () => {
     render(<OverviewView {...base} phase={1} apps={[]} applicationOpen={false} applicationDeadline={null} />)
     expect(screen.getByRole('heading', { name: /Commencez votre échange/ })).toBeInTheDocument()

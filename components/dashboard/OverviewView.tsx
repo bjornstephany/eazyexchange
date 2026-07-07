@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill } from '@/lib/dashboard/rollup'
 import {
   p1Funnel,
@@ -89,7 +90,7 @@ export function OverviewView(props: OverviewProps) {
   const filteredApps = phase === 1 ? p1Filter(apps, filter) : []
   const filteredRollups = phase === 2 ? p2Filter(rollups, filter) : []
 
-  const cards = actionCards(phase, apps, rollups)
+  const cards = actionCards(phase, apps, rollups, templates.length)
   const next = nextDeadline(rollups)
   const prog = computeProgress(phase, apps, rollups)
   const subline = overviewSubline(phase, apps, rollups)
@@ -260,13 +261,22 @@ export function OverviewView(props: OverviewProps) {
                 >
                   <span className="text-sm font-semibold text-navy">{card.title}</span>
                   <span className="text-[12.5px] text-muted-foreground">{card.desc}</span>
-                  <button
-                    type="button"
-                    onClick={() => setFilter(card.filterKey)}
-                    className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
-                  >
-                    {card.cta}
-                  </button>
+                  {card.href ? (
+                    <Link
+                      href={card.href}
+                      className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
+                    >
+                      {card.cta}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setFilter(card.filterKey)}
+                      className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
+                    >
+                      {card.cta}
+                    </button>
+                  )}
                 </div>
               ))
             )}

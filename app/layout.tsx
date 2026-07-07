@@ -24,7 +24,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://eazyexchange.com'),
-  title: 'EazyExchange — Every student, cleared for departure',
+  title: 'EazyExchange',
   description:
     'Turn pre-trip exchange paperwork into a live boarding manifest. Personal checklists and automatic reminders for students; one dashboard for organizers.',
 }

@@ -29,3 +29,17 @@ describe('LoginPage error banner (French)', () => {
     expect(await screen.findByText(/associer votre compte google à une invitation/i)).toBeInTheDocument()
   })
 })
+
+describe('LoginPage layout', () => {
+  it('shows the "ou continuer avec" separator and a Google button labelled Google', () => {
+    window.history.pushState({}, '', '/login')
+    render(<LoginPage />)
+    expect(screen.getByText(/ou continuer avec/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Google' })).toBeInTheDocument()
+  })
+  it('links to the signup page', () => {
+    window.history.pushState({}, '', '/login')
+    render(<LoginPage />)
+    expect(screen.getByRole('link', { name: /Créer un compte/i })).toHaveAttribute('href', '/signup')
+  })
+})

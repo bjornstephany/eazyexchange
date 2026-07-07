@@ -26,7 +26,7 @@ export function InviteModal({
   const [step, setStep] = useState<'deadline' | 'link'>('deadline')
   const [deadline, setDeadline] = useState('')
   const [saving, setSaving] = useState(false)
-  const [confirmingClose, setConfirmingClose] = useState(false)
+  const [showCloseWarning, setShowCloseWarning] = useState(false)
   const [copied, setCopied] = useState(false)
 
   // Reset transient state each time the modal is opened.
@@ -35,7 +35,7 @@ export function InviteModal({
       setStep('deadline')
       setDeadline('')
       setSaving(false)
-      setConfirmingClose(false)
+      setShowCloseWarning(false)
       setCopied(false)
     }
   }, [open])
@@ -63,8 +63,8 @@ export function InviteModal({
   // Every close path (X, Escape, backdrop, explicit button) routes here so the
   // link step can intercept and warn before actually closing.
   function requestClose() {
-    if (step === 'link' && !confirmingClose) {
-      setConfirmingClose(true)
+    if (step === 'link' && !copied && !showCloseWarning) {
+      setShowCloseWarning(true)
       return
     }
     close()
@@ -74,6 +74,7 @@ export function InviteModal({
     try {
       await navigator.clipboard.writeText(applyUrl)
       setCopied(true)
+      setShowCloseWarning(false)
     } catch {
       /* best-effort: field is selectable for manual copy */
     }
@@ -111,25 +112,6 @@ export function InviteModal({
               </Button>
             </div>
           </>
-        ) : confirmingClose ? (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display text-2xl font-bold tracking-tight text-navy">
-                Avez-vous copié le lien&nbsp;?
-              </DialogTitle>
-              <DialogDescription className="text-[15px] text-muted-foreground">
-                Vous ne reverrez plus ce lien. Assurez-vous de l&apos;avoir copié avant de fermer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-1.5 flex justify-end gap-3">
-              <Button type="button" variant="ghost" onClick={() => setConfirmingClose(false)} className="text-muted-foreground">
-                Annuler
-              </Button>
-              <Button type="button" onClick={close}>
-                Fermer quand même
-              </Button>
-            </div>
-          </>
         ) : (
           <>
             <DialogHeader>
@@ -155,9 +137,14 @@ export function InviteModal({
                 </Button>
               </div>
             </div>
+            {showCloseWarning && (
+              <div className="mt-3 rounded-[10px] border border-[#F0C674] bg-[#FDF6E7] px-3.5 py-2.5 text-[13px] font-medium text-[#8A6100]">
+                Vous ne reverrez plus ce lien — copiez-le avant de fermer.
+              </div>
+            )}
             <div className="mt-1.5 flex justify-end">
               <Button type="button" onClick={requestClose}>
-                Fermer
+                {showCloseWarning ? 'Fermer quand même' : 'Fermer'}
               </Button>
             </div>
           </>

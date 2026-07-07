@@ -10,11 +10,19 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Arrêtez')
   })
 
-  it('switches to English and persists the choice', () => {
+  it('switches to English via the language dropdown and persists the choice', () => {
     render(<LandingPage />)
-    fireEvent.click(screen.getByRole('button', { name: /^en$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /changer de langue/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'English' }))
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Stop chasing')
     expect(window.localStorage.getItem('ee_lang')).toBe('en')
+  })
+
+  it('the language menu opens and lists both languages', () => {
+    render(<LandingPage />)
+    fireEvent.click(screen.getByRole('button', { name: /changer de langue/i }))
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'English' })).toBeInTheDocument()
   })
 
   it('hydrates the stored language on mount', () => {

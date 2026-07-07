@@ -40,4 +40,13 @@ describe('forms emails', () => {
     })
     expect(ok).toBe(false)
   })
+
+  it('renders the wordmark in brand blue, not green', async () => {
+    await sendTemplateReminderEmail({
+      to: 's@x.fr', studentName: 'Léa', templateName: 'Passeport', exchangeName: 'Espagne', deadline: null,
+    })
+    const call = sendMock.mock.calls[0][0]
+    expect(call.html).toContain('<span style="color: #2456E6;">Eazy</span>Exchange')
+    expect(call.html).not.toContain('#3FA277')
+  })
 })

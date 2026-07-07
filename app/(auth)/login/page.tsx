@@ -1,5 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -42,20 +44,25 @@ export default function LoginPage() {
   return (
     <CenteredCard maxWidth={460} className="flex flex-col gap-[22px]">
       <h3 className="m-0 font-display text-2xl font-bold tracking-[-0.02em] text-[#10203F]">Connexion</h3>
-      <GoogleButton label="Continuer avec Google" />
-      <div className="flex items-center gap-3.5 font-mono text-[13px] font-medium text-[#8A97B2]">
-        <span className="flex-1 border-t border-[#E4E9F2]" />ou<span className="flex-1 border-t border-[#E4E9F2]" />
-      </div>
+
       <form onSubmit={handleLogin} className="flex flex-col gap-[22px]">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email" className="text-sm font-semibold text-[#42506E]">E-mail</Label>
-          <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required
-            className="h-[50px] rounded-[11px] border-[#C4CDE0] text-base" />
+          <Label htmlFor="email" className="sr-only">Adresse e-mail</Label>
+          <div className="relative">
+            <Mail aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8A97B2]" />
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required
+              placeholder="Adresse e-mail"
+              className="h-[50px] rounded-[11px] border-[#C4CDE0] pl-11 text-base" />
+          </div>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="password" className="text-sm font-semibold text-[#42506E]">Mot de passe</Label>
-          <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required
-            className="h-[50px] rounded-[11px] border-[#C4CDE0] text-base" />
+          <Label htmlFor="password" className="sr-only">Mot de passe</Label>
+          <div className="relative">
+            <Lock aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8A97B2]" />
+            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required
+              placeholder="Mot de passe"
+              className="h-[50px] rounded-[11px] border-[#C4CDE0] pl-11 text-base" />
+          </div>
         </div>
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
         <Button type="submit" disabled={loading}
@@ -63,6 +70,16 @@ export default function LoginPage() {
           {loading ? 'Connexion…' : 'Se connecter'}
         </Button>
       </form>
+
+      <div className="flex items-center gap-3.5 font-mono text-[13px] font-medium text-[#8A97B2]">
+        <span className="flex-1 border-t border-[#E4E9F2]" />ou continuer avec<span className="flex-1 border-t border-[#E4E9F2]" />
+      </div>
+      <GoogleButton label="Google" />
+
+      <p className="text-center text-sm text-[#5B6B8C]">
+        Pas encore de compte&nbsp;?{' '}
+        <Link href="/signup" className="font-semibold text-[#2456E6] hover:underline">Créer un compte</Link>
+      </p>
     </CenteredCard>
   )
 }

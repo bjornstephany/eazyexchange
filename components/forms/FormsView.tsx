@@ -1,7 +1,6 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { StatusPill } from '@/components/dashboard/StatusPill'
-import { useShellUi } from '@/components/shell/ShellUiContext'
 import { typePill, statusPill, progressLabel, progressPct, formsStats, type TemplateVM } from '@/lib/forms/rollup'
 import { p } from '@/lib/dashboard/rollup'
 import { TemplateIcon } from './TemplateIcon'
@@ -18,21 +17,10 @@ export function FormsView({
   templates: TemplateVM[]
   studentCount: number
 }) {
-  const { listSearch, addRequestId } = useShellUi()
   const [showAdd, setShowAdd] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
-  const lastAddRequest = useRef(addRequestId)
 
-  // Top-bar « + Nouveau formulaire » bumps addRequestId → open the panel.
-  useEffect(() => {
-    if (addRequestId !== lastAddRequest.current) {
-      lastAddRequest.current = addRequestId
-      setShowAdd(true)
-    }
-  }, [addRequestId])
-
-  const q = listSearch.trim().toLowerCase()
-  const visible = q ? templates.filter(t => t.name.toLowerCase().includes(q)) : templates
+  const visible = templates
   const stats = formsStats(templates)
   const open = openId ? templates.find(t => t.id === openId) ?? null : null
 
@@ -117,9 +105,6 @@ export function FormsView({
             </div>
           </div>
         ))}
-        {visible.length === 0 && q && (
-          <p className="py-6 text-center text-sm text-muted-foreground">Aucun résultat pour «&nbsp;{listSearch.trim()}&nbsp;»</p>
-        )}
       </div>
 
       <FormDrawer vm={open} onClose={() => setOpenId(null)} />

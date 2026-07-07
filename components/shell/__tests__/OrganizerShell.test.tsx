@@ -139,17 +139,16 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('Docs').closest('a')).toHaveAttribute('href', '/documents')
   })
 
-  it('shows the contextual search + CTA on /forms instead of the invite button', () => {
+  it('shows no top-bar search or create button on /forms', () => {
     renderShell({ pathname: '/forms' })
-    expect(screen.getByPlaceholderText('Rechercher un formulaire…')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Nouveau formulaire/ })).toBeInTheDocument()
-    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
+    expect(screen.queryByPlaceholderText('Rechercher un formulaire…')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Nouveau formulaire/ })).toBeNull()
   })
 
-  it('shows the documents CTA on /documents', () => {
+  it('shows no top-bar search or create button on /documents', () => {
     renderShell({ pathname: '/documents' })
-    expect(screen.getByPlaceholderText('Rechercher un document…')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Demander un document/ })).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Rechercher un document…')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Demander un document/ })).toBeNull()
   })
 
   it('shows no invite button on /dashboard', () => {
@@ -188,20 +187,16 @@ describe('OrganizerShell', () => {
     expect(screen.queryByText('Phase 1 · Recrutement')).toBeNull()
   })
 
-  it('rail contains Élèves and Réglages when an exchange is active', () => {
+  it('rail contains Élèves but not Réglages when an exchange is active', () => {
     renderShell({ pathname: '/dashboard' })
     expect(screen.getByRole('link', { name: /Élèves/ })).toHaveAttribute('href', '/students')
-    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
+    expect(screen.queryByRole('link', { name: /Réglages/ })).toBeNull()
   })
 
-  it('Réglages stays visible with zero exchanges but Élèves does not', () => {
-    mockPathname = '/dashboard'
-    render(
-      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
-        <p>page</p>
-      </OrganizerShell>
-    )
-    expect(screen.getByRole('link', { name: /Réglages/ })).toBeInTheDocument()
-    expect(screen.queryByText('Élèves')).toBeNull()
+  it('Réglages lives in the profile menu and links to /settings', () => {
+    renderShell({ pathname: '/dashboard' })
+    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
+    expect(screen.getByRole('link', { name: 'Réglages' })).toHaveAttribute('href', '/settings')
+    expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
   })
 })
