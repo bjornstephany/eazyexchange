@@ -99,6 +99,17 @@ export type Feedback = {
   type: 'suggestion' | 'bug'; message: string; page_path: string | null
   status: 'new' | 'reviewed' | 'done'; created_at: string
 }
+export type EmailSendStatus = 'sent' | 'error'
+export type EmailSendLog = {
+  id: string
+  created_at: string
+  recipient: string
+  kind: string
+  status: EmailSendStatus
+  error_code: number | null
+  school_id: string | null
+  exchange_id: string | null
+}
 
 type TableDef<Row, Insert, Update> = {
   Row: Row
@@ -134,6 +145,12 @@ export type Database = {
       document_uploads: TableDef<DocumentUpload, Omit<DocumentUpload, 'id' | 'uploaded_at'>, Partial<DocumentUpload>>
       applications: TableDef<Application, Omit<Application, 'id' | 'created_at' | 'updated_at'>, Partial<Application>>
       feedback: TableDef<Feedback, Omit<Feedback, 'id' | 'status' | 'created_at'> & Partial<Pick<Feedback, 'status'>>, Partial<Feedback>>
+      email_send_log: TableDef<
+        EmailSendLog,
+        Omit<EmailSendLog, 'id' | 'created_at' | 'error_code' | 'school_id' | 'exchange_id'> &
+          Partial<Pick<EmailSendLog, 'error_code' | 'school_id' | 'exchange_id'>>,
+        Partial<EmailSendLog>
+      >
       rate_limits: TableDef<RateLimit, RateLimit, Partial<RateLimit>>
     }
     Views: Record<string, never>
