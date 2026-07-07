@@ -21,4 +21,12 @@ describe('PlanSelector', () => {
     expect(screen.getByText('499 €')).toBeInTheDocument()
     expect(screen.getByText('799 €')).toBeInTheDocument()
   })
+  it('shows an audience line for each plan and the shared feature bullets', () => {
+    render(<PlanSelector />)
+    expect(screen.getByText('Pour un jumelage unique')).toBeInTheDocument()
+    expect(screen.getByText('Pour plusieurs programmes en parallèle')).toBeInTheDocument()
+    expect(screen.getByText('Pour les grands établissements')).toBeInTheDocument()
+    // Bullets are identical across the three cards → one per plan.
+    expect(screen.getAllByText('Relances automatiques par e-mail')).toHaveLength(3)
+  })
 })

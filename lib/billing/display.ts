@@ -15,6 +15,21 @@ export const PLAN_DESC_FR: Record<PlanKey, string> = {
   growth: 'Pour les associations en pleine croissance.',
   scale: 'Pour les grands réseaux d’échanges.',
 }
+// Audience line shown on each plan card (semibold, under the cap).
+export const PLAN_AUDIENCE_FR: Record<PlanKey, string> = {
+  starter: 'Pour un jumelage unique',
+  growth: 'Pour plusieurs programmes en parallèle',
+  scale: 'Pour les grands établissements',
+}
+
+// Shared feature bullets — identical across plans (only the cap differs).
+export const PLAN_FEATURE_BULLETS_FR: string[] = [
+  'Élèves et familles illimités',
+  'Formulaires et documents illimités',
+  'Relances automatiques par e-mail',
+  'Suivi des dossiers en temps réel',
+]
+
 export const TRIAL_LABEL = 'Essai gratuit'
 export const TRIAL_PRICE = '0 €'
 export const TRIAL_DESC = 'Votre premier échange est offert — aucun paiement requis.'

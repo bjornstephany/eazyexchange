@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { PLAN_KEYS, type PlanKey } from '@/lib/billing/plans'
-import { PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel } from '@/lib/billing/display'
+import { PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel, PLAN_AUDIENCE_FR, PLAN_FEATURE_BULLETS_FR } from '@/lib/billing/display'
 
 export function PlanSelector() {
   const [selected, setSelected] = useState<PlanKey>('growth')
@@ -24,6 +24,15 @@ export function PlanSelector() {
               <span className="font-display text-[17px] font-bold tracking-[-0.02em] text-[#10203F]">{PLAN_LABEL_FR[key]}</span>
               <span className="text-[15px] font-semibold text-[#10203F]">{PLAN_PRICE_FR[key]} <span className="text-[13px] font-normal text-[#5B6B8C]">/ an</span></span>
               <span className="text-[13.5px] text-[#5B6B8C]">{planCapLabel(key)}</span>
+              <span className="mt-1.5 text-[13px] font-semibold text-[#10203F]">{PLAN_AUDIENCE_FR[key]}</span>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {PLAN_FEATURE_BULLETS_FR.map(f => (
+                  <li key={f} className="flex items-start gap-1.5 text-[12.5px] text-[#5B6B8C]">
+                    <span aria-hidden className="mt-[1px] text-[#2456E6]">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
             </button>
           )
         })}
