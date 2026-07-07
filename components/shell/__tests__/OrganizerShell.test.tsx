@@ -12,6 +12,9 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
 vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
 vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
+vi.mock('@/components/shell/FeedbackModal', () => ({
+  FeedbackModal: ({ open }: { open: boolean }) => (open ? <div>feedback-modal-open</div> : null),
+}))
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
@@ -198,5 +201,16 @@ describe('OrganizerShell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
     expect(screen.getByRole('link', { name: 'Réglages' })).toHaveAttribute('href', '/settings')
     expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
+  })
+
+  it('shows a Feedback rail button that opens the feedback modal', () => {
+    render(
+      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.queryByText('feedback-modal-open')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Feedback/ }))
+    expect(screen.getByText('feedback-modal-open')).toBeInTheDocument()
   })
 })

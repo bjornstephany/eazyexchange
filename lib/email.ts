@@ -228,3 +228,25 @@ export async function sendOrganizerInviteEmail(opts: {
   `, ORGANIZER_FOOTER)
   return send(opts.to, `${opts.inviterName} vous invite sur Eazyexchange`, html, 'organizer invite email')
 }
+
+export async function sendFeedbackNotificationEmail(opts: {
+  type: 'suggestion' | 'bug'
+  schoolName: string
+  organizerName: string
+  pagePath: string | null
+  message: string
+}): Promise<void> {
+  const to = process.env.FEEDBACK_EMAIL
+  // Optional, Bjorn-only var: the row is the source of truth, so skip silently.
+  if (!to) return
+
+  const typeLabel = opts.type === 'bug' ? 'Bug' : 'Suggestion'
+  const path = opts.pagePath ? esc(opts.pagePath) : '—'
+  const message = esc(opts.message).replace(/\n/g, '<br>')
+  const html = layout(`
+    <p><strong>${typeLabel}</strong> — ${esc(opts.schoolName)}</p>
+    <p style="font-size:13px;color:#5C7268;">De ${esc(opts.organizerName)} · page ${path}</p>
+    <p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${message}</p>
+  `, ORG_FOOTER)
+  await send(to, `Nouveau feedback (${opts.type}) — ${opts.schoolName}`, html, 'feedback notification email')
+}

@@ -94,6 +94,11 @@ export type OrganizerInvite = {
   accepted_at: string | null; revoked_at: string | null
 }
 export type RateLimit = { key: string; hits: number; window_start: string }
+export type Feedback = {
+  id: string; user_id: string; school_id: string
+  type: 'suggestion' | 'bug'; message: string; page_path: string | null
+  status: 'new' | 'reviewed' | 'done'; created_at: string
+}
 
 type TableDef<Row, Insert, Update> = {
   Row: Row
@@ -128,6 +133,7 @@ export type Database = {
       field_answers: TableDef<FieldAnswer, Omit<FieldAnswer, 'id'>, Partial<FieldAnswer>>
       document_uploads: TableDef<DocumentUpload, Omit<DocumentUpload, 'id' | 'uploaded_at'>, Partial<DocumentUpload>>
       applications: TableDef<Application, Omit<Application, 'id' | 'created_at' | 'updated_at'>, Partial<Application>>
+      feedback: TableDef<Feedback, Omit<Feedback, 'id' | 'status' | 'created_at'> & Partial<Pick<Feedback, 'status'>>, Partial<Feedback>>
       rate_limits: TableDef<RateLimit, RateLimit, Partial<RateLimit>>
     }
     Views: Record<string, never>
