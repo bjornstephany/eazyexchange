@@ -62,3 +62,11 @@ export function IconSettings() {
     </div>
   )
 }
+
+export function IconFeedback() {
+  return (
+    <div className="relative h-4 w-4 rounded-[3px] rounded-bl-none border-[1.5px] border-current">
+      <div className="absolute -bottom-[3px] left-[2px] h-[4px] w-[4px] rotate-45 border-b-[1.5px] border-l-[1.5px] border-current bg-rail" />
+    </div>
+  )
+}
