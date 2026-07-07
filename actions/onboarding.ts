@@ -2,7 +2,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 // Persists the organizer's school name from the /onboarding page. Mirrors
 // createExchange's guards. Uses the cookie (RLS) client — the organizer
@@ -23,5 +22,4 @@ export async function completeOnboarding(formData: FormData): Promise<void> {
   if (error) throw error
 
   revalidatePath('/dashboard')
-  redirect('/dashboard')
 }
