@@ -102,11 +102,17 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
       const admin = createAdminClient()
       const appUrl = getAppUrl()
       for (const email of emails) {
-        const r = await createAndSendOrganizerInvite(admin, {
-          schoolId: profile.school_id, email,
-          inviterUserId: user.id, inviterName: profile.full_name, appUrl,
-        })
-        if (!r.ok) inviteErrors.push({ email, message: r.message })
+        try {
+          const r = await createAndSendOrganizerInvite(admin, {
+            schoolId: profile.school_id, email,
+            inviterUserId: user.id, inviterName: profile.full_name, appUrl,
+          })
+          if (!r.ok) inviteErrors.push({ email, message: r.message })
+        } catch {
+          // Unexpected (infra) rejection — never abort creation, and never
+          // log PII (the email) in this catch.
+          inviteErrors.push({ email, message: 'L’invitation n’a pas pu être envoyée. Réessayez.' })
+        }
       }
     }
   }

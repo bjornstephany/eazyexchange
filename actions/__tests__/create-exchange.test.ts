@@ -163,6 +163,18 @@ describe('createExchange collaborator invites', () => {
     expect(result).toEqual({ ok: true, inviteErrors: [{ email: 'bad', message: 'Adresse e-mail invalide.' }] })
   })
 
+  it('still creates the exchange and returns a generic inviteError when an invite rejects unexpectedly', async () => {
+    ;(createAndSendOrganizerInvite as any)
+      .mockRejectedValueOnce(new Error('infra'))
+      .mockResolvedValueOnce({ ok: true })
+    const result = await createExchange(formWith(base, ['bad@x.fr', 'b@x.fr']))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+    expect(result).toEqual({
+      ok: true,
+      inviteErrors: [{ email: 'bad@x.fr', message: 'L’invitation n’a pas pu être envoyée. Réessayez.' }],
+    })
+  })
+
   it('skips invites entirely for an admin caller', async () => {
     ;(createAndSendOrganizerInvite as any).mockResolvedValue({ ok: true })
     opts = { orgRole: 'admin' }
