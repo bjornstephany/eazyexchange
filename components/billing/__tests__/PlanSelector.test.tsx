@@ -15,6 +15,17 @@ describe('PlanSelector', () => {
     await user.click(screen.getByText('Essentiel'))
     expect(screen.getByRole('link', { name: /continuer avec Essentiel/i })).toBeInTheDocument()
   })
+  it('exposes the cards as a keyboard-operable radiogroup', async () => {
+    const user = userEvent.setup()
+    render(<PlanSelector />)
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument()
+    // Growth pre-selected → it is the checked radio and the sole tab stop.
+    const growth = screen.getByRole('radio', { checked: true })
+    growth.focus()
+    // Arrow key moves selection to the next card (growth → scale) and updates the CTA.
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByRole('link', { name: /continuer avec Réseau/i })).toBeInTheDocument()
+  })
   it('shows the yearly price for each tier', () => {
     render(<PlanSelector />)
     expect(screen.getByText('199 €')).toBeInTheDocument()

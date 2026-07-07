@@ -1,22 +1,37 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { PLAN_KEYS, type PlanKey } from '@/lib/billing/plans'
 import { PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel, PLAN_AUDIENCE_FR, PLAN_FEATURE_BULLETS_FR } from '@/lib/billing/display'
 
 export function PlanSelector() {
   const [selected, setSelected] = useState<PlanKey>('growth')
+  const cardRefs = useRef<Partial<Record<PlanKey, HTMLDivElement | null>>>({})
+  // Move selection to an adjacent card and follow it with focus (radiogroup arrow-key behavior).
+  const move = (key: PlanKey, delta: number) => {
+    const next = PLAN_KEYS[(PLAN_KEYS.indexOf(key) + delta + PLAN_KEYS.length) % PLAN_KEYS.length]
+    setSelected(next)
+    cardRefs.current[next]?.focus()
+  }
   return (
     <>
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+      <div role="radiogroup" aria-label="Choix du forfait" className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
         {PLAN_KEYS.map(key => {
           const active = key === selected
           return (
-            <button
+            <div
               key={key}
-              type="button"
+              ref={el => { cardRefs.current[key] = el }}
+              role="radio"
+              aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => setSelected(key)}
-              className={`relative flex flex-col gap-1.5 rounded-[14px] border p-5 text-left ${active ? 'border-2 border-[#2456E6] bg-[#F7F9FE]' : 'border-[#C4CDE0] hover:border-[#2456E6]'}`}
+              onKeyDown={e => {
+                if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setSelected(key) }
+                else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); move(key, 1) }
+                else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(key, -1) }
+              }}
+              className={`relative flex cursor-pointer flex-col gap-1.5 rounded-[14px] border p-5 text-left ${active ? 'border-2 border-[#2456E6] bg-[#F7F9FE]' : 'border-[#C4CDE0] hover:border-[#2456E6]'}`}
             >
               {key === 'growth' && (
                 <span className="absolute -top-2.5 left-4 rounded-full bg-[#2456E6] px-2.5 py-[3px] font-mono text-[11px] font-semibold tracking-[0.08em] text-white">POPULAIRE</span>
@@ -33,7 +48,7 @@ export function PlanSelector() {
                   </li>
                 ))}
               </ul>
-            </button>
+            </div>
           )
         })}
       </div>
