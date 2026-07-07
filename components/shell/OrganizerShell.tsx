@@ -86,14 +86,11 @@ export function OrganizerShell({
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
   const [listSearch, setListSearch] = useState('')
-  const [addRequestId, setAddRequestId] = useState(0)
 
   // Contextual search is page-scoped: leaving the page clears it.
   useEffect(() => { setListSearch('') }, [pathname])
 
-  const listPage = pathname.startsWith('/forms') ? 'forms'
-    : pathname.startsWith('/documents') ? 'docs'
-    : pathname.startsWith('/students') ? 'students' : null
+  const isStudents = pathname.startsWith('/students')
   const isSettings = pathname.startsWith('/settings')
 
   // Every "+ Nouvel échange" affordance routes through this. At the plan's
@@ -111,9 +108,7 @@ export function OrganizerShell({
     openNewExchange: handleNewExchange,
     listSearch,
     setListSearch,
-    addRequestId,
-    requestAdd: () => setAddRequestId(n => n + 1),
-  }), [handleNewExchange, listSearch, addRequestId])
+  }), [handleNewExchange, listSearch])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -238,7 +233,7 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {!isSettings && active && listPage === 'students' && (
+          {!isSettings && active && isStudents && (
             <input
               type="search"
               value={listSearch}
@@ -246,24 +241,6 @@ export function OrganizerShell({
               placeholder="Rechercher un élève…"
               className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
             />
-          )}
-          {!isSettings && active && (listPage === 'forms' || listPage === 'docs') && (
-            <div className="flex items-center gap-3">
-              <input
-                type="search"
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                placeholder={listPage === 'forms' ? 'Rechercher un formulaire…' : 'Rechercher un document…'}
-                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={shellUi.requestAdd}
-                className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
-              >
-                <span className="text-base leading-none">+</span> {listPage === 'forms' ? 'Nouveau formulaire' : 'Demander un document'}
-              </button>
-            </div>
           )}
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">

@@ -1,7 +1,6 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { StatusPill } from '@/components/dashboard/StatusPill'
-import { useShellUi } from '@/components/shell/ShellUiContext'
 import { reqPill, progressLabel, progressPct, docAttentionPill, docsStats, earliestActiveDeadline, type TemplateVM } from '@/lib/forms/rollup'
 import { frShortDate } from '@/lib/dashboard/rollup'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
@@ -19,20 +18,10 @@ export function DocsView({
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
 }) {
-  const { listSearch, addRequestId } = useShellUi()
   const [showAdd, setShowAdd] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
-  const lastAddRequest = useRef(addRequestId)
 
-  useEffect(() => {
-    if (addRequestId !== lastAddRequest.current) {
-      lastAddRequest.current = addRequestId
-      setShowAdd(true)
-    }
-  }, [addRequestId])
-
-  const q = listSearch.trim().toLowerCase()
-  const visible = q ? templates.filter(t => t.name.toLowerCase().includes(q)) : templates
+  const visible = templates
   const stats = docsStats(templates)
   const open = openId ? templates.find(t => t.id === openId) ?? null : null
   const due = earliestActiveDeadline(templates)
@@ -114,9 +103,6 @@ export function DocsView({
             </div>
           </div>
         ))}
-        {visible.length === 0 && q && (
-          <p className="py-6 text-center text-sm text-muted-foreground">Aucun résultat pour «&nbsp;{listSearch.trim()}&nbsp;»</p>
-        )}
       </div>
 
       <DocDrawer vm={open} exchangeId={exchangeId} enrolledStudents={enrolledStudents} onClose={() => setOpenId(null)} />

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { ShellUiContext, type ShellUi } from '@/components/shell/ShellUiContext'
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
 const createDraft = vi.fn().mockResolvedValue('new-id')
@@ -26,12 +25,8 @@ const vm = (over: Partial<TemplateVM>): TemplateVM => ({
   ...over,
 })
 
-function renderWith(ui: React.ReactElement, shell?: Partial<ShellUi>) {
-  const value: ShellUi = {
-    openNewExchange: vi.fn(), listSearch: '', setListSearch: vi.fn(),
-    addRequestId: 0, requestAdd: vi.fn(), ...shell,
-  }
-  return render(<ShellUiContext.Provider value={value}>{ui}</ShellUiContext.Provider>)
+function renderWith(ui: React.ReactElement) {
+  return render(ui)
 }
 
 describe('FormsView', () => {
@@ -42,11 +37,6 @@ describe('FormsView', () => {
     expect(screen.getByText('Actif')).toBeInTheDocument()
     expect(screen.getByText('1 / 2 reçus')).toBeInTheDocument()
     expect(screen.getByText('STANDARD')).toBeInTheDocument()
-  })
-  it('filters by the shell search and shows the empty-result line', () => {
-    renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />, { listSearch: 'zzz' })
-    expect(screen.queryByText('Formulaire de santé')).toBeNull()
-    expect(screen.getByText('Aucun résultat pour « zzz »')).toBeInTheDocument()
   })
   it('opens the add panel and creates an online draft', async () => {
     renderWith(<FormsView exchangeId="ex1" templates={[]} studentCount={0} />)
@@ -75,11 +65,7 @@ describe('FormsView', () => {
   it('shows Supprimer only for custom templates', () => {
     const { rerender } = renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />)
     expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(
-      <ShellUiContext.Provider value={{ openNewExchange: vi.fn(), listSearch: '', setListSearch: vi.fn(), addRequestId: 0, requestAdd: vi.fn() }}>
-        <FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />
-      </ShellUiContext.Provider>
-    )
+    rerender(<FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />)
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom template when the confirm is accepted', async () => {

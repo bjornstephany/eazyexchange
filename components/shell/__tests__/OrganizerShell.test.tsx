@@ -139,17 +139,16 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('Docs').closest('a')).toHaveAttribute('href', '/documents')
   })
 
-  it('shows the contextual search + CTA on /forms instead of the invite button', () => {
+  it('shows no top-bar search or create button on /forms', () => {
     renderShell({ pathname: '/forms' })
-    expect(screen.getByPlaceholderText('Rechercher un formulaire…')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Nouveau formulaire/ })).toBeInTheDocument()
-    expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
+    expect(screen.queryByPlaceholderText('Rechercher un formulaire…')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Nouveau formulaire/ })).toBeNull()
   })
 
-  it('shows the documents CTA on /documents', () => {
+  it('shows no top-bar search or create button on /documents', () => {
     renderShell({ pathname: '/documents' })
-    expect(screen.getByPlaceholderText('Rechercher un document…')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Demander un document/ })).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Rechercher un document…')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Demander un document/ })).toBeNull()
   })
 
   it('shows no invite button on /dashboard', () => {
