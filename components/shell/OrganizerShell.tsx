@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents, IconSettings } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
@@ -171,13 +171,17 @@ export function OrganizerShell({
               </RailItem>
             </>
           )}
-          <RailItem href="/settings" label="Réglages" active={pathname.startsWith('/settings')}>
-            <IconSettings />
-          </RailItem>
         </div>
         <div ref={menuRef} className="relative mt-auto">
           {menuOpen && (
             <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
+              <Link
+                href="/settings"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
+              >
+                Réglages
+              </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
