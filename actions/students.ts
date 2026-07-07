@@ -152,6 +152,7 @@ export async function remindStudent(
   const ok = await sendStudentReminderEmail({
     to: student.email, studentName: student.full_name ?? '',
     exchangeName: exchange?.name ?? '', items,
+    ctx: { schoolId, exchangeId },
   })
   if (!ok) throw new Error('L’e-mail de relance n’a pas pu être envoyé. Réessayez.')
 

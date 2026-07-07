@@ -328,6 +328,7 @@ async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, school
     await sendPhase2ChecklistEmail({
       to: student.email, studentName: student.full_name ?? '',
       exchangeName: exchange.name, items,
+      ctx: { schoolId, exchangeId },
     })
   }
 

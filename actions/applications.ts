@@ -92,6 +92,7 @@ export async function startApplication(
       to: email,
       exchangeName: exchange.name,
       resumeUrl: `${APP_URL}/apply/resume/${existing.resume_token}`,
+      ctx: { schoolId: exchange.school_a_id, exchangeId: exchange.id },
     }).catch(() => {})
     return { existing: 'draft' }
   }
@@ -142,6 +143,7 @@ export async function startApplication(
     to: email,
     exchangeName: exchange.name,
     resumeUrl: `${APP_URL}/apply/resume/${token}`,
+    ctx: { schoolId: exchange.school_a_id, exchangeId: exchange.id },
   }).catch(() => {})
 
   return { token }
@@ -209,7 +211,7 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('email, status, resume_token_expires_at, exchanges(name)')
+    .select('email, status, resume_token_expires_at, school_id, exchange_id, exchanges(name)')
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
@@ -225,6 +227,7 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
     to: app.email,
     exchangeName: (app as any).exchanges?.name ?? '',
     resumeUrl: `${APP_URL}/apply/resume/${token}`,
+    ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   })
 }
 
@@ -279,6 +282,7 @@ export async function submitApplication(token: string, data: Record<string, stri
   const applicantName = buildApplicantName(data)
   void sendApplicationConfirmationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
+    ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   }).catch(() => {})
   const { data: organizers } = await admin
     .from('users').select('email').eq('school_id', app.school_id).eq('role', 'organizer')
@@ -286,6 +290,7 @@ export async function submitApplication(token: string, data: Record<string, stri
     sendNewApplicationAlertEmail({
       to: org.email, applicantName, exchangeName: exchange?.name ?? '',
       reviewUrl: `${APP_URL}/exchanges/${app.exchange_id}/applications`,
+      ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
     }).catch(() => {})
   ))
 }
@@ -386,6 +391,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   void sendInvitationEmail({
     to: app.email, applicantName, exchangeName: exchange?.name ?? '',
     respondUrl: `${APP_URL}/invite/${inviteToken}`,
+    ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   }).catch(() => {})
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
   revalidatePath('/applications')
@@ -416,6 +422,7 @@ export async function rejectApplication(applicationId: string, note: string, sen
     const applicantName = buildApplicantName(app.data)
     void sendApplicationRejectionEmail({
       to: app.email, applicantName, exchangeName: exchange?.name ?? '', note,
+      ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
     }).catch(() => {})
   }
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)

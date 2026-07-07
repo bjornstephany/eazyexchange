@@ -300,7 +300,7 @@ const REMIND_COOLDOWN_MS = 24 * 3600 * 1000
 // (cooldownMs = 0: fresh assignments have never been emailed).
 async function notifyIncompleteAssignees(
   supabase: SupabaseClient,
-  tmpl: { id: string; name: string; deadline: string | null },
+  tmpl: { id: string; name: string; deadline: string | null; exchange_id: string; school_id: string },
   exchangeName: string,
   cooldownMs: number,
 ): Promise<{ reminded: number; skipped: number; failed: number }> {
@@ -321,6 +321,7 @@ async function notifyIncompleteAssignees(
     const ok = await sendTemplateReminderEmail({
       to: student.email, studentName: student.full_name ?? '',
       templateName: tmpl.name, exchangeName, deadline: tmpl.deadline,
+      ctx: { schoolId: tmpl.school_id, exchangeId: tmpl.exchange_id },
     })
     if (ok) { reminded++; remindedIds.push(row.id) } else { failed++ }
   }
