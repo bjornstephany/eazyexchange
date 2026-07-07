@@ -1,19 +1,20 @@
 // send-reminders — paced reminder emails for forms that still need student action.
 //
-// Runs on a daily cron (see supabase/cron-setup.sql). Cadence per assignment:
-//   - deadline more than 7 days away  → remind weekly (>= 7 days since last reminder)
-//   - deadline within 7 days, or overdue → remind daily (>= 1 day since last reminder)
+// Runs on a daily cron (see supabase/cron-setup.sql). Pacing is per exchange:
+// organizers pick a cadence preset ('douce' | 'normale' | 'insistante') or turn
+// automatic reminders off entirely (exchanges.reminders_enabled = false). The
+// interval math lives in ./pacing.ts (pure, unit-tested under vitest).
 // "Needs action" = no submission, or status 'draft' / 'rejected'. The first
-// reminder fires on the first run after creation (last_reminded_at IS NULL),
-// giving a weekly drip from creation that accelerates to daily near the deadline
-// and keeps nagging daily until an overdue form is submitted/approved.
+// reminder fires on the first run after creation (last_reminded_at IS NULL).
 //
-// Each run groups every due form per student into one email, sends it, then
-// stamps last_reminded_at on those assignments so the next run respects the cadence.
+// Each run groups every due form per student into one French email, sends it,
+// then stamps last_reminded_at on those assignments so the next run respects
+// the cadence.
 //
 // Deno runtime. Uses the service-role key (bypasses RLS) and the Resend REST API.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { resolvePreset, isDue } from './pacing.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 // Prefer an explicitly-set secret key (SERVICE_KEY = an sb_secret_… key) so this
@@ -28,7 +29,6 @@ const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:3000'
 // let anyone trigger a reminder blast. Fail closed if it isn't configured.
 const CRON_SECRET = Deno.env.get('CRON_SECRET')
 
-const FINAL_WEEK_DAYS = 7
 const DAY_MS = 24 * 60 * 60 * 1000
 
 type ReminderForm = { name: string; deadline: string; overdue: boolean }
@@ -41,18 +41,6 @@ function daysUntil(isoDate: string): number {
   return Math.round((target.getTime() - today.getTime()) / DAY_MS)
 }
 
-// Whether a reminder is due given the deadline distance and when we last reminded.
-function isDue(daysLeft: number, lastRemindedAt: string | null): boolean {
-  // Within the final week or overdue → daily; otherwise → weekly.
-  const minIntervalDays = daysLeft <= FINAL_WEEK_DAYS ? 1 : 7
-  if (!lastRemindedAt) return true
-  const elapsedDays = (Date.now() - new Date(lastRemindedAt).getTime()) / DAY_MS
-  // Tolerance: the cron fires at a fixed 08:00 but last_reminded_at is stamped a
-  // few seconds later, so consecutive runs are elapsed-wise just under 24h apart.
-  // Without the 0.5-day slack a `>= 1` daily gate would skip every other day.
-  return elapsedDays >= minIntervalDays - 0.5
-}
-
 // Escape untrusted values before embedding them in email HTML.
 function esc(s: string): string {
   return s
@@ -63,26 +51,43 @@ function esc(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function buildEmail(studentName: string, forms: ReminderForm[]): string {
-  const greeting = studentName ? `Hi ${esc(studentName)},` : 'Hi,'
+// French short date («10 oct.»), matching the tone of lib/email.ts (which uses
+// frShortDate — not importable here: Deno can't resolve the @/ alias).
+const frDateFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+function frShortDate(isoDate: string): string {
+  return frDateFormat.format(new Date(`${isoDate}T00:00:00Z`))
+}
+
+// « ton dossier pour X » when everything due this morning belongs to one
+// exchange (the normal case); generic wording for the rare multi-exchange email.
+function dossierRef(exchangeNames: string[], html: boolean): string {
+  if (exchangeNames.length === 1) {
+    const name = exchangeNames[0]
+    return html ? `ton dossier pour <strong>${esc(name)}</strong>` : `ton dossier pour ${name}`
+  }
+  return 'ton dossier d’échange'
+}
+
+function buildEmail(studentName: string, exchangeNames: string[], forms: ReminderForm[]): string {
+  const greeting = studentName ? `Bonjour ${esc(studentName)},` : 'Bonjour,'
   const items = forms
     .map(f => {
-      const due = new Date(f.deadline).toLocaleDateString()
+      const due = esc(frShortDate(f.deadline))
       const label = f.overdue
-        ? `<span style="color: #b91c1c;">overdue — was due ${due}</span>`
-        : `due ${due}`
+        ? `<span style="color: #b91c1c;">en retard — échéance ${due}</span>`
+        : `échéance ${due}`
       return `<li style="margin-bottom: 6px;"><strong>${esc(f.name)}</strong> — ${label}</li>`
     })
     .join('')
   return `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #0f172a;">
-      <h2 style="font-weight: 600;">EazyExchange</h2>
+    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #1F3A30;">
+      <h2 style="font-weight: 700; letter-spacing: -0.02em; font-size: 20px;"><span style="color: #3FA277;">Eazy</span>Exchange</h2>
       <p>${greeting}</p>
-      <p>You have ${forms.length} form${forms.length === 1 ? '' : 's'} to complete:</p>
+      <p>Il manque encore ${forms.length === 1 ? 'cet élément' : 'ces éléments'} à ${dossierRef(exchangeNames, true)} :</p>
       <ul style="padding-left: 18px;">${items}</ul>
-      <p><a href="${APP_URL}/my-forms" style="display: inline-block; background: #0f172a; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Complete your forms</a></p>
-      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-      <p style="font-size: 12px; color: #94a3b8;">You're receiving this because you have forms to complete for a student exchange.</p>
+      <p><a href="${APP_URL}/my-forms" style="display: inline-block; background: #2456E6; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Compléter mon dossier</a></p>
+      <hr style="border: none; border-top: 1px solid #E7F1EC; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #5C7268;">Tu reçois cet e-mail car ton dossier d’échange scolaire est en cours de préparation sur Eazyexchange.</p>
     </div>
   `
 }
@@ -123,12 +128,13 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-  // Pull every assignment with its form deadline, reminder state, and latest
-  // submission status. Cadence and "needs action" are filtered in code.
+  // Pull every assignment with its form deadline, reminder state, exchange
+  // reminder settings, and latest submission status. Cadence and "needs
+  // action" are filtered in code.
   const { data: rows, error } = await supabase
     .from('assignments')
     .select(
-      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline, exchanges!inner(archived_at)), submissions(status)',
+      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline, exchanges!inner(name, archived_at, reminders_enabled, reminder_cadence)), submissions(status)',
     )
 
   if (error) {
@@ -136,10 +142,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 
-  // Group due forms per student email, tracking which assignment ids to stamp.
+  // Group due forms per student email, tracking which assignment ids to stamp
+  // and which exchanges are involved (for the subject/body wording).
   const perStudent = new Map<
     string,
-    { name: string; forms: ReminderForm[]; assignmentIds: string[] }
+    { name: string; forms: ReminderForm[]; assignmentIds: string[]; exchangeNames: Set<string> }
   >()
 
   for (const row of (rows ?? []) as any[]) {
@@ -148,13 +155,20 @@ Deno.serve(async (req) => {
     const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
     const status: string | undefined = submission?.status
     if (status === 'approved' || status === 'submitted') continue
-    if (row.form_templates?.exchanges?.archived_at) continue
+
+    const exchange = row.form_templates?.exchanges
+    if (exchange?.archived_at) continue
+    // Master switch: the organizer turned automatic reminders off for this
+    // exchange. Manual « Relancer » is unaffected (it lives in the app).
+    if (exchange?.reminders_enabled === false) continue
 
     const deadline: string | undefined = row.form_templates?.deadline
     if (!deadline) continue
 
     const daysLeft = daysUntil(deadline)
-    if (!isDue(daysLeft, row.last_reminded_at)) continue
+    // Unknown/missing cadence resolves to 'normale' — never fail the run on it.
+    const preset = resolvePreset(exchange?.reminder_cadence)
+    if (!isDue(daysLeft, row.last_reminded_at, preset)) continue
 
     const student = row.student
     if (!student?.email) continue
@@ -164,22 +178,23 @@ Deno.serve(async (req) => {
         name: student.full_name ?? '',
         forms: [],
         assignmentIds: [],
+        exchangeNames: new Set<string>(),
       })
     }
     const bucket = perStudent.get(student.email)!
     bucket.forms.push({ name: row.form_templates.name, deadline, overdue: daysLeft < 0 })
     bucket.assignmentIds.push(row.id)
+    if (exchange?.name) bucket.exchangeNames.add(exchange.name)
   }
 
   const nowIso = new Date().toISOString()
   let sent = 0
-  for (const [email, { name, forms, assignmentIds }] of perStudent) {
+  for (const [email, { name, forms, assignmentIds, exchangeNames }] of perStudent) {
     const anyOverdue = forms.some(f => f.overdue)
-    const subject = anyOverdue
-      ? `Action needed: ${forms.length} form${forms.length === 1 ? '' : 's'} for your exchange`
-      : `You have ${forms.length} form${forms.length === 1 ? '' : 's'} to complete`
+    const ref = dossierRef([...exchangeNames], false)
+    const subject = anyOverdue ? `Action requise : ${ref}` : `Rappel : ${ref}`
 
-    const ok = await sendEmail(email, subject, buildEmail(name, forms))
+    const ok = await sendEmail(email, subject, buildEmail(name, [...exchangeNames], forms))
     if (!ok) continue
     sent++
 
