@@ -210,6 +210,37 @@ export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
   revalidatePath('/settings')
 }
 
+export async function removeOrganizer(userId: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+
+  const admin = createAdminClient()
+  // Target must be an ADMIN organizer in the caller's school. Excluding
+  // org_role='owner' makes owner removal impossible by construction, so a school
+  // always keeps exactly one owner.
+  const { data: target } = await admin
+    .from('users').select('id, role, org_role, school_id')
+    .eq('id', userId).maybeSingle()
+  if (!target || target.school_id !== ctx.schoolId
+      || target.role !== 'organizer' || target.org_role !== 'admin') {
+    throw new Error('Ce collaborateur est introuvable.')
+  }
+
+  // Reassign every FK the target may hold to the owner BEFORE deletion, so
+  // nothing dangles when the profile row cascades on auth deletion. These are
+  // the only four `references users(id)` columns an organizer can hold.
+  await admin.from('form_templates').update({ created_by: ctx.userId }).eq('created_by', userId)
+  await admin.from('submissions').update({ reviewer_id: ctx.userId }).eq('reviewer_id', userId)
+  await admin.from('applications').update({ reviewer_id: ctx.userId }).eq('reviewer_id', userId)
+  await admin.from('organizer_invites').update({ invited_by: ctx.userId }).eq('invited_by', userId)
+
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) throw new Error('Le collaborateur n’a pas pu être retiré. Réessayez.')
+
+  revalidatePath('/settings')
+}
+
 export type ProgramInfo = {
   id: string; name: string; year: number; phase: 1 | 2; archived: boolean
   enrolled: number; applications: number; earliestDeadline: string | null
