@@ -9,8 +9,8 @@
 
 create table feedback (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references users(id),
-  school_id uuid not null references schools(id),
+  user_id uuid not null references users(id) on delete cascade,
+  school_id uuid not null references schools(id) on delete cascade,
   type text not null check (type in ('suggestion','bug')),
   message text not null check (char_length(message) between 1 and 2000),
   page_path text,
