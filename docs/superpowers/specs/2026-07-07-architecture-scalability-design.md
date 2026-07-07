@@ -16,7 +16,7 @@ Production scale at time of review: 3 schools, 4 users, 1 exchange, 0 submission
 
 At ~300 schools: ~150 active exchanges, ~6,000 students, ~70k assignments, ~1M rows total. Postgres does not notice this — the database, dashboard grid (~500 cells per tenant), Vercel compute, Auth, and Stripe are all fine as-is.
 
-1. **The reminder cron has the only hard ceiling.** `send-reminders` sends sequentially through Resend; deadline weeks at ~30–50 active exchanges produce enough sends to hit Resend rate limits or the Edge Function wall-clock limit. Failure mode: *partial* runs — students early in iteration order get chased, the rest silently don't. **Early signal:** function execution duration in Supabase logs trending up; Resend 429/5xx errors.
+1. **The reminder cron has the only hard ceiling — and it is closer than rate limits.** The 2026-07-07 perf/cold-starts review (`2026-07-07-perf-cold-starts-design.md`) found `send-reminders` reads the entire `assignments` table unfiltered; PostgREST silently caps that at 1,000 rows, so reminders silently stop for some students at ~4–5 active exchanges. That fix is already scoped there. The *next* ceiling after it is the one this review identified: sequential Resend sends hitting rate limits / the Edge Function wall clock at ~30–50 active exchanges. **Early signal:** function execution duration trending up; Resend 429/5xx errors (visible once the send log below exists).
 2. **Email is an unauditable side effect.** Sends happen inline in server actions with no record. At scale, "the family never got the invitation" becomes a weekly support question with no way to answer it. **Early signal:** the first support question that requires grepping Resend's dashboard.
 3. **RLS change velocity.** A large fraction of the 40 migrations are fixes/hardening of earlier policies. The failure mode is not performance but cross-tenant exposure of minors' data, and the cost is fear-driven slowdown on every RLS-touching feature. **Early signal:** already visible in the migration history.
 4. **Previews shared production data** (decision of 2026-07-06, now reversed). Unreviewed branch code auto-deployed by Vercel had full read/write access to production PII. No early-warning signal exists for this class of risk. Previews are used for testing only (confirmed), so separation is a pure win.
@@ -49,14 +49,29 @@ Create a second free-tier Supabase project (`eazyexchange-staging`). Apply the s
 
 - **Failure modes:** double-sends (worker crashes after send, before mark → parent gets three reminders → spam-flagged); requires idempotency discipline from day one. Scope creep: the log is an hour only if the worker waits for its signal.
 
-### 3. RLS regression harness (~a day)
+### 3. RLS regression harness — already spec'd elsewhere; do not duplicate
 
-Seeded fixtures: two schools, one organizer + student each; assertion tests that school A's organizer cannot read school B's rows across every table, plus role checks (student can't review, etc.). Runs against a local Supabase stack, or — fallback if CI plumbing fights back — against the staging project from item 1. Every new table/policy gets a test; every past `fix_*` class gets a tripwire.
+This review independently reached the same conclusion as two pending specs:
+`2026-07-07-multi-tenancy-isolation-design.md` (D1: RLS test suite + admin
+allowlist) and `2026-07-07-test-reliability-design.md` (RLS run-convention,
+CI). Those documents own the design; this review adds only a note: once the
+staging project from item 1 exists, it is a candidate target for running the
+RLS suite if local-stack plumbing fights back.
 
 - **Buys:** removes the fear tax on the empirically most error-prone surface.
 - **Failure modes:** false confidence (tests only catch imagined leaks — the harness supplements paranoia, never replaces it); fixture maintenance.
 
-**Sequence:** 1 → 2-log → 3 → (2-outbox parked on trigger). ~Two days total, zero new infrastructure products, addresses all four bend points.
+**Sequence:** 1 → 2-log → (3 via the multi-tenancy/test-reliability specs) → (2-outbox parked on trigger). Net-new work from *this* review: items 1 and 2-log, roughly one day, zero new infrastructure products.
+
+## Relationship to other 2026-07-07 specs
+
+Several sibling specs were brainstormed the same day. Division of labor:
+
+- **This spec owns:** staging/preview environment split (item 1), email send log + parked outbox (item 2), and the rejected-scaling-moves record.
+- **`perf-cold-starts`** owns the send-reminders 1,000-row truncation fix and cold-start work.
+- **`multi-tenancy-isolation`** owns the RLS test suite (D1), service-role funnel walling (D2), and fair-share reminders (D4).
+- **`test-reliability`** owns CI, the Stripe-webhook 200-on-error fix, and the RLS test run-convention.
+- **`debt-guardrails`** owns migration-ledger heal, generated DB types, and moving tribal knowledge into the repo; it documents the *current* preview-hits-prod state and points here for the target state.
 
 ## Reopening triggers
 
