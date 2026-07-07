@@ -92,10 +92,10 @@ function buildEmail(studentName: string, exchangeNames: string[], forms: Reminde
   `
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+async function sendEmail(to: string, subject: string, html: string): Promise<{ ok: boolean; errorCode: number | null }> {
   if (!RESEND_API_KEY) {
     console.warn('[send-reminders] RESEND_API_KEY not set — skipping reminder email')
-    return false
+    return { ok: false, errorCode: null }
   }
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -109,14 +109,14 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     if (!res.ok) {
       // Don't log `to` — it's student PII. Status + Resend's message is enough to debug.
       console.error('[send-reminders] Resend send failed:', res.status, await res.text())
-      return false
+      return { ok: false, errorCode: res.status }
     }
-    return true
+    return { ok: true, errorCode: null }
   } catch (err) {
-    // A network/DNS error must not abort the per-student loop — return false so
+    // A network/DNS error must not abort the per-student loop — return ok:false so
     // the rest of the cohort still gets reminded. No `to` in the log (PII).
     console.error('[send-reminders] Resend request error:', (err as Error).message)
-    return false
+    return { ok: false, errorCode: null }
   }
 }
 
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
   const { data: rows, error } = await supabase
     .from('assignments')
     .select(
-      'id, last_reminded_at, student:users!student_id(email, full_name), form_templates!inner(name, deadline, exchanges!inner(name, archived_at, reminders_enabled, reminder_cadence)), submissions(status)',
+      'id, last_reminded_at, student:users!student_id(email, full_name, school_id), form_templates!inner(name, deadline, exchanges!inner(id, name, archived_at, reminders_enabled, reminder_cadence)), submissions(status)',
     )
 
   if (error) {
@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
   // and which exchanges are involved (for the subject/body wording).
   const perStudent = new Map<
     string,
-    { name: string; forms: ReminderForm[]; assignmentIds: string[]; exchangeNames: Set<string> }
+    { name: string; forms: ReminderForm[]; assignmentIds: string[]; exchangeNames: Set<string>; exchangeIds: Set<string>; schoolId: string | null }
   >()
 
   for (const row of (rows ?? []) as any[]) {
@@ -179,23 +179,40 @@ Deno.serve(async (req) => {
         forms: [],
         assignmentIds: [],
         exchangeNames: new Set<string>(),
+        exchangeIds: new Set<string>(),
+        schoolId: student.school_id ?? null,
       })
     }
     const bucket = perStudent.get(student.email)!
     bucket.forms.push({ name: row.form_templates.name, deadline, overdue: daysLeft < 0 })
     bucket.assignmentIds.push(row.id)
     if (exchange?.name) bucket.exchangeNames.add(exchange.name)
+    if (exchange?.id) bucket.exchangeIds.add(exchange.id)
   }
 
   const nowIso = new Date().toISOString()
   let sent = 0
-  for (const [email, { name, forms, assignmentIds, exchangeNames }] of perStudent) {
+  for (const [email, { name, forms, assignmentIds, exchangeNames, exchangeIds, schoolId }] of perStudent) {
     const anyOverdue = forms.some(f => f.overdue)
     const ref = dossierRef([...exchangeNames], false)
     const subject = anyOverdue ? `Action requise : ${ref}` : `Rappel : ${ref}`
 
-    const ok = await sendEmail(email, subject, buildEmail(name, [...exchangeNames], forms))
-    if (!ok) continue
+    const result = await sendEmail(email, subject, buildEmail(name, [...exchangeNames], forms))
+    // Audit every real attempt (skip when email is disabled entirely). The 429
+    // signal here is the trigger for building the outbox worker — see the
+    // architecture-scalability spec.
+    if (RESEND_API_KEY) {
+      const { error: logError } = await supabase.from('email_send_log').insert({
+        recipient: email,
+        kind: 'reminder cron email',
+        status: result.ok ? 'sent' : 'error',
+        error_code: result.errorCode,
+        school_id: schoolId,
+        exchange_id: exchangeIds.size === 1 ? [...exchangeIds][0] : null,
+      })
+      if (logError) console.error('[send-reminders] send-log insert failed:', logError.code)
+    }
+    if (!result.ok) continue
     sent++
 
     // Stamp only after a successful send so a failed email retries next run.
