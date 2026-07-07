@@ -84,6 +84,17 @@ supabase db push
 
 All tables use Row Level Security (RLS). Organizers can only access data for their own school. Students can only access their own assignments and submissions.
 
+## Staging & Previews
+
+A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — never committed) backs all Vercel **Preview** deployments; Production keeps the real project. Previews physically cannot touch prod data.
+
+- **Every migration is applied to staging FIRST** (`set -a; source .env.staging; set +a; supabase db push --db-url "$STAGING_DB_URL"`), then to prod via MCP `apply_migration`. Never skip the staging apply — drift breaks previews mysteriously.
+- Seed data: `scripts/seed-staging.mjs` (fake school/organizer/students, idempotent). Login `demo-organizer@example.com`; password is set at seed time (`SEED_PASSWORD`).
+- Staging sends NO email (`RESEND_API_KEY` unset app-side and function-side; sends degrade to console warnings). Free-tier Supabase auth email ≈ 2/hour.
+- Google OAuth is not configured on staging — Google buttons error on previews; use email/password.
+- `send-reminders` is deployed to staging but has no cron; invoke manually with the `x-cron-secret` header (`STAGING_CRON_SECRET` in `.env.staging`) to rehearse.
+- Staging auth emails use Supabase's **default templates** (free tier blocks template customization without custom SMTP) — the invite/confirm links use the broken `GET /verify` flow, and the default provider only delivers to org team members. Wire Resend SMTP on staging only if preview email testing ever demands it; that also unlocks template editing.
+
 ## Gotchas & Conventions
 
 - **RLS is the most error-prone area.** Avoid self-referential/recursive policies (see `20260625000005_fix_rls_recursion.sql`). New access needs a migration, never a client-side service-role workaround.
