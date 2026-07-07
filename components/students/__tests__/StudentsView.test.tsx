@@ -4,8 +4,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 let listSearch = ''
 vi.mock('@/components/shell/ShellUiContext', () => ({
   useShellUi: () => ({
-    listSearch, setListSearch: vi.fn(), addRequestId: 0,
-    requestAdd: vi.fn(), openNewExchange: vi.fn(),
+    listSearch, setListSearch: vi.fn(), openNewExchange: vi.fn(),
   }),
 }))
 const remind = vi.fn().mockResolvedValue({ reminded: true, skipped: false })
