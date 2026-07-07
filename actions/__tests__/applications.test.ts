@@ -7,6 +7,7 @@ let scenario: {
   inserted: any
   insertError: any | null          // injected error for applications inserts
   updated: any
+  updates: any[]                   // every update in call order (updated = last)
   enrollError: any | null
   deletedProfileUserId: string | null
   deletedAuthUserId: string | null
@@ -33,6 +34,7 @@ function builder(table: string) {
     },
     update: (row: any) => {
       scenario.updated = { table, row }
+      scenario.updates.push({ table, row })
       // Chainable supporting .eq().eq(), .eq().in().select().maybeSingle(), and
       // a direct await (thenable). maybeSingle honors an .in(col, [...]) guard
       // against the current row so the atomic-claim path can "miss".
@@ -114,7 +116,7 @@ beforeEach(() => {
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_a_id: 's-1', application_open: true, application_deadline: null },
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
-    inserted: null, updated: null, insertError: null, applicationQueue: [],
+    inserted: null, updated: null, updates: [], insertError: null, applicationQueue: [],
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
     rateLimitAllowed: true,
   }
@@ -322,6 +324,17 @@ describe('respondToInvitation', () => {
     // is released back to 'accepted' so the applicant can retry.
     expect(scenario.updated.row.status).toBe('accepted')
     expect(scenario.updated.row.enrolled_user_id).toBeUndefined()
+  })
+  it('on Yes stamps terms_acknowledged_at on the claim', async () => {
+    await respondToInvitation('inv-1', 'yes', '')
+    const claim = scenario.updates.find(u => u.table === 'applications' && u.row.status === 'enrolling')
+    expect(claim?.row.terms_acknowledged_at).toBeTruthy()
+  })
+  it('No and Maybe never set terms_acknowledged_at', async () => {
+    await respondToInvitation('inv-1', 'no', '')
+    expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
+    await respondToInvitation('inv-1', 'maybe', '')
+    expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
   })
 })
 

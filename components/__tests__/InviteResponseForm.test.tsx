@@ -6,6 +6,7 @@ vi.mock('@/actions/applications', () => ({ respondToInvitation: vi.fn(async () =
 
 import { InviteResponseForm } from '@/components/InviteResponseForm'
 import { respondToInvitation } from '@/actions/applications'
+import { EXCHANGE_TERMS_RESPOND } from '@/lib/exchange-terms'
 
 describe('InviteResponseForm (French)', () => {
   it('renders the personalized heading and accept CTA', () => {
@@ -19,5 +20,9 @@ describe('InviteResponseForm (French)', () => {
     await user.click(screen.getByRole('button', { name: /je veux participer/i }))
     expect(respondToInvitation).toHaveBeenCalledWith('t', 'yes', '')
     expect(await screen.findByText(/regarde ta boîte mail/i)).toBeInTheDocument()
+  })
+  it('shows the terms notice directly under the accept button', () => {
+    render(<InviteResponseForm token="t" firstName="" exchangeName="X" />)
+    expect(screen.getByText(EXCHANGE_TERMS_RESPOND)).toBeInTheDocument()
   })
 })

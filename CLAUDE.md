@@ -96,7 +96,7 @@ All tables use Row Level Security (RLS). Organizers can only access data for the
 
 ## Automated Reminders
 
-A Supabase Edge Function (`send-reminders`) runs daily at 08:00 via cron. It paces reminder emails to students with incomplete forms: weekly while the deadline is more than 7 days out, then daily during the final week and while overdue. Pacing is tracked per assignment via `assignments.last_reminded_at`. Rejection notifications are sent immediately when an organizer rejects a submission.
+A Supabase Edge Function (`send-reminders`) runs daily at 08:00 via cron. Pacing is per exchange: organizers pick a preset on the exchange detail page — `douce` (weekly, never accelerates), `normale` (weekly, then daily during the final week and while overdue — the default) or `insistante` (every 3 days, then daily during the final 2 weeks and while overdue) — or turn automatic reminders off entirely (`exchanges.reminders_enabled`). Interval math lives in `supabase/functions/send-reminders/pacing.ts` (pure, vitest-tested). Pacing is tracked per assignment via `assignments.last_reminded_at`; manual « Relancer » ignores these settings. Rejection notifications are sent immediately when an organizer rejects a submission. Deploying edge-function changes is manual: `supabase functions deploy send-reminders`.
 
 ## Project Plan
 

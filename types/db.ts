@@ -32,6 +32,8 @@ export type Exchange = {
   phase: number
   phase2_checklist_sent_at: string | null
   archived_at: string | null
+  reminders_enabled: boolean
+  reminder_cadence: string
 }
 export type UserProfile = {
   id: string; school_id: string; role: Role
@@ -84,6 +86,7 @@ export type Application = {
   submitted_at: string | null; reviewed_at: string | null
   reviewer_id: string | null; review_note: string | null
   created_at: string; updated_at: string
+  terms_acknowledged_at?: string | null
 }
 export type OrganizerInvite = {
   id: string; school_id: string; email: string; token: string
@@ -103,7 +106,7 @@ export type Database = {
   public: {
     Tables: {
       schools: TableDef<School, Pick<School, 'name'> & Partial<Omit<School, 'id' | 'created_at' | 'name'>>, Partial<School>>
-      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at'>>, Partial<Exchange>>
+      exchanges: TableDef<Exchange, Omit<Exchange, 'id' | 'created_at' | 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at' | 'reminders_enabled' | 'reminder_cadence'> & Partial<Pick<Exchange, 'application_open' | 'application_deadline' | 'apply_slug' | 'phase' | 'phase2_checklist_sent_at' | 'archived_at' | 'reminders_enabled' | 'reminder_cadence'>>, Partial<Exchange>>
       users: TableDef<
         UserProfile,
         Omit<UserProfile, 'created_at' | 'org_role'> &

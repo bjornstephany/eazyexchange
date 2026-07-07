@@ -339,3 +339,28 @@ async function stampChecklist(supabase: any, exchangeId: string): Promise<void> 
     .update({ phase2_checklist_sent_at: new Date().toISOString() })
     .eq('id', exchangeId)
 }
+
+// Cadence allow-list. NOT exported: a 'use server' file may only export async
+// functions (plus type-only exports). The DB CHECK constraint is the backstop.
+const REMINDER_CADENCES = ['douce', 'normale', 'insistante'] as const
+export type ReminderCadence = (typeof REMINDER_CADENCES)[number]
+
+export async function updateReminderSettings(
+  exchangeId: string, enabled: boolean, cadence: ReminderCadence,
+): Promise<void> {
+  if (!REMINDER_CADENCES.includes(cadence)) throw new Error('Invalid cadence')
+  const supabase = await createClient()
+  const user = await getAuthUser()
+  if (!user) throw new Error('Unauthenticated')
+  const profile = await getProfile()
+  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await assertExchangeInScope(supabase, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
+
+  const { error } = await supabase
+    .from('exchanges')
+    .update({ reminders_enabled: enabled, reminder_cadence: cadence })
+    .eq('id', exchangeId)
+  if (error) throw error
+  revalidatePath(`/exchanges/${exchangeId}`)
+}

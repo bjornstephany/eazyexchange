@@ -478,7 +478,12 @@ export async function respondToInvitation(
   // account-creation sequence runs exactly once.
   const { data: claimed } = await admin
     .from('applications')
-    .update({ ...base, status: 'enrolling' })
+    // Clicking « Oui » is the explicit terms acknowledgment (the respond page
+    // shows the notice right under the button). Stamped at claim time and
+    // deliberately KEPT if the claim is later released back to 'accepted' —
+    // it records that the acknowledgment click happened. A retry overwrites
+    // it with the newer click.
+    .update({ ...base, status: 'enrolling', terms_acknowledged_at: new Date().toISOString() })
     .eq('invite_token', token).in('status', ['accepted', 'maybe'])
     .select('id, email, school_id, exchange_id').maybeSingle()
   if (!claimed) {

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { respondToInvitation } from '@/actions/applications'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { EXCHANGE_TERMS_RESPOND } from '@/lib/exchange-terms'
 
 export function InviteResponseForm({ token, firstName, exchangeName }: { token: string; firstName: string; exchangeName: string }) {
   const [busy, setBusy] = useState(false)
@@ -29,6 +30,7 @@ export function InviteResponseForm({ token, firstName, exchangeName }: { token: 
       </div>
       <div className="flex flex-col gap-2.5">
         <Button disabled={busy} onClick={() => respond('yes')} className="h-[50px] w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">Oui, je veux participer</Button>
+        <p className="m-0 text-[12.5px] leading-normal text-[#5B6B8C]">{EXCHANGE_TERMS_RESPOND}</p>
         <Button variant="outline" disabled={busy} onClick={() => respond('no')} className="h-[50px] w-full rounded-[11px] border-[#C4CDE0] text-base font-semibold">Non merci</Button>
       </div>
       <div className="flex flex-col gap-2.5 border-t border-[#E4E9F2] pt-[18px]">
