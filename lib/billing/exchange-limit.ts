@@ -7,7 +7,7 @@ export const EXCHANGE_LIMIT_MESSAGE =
   "Vous avez atteint la limite d'échanges de votre offre. Abonnez-vous pour en ajouter."
 
 export const EXCHANGE_INVALID_MESSAGE =
-  "Veuillez renseigner le nom de l'échange, l'année et l'établissement partenaire"
+  "Veuillez renseigner le nom de l’échange."
 
 // createExchange returns this for expected outcomes instead of throwing.
 // Next.js redacts thrown Server Action error messages in production, so a
@@ -15,5 +15,5 @@ export const EXCHANGE_INVALID_MESSAGE =
 // only ever receives the opaque "An error occurred in the Server Components
 // render" string. Expected results must therefore travel as return values.
 export type CreateExchangeResult =
-  | { ok: true }
+  | { ok: true; inviteErrors?: { email: string; message: string }[] }
   | { ok: false; error: 'limit' | 'invalid'; message: string }

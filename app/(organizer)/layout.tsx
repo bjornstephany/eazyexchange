@@ -54,6 +54,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
       atCap={atCap}
       isTrial={isTrial}
       remaining={remaining}
+      orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
     >
       {showGrace && <PaymentWarningBanner />}
       {children}

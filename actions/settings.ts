@@ -14,9 +14,7 @@ import { getAppUrl } from '@/lib/app-url'
 import {
   PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
 } from '@/lib/billing/display'
-import { normalizeEmail, isValidEmail } from '@/lib/validation'
-import { randomToken } from '@/lib/tokens'
-import { sendOrganizerInviteEmail } from '@/lib/email'
+import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
@@ -187,45 +185,14 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx(supabase)
   assertOwner(ctx)
-
-  const email = normalizeEmail(rawEmail)
-  if (!isValidEmail(email)) throw new Error('Adresse e-mail invalide.')
   await enforceRateLimit(`team-invite:${ctx.schoolId}`, 10, 3600)
 
   const admin = createAdminClient()
-  const { data: existingMember } = await admin
-    .from('users').select('id')
-    .eq('school_id', ctx.schoolId).eq('email', email).maybeSingle()
-  if (existingMember) throw new Error('Cette personne fait déjà partie de votre équipe.')
-
-  const { data: existingInvite } = await admin
-    .from('organizer_invites').select('id, expires_at')
-    .eq('school_id', ctx.schoolId).eq('email', email)
-    .is('accepted_at', null).is('revoked_at', null)
-    .gt('expires_at', new Date().toISOString())
-    .maybeSingle()
-  if (existingInvite) throw new Error('Une invitation est déjà en attente pour cette adresse.')
-
-  const { data: school } = await admin
-    .from('schools').select('name').eq('id', ctx.schoolId).single()
-
-  const token = randomToken()
-  const { data: invite, error: insertError } = await admin
-    .from('organizer_invites')
-    .insert({ school_id: ctx.schoolId, email, token, invited_by: ctx.userId })
-    .select('id').single()
-  if (insertError || !invite) throw new Error('L’invitation n’a pas pu être créée. Réessayez.')
-
-  const appUrl = getAppUrl()
-  const ok = await sendOrganizerInviteEmail({
-    to: email, inviterName: ctx.fullName, schoolName: school?.name ?? '',
-    joinUrl: `${appUrl}/join/${token}`,
+  const result = await createAndSendOrganizerInvite(admin, {
+    schoolId: ctx.schoolId, email: rawEmail,
+    inviterUserId: ctx.userId, inviterName: ctx.fullName, appUrl: getAppUrl(),
   })
-  if (!ok) {
-    // No orphan pending rows for e-mails that never went out.
-    await admin.from('organizer_invites').delete().eq('id', invite.id)
-    throw new Error('L’e-mail d’invitation n’a pas pu être envoyé. Réessayez.')
-  }
+  if (!result.ok) throw new Error(result.message)
   revalidatePath('/settings')
 }
 
@@ -240,6 +207,37 @@ export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
     .update({ revoked_at: new Date().toISOString() })
     .eq('id', inviteId).eq('school_id', ctx.schoolId).is('accepted_at', null)
   if (error) throw new Error('L’invitation n’a pas pu être révoquée.')
+  revalidatePath('/settings')
+}
+
+export async function removeOrganizer(userId: string): Promise<void> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx(supabase)
+  assertOwner(ctx)
+
+  const admin = createAdminClient()
+  // Target must be an ADMIN organizer in the caller's school. Excluding
+  // org_role='owner' makes owner removal impossible by construction, so a school
+  // always keeps exactly one owner.
+  const { data: target } = await admin
+    .from('users').select('id, role, org_role, school_id')
+    .eq('id', userId).maybeSingle()
+  if (!target || target.school_id !== ctx.schoolId
+      || target.role !== 'organizer' || target.org_role !== 'admin') {
+    throw new Error('Ce collaborateur est introuvable.')
+  }
+
+  // Reassign every FK the target may hold to the owner BEFORE deletion, so
+  // nothing dangles when the profile row cascades on auth deletion. These are
+  // the only four `references users(id)` columns an organizer can hold.
+  await admin.from('form_templates').update({ created_by: ctx.userId }).eq('created_by', userId)
+  await admin.from('submissions').update({ reviewer_id: ctx.userId }).eq('reviewer_id', userId)
+  await admin.from('applications').update({ reviewer_id: ctx.userId }).eq('reviewer_id', userId)
+  await admin.from('organizer_invites').update({ invited_by: ctx.userId }).eq('invited_by', userId)
+
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) throw new Error('Le collaborateur n’a pas pu être retiré. Réessayez.')
+
   revalidatePath('/settings')
 }
 

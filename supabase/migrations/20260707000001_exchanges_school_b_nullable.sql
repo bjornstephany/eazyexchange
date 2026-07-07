@@ -1,0 +1,11 @@
+-- « Nouvel échange » no longer collects a partner school, and createExchange
+-- stops creating a phantom partner-school row per exchange (those rows polluted
+-- `schools`, which is also the billing/customer table). New exchanges store
+-- school_b_id = null; existing exchanges keep their partner rows.
+--
+-- Safe because school_b is already a phantom: every organizer belongs to a
+-- freshly-created school_a, so no user ever belongs to school_b — every
+-- `or school_b_id = my_school_id()` policy branch is dead in practice and never
+-- matches null. The immutability guard (20260630000003) uses `is distinct from`,
+-- which is null-safe.
+alter table exchanges alter column school_b_id drop not null;

@@ -84,7 +84,7 @@ describe('OrganizerShell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
     expect(push).toHaveBeenCalledWith('/billing')
     // The creation dialog must not open.
-    expect(screen.queryByText("Un échange relie votre établissement à un partenaire, pour une session donnée.")).toBeNull()
+    expect(screen.queryByText('Donnez un nom à votre échange pour commencer.')).toBeNull()
   })
 
   it('+ Nouvel échange opens the modal when under cap', () => {
@@ -96,7 +96,7 @@ describe('OrganizerShell', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
     expect(push).not.toHaveBeenCalledWith('/billing')
-    expect(screen.getByText("Un échange relie votre établissement à un partenaire, pour une session donnée.")).toBeInTheDocument()
+    expect(screen.getByText('Donnez un nom à votre échange pour commencer.')).toBeInTheDocument()
   })
 
   it('shows organizer initials and the session name', () => {

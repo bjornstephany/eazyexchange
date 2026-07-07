@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 let opts: {
   role?: string; ownSchoolName?: string; ownSchoolError?: unknown
-  subStatus?: string; plan?: string; exchangeCount?: number
+  subStatus?: string; plan?: string; exchangeCount?: number; orgRole?: string
 }
 let calls: { schoolUpdated: any; partnerInserted: any; exchangeInserted: any; fromTables: string[] }
 
@@ -13,7 +13,10 @@ function makeClient() {
     from(table: string) {
       calls.fromTables.push(table)
       if (table === 'users') {
-        return { select: () => ({ eq: () => ({ single: async () => ({ data: { school_id: 's-own', role: opts.role ?? 'organizer' } }) }) }) }
+        return { select: () => ({ eq: () => ({ single: async () => ({ data: {
+          school_id: 's-own', role: opts.role ?? 'organizer',
+          org_role: opts.orgRole ?? 'owner', full_name: 'Owner', email: 'owner@s.fr',
+        } }) }) }) }
       }
       if (table === 'schools') {
         return {
@@ -52,9 +55,13 @@ function makeClient() {
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ set: vi.fn() }) }))
+vi.mock('@/lib/team/invite', () => ({ createAndSendOrganizerInvite: vi.fn() }))
+vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({}) }))
+vi.mock('@/lib/app-url', () => ({ getAppUrl: () => 'https://app.test' }))
 
 import { createExchange } from '../exchanges'
 import { EXCHANGE_LIMIT_MESSAGE, EXCHANGE_INVALID_MESSAGE } from '@/lib/billing/exchange-limit'
+import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData()
@@ -62,17 +69,30 @@ function form(fields: Record<string, string>): FormData {
   return fd
 }
 
-const base = { name: 'France–Canada', year: '2026', school_b_name: 'Partner Lycée' }
+const base = { name: 'France–Canada' }
 
-beforeEach(() => { opts = {} })
+function formWith(fields: Record<string, string>, invites: string[] = []): FormData {
+  const fd = new FormData()
+  for (const [k, v] of Object.entries(fields)) fd.set(k, v)
+  for (const e of invites) fd.append('invite_email', e)
+  return fd
+}
+
+beforeEach(() => {
+  opts = {}
+  ;(createAndSendOrganizerInvite as any).mockReset?.()
+})
 
 describe('createExchange own-school fetch', () => {
-  it('creates the exchange without ever renaming the organizer school', async () => {
+  it('creates the exchange with a null partner school and current-year default', async () => {
     opts = { ownSchoolName: '' }
     await createExchange(form(base))
     expect(calls.schoolUpdated).toBeNull()
-    expect(calls.partnerInserted).toEqual({ name: 'Partner Lycée' })
-    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada', year: 2026, school_a_id: 's-own', school_b_id: 's-partner' })
+    expect(calls.partnerInserted).toBeNull()
+    expect(calls.exchangeInserted).toMatchObject({
+      name: 'France–Canada', year: new Date().getFullYear(),
+      school_a_id: 's-own', school_b_id: null,
+    })
     expect(calls.fromTables).toContain('form_templates')
   })
 
@@ -119,9 +139,47 @@ describe('createExchange plan cap', () => {
 })
 
 describe('createExchange validation', () => {
-  it('returns an invalid result for missing fields instead of throwing', async () => {
-    const result = await createExchange(form({ name: '', year: '', school_b_name: '' }))
+  it('returns an invalid result for a blank name instead of throwing', async () => {
+    const result = await createExchange(form({ name: '   ' }))
     expect(result).toEqual({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     expect(calls.exchangeInserted).toBeNull()
+  })
+})
+
+describe('createExchange collaborator invites', () => {
+  it('sends best-effort invites for an owner and returns ok on full success', async () => {
+    ;(createAndSendOrganizerInvite as any).mockResolvedValue({ ok: true })
+    const result = await createExchange(formWith(base, ['a@x.fr', 'b@x.fr']))
+    expect(createAndSendOrganizerInvite).toHaveBeenCalledTimes(2)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('still creates the exchange and returns inviteErrors when an invite fails', async () => {
+    ;(createAndSendOrganizerInvite as any)
+      .mockResolvedValueOnce({ ok: false, message: 'Adresse e-mail invalide.' })
+      .mockResolvedValueOnce({ ok: true })
+    const result = await createExchange(formWith(base, ['bad', 'b@x.fr']))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+    expect(result).toEqual({ ok: true, inviteErrors: [{ email: 'bad', message: 'Adresse e-mail invalide.' }] })
+  })
+
+  it('still creates the exchange and returns a generic inviteError when an invite rejects unexpectedly', async () => {
+    ;(createAndSendOrganizerInvite as any)
+      .mockRejectedValueOnce(new Error('infra'))
+      .mockResolvedValueOnce({ ok: true })
+    const result = await createExchange(formWith(base, ['bad@x.fr', 'b@x.fr']))
+    expect(calls.exchangeInserted).toMatchObject({ name: 'France–Canada' })
+    expect(result).toEqual({
+      ok: true,
+      inviteErrors: [{ email: 'bad@x.fr', message: 'L’invitation n’a pas pu être envoyée. Réessayez.' }],
+    })
+  })
+
+  it('skips invites entirely for an admin caller', async () => {
+    ;(createAndSendOrganizerInvite as any).mockResolvedValue({ ok: true })
+    opts = { orgRole: 'admin' }
+    const result = await createExchange(formWith(base, ['a@x.fr']))
+    expect(createAndSendOrganizerInvite).not.toHaveBeenCalled()
+    expect(result).toEqual({ ok: true })
   })
 })

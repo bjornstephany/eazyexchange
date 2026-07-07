@@ -68,6 +68,7 @@ export function OrganizerShell({
   atCap = false,
   isTrial = false,
   remaining = Infinity,
+  orgRole = 'admin',
   children,
 }: {
   exchanges: ExchangeOption[]
@@ -77,6 +78,7 @@ export function OrganizerShell({
   atCap?: boolean
   isTrial?: boolean
   remaining?: number
+  orgRole?: 'owner' | 'admin'
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -260,6 +262,7 @@ export function OrganizerShell({
         onOpenChange={setNewExchangeOpen}
         isTrial={isTrial}
         remaining={remaining}
+        isOwner={orgRole === 'owner'}
       />
     </div>
   )

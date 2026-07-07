@@ -14,6 +14,9 @@ import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { seedStandardTemplates } from '@/lib/forms/standard-library'
 import { sendPhase2ChecklistEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getAppUrl } from '@/lib/app-url'
+import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 
 export async function getExchanges() {
   const supabase = await createClient()
@@ -42,13 +45,14 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
 
   const name = (formData.get('name') as string ?? '').trim()
-  const year = parseInt(formData.get('year') as string)
-  const schoolBName = (formData.get('school_b_name') as string ?? '').trim()
-  if (!name || !schoolBName || Number.isNaN(year)) {
+  if (!name) {
     // Expected outcome, not an exception: return so the client can show it.
     // A thrown message would be redacted in production (see exchange-limit.ts).
     return { ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE }
   }
+  // The app never needs data about the partner school; default the year
+  // server-side (the DB column stays NOT NULL).
+  const year = new Date().getFullYear()
 
   // Fetch the school's subscription state for the plan cap check below.
   const { data: ownSchool, error: ownSchoolError } = await supabase
@@ -69,24 +73,13 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
     return { ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE }
   }
 
-  // Always create a fresh partner-school record. Never bind to an existing
-  // school by name: a name collision with another customer's school would give
-  // that school's organizers read/update access to this exchange.
-  const { data: created, error: createError } = await supabase
-    .from('schools')
-    .insert({ name: schoolBName })
-    .select('id')
-    .single()
-  if (createError) throw createError
-  const schoolBId = created.id
-
   const { data: createdExchange, error } = await supabase
     .from('exchanges')
     .insert({
       name,
       year,
       school_a_id: profile.school_id,
-      school_b_id: schoolBId,
+      school_b_id: null,
       apply_slug: applySlug(name),
     })
     .select('id')
@@ -99,6 +92,31 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
     userId: user.id,
   })
 
+  // Optional collaborator invites from the modal — owner-only, best-effort:
+  // a failed invite never fails the creation, it is returned for inline display.
+  const inviteErrors: { email: string; message: string }[] = []
+  if (profile.org_role === 'owner') {
+    const emails = (formData.getAll('invite_email') as string[])
+      .map(e => e.trim()).filter(Boolean)
+    if (emails.length > 0) {
+      const admin = createAdminClient()
+      const appUrl = getAppUrl()
+      for (const email of emails) {
+        try {
+          const r = await createAndSendOrganizerInvite(admin, {
+            schoolId: profile.school_id, email,
+            inviterUserId: user.id, inviterName: profile.full_name, appUrl,
+          })
+          if (!r.ok) inviteErrors.push({ email, message: r.message })
+        } catch {
+          // Unexpected (infra) rejection — never abort creation, and never
+          // log PII (the email) in this catch.
+          inviteErrors.push({ email, message: 'L’invitation n’a pas pu être envoyée. Réessayez.' })
+        }
+      }
+    }
+  }
+
   const cookieStore = await cookies()
   cookieStore.set(ACTIVE_EXCHANGE_COOKIE, createdExchange.id, {
     path: '/',
@@ -110,7 +128,7 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
   // The shell's exchange selector (layout data) must pick up the new exchange.
   revalidatePath('/', 'layout')
 
-  return { ok: true }
+  return inviteErrors.length > 0 ? { ok: true, inviteErrors } : { ok: true }
 }
 
 // Confirm the caller's school participates in the exchange. Returns the

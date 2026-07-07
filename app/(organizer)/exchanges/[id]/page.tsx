@@ -9,7 +9,9 @@ export default async function ExchangePage({ params }: { params: Promise<{ id: s
   return (
     <div>
       <p className="mb-1 text-sm text-muted-foreground">
-        {exchange.school_a?.name} ↔ {exchange.school_b?.name} · {exchange.year}
+        {exchange.school_b?.name
+          ? `${exchange.school_a?.name} ↔ ${exchange.school_b.name} · ${exchange.year}`
+          : `${exchange.school_a?.name ?? ''} · ${exchange.year}`}
       </p>
       <h1 className="font-display text-2xl font-semibold">{exchange.name}</h1>
     </div>

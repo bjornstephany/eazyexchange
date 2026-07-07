@@ -33,9 +33,10 @@ beforeEach(() => {
 })
 
 describe('completeOnboarding', () => {
-  it('persists the trimmed name and redirects to /dashboard', async () => {
-    await expect(completeOnboarding(fd('  Lincoln High  '))).rejects.toThrow('REDIRECT:/dashboard')
+  it('persists the trimmed name without redirecting (client advances to step 2)', async () => {
+    await completeOnboarding(fd('  Lincoln High  '))
     expect(scenario.updated).toEqual({ name: 'Lincoln High' })
+    expect(redirect).not.toHaveBeenCalled()
   })
 
   it('rejects an empty/whitespace name without writing or redirecting', async () => {

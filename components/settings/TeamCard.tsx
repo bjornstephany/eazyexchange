@@ -1,6 +1,10 @@
 'use client'
 import { useState } from 'react'
-import { inviteOrganizer, revokeOrganizerInvite, type TeamMember, type PendingInvite } from '@/actions/settings'
+import { inviteOrganizer, revokeOrganizerInvite, removeOrganizer, type TeamMember, type PendingInvite } from '@/actions/settings'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 const MEMBER_AVATARS = ['linear-gradient(135deg,#3B6EF6,#0E1B38)', '#7C5CE0', '#0F8A6D', '#C2543A', '#B0468C']
 
@@ -16,6 +20,8 @@ export function TeamCard({ team, isOwner }: {
   const [error, setError] = useState<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [removing, setRemoving] = useState<TeamMember | null>(null)
+  const [removeBusy, setRemoveBusy] = useState(false)
 
   async function handleInvite() {
     setBusy(true); setError(null); setFlash(null)
@@ -33,6 +39,18 @@ export function TeamCard({ team, isOwner }: {
     setError(null)
     try { await revokeOrganizerInvite(id) }
     catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue.') }
+  }
+
+  async function handleRemove() {
+    if (!removing) return
+    setRemoveBusy(true); setError(null)
+    try {
+      await removeOrganizer(removing.id)
+      setRemoving(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+    }
+    setRemoveBusy(false)
   }
 
   return (
@@ -86,6 +104,15 @@ export function TeamCard({ team, isOwner }: {
             ) : (
               <span className="rounded-pill bg-subtle px-3 py-[5px] text-[11.5px] font-semibold text-muted-foreground">Administrateur</span>
             )}
+            {isOwner && !m.isOwner && !m.isYou && (
+              <button
+                type="button"
+                onClick={() => setRemoving(m)}
+                className="px-1.5 py-1 text-xs font-semibold text-tertiary hover:text-danger-text"
+              >
+                Retirer
+              </button>
+            )}
           </div>
         ))}
         {team.pending.map(p => (
@@ -118,6 +145,25 @@ export function TeamCard({ team, isOwner }: {
           <div className="text-[11.5px] leading-[1.45] text-tertiary">Gérer élèves, candidatures, formulaires et documents.</div>
         </div>
       </div>
+
+      <Dialog open={!!removing} onOpenChange={o => { if (!o) setRemoving(null) }}>
+        <DialogContent className="max-w-[440px] rounded-card p-8">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-bold text-navy">Retirer ce collaborateur ?</DialogTitle>
+            <DialogDescription className="text-[14px] text-muted-foreground">
+              {removing?.name} perdra l’accès à tous les échanges de votre établissement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={() => setRemoving(null)} className="text-muted-foreground">
+              Annuler
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleRemove} disabled={removeBusy}>
+              {removeBusy ? 'Retrait…' : 'Confirmer le retrait'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
