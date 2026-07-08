@@ -32,8 +32,12 @@ const CRON_SECRET = Deno.env.get('CRON_SECRET')
 
 // Per-school per-run send budget (fair-share, multi-tenancy spec D4). Generous
 // headroom — real cohorts are 20–60 students — not a punitive quota; schools
-// that hit it are logged and their remainder sends next run.
-const PER_SCHOOL_BUDGET = Number(Deno.env.get('REMINDER_SCHOOL_BUDGET') ?? '150')
+// that hit it are logged and their remainder sends next run. Guard against a
+// misconfigured env: a non-numeric or non-positive value would make the budget
+// slice empty and silently send ZERO reminders on the unattended cron.
+const BUDGET_DEFAULT = 150
+const budgetRaw = Number(Deno.env.get('REMINDER_SCHOOL_BUDGET') ?? BUDGET_DEFAULT)
+const PER_SCHOOL_BUDGET = Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : BUDGET_DEFAULT
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

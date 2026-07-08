@@ -29,6 +29,9 @@ const ALLOWLIST = [
 const ROOT = process.cwd()
 const SCAN_DIRS = ['app', 'actions', 'lib', 'components']
 const ROOT_FILES = ['middleware.ts']
+// Matches only static `import … from '…/supabase/admin'`. Assumes the app's
+// static-import convention (verified: no dynamic `import()` of the admin client
+// exists today) — a dynamic import would slip past this guard.
 const IMPORT_RE = /from\s+['"][^'"]*supabase\/admin['"]/
 
 function tsFiles(dir: string): string[] {
