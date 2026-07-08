@@ -18,7 +18,7 @@ export function ProfileCard({ profile, isOwner }: {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   async function handleSave() {
     setBusy(true); setError(null)

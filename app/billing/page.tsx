@@ -14,9 +14,10 @@ const capLabel = (n: number) => (n === Infinity ? 'illimités' : String(n))
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: { error?: string }
+  searchParams: Promise<{ error?: string }>
 }) {
-  const unavailable = searchParams?.error === 'unavailable'
+  const { error } = await searchParams
+  const unavailable = error === 'unavailable'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')

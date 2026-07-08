@@ -1,2 +1,4 @@
 allowBuilds:
+  # sharp = next 15's image optimizer; its install step fetches prebuilt binaries.
+  sharp: true
   unrs-resolver: true
