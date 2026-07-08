@@ -16,6 +16,10 @@ const NOTICE = {
     en: 'An application has already been submitted with this email address.',
     fr: 'Une candidature a déjà été envoyée avec cette adresse e-mail.',
   },
+  closed: {
+    en: 'Applications are closed for this exchange.',
+    fr: 'Les candidatures sont fermées pour cet échange.',
+  },
 } as const
 
 export function ApplicationStartForm({ slug }: { slug: string }) {
@@ -23,7 +27,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<'draft' | 'submitted' | null>(null)
+  const [notice, setNotice] = useState<'draft' | 'submitted' | 'closed' | null>(null)
   const router = useRouter()
   const fr = lang === 'fr'
 
@@ -34,6 +38,11 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       if ('token' in res) {
         storeResumeToken(slug, res.token)
         router.push(`/apply/resume/${res.token}`)
+        return
+      }
+      if ('closed' in res) {
+        setNotice('closed')
+        setLoading(false)
         return
       }
       setNotice(res.existing)

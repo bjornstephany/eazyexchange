@@ -15,6 +15,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { resolvePreset, isDue } from './pacing.ts'
+import { planFairShare } from './fair-share.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 // Prefer an explicitly-set secret key (SERVICE_KEY = an sb_secret_… key) so this
@@ -28,6 +29,15 @@ const APP_URL = Deno.env.get('APP_URL') ?? 'http://localhost:3000'
 // of the platform JWT check: the anon key is public, so verify_jwt alone would
 // let anyone trigger a reminder blast. Fail closed if it isn't configured.
 const CRON_SECRET = Deno.env.get('CRON_SECRET')
+
+// Per-school per-run send budget (fair-share, multi-tenancy spec D4). Generous
+// headroom — real cohorts are 20–60 students — not a punitive quota; schools
+// that hit it are logged and their remainder sends next run. Guard against a
+// misconfigured env: a non-numeric or non-positive value would make the budget
+// slice empty and silently send ZERO reminders on the unattended cron.
+const BUDGET_DEFAULT = 150
+const budgetRaw = Number(Deno.env.get('REMINDER_SCHOOL_BUDGET') ?? BUDGET_DEFAULT)
+const PER_SCHOOL_BUDGET = Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : BUDGET_DEFAULT
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -190,9 +200,22 @@ Deno.serve(async (req) => {
     if (exchange?.id) bucket.exchangeIds.add(exchange.id)
   }
 
+  // Fair-share (multi-tenancy spec D4): rotate school order daily and cap each
+  // school's sends per run so one big school can't exhaust the Resend quota or
+  // starve schools later in the iteration. Truncated students retry next run
+  // (their last_reminded_at is only stamped after a successful send).
+  const entries = [...perStudent.entries()].map(([email, bucket]) => ({
+    // planFairShare groups/rotates by school id (string). bucket.schoolId is
+    // string | null; a null-schooled student groups under 'unknown' for
+    // rotation/budget only — the item keeps the real schoolId for logging.
+    schoolId: bucket.schoolId ?? 'unknown',
+    item: { email, ...bucket },
+  }))
+  const plan = planFairShare(entries, new Date(), PER_SCHOOL_BUDGET)
+
   const nowIso = new Date().toISOString()
   let sent = 0
-  for (const [email, { name, forms, assignmentIds, exchangeNames, exchangeIds, schoolId }] of perStudent) {
+  for (const { email, name, forms, assignmentIds, exchangeNames, exchangeIds, schoolId } of plan.send) {
     const anyOverdue = forms.some(f => f.overdue)
     const ref = dossierRef([...exchangeNames], false)
     const subject = anyOverdue ? `Action requise : ${ref}` : `Rappel : ${ref}`
@@ -225,8 +248,11 @@ Deno.serve(async (req) => {
     }
   }
 
+  // School ids and counts only — never emails or names (PII rule).
+  console.log('[send-reminders] fair-share per-school counts:', JSON.stringify(plan.perSchool))
+
   return new Response(
-    JSON.stringify({ students: perStudent.size, emailsSent: sent }),
+    JSON.stringify({ students: perStudent.size, emailsSent: sent, perSchool: plan.perSchool }),
     { headers: { 'Content-Type': 'application/json' } },
   )
 })
