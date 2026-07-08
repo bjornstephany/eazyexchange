@@ -59,6 +59,11 @@ pnpm test        # vitest run (config: vitest.config.ts)
 pnpm build       # catches type errors + build breakage
 ```
 
+Any change touching `supabase/migrations/`, RLS policies, or storage buckets must
+also pass `pnpm test:rls` (RLS regression matrix — see `docs/security/rls-testing.md`;
+needs the local Supabase stack or `RLS_TEST_DB_URL`). New tables/buckets ship with
+matrix cases in the same PR.
+
 ## Git Workflow (solo project)
 
 - Small, safe, self-contained changes (docs, copy, confident bug fixes) → commit straight to `main`.
