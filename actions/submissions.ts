@@ -29,7 +29,7 @@ async function assertStudentOwnsAssignment(
 async function assertOrganizerOwnsAssignment(
   supabase: SupabaseClient,
   assignmentId: string,
-): Promise<{ exchangeId: string }> {
+): Promise<{ exchangeId: string; schoolId: string }> {
   const { data: ctx } = await supabase
     .from('assignments')
     .select('form_templates!inner(school_id, exchange_id)')
@@ -41,7 +41,10 @@ async function assertOrganizerOwnsAssignment(
   if (profile?.role !== 'organizer' || profile.school_id !== ctx.form_templates.school_id) {
     throw new Error('Unauthorized')
   }
-  return { exchangeId: ctx.form_templates.exchange_id as string }
+  return {
+    exchangeId: ctx.form_templates.exchange_id as string,
+    schoolId: ctx.form_templates.school_id as string,
+  }
 }
 
 export async function getAssignmentDetails(assignmentId: string) {
@@ -309,7 +312,7 @@ export async function rejectSubmission(assignmentId: string, note: string) {
   const supabase = await createClient()
   const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
+  const { exchangeId, schoolId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
@@ -348,6 +351,7 @@ export async function rejectSubmission(assignmentId: string, note: string) {
       formName: info.form_templates.name,
       note,
       assignmentId,
+      ctx: { schoolId, exchangeId },
     })
   }
 

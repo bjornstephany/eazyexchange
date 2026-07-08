@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { frShortDate } from '@/lib/dashboard/rollup'
 import { getAppUrl } from '@/lib/app-url'
 import { EXCHANGE_TERMS_EMAIL } from '@/lib/exchange-terms'
+import { logEmailSend, type EmailLogContext } from '@/lib/email-log'
 
 const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
 const APP_URL = getAppUrl()
@@ -37,7 +38,7 @@ function layout(body: string, footer = "You're receiving this because you have f
   `
 }
 
-async function send(to: string, subject: string, html: string, label: string): Promise<boolean> {
+async function send(to: string, subject: string, html: string, label: string, ctx?: EmailLogContext): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
     console.warn(`[email] RESEND_API_KEY not set — skipping ${label}`)
@@ -45,10 +46,20 @@ async function send(to: string, subject: string, html: string, label: string): P
   }
   try {
     const { error } = await resend.emails.send({ from: FROM, to, subject, html })
-    if (error) { logSendError(label, error); return false }
+    if (error) {
+      logSendError(label, error)
+      await logEmailSend({
+        recipient: to, kind: label, status: 'error',
+        errorCode: (error as { statusCode?: number }).statusCode ?? null,
+        ...ctx,
+      })
+      return false
+    }
+    await logEmailSend({ recipient: to, kind: label, status: 'sent', ...ctx })
     return true
   } catch {
     console.error(`[email] ${label} failed: send threw`)
+    await logEmailSend({ recipient: to, kind: label, status: 'error', ...ctx })
     return false
   }
 }
@@ -76,13 +87,8 @@ export async function sendRejectionEmail(opts: {
   formName: string
   note: string
   assignmentId: string
+  ctx?: EmailLogContext
 }): Promise<void> {
-  const resend = getResend()
-  if (!resend) {
-    console.warn('[email] RESEND_API_KEY not set — skipping rejection email')
-    return
-  }
-
   // assignmentId is a server-generated UUID; encode defensively all the same.
   const link = `${APP_URL}/my-forms/${encodeURIComponent(opts.assignmentId)}`
   const greeting = opts.studentName ? `Hi ${esc(opts.studentName)},` : 'Hi,'
@@ -97,14 +103,9 @@ export async function sendRejectionEmail(opts: {
     <p><a href="${link}" style="display: inline-block; background: #1F7A57; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
   `)
 
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to: opts.to,
-    subject: `Action needed: ${opts.formName}`,
-    html,
-  })
-  // Don't fail the caller's action just because the email bounced.
-  if (error) logSendError('rejection email', error)
+  // Don't fail the caller's action just because the email bounced: send()
+  // already swallows and logs failures.
+  await send(opts.to, `Action needed: ${opts.formName}`, html, 'rejection email', opts.ctx)
 }
 
 const APP_FOOTER = "You're receiving this because you applied (or were invited to apply) to a student exchange."
@@ -115,34 +116,34 @@ const ORG_FOOTER = "You're receiving this because you're an organizer for this e
 // and are out of scope here.
 const APP_FOOTER_FR = 'Tu reçois cet e-mail car tu as candidaté (ou as été invité·e à candidater) à un échange scolaire.'
 
-export async function sendApplicationResumeEmail(opts: { to: string; exchangeName: string; resumeUrl: string }): Promise<void> {
+export async function sendApplicationResumeEmail(opts: { to: string; exchangeName: string; resumeUrl: string; ctx?: EmailLogContext }): Promise<void> {
   const html = layout(`
     <p>Hi,</p>
     <p>Here's your private link to continue your application for <strong>${esc(opts.exchangeName)}</strong>. You can leave and come back anytime, on any device:</p>
     <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
     <p style="font-size:12px;color:#5C7268;">Keep this email — it's the only way back to your in-progress application.</p>
   `, APP_FOOTER)
-  await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email')
+  await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email', opts.ctx)
 }
 
-export async function sendApplicationConfirmationEmail(opts: { to: string; applicantName: string; exchangeName: string }): Promise<void> {
+export async function sendApplicationConfirmationEmail(opts: { to: string; applicantName: string; exchangeName: string; ctx?: EmailLogContext }): Promise<void> {
   const greeting = opts.applicantName ? `Hi ${esc(opts.applicantName)},` : 'Hi,'
   const html = layout(`
     <p>${greeting}</p>
     <p>We've received your application for <strong>${esc(opts.exchangeName)}</strong>. The organizer will review it and be in touch.</p>
   `, APP_FOOTER)
-  await send(opts.to, `Application received — ${opts.exchangeName}`, html, 'application confirmation email')
+  await send(opts.to, `Application received — ${opts.exchangeName}`, html, 'application confirmation email', opts.ctx)
 }
 
-export async function sendNewApplicationAlertEmail(opts: { to: string; applicantName: string; exchangeName: string; reviewUrl: string }): Promise<void> {
+export async function sendNewApplicationAlertEmail(opts: { to: string; applicantName: string; exchangeName: string; reviewUrl: string; ctx?: EmailLogContext }): Promise<void> {
   const html = layout(`
     <p>A new application has arrived for <strong>${esc(opts.exchangeName)}</strong> from <strong>${esc(opts.applicantName)}</strong>.</p>
     <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
   `, ORG_FOOTER)
-  await send(opts.to, `New application — ${opts.exchangeName}`, html, 'new application alert email')
+  await send(opts.to, `New application — ${opts.exchangeName}`, html, 'new application alert email', opts.ctx)
 }
 
-export async function sendInvitationEmail(opts: { to: string; applicantName: string; exchangeName: string; respondUrl: string }): Promise<void> {
+export async function sendInvitationEmail(opts: { to: string; applicantName: string; exchangeName: string; respondUrl: string; ctx?: EmailLogContext }): Promise<void> {
   const greeting = opts.applicantName ? `Bonjour ${esc(opts.applicantName)},` : 'Bonjour,'
   const html = layout(`
     <p>${greeting}</p>
@@ -150,10 +151,10 @@ export async function sendInvitationEmail(opts: { to: string; applicantName: str
     <p><a href="${opts.respondUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Répondre à l’invitation</a></p>
     <p style="font-size:12px;color:#5C7268;">${EXCHANGE_TERMS_EMAIL}</p>
   `, APP_FOOTER_FR)
-  await send(opts.to, `Bonne nouvelle — ta candidature pour ${opts.exchangeName} a été retenue !`, html, 'invitation email')
+  await send(opts.to, `Bonne nouvelle — ta candidature pour ${opts.exchangeName} a été retenue !`, html, 'invitation email', opts.ctx)
 }
 
-export async function sendApplicationRejectionEmail(opts: { to: string; applicantName: string; exchangeName: string; note: string }): Promise<void> {
+export async function sendApplicationRejectionEmail(opts: { to: string; applicantName: string; exchangeName: string; note: string; ctx?: EmailLogContext }): Promise<void> {
   const greeting = opts.applicantName ? `Hi ${esc(opts.applicantName)},` : 'Hi,'
   const note = opts.note ? `<p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${esc(opts.note).replace(/\n/g, '<br>')}</p>` : ''
   const html = layout(`
@@ -162,13 +163,14 @@ export async function sendApplicationRejectionEmail(opts: { to: string; applican
     ${note}
     <p>We wish you all the best.</p>
   `, APP_FOOTER)
-  await send(opts.to, `Update on your application — ${opts.exchangeName}`, html, 'application rejection email')
+  await send(opts.to, `Update on your application — ${opts.exchangeName}`, html, 'application rejection email', opts.ctx)
 }
 
 const STUDENT_FOOTER = 'Tu reçois cet e-mail car ton dossier d’échange scolaire est en cours de préparation sur Eazyexchange.'
 
 export async function sendTemplateReminderEmail(opts: {
   to: string; studentName: string; templateName: string; exchangeName: string; deadline: string | null
+  ctx?: EmailLogContext
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const due = opts.deadline ? ` avant le <strong>${esc(frShortDate(opts.deadline))}</strong>` : ''
@@ -177,12 +179,13 @@ export async function sendTemplateReminderEmail(opts: {
     <p>Il manque encore « <strong>${esc(opts.templateName)}</strong> » à ton dossier pour <strong>${esc(opts.exchangeName)}</strong>. Merci de le compléter${due}.</p>
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Compléter mon dossier</a></p>
   `, STUDENT_FOOTER)
-  return send(opts.to, `Rappel : ${opts.templateName} — ${opts.exchangeName}`, html, 'template reminder email')
+  return send(opts.to, `Rappel : ${opts.templateName} — ${opts.exchangeName}`, html, 'template reminder email', opts.ctx)
 }
 
 export async function sendStudentReminderEmail(opts: {
   to: string; studentName: string; exchangeName: string
   items: { name: string; deadline: string | null }[]
+  ctx?: EmailLogContext
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const n = opts.items.length
@@ -195,11 +198,12 @@ export async function sendStudentReminderEmail(opts: {
     <ul>${rows}</ul>
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Compléter mon dossier</a></p>
   `, STUDENT_FOOTER)
-  return send(opts.to, `Rappel : ton dossier pour ${opts.exchangeName}`, html, 'student reminder email')
+  return send(opts.to, `Rappel : ton dossier pour ${opts.exchangeName}`, html, 'student reminder email', opts.ctx)
 }
 
 export async function sendPhase2ChecklistEmail(opts: {
   to: string; studentName: string; exchangeName: string; items: { name: string; deadline: string | null }[]
+  ctx?: EmailLogContext
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const rows = opts.items.map(i =>
@@ -211,13 +215,14 @@ export async function sendPhase2ChecklistEmail(opts: {
     <ul>${rows}</ul>
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Ouvrir mon dossier</a></p>
   `, STUDENT_FOOTER)
-  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email')
+  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email', opts.ctx)
 }
 
 const ORGANIZER_FOOTER = "Vous recevez cet e-mail car un collègue vous invite à rejoindre son équipe sur Eazyexchange."
 
 export async function sendOrganizerInviteEmail(opts: {
   to: string; inviterName: string; schoolName: string; joinUrl: string
+  ctx?: EmailLogContext
 }): Promise<boolean> {
   const school = opts.schoolName.trim() ? esc(opts.schoolName) : "son établissement"
   const html = layout(`
@@ -226,7 +231,7 @@ export async function sendOrganizerInviteEmail(opts: {
     <p><a href="${opts.joinUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon compte</a></p>
     <p style="font-size:13px;">Ce lien est valable 14 jours.</p>
   `, ORGANIZER_FOOTER)
-  return send(opts.to, `${opts.inviterName} vous invite sur Eazyexchange`, html, 'organizer invite email')
+  return send(opts.to, `${opts.inviterName} vous invite sur Eazyexchange`, html, 'organizer invite email', opts.ctx)
 }
 
 export async function sendFeedbackNotificationEmail(opts: {

@@ -48,6 +48,7 @@ describe('createAndSendOrganizerInvite', () => {
     expect(sendOrganizerInviteEmail).toHaveBeenCalledWith({
       to: 'new@school.fr', inviterName: 'Alice', schoolName: 'Lincoln High',
       joinUrl: 'https://app.test/join/tok-123',
+      ctx: { schoolId: 's-1' },
     })
   })
 

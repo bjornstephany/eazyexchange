@@ -44,6 +44,7 @@ export async function createAndSendOrganizerInvite(
   const ok = await sendOrganizerInviteEmail({
     to: email, inviterName: opts.inviterName, schoolName: school?.name ?? '',
     joinUrl: `${opts.appUrl}/join/${token}`,
+    ctx: { schoolId: opts.schoolId },
   })
   if (!ok) {
     await admin.from('organizer_invites').delete().eq('id', invite.id)
