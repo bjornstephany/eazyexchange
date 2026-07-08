@@ -126,6 +126,71 @@ describe.each([
     expectBlocked(await writeOutcome(sql, uid(), (tx) =>
       tx`update assignments set assigned_at = now() where id = ${fx.assignmentA}`))
   })
+
+  it('submissions: cannot read submission A', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from submissions where id = ${fx.submissionA}`)).toHaveLength(0)
+  })
+
+  it('submissions: cannot touch submission A review fields', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update submissions set review_note = 'pwned' where id = ${fx.submissionA}`))
+  })
+
+  it('field_answers: cannot read answer A', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from field_answers where id = ${fx.answerA}`)).toHaveLength(0)
+  })
+
+  it('field_answers: cannot insert an answer into submission A', async () => {
+    // fieldA2 has no stored answer, so a pass-through would hit RLS, not the
+    // (submission_id, field_id) unique constraint.
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into field_answers (submission_id, field_id, value)
+         values (${fx.submissionA}, ${fx.fieldA2}, 'pwned')`))
+  })
+
+  it('field_answers: cannot update answer A', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update field_answers set value = 'pwned' where id = ${fx.answerA}`))
+  })
+
+  it('document_uploads: cannot read school A uploads', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from document_uploads where submission_id = ${fx.submissionA}`)).toHaveLength(0)
+  })
+
+  it('document_uploads: cannot insert an upload into submission A', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into document_uploads (submission_id, slot_id, storage_path, file_name)
+         values (${fx.submissionA}, ${fx.slotA2}, ${fx.assignmentA + '/' + fx.slotA2 + '/pwned.pdf'}, 'pwned.pdf')`))
+  })
+
+  it('applications: cannot read school A applications', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from applications where id = ${fx.applicationA}`)).toHaveLength(0)
+  })
+
+  it('applications: cannot read by resume token either', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from applications where resume_token = ${fx.resumeTokenA}`)).toHaveLength(0)
+  })
+
+  it('applications: cannot update school A applications', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update applications set status = 'accepted' where id = ${fx.applicationA}`))
+  })
+
+  it('feedback: cannot read any feedback (no client SELECT policy)', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from feedback where id = ${fx.feedbackA}`)).toHaveLength(0)
+  })
+
+  it('feedback: cannot forge feedback as another user', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into feedback (user_id, school_id, type, message)
+         values (${fx.orgA}, ${fx.schoolA}, 'bug', 'forged')`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -167,5 +232,53 @@ describe('own-school allow', () => {
   it('student B still reads their own profile (B personas are not deny-all)', async () => {
     expect(await runAs(sql, fx.studentB, (tx) =>
       tx`select id from users where id = ${fx.studentB}`)).toHaveLength(1)
+  })
+
+  it('organizer A reads the submission, answer, upload and application', async () => {
+    const rows = await runAs(sql, fx.orgA, async (tx) => ({
+      submission: await tx`select id from submissions where id = ${fx.submissionA}`,
+      answer: await tx`select id from field_answers where id = ${fx.answerA}`,
+      upload: await tx`select id from document_uploads where submission_id = ${fx.submissionA}`,
+      application: await tx`select id from applications where id = ${fx.applicationA}`,
+    }))
+    for (const [name, r] of Object.entries(rows)) {
+      expect(r, `organizer A should see their own ${name}`).toHaveLength(1)
+    }
+  })
+
+  it('organizer A can approve the submission (review guard allows in-school organizer)', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update submissions set status = 'approved', reviewer_id = ${fx.orgA}, reviewed_at = now()
+         where id = ${fx.submissionA}`)).toBe(1)
+  })
+
+  it('student A can update their own answer', async () => {
+    expect(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update field_answers set value = 'quarante-trois' where id = ${fx.answerA}`)).toBe(1)
+  })
+
+  it('any authenticated user can insert feedback stamped with their own uid', async () => {
+    expect(await writeOutcome(sql, fx.orgB, (tx) =>
+      tx`insert into feedback (user_id, school_id, type, message)
+         values (${fx.orgB}, ${fx.schoolB}, 'suggestion', 'own row')`)).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ANON: the anonymous role sees nothing — the token flows go through the
+// service role (or, after W3, narrow SECURITY DEFINER RPCs), never table reads.
+// ---------------------------------------------------------------------------
+describe('anon sees nothing', () => {
+  it('cannot read exchanges, applications, submissions or storage objects', async () => {
+    const rows = {
+      exchange: await readRows(null, (tx) => tx`select id from exchanges where id = ${fx.exchangeA}`),
+      applicationByToken: await readRows(null, (tx) =>
+        tx`select id from applications where resume_token = ${fx.resumeTokenA}`),
+      submission: await readRows(null, (tx) => tx`select id from submissions where id = ${fx.submissionA}`),
+      storage: await readRows(null, (tx) => tx`select id from storage.objects where name = ${fx.docPathA}`),
+    }
+    for (const [name, r] of Object.entries(rows)) {
+      expect(r, `anon must not see ${name}`).toHaveLength(0)
+    }
   })
 })
