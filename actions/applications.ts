@@ -41,7 +41,14 @@ function tokenExpired(expiresAt: string | null): boolean {
   return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
 }
 
-export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' }
+// Hard sanity cap, not a product limit: no legitimate exchange approaches this
+// (typical cohorts are 20–60 students). Protects the shared DB/storage from
+// rotating-IP bulk fakes that the per-IP/per-email rate limits can't see.
+// Not exported: a `'use server'` module may only export async functions, and
+// nothing outside this file consumes it (the cap is enforced below).
+const APPLICATION_CAP_PER_EXCHANGE = 2000
+
+export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' } | { closed: true }
 
 export async function startApplication(
   slug: string,
@@ -95,6 +102,17 @@ export async function startApplication(
       ctx: { schoolId: exchange.school_a_id, exchangeId: exchange.id },
     }).catch(() => {})
     return { existing: 'draft' }
+  }
+
+  // Per-exchange sanity cap — abuse guard only; existing applicants resumed
+  // above are never affected. Fail open on a count error: a DB blip must not
+  // block a legitimate applicant (same convention as the rate limiter).
+  const { count, error: countError } = await admin
+    .from('applications')
+    .select('id', { count: 'exact', head: true })
+    .eq('exchange_id', exchange.id)
+  if (!countError && (count ?? 0) >= APPLICATION_CAP_PER_EXCHANGE) {
+    return { closed: true }
   }
 
   const token = randomToken()

@@ -12,12 +12,17 @@ let scenario: {
   deletedProfileUserId: string | null
   deletedAuthUserId: string | null
   rateLimitAllowed: boolean
+  applicationCount: number
 }
 
 function builder(table: string) {
   const b: any = {
     _filters: {} as Record<string, any>,
-    select: () => b,
+    select: (_cols?: string, opts?: { count?: 'exact'; head?: boolean }) => {
+      // startApplication's cap check: .select('id', { count: 'exact', head: true }).eq(…)
+      if (opts?.head) return { eq: async () => ({ count: scenario.applicationCount, error: null }) }
+      return b
+    },
     eq: (col: string, val: any) => { b._filters[col] = val; return b },
     order: () => b,
     insert: (row: any) => {
@@ -118,7 +123,7 @@ beforeEach(() => {
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
     inserted: null, updated: null, updates: [], insertError: null, applicationQueue: [],
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
-    rateLimitAllowed: true,
+    rateLimitAllowed: true, applicationCount: 0,
   }
 })
 
@@ -208,6 +213,25 @@ describe('startApplication', () => {
     await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
       .rejects.toThrow('Too many attempts')
     expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('at the per-exchange cap: { closed: true }, no insert, no email', async () => {
+    scenario.applicationCount = 2000
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ closed: true })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+  it('one under the cap still inserts', async () => {
+    scenario.applicationCount = 1999
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect('token' in res).toBe(true)
+  })
+  it('an existing draft is still resumable past the cap (cap only blocks new rows)', async () => {
+    scenario.applicationCount = 2000
+    scenario.application = { id: 'app-1', status: 'draft', resume_token: 'tok-old' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ existing: 'draft' })
   })
 })
 

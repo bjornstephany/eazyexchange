@@ -60,4 +60,13 @@ describe('ApplicationStartForm', () => {
     expect(await screen.findByText(/already been submitted with this email/i)).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()
   })
+
+  it('shows the closed notice when the cap refuses new applications', async () => {
+    vi.mocked(startApplication).mockResolvedValueOnce({ closed: true })
+    const user = userEvent.setup()
+    render(<ApplicationStartForm slug="france-canada" />)
+    await fillAndStart(user)
+    expect(await screen.findByText(/applications are closed for this exchange/i)).toBeInTheDocument()
+    expect(push).not.toHaveBeenCalled()
+  })
 })
