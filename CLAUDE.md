@@ -64,6 +64,16 @@ also pass `pnpm test:rls` (RLS regression matrix — see `docs/security/rls-test
 needs the local Supabase stack or `RLS_TEST_DB_URL`). New tables/buckets ship with
 matrix cases in the same PR.
 
+## Dependency Audit Cadence
+
+`.github/workflows/dependency-audit.yml` runs `pnpm audit --prod --audit-level high`
+weekly (Monday 06:00 UTC) and on every push to `main`; it fails on any high/critical
+advisory in production dependencies. Triage rule when it goes red: bump to the patched
+release within the week (patch/minor bump → straight to `main` after the Verifying
+Changes commands; major bump → branch + full gate + auth-flow regression). If no patch
+exists, record the advisory and the accepted-risk rationale in
+`docs/security/audit-decisions.md` and re-check weekly.
+
 ## Git Workflow (solo project)
 
 - Small, safe, self-contained changes (docs, copy, confident bug fixes) → commit straight to `main`.
