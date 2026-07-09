@@ -1,12 +1,13 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile } from '@/lib/uploads'
-import { enforceRateLimit, clientIp } from '@/lib/rate-limit'
+import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
 import {
   sendApplicationResumeEmail, sendApplicationConfirmationEmail, sendNewApplicationAlertEmail,
   sendInvitationEmail, sendApplicationRejectionEmail,
@@ -14,6 +15,7 @@ import {
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
+import { logAudit } from '@/lib/audit'
 
 const APP_URL = getAppUrl()
 const PHOTO_BUCKET = 'application-photos'
@@ -62,7 +64,7 @@ export async function startApplication(
   // sending domain. Per-email is the tighter limit (don't re-mail the same victim).
   const ip = await clientIp()
   await enforceRateLimit(`apply_ip:${ip}`, 10, 3600)
-  await enforceRateLimit(`apply_email:${email}`, 3, 3600)
+  await enforceRateLimitStrict(`apply_email:${email}`, 3, 3600)
 
   const admin = createAdminClient()
   const { data: exchange } = await admin
@@ -209,18 +211,16 @@ export async function getApplicationDraft(token: string) {
 export async function peekApplicationDraft(
   token: string,
 ): Promise<{ live: boolean; firstName: string | null; language: 'en' | 'fr' }> {
-  const admin = createAdminClient()
-  const { data: app } = await admin
-    .from('applications')
-    .select('status, data, language, resume_token_expires_at')
-    .eq('resume_token', token)
+  // Anon-key RPC (not the service role): returns status + first name only.
+  const anon = createAnonClient()
+  const { data: app } = await anon
+    .rpc('peek_application_draft', { p_token: token })
     .maybeSingle()
-  const language: 'en' | 'fr' = (app?.language === 'fr' ? 'fr' : 'en')
+  const language: 'en' | 'fr' = app?.language === 'fr' ? 'fr' : 'en'
   if (!app || tokenExpired(app.resume_token_expires_at) || app.status !== 'draft') {
     return { live: false, firstName: null, language }
   }
-  const first = (app.data as Record<string, unknown> | null)?.first_name
-  return { live: true, firstName: typeof first === 'string' ? first : null, language }
+  return { live: true, firstName: app.first_name, language }
 }
 
 // Emails the applicant their private resume link on demand ("Finish later").
@@ -239,7 +239,7 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
   // mail-bombing from our sending domain (mirrors startApplication's old gate).
   const ip = await clientIp()
   await enforceRateLimit(`resume_ip:${ip}`, 10, 3600)
-  await enforceRateLimit(`resume_email:${app.email}`, 3, 3600)
+  await enforceRateLimitStrict(`resume_email:${app.email}`, 3, 3600)
 
   await sendApplicationResumeEmail({
     to: app.email,
@@ -356,6 +356,18 @@ export async function listApplications(exchangeId: string) {
   if (!user) throw new Error('Unauthenticated')
   const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  // Belt-and-suspenders with RLS (which already scopes rows to the caller's
+  // school — proven by tests/rls/matrix.test.ts): refuse foreign exchange ids
+  // outright so a future RLS refactor can never silently open this read.
+  // Same shape as assertOrganizerInExchange in actions/students.ts.
+  const { data: exchange } = await supabase
+    .from('exchanges')
+    .select('school_a_id, school_b_id')
+    .eq('id', exchangeId)
+    .maybeSingle()
+  if (!exchange || (exchange.school_a_id !== profile.school_id && exchange.school_b_id !== profile.school_id)) {
+    throw new Error('Unauthorized')
+  }
   const { data, error } = await supabase
     .from('applications')
     // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
@@ -403,6 +415,15 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   }).eq('id', applicationId)
   if (error) throw error
 
+  await logAudit({
+    action: 'application.accepted',
+    actorUserId: user.id,
+    actorSchoolId: app.school_id,
+    targetType: 'application',
+    targetId: applicationId,
+    metadata: { exchange_id: app.exchange_id },
+  })
+
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = buildApplicantName(app.data)
@@ -433,6 +454,15 @@ export async function rejectApplication(applicationId: string, note: string, sen
     reviewer_id: user.id, review_note: note || null,
   }).eq('id', applicationId)
   if (error) throw error
+
+  await logAudit({
+    action: 'application.rejected',
+    actorUserId: user.id,
+    actorSchoolId: app.school_id,
+    targetType: 'application',
+    targetId: applicationId,
+    metadata: { exchange_id: app.exchange_id, email_sent: sendEmail },
+  })
 
   if (sendEmail) {
     const { data: exchange } = await supabase

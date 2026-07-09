@@ -1,6 +1,7 @@
 import { getStripe } from '@/lib/billing/stripe'
 import { resolveBillingUpdate } from '@/lib/billing/webhook'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logAudit } from '@/lib/audit'
 
 // Stripe requires the raw request body for signature verification; do not parse.
 export const runtime = 'nodejs'
@@ -35,12 +36,36 @@ export async function POST(req: Request) {
         .from('schools')
         .update({ grace_until: new Date(Date.now() + GRACE_MS).toISOString() })
         .eq('id', school.id)
+      await logAudit({
+        action: 'billing.grace_started',
+        actorUserId: null, // system actor: Stripe webhook
+        actorSchoolId: school.id,
+        targetType: 'school',
+        targetId: school.id,
+      })
     }
     return new Response('ok', { status: 200 })
   }
 
   if (Object.keys(update.patch).length > 0) {
-    await admin.from('schools').update(update.patch).eq('stripe_customer_id', update.customerId)
+    const { data: patched } = await admin
+      .from('schools')
+      .update(update.patch)
+      .eq('stripe_customer_id', update.customerId)
+      .select('id')
+    for (const school of patched ?? []) {
+      await logAudit({
+        action: 'billing.subscription_updated',
+        actorUserId: null, // system actor: Stripe webhook
+        actorSchoolId: school.id,
+        targetType: 'school',
+        targetId: school.id,
+        metadata: {
+          subscription_status: update.patch.subscription_status ?? null,
+          plan: update.patch.plan ?? null,
+        },
+      })
+    }
   }
   return new Response('ok', { status: 200 })
 }

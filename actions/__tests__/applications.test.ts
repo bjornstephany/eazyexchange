@@ -91,6 +91,30 @@ const adminClient = {
 
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => adminClient }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => adminClient }))
+// peekApplicationDraft now reads via the anon-key RPC (W3). The RPC returns the
+// flattened first_name column, not the raw application row — translate the
+// scenario fixture so the existing peek scenarios stay valid.
+vi.mock('@/lib/supabase/anon', () => ({
+  createAnonClient: () => ({
+    rpc: (fn: string) => ({
+      maybeSingle: async () => {
+        if (fn !== 'peek_application_draft') return { data: null, error: null }
+        const a = scenario.application
+        if (!a) return { data: null, error: null }
+        const first = (a.data as Record<string, unknown> | null)?.first_name
+        return {
+          data: {
+            status: a.status,
+            first_name: typeof first === 'string' ? first : null,
+            language: a.language,
+            resume_token_expires_at: a.resume_token_expires_at,
+          },
+          error: null,
+        }
+      },
+    }),
+  }),
+}))
 vi.mock('next/headers', () => ({ headers: async () => ({ get: () => null }) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/email', () => ({

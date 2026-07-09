@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan } from '@/lib/billing/limits'
 import { Logo } from '@/components/brand/Logo'
 import { ReturnPoller } from './ReturnPoller'
@@ -12,11 +11,10 @@ export default async function BillingReturnPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const admin = createAdminClient()
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from('users').select('school_id').eq('id', user.id).maybeSingle()
   const { data: school } = profile
-    ? await admin.from('schools')
+    ? await supabase.from('schools')
         .select('subscription_status, plan, grace_until').eq('id', profile.school_id).single()
     : { data: null }
 

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, isInGrace, PLAN_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { PLAN_LABEL_FR } from '@/lib/billing/display'
 import { CenteredCard } from '@/components/auth/CenteredCard'
@@ -14,19 +13,20 @@ const capLabel = (n: number) => (n === Infinity ? 'illimités' : String(n))
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: { error?: string }
+  searchParams: Promise<{ error?: string }>
 }) {
-  const unavailable = searchParams?.error === 'unavailable'
+  const { error } = await searchParams
+  const unavailable = error === 'unavailable'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const admin = createAdminClient()
-  const { data: profile } = await admin
+  // Own profile + own school: RLS covers both reads — no service role needed.
+  const { data: profile } = await supabase
     .from('users').select('school_id, role').eq('id', user.id).maybeSingle()
   if (!profile || profile.role !== 'organizer') redirect('/my-forms')
 
-  const { data: school } = await admin
+  const { data: school } = await supabase
     .from('schools')
     .select('subscription_status, plan, grace_until, stripe_customer_id')
     .eq('id', profile.school_id).single()

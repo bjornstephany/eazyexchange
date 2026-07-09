@@ -1,20 +1,18 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { ApplyEntry } from '@/components/ApplyEntry'
 import { Logo } from '@/components/brand/Logo'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
 
-// Reads live exchange state (application_open/deadline) via the cookie-less admin
-// client, which is otherwise eligible for Next's Data Cache — force dynamic so the
-// open/closed state is never served stale.
+// Reads live exchange state (application_open/deadline) via the cookie-less anon
+// client through a narrowly-granted RPC, which is otherwise eligible for Next's
+// Data Cache — force dynamic so the open/closed state is never served stale.
 export const dynamic = 'force-dynamic'
 
 export default async function ApplyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const admin = createAdminClient()
-  const { data: exchange } = await admin
-    .from('exchanges')
-    .select('name, application_open, application_deadline')
-    .eq('apply_slug', slug)
+  const anon = createAnonClient()
+  const { data: exchange } = await anon
+    .rpc('get_apply_page_exchange', { p_slug: slug })
     .maybeSingle()
 
   const closed = !exchange || !exchange.application_open ||

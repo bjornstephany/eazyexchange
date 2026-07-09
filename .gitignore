@@ -40,6 +40,8 @@ next-env.d.ts
 # Claude Code local config
 .claude/
 .env*
+# ...but the values-free reference IS committed (see docs/security/key-rotation-runbook.md).
+!.env.example
 
 # Student application PDFs dropped in docs/ — never commit (PII)
 docs/*.pdf

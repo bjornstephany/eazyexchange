@@ -110,6 +110,16 @@ export type EmailSendLog = {
   school_id: string | null
   exchange_id: string | null
 }
+export type AuditLog = {
+  id: string
+  actor_user_id: string | null
+  actor_school_id: string | null
+  action: string
+  target_type: string
+  target_id: string | null
+  metadata: Record<string, string | number | boolean | null>
+  created_at: string
+}
 
 type TableDef<Row, Insert, Update> = {
   Row: Row
@@ -152,12 +162,30 @@ export type Database = {
         Partial<EmailSendLog>
       >
       rate_limits: TableDef<RateLimit, RateLimit, Partial<RateLimit>>
+      audit_log: TableDef<
+        AuditLog,
+        Omit<AuditLog, 'id' | 'created_at' | 'metadata'> & Partial<Pick<AuditLog, 'metadata'>>,
+        Record<string, never> // append-only: .update() is a type error in practice
+      >
     }
     Views: Record<string, never>
     Functions: {
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
+      }
+      get_apply_page_exchange: {
+        Args: { p_slug: string }
+        Returns: { name: string; application_open: boolean; application_deadline: string | null }[]
+      }
+      peek_application_draft: {
+        Args: { p_token: string }
+        Returns: {
+          status: string
+          first_name: string | null
+          language: string
+          resume_token_expires_at: string | null
+        }[]
       }
     }
   }

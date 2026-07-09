@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendRejectionEmail } from '@/lib/email'
 import { hasOverlongAnswer, hasMissingRequired, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { logAudit } from '@/lib/audit'
 
 // Verify the assignment belongs to the calling student. Throws if not.
 // Returns the assignment's exchange id (via its template) for the write guard.
@@ -289,7 +290,7 @@ export async function approveSubmission(assignmentId: string) {
   const supabase = await createClient()
   const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
-  const { exchangeId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
+  const { exchangeId, schoolId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
   const { data: submission } = await supabase
@@ -304,6 +305,15 @@ export async function approveSubmission(assignmentId: string) {
     .update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewer_id: user.id })
     .eq('id', submission.id)
   if (error) throw error
+
+  await logAudit({
+    action: 'submission.approved',
+    actorUserId: user.id,
+    actorSchoolId: schoolId,
+    targetType: 'submission',
+    targetId: submission.id,
+    metadata: { assignment_id: assignmentId },
+  })
 
   revalidatePath(`/exchanges`)
 }
@@ -337,6 +347,15 @@ export async function rejectSubmission(assignmentId: string, note: string) {
     })
     .eq('id', submission.id)
   if (error) throw error
+
+  await logAudit({
+    action: 'submission.rejected',
+    actorUserId: user.id,
+    actorSchoolId: schoolId,
+    targetType: 'submission',
+    targetId: submission.id,
+    metadata: { assignment_id: assignmentId }, // never the note text
+  })
 
   // Notify the student immediately. Email failure must not roll back the rejection.
   const { data: info } = await supabase

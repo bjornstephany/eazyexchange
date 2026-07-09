@@ -42,13 +42,9 @@ pnpm install
 pnpm dev
 ```
 
-Environment variables required (create `.env.local`):
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-RESEND_API_KEY=
-```
+Environment variables: copy `.env.example` (the authoritative, commented list of
+every required variable) to `.env.local` and fill it in. Key rotation:
+`docs/security/key-rotation-runbook.md`.
 
 ## Verifying Changes
 
@@ -58,6 +54,21 @@ pnpm lint        # next lint
 pnpm test        # vitest run (config: vitest.config.ts)
 pnpm build       # catches type errors + build breakage
 ```
+
+Any change touching `supabase/migrations/`, RLS policies, or storage buckets must
+also pass `pnpm test:rls` (RLS regression matrix — see `docs/security/rls-testing.md`;
+needs the local Supabase stack or `RLS_TEST_DB_URL`). New tables/buckets ship with
+matrix cases in the same PR.
+
+## Dependency Audit Cadence
+
+`.github/workflows/dependency-audit.yml` runs `pnpm audit --prod --audit-level high`
+weekly (Monday 06:00 UTC) and on every push to `main`; it fails on any high/critical
+advisory in production dependencies. Triage rule when it goes red: bump to the patched
+release within the week (patch/minor bump → straight to `main` after the Verifying
+Changes commands; major bump → branch + full gate + auth-flow regression). If no patch
+exists, record the advisory and the accepted-risk rationale in
+`docs/security/audit-decisions.md` and re-check weekly.
 
 ## Git Workflow (solo project)
 
