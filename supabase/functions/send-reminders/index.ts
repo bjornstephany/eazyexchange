@@ -3,7 +3,8 @@
 // Runs on a daily cron (see supabase/cron-setup.sql). Pacing is per exchange:
 // organizers pick a cadence preset ('douce' | 'normale' | 'insistante') or turn
 // automatic reminders off entirely (exchanges.reminders_enabled = false). The
-// interval math lives in ./pacing.ts (pure, unit-tested under vitest).
+// interval math lives in ./pacing.ts and the per-row decision in ./filter.ts
+// (both pure, unit-tested under vitest).
 // "Needs action" = no submission, or status 'draft' / 'rejected'. The first
 // reminder fires on the first run after creation (last_reminded_at IS NULL).
 //
@@ -14,7 +15,7 @@
 // Deno runtime. Uses the service-role key (bypasses RLS) and the Resend REST API.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { resolvePreset, isDue } from './pacing.ts'
+import { shouldRemind } from './filter.ts'
 import { planFairShare } from './fair-share.ts'
 import { fetchAllPages } from './fetch-all.ts'
 
@@ -40,17 +41,7 @@ const BUDGET_DEFAULT = 150
 const budgetRaw = Number(Deno.env.get('REMINDER_SCHOOL_BUDGET') ?? BUDGET_DEFAULT)
 const PER_SCHOOL_BUDGET = Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : BUDGET_DEFAULT
 
-const DAY_MS = 24 * 60 * 60 * 1000
-
 type ReminderForm = { name: string; deadline: string; overdue: boolean }
-
-// Whole days from now until an ISO date (UTC). Negative when the date is past.
-function daysUntil(isoDate: string): number {
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
-  const target = new Date(`${isoDate}T00:00:00Z`)
-  return Math.round((target.getTime() - today.getTime()) / DAY_MS)
-}
 
 // Escape untrusted values before embedding them in email HTML.
 function esc(s: string): string {
@@ -172,25 +163,8 @@ Deno.serve(async (req) => {
   >()
 
   for (const row of rows as any[]) {
-    // submissions is one-to-one with assignments, so PostgREST returns it as an
-    // object (not an array). Handle both shapes defensively.
-    const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
-    const status: string | undefined = submission?.status
-    if (status === 'approved' || status === 'submitted') continue
-
-    const exchange = row.form_templates?.exchanges
-    if (exchange?.archived_at) continue
-    // Master switch: the organizer turned automatic reminders off for this
-    // exchange. Manual « Relancer » is unaffected (it lives in the app).
-    if (exchange?.reminders_enabled === false) continue
-
-    const deadline: string | undefined = row.form_templates?.deadline
-    if (!deadline) continue
-
-    const daysLeft = daysUntil(deadline)
-    // Unknown/missing cadence resolves to 'normale' — never fail the run on it.
-    const preset = resolvePreset(exchange?.reminder_cadence)
-    if (!isDue(daysLeft, row.last_reminded_at, preset)) continue
+    const decision = shouldRemind(row)
+    if (!decision) continue
 
     const student = row.student
     if (!student?.email) continue
@@ -206,8 +180,13 @@ Deno.serve(async (req) => {
       })
     }
     const bucket = perStudent.get(student.email)!
-    bucket.forms.push({ name: row.form_templates.name, deadline, overdue: daysLeft < 0 })
+    bucket.forms.push({
+      name: row.form_templates.name,
+      deadline: decision.deadline,
+      overdue: decision.daysLeft < 0,
+    })
     bucket.assignmentIds.push(row.id)
+    const exchange = row.form_templates?.exchanges
     if (exchange?.name) bucket.exchangeNames.add(exchange.name)
     if (exchange?.id) bucket.exchangeIds.add(exchange.id)
   }
