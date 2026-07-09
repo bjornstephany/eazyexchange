@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { getProfile } from '@/lib/supabase/request'
+import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
@@ -31,8 +32,7 @@ type ExchangeWithSchools = Omit<Tables<'exchanges'>, 'apply_slug'> & {
 
 export async function getExchanges() {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
 
   const profile = await getProfile()
   if (!profile) throw new Error('No profile')
@@ -50,11 +50,7 @@ export async function getExchanges() {
 
 export async function createExchange(formData: FormData): Promise<CreateExchangeResult> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { user, profile } = await requireOrganizer()
 
   const name = (formData.get('name') as string ?? '').trim()
   if (!name) {
@@ -163,8 +159,7 @@ async function assertExchangeInScope(supabase: SupabaseClient<Database>, exchang
 
 export async function getExchange(exchangeId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
   await assertExchangeInScope(supabase, exchangeId)
 
   const { data, error } = await supabase
@@ -179,8 +174,7 @@ export async function getExchange(exchangeId: string) {
 
 export async function getExchangeGrid(exchangeId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
 
   const schoolId = await assertExchangeInScope(supabase, exchangeId)
   const profile = { school_id: schoolId }
@@ -247,10 +241,7 @@ export async function getExchangeGrid(exchangeId: string) {
 
 export async function setApplicationOpen(exchangeId: string, open: boolean, deadline: string | null): Promise<void> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -268,10 +259,7 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
 export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promise<void> {
   if (phase !== 1 && phase !== 2) throw new Error('Invalid phase')
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { profile } = await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -363,10 +351,7 @@ export async function updateReminderSettings(
 ): Promise<void> {
   if (!REMINDER_CADENCES.includes(cadence)) throw new Error('Invalid cadence')
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
