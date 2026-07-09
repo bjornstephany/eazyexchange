@@ -16,6 +16,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { resolvePreset, isDue } from './pacing.ts'
 import { planFairShare } from './fair-share.ts'
+import { fetchAllPages } from './fetch-all.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 // Prefer an explicitly-set secret key (SERVICE_KEY = an sb_secret_… key) so this
@@ -138,14 +139,25 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-  // Pull every assignment with its form deadline, reminder state, exchange
-  // reminder settings, and latest submission status. Cadence and "needs
-  // action" are filtered in code.
-  const { data: rows, error } = await supabase
-    .from('assignments')
-    .select(
-      'id, last_reminded_at, student:users!student_id(email, full_name, school_id), form_templates!inner(name, deadline, exchanges!inner(id, name, archived_at, reminders_enabled, reminder_cadence)), submissions(status)',
-    )
+  // Pull every assignment that could need a reminder, with its form deadline,
+  // reminder state, exchange settings, and latest submission status. The hard
+  // disqualifiers (no deadline, archived exchange, reminders off) are pushed
+  // into PostgREST via the !inner embeds; "needs action" and cadence stay in
+  // code. PostgREST silently caps un-ranged selects at 1,000 rows, so the read
+  // pages explicitly — on any page error the whole run aborts (retried by the
+  // next daily cron) rather than reminding from a half-read cohort.
+  const { rows, error } = await fetchAllPages<Record<string, unknown>>((from, to) =>
+    supabase
+      .from('assignments')
+      .select(
+        'id, last_reminded_at, student:users!student_id(email, full_name, school_id), form_templates!inner(name, deadline, exchanges!inner(id, name, archived_at, reminders_enabled, reminder_cadence)), submissions(status)',
+      )
+      .not('form_templates.deadline', 'is', null)
+      .is('form_templates.exchanges.archived_at', null)
+      .eq('form_templates.exchanges.reminders_enabled', true)
+      .order('id')
+      .range(from, to),
+  )
 
   if (error) {
     console.error('[send-reminders] query failed:', error)
@@ -159,7 +171,7 @@ Deno.serve(async (req) => {
     { name: string; forms: ReminderForm[]; assignmentIds: string[]; exchangeNames: Set<string>; exchangeIds: Set<string>; schoolId: string | null }
   >()
 
-  for (const row of (rows ?? []) as any[]) {
+  for (const row of rows as any[]) {
     // submissions is one-to-one with assignments, so PostgREST returns it as an
     // object (not an array). Handle both shapes defensively.
     const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
