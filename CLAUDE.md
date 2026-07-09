@@ -42,13 +42,9 @@ pnpm install
 pnpm dev
 ```
 
-Environment variables required (create `.env.local`):
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-RESEND_API_KEY=
-```
+Environment variables: copy `.env.example` (the authoritative, commented list of
+every required variable) to `.env.local` and fill it in. Key rotation:
+`docs/security/key-rotation-runbook.md`.
 
 ## Verifying Changes
 
