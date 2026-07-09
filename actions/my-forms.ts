@@ -19,5 +19,5 @@ export async function getMyAssignments() {
     .order('assigned_at')
 
   if (error) throw error
-  return (data ?? []) as any[]
+  return data ?? []
 }
