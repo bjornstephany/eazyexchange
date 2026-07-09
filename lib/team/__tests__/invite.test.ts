@@ -43,7 +43,7 @@ beforeEach(() => {
 describe('createAndSendOrganizerInvite', () => {
   it('normalizes the email, inserts a pending row, and sends the email', async () => {
     const r = await createAndSendOrganizerInvite(makeAdmin(), opts)
-    expect(r).toEqual({ ok: true })
+    expect(r).toMatchObject({ ok: true })
     expect(inserted).toMatchObject({ school_id: 's-1', email: 'new@school.fr', token: 'tok-123', invited_by: 'u1' })
     expect(sendOrganizerInviteEmail).toHaveBeenCalledWith({
       to: 'new@school.fr', inviterName: 'Alice', schoolName: 'Lincoln High',

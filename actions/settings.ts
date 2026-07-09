@@ -15,6 +15,7 @@ import {
   PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
 } from '@/lib/billing/display'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
+import { logAudit } from '@/lib/audit'
 import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
@@ -192,6 +193,13 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
     inviterUserId: ctx.userId, inviterName: ctx.fullName, appUrl: getAppUrl(),
   })
   if (!result.ok) throw new Error(result.message)
+  await logAudit({
+    action: 'organizer.invited',
+    actorUserId: ctx.userId,
+    actorSchoolId: ctx.schoolId,
+    targetType: 'organizer_invite',
+    targetId: result.inviteId,
+  })
   revalidatePath('/settings')
 }
 
@@ -206,6 +214,13 @@ export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
     .update({ revoked_at: new Date().toISOString() })
     .eq('id', inviteId).eq('school_id', ctx.schoolId).is('accepted_at', null)
   if (error) throw new Error('L’invitation n’a pas pu être révoquée.')
+  await logAudit({
+    action: 'organizer.invite_revoked',
+    actorUserId: ctx.userId,
+    actorSchoolId: ctx.schoolId,
+    targetType: 'organizer_invite',
+    targetId: inviteId,
+  })
   revalidatePath('/settings')
 }
 
@@ -236,6 +251,14 @@ export async function removeOrganizer(userId: string): Promise<void> {
 
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) throw new Error('Le collaborateur n’a pas pu être retiré. Réessayez.')
+
+  await logAudit({
+    action: 'organizer.removed',
+    actorUserId: ctx.userId,
+    actorSchoolId: ctx.schoolId,
+    targetType: 'user',
+    targetId: userId,
+  })
 
   revalidatePath('/settings')
 }
@@ -290,6 +313,13 @@ export async function archiveExchange(exchangeId: string): Promise<void> {
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: new Date().toISOString() }).eq('id', exchangeId)
   if (error) throw new Error('Le programme n’a pas pu être archivé. Réessayez.')
+  await logAudit({
+    action: 'exchange.archived',
+    actorUserId: ctx.userId,
+    actorSchoolId: ctx.schoolId,
+    targetType: 'exchange',
+    targetId: exchangeId,
+  })
   revalidatePath('/', 'layout')
 }
 
@@ -301,6 +331,13 @@ export async function restoreExchange(exchangeId: string): Promise<void> {
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: null }).eq('id', exchangeId)
   if (error) throw new Error('Le programme n’a pas pu être restauré. Réessayez.')
+  await logAudit({
+    action: 'exchange.restored',
+    actorUserId: ctx.userId,
+    actorSchoolId: ctx.schoolId,
+    targetType: 'exchange',
+    targetId: exchangeId,
+  })
   revalidatePath('/', 'layout')
 }
 

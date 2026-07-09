@@ -3,7 +3,7 @@ import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { randomToken } from '@/lib/tokens'
 import { sendOrganizerInviteEmail } from '@/lib/email'
 
-export type InviteResult = { ok: true } | { ok: false; message: string }
+export type InviteResult = { ok: true; inviteId: string } | { ok: false; message: string }
 
 // Shared organizer-invite mechanics: dedupe → insert pending row → send email,
 // rolling back the row if the email never goes out (no orphan pending invites).
@@ -50,5 +50,5 @@ export async function createAndSendOrganizerInvite(
     await admin.from('organizer_invites').delete().eq('id', invite.id)
     return { ok: false, message: 'L’e-mail d’invitation n’a pas pu être envoyé. Réessayez.' }
   }
-  return { ok: true }
+  return { ok: true, inviteId: invite.id }
 }

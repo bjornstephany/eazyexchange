@@ -15,6 +15,7 @@ import {
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
+import { logAudit } from '@/lib/audit'
 
 const APP_URL = getAppUrl()
 const PHOTO_BUCKET = 'application-photos'
@@ -402,6 +403,15 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   }).eq('id', applicationId)
   if (error) throw error
 
+  await logAudit({
+    action: 'application.accepted',
+    actorUserId: user.id,
+    actorSchoolId: app.school_id,
+    targetType: 'application',
+    targetId: applicationId,
+    metadata: { exchange_id: app.exchange_id },
+  })
+
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
   const applicantName = buildApplicantName(app.data)
@@ -432,6 +442,15 @@ export async function rejectApplication(applicationId: string, note: string, sen
     reviewer_id: user.id, review_note: note || null,
   }).eq('id', applicationId)
   if (error) throw error
+
+  await logAudit({
+    action: 'application.rejected',
+    actorUserId: user.id,
+    actorSchoolId: app.school_id,
+    targetType: 'application',
+    targetId: applicationId,
+    metadata: { exchange_id: app.exchange_id, email_sent: sendEmail },
+  })
 
   if (sendEmail) {
     const { data: exchange } = await supabase
