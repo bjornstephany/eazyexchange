@@ -101,8 +101,7 @@ export async function getBillingOverview(): Promise<BillingOverview> {
   const ctx = await getOrganizerCtx(supabase)
   assertOwner(ctx)
 
-  const admin = createAdminClient()
-  const { data: school } = await admin
+  const { data: school } = await supabase
     .from('schools')
     .select('subscription_status, plan, grace_until, stripe_customer_id')
     .eq('id', ctx.schoolId).single()
