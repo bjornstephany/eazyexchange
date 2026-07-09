@@ -1,11 +1,10 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { requireUser } from '@/lib/auth/require'
 
 export async function getMyAssignments() {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
 
   const { data, error } = await supabase
     .from('assignments')
