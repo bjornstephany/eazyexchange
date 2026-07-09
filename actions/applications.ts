@@ -16,6 +16,8 @@ import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
 import { logAudit } from '@/lib/audit'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/db'
 
 const APP_URL = getAppUrl()
 const PHOTO_BUCKET = 'application-photos'
@@ -177,7 +179,7 @@ export async function getApplicationDraft(token: string) {
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
-  const exchangeName = (app as any).exchanges?.name ?? ''
+  const exchangeName = app.exchanges?.name ?? ''
   // Don't return PII through an expired link.
   if (tokenExpired(app.resume_token_expires_at)) {
     return { expired: true as const, submitted: false as const, exchangeName }
@@ -200,7 +202,7 @@ export async function getApplicationDraft(token: string) {
     expired: false as const, submitted: false as const,
     status: app.status, data: app.data ?? {}, language: app.language,
     photo_path: app.photo_path, photoUrl, exchangeName,
-    slug: (app as any).exchanges?.apply_slug ?? '',
+    slug: app.exchanges?.apply_slug ?? '',
   }
 }
 
@@ -243,7 +245,7 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
 
   await sendApplicationResumeEmail({
     to: app.email,
-    exchangeName: (app as any).exchanges?.name ?? '',
+    exchangeName: app.exchanges?.name ?? '',
     resumeUrl: `${APP_URL}/apply/resume/${token}`,
     ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   })
@@ -340,7 +342,7 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 
 // ---- Organizer actions (authenticated, RLS-enforced) ----
 
-async function assertOrganizerOwnsApplication(supabase: any, applicationId: string) {
+async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>, applicationId: string) {
   const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
   const { data: app } = await supabase
@@ -487,7 +489,7 @@ export async function getInvitation(token: string) {
   if (!app) return null
   const applicantName = buildApplicantName(app.data)
   return {
-    exchangeName: (app as any).exchanges?.name ?? '', applicantName, status: app.status,
+    exchangeName: app.exchanges?.name ?? '', applicantName, status: app.status,
     expired: tokenExpired(app.invite_token_expires_at),
   }
 }
@@ -559,7 +561,7 @@ export async function respondToInvitation(
       redirectTo: `${APP_URL}/accept-invite`,
     })
     if (inviteError) {
-      if ((inviteError as any).code === 'email_exists') throw new Error('An account already exists for this email')
+      if (inviteError.code === 'email_exists') throw new Error('An account already exists for this email')
       throw inviteError
     }
     userId = invited.user.id
@@ -572,13 +574,13 @@ export async function respondToInvitation(
     })
     if (profileError) {
       await admin.auth.admin.deleteUser(userId).catch(() => {})
-      if ((profileError as any).code === '23505') throw new Error('An account already exists for this email')
+      if (profileError.code === '23505') throw new Error('An account already exists for this email')
       throw profileError
     }
     const { error: enrollError } = await admin.from('exchange_enrollments').insert({
       exchange_id: claimed.exchange_id, user_id: userId,
     })
-    if (enrollError && (enrollError as any).code !== '23505') {
+    if (enrollError && enrollError.code !== '23505') {
       await admin.from('users').delete().eq('id', userId)
       await admin.auth.admin.deleteUser(userId).catch(() => {})
       throw enrollError
