@@ -23,7 +23,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && isAuthRoute) {
+  // Logged-in users hitting the auth routes or the marketing page (/) get sent
+  // to their app. Handling / here (not in app/page.tsx) keeps the landing page
+  // fully static so anonymous visitors are served from the CDN with no cold start.
+  if (user && (isAuthRoute || pathname === '/')) {
     // Fetch role + setup state to redirect correctly
     const { data: profile } = await supabase
       .from('users').select('role, full_name').eq('id', user.id)

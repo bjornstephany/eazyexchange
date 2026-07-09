@@ -70,4 +70,26 @@ describe('middleware', () => {
     const res = await middleware(req('/invite/tok123'))
     expect(res.headers.get('location')).toBeNull()
   })
+
+  it('redirects a logged-in organizer from / to /dashboard', async () => {
+    user = { id: 'u1' }
+    const res = await middleware(req('/'))
+    expect(res.headers.get('location')).toContain('/dashboard')
+  })
+
+  it('redirects a logged-in student from / to /my-forms', async () => {
+    user = { id: 'u2' }
+    profileRow = { role: 'student', full_name: 'Stu' }
+    const res = await middleware(req('/'))
+    expect(res.headers.get('location')).toContain('/my-forms')
+  })
+
+  it('does NOT redirect an orphaned session off / (landing page must render)', async () => {
+    // Valid JWT but no users row: redirecting would bounce off the getUser()-based
+    // layouts back to /login → loop. The landing page is safe to serve instead.
+    user = { id: 'ghost' }
+    profileRow = null
+    const res = await middleware(req('/'))
+    expect(res.headers.get('location')).toBeNull()
+  })
 })
