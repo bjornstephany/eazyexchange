@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { frShortDate } from '@/lib/dashboard/rollup'
+import { frShortDate } from '@/lib/dates'
 import { getAppUrl } from '@/lib/app-url'
 import { EXCHANGE_TERMS_EMAIL } from '@/lib/exchange-terms'
 import { logEmailSend, type EmailLogContext } from '@/lib/email-log'

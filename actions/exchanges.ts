@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { getProfile } from '@/lib/supabase/request'
+import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { applySlug } from '@/lib/tokens'
@@ -17,11 +18,21 @@ import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database, Tables } from '@/types/db'
+
+// apply_slug is nullable in the column definition but always set at creation
+// (see createExchange below) — every consumer (CandidaturesView, OverviewView)
+// already reads it as a plain string with no fallback.
+type ExchangeWithSchools = Omit<Tables<'exchanges'>, 'apply_slug'> & {
+  apply_slug: string
+  school_a: { name: string } | null
+  school_b: { name: string } | null
+}
 
 export async function getExchanges() {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
 
   const profile = await getProfile()
   if (!profile) throw new Error('No profile')
@@ -31,18 +42,15 @@ export async function getExchanges() {
     .select('*, school_a:schools!school_a_id(name), school_b:schools!school_b_id(name)')
     .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
     .order('created_at', { ascending: false })
+    .returns<ExchangeWithSchools[]>()
 
   if (error) throw error
-  return (data ?? []) as any[]
+  return data ?? []
 }
 
 export async function createExchange(formData: FormData): Promise<CreateExchangeResult> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { user, profile } = await requireOrganizer()
 
   const name = (formData.get('name') as string ?? '').trim()
   if (!name) {
@@ -133,7 +141,7 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
 
 // Confirm the caller's school participates in the exchange. Returns the
 // caller's school_id. Throws if the exchange is out of scope.
-async function assertExchangeInScope(supabase: any, exchangeId: string) {
+async function assertExchangeInScope(supabase: SupabaseClient<Database>, exchangeId: string) {
   const profile = await getProfile()
   if (!profile) throw new Error('No profile')
 
@@ -151,8 +159,7 @@ async function assertExchangeInScope(supabase: any, exchangeId: string) {
 
 export async function getExchange(exchangeId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
   await assertExchangeInScope(supabase, exchangeId)
 
   const { data, error } = await supabase
@@ -162,13 +169,12 @@ export async function getExchange(exchangeId: string) {
     .single()
 
   if (error) throw error
-  return data as any
+  return data
 }
 
 export async function getExchangeGrid(exchangeId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
 
   const schoolId = await assertExchangeInScope(supabase, exchangeId)
   const profile = { school_id: schoolId }
@@ -205,7 +211,7 @@ export async function getExchangeGrid(exchangeId: string) {
   const templateIds = (templates ?? []).map(t => t.id)
   const studentIds = students.map(s => s.id)
 
-  const assignments: any[] = (templateIds.length > 0 && studentIds.length > 0)
+  const assignments = (templateIds.length > 0 && studentIds.length > 0)
     ? (await supabase
         .from('assignments')
         .select('id, template_id, student_id, submissions(status)')
@@ -235,10 +241,7 @@ export async function getExchangeGrid(exchangeId: string) {
 
 export async function setApplicationOpen(exchangeId: string, open: boolean, deadline: string | null): Promise<void> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -256,10 +259,7 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
 export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promise<void> {
   if (phase !== 1 && phase !== 2) throw new Error('Invalid phase')
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { profile } = await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -277,7 +277,7 @@ export async function setExchangePhase(exchangeId: string, phase: 1 | 2): Promis
 // One-shot checklist when an exchange first enters Phase 2: each enrolled
 // student with pending active items gets ONE email listing them. The
 // phase2_checklist_sent_at stamp guarantees toggling 1↔2 never re-spams.
-async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, schoolId: string): Promise<void> {
+async function sendPhase2ChecklistOnce(supabase: SupabaseClient<Database>, exchangeId: string, schoolId: string): Promise<void> {
   const { data: exchange } = await supabase
     .from('exchanges').select('name, phase2_checklist_sent_at').eq('id', exchangeId).single()
   if (!exchange || exchange.phase2_checklist_sent_at) return
@@ -292,14 +292,14 @@ async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, school
     .eq('status', 'active')
 
   const templateById = new Map<string, { name: string; deadline: string | null }>(
-    (templates ?? []).map((t: any) => [t.id, t])
+    (templates ?? []).map((t) => [t.id, t])
   )
   if (templateById.size === 0) { await stampChecklist(supabase, exchangeId); return }
 
   const { data: enrollments } = await supabase
     .from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId)
-  const enrolledIds = (enrollments ?? []).map((e: any) => e.user_id)
-  const students: any[] = enrolledIds.length > 0
+  const enrolledIds = (enrollments ?? []).map((e) => e.user_id)
+  const students = enrolledIds.length > 0
     ? ((await supabase
         .from('users').select('id, full_name, email')
         .in('id', enrolledIds).eq('school_id', schoolId).eq('role', 'student')).data ?? [])
@@ -311,7 +311,7 @@ async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, school
     .in('template_id', Array.from(templateById.keys()))
 
   const pendingByStudent = new Map<string, { name: string; deadline: string | null }[]>()
-  for (const a of (assignments ?? []) as any[]) {
+  for (const a of assignments ?? []) {
     const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
     const status = submission?.status ?? null
     if (status === 'submitted' || status === 'approved') continue
@@ -335,7 +335,7 @@ async function sendPhase2ChecklistOnce(supabase: any, exchangeId: string, school
   await stampChecklist(supabase, exchangeId)
 }
 
-async function stampChecklist(supabase: any, exchangeId: string): Promise<void> {
+async function stampChecklist(supabase: SupabaseClient<Database>, exchangeId: string): Promise<void> {
   await supabase.from('exchanges')
     .update({ phase2_checklist_sent_at: new Date().toISOString() })
     .eq('id', exchangeId)
@@ -351,10 +351,7 @@ export async function updateReminderSettings(
 ): Promise<void> {
   if (!REMINDER_CADENCES.includes(cadence)) throw new Error('Invalid cadence')
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 

@@ -1,6 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { requireOrganizer } from '@/lib/auth/require'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -20,11 +20,8 @@ import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
 
-async function getOrganizerCtx(supabase: SupabaseClient): Promise<OrganizerCtx> {
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+async function getOrganizerCtx(opts?: { orgRole?: 'owner' }): Promise<OrganizerCtx> {
+  const { user, profile } = await requireOrganizer(opts)
   return {
     userId: user.id, schoolId: profile.school_id,
     orgRole: (profile.org_role ?? 'admin') as 'owner' | 'admin',
@@ -32,15 +29,11 @@ async function getOrganizerCtx(supabase: SupabaseClient): Promise<OrganizerCtx> 
   }
 }
 
-function assertOwner(ctx: OrganizerCtx): void {
-  if (ctx.orgRole !== 'owner') throw new Error('Réservé au propriétaire du compte.')
-}
-
 export async function updateProfile(input: {
   fullName: string; schoolName: string
 }): Promise<void> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
+  const ctx = await getOrganizerCtx()
 
   const fullName = input.fullName.trim()
   if (!fullName) throw new Error('Le nom ne peut pas être vide.')
@@ -67,7 +60,7 @@ export async function updateProfile(input: {
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
+  const ctx = await getOrganizerCtx()
   await enforceRateLimit(`pwchange:${ctx.userId}`, 5, 3600)
 
   const policyError = passwordPolicyError(newPassword)
@@ -99,8 +92,7 @@ export type BillingOverview = {
 
 export async function getBillingOverview(): Promise<BillingOverview> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
 
   const { data: school } = await supabase
     .from('schools')
@@ -155,7 +147,7 @@ export type PendingInvite = { id: string; email: string }
 
 export async function getTeam(): Promise<{ members: TeamMember[]; pending: PendingInvite[] }> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
+  const ctx = await getOrganizerCtx()
 
   const [{ data: users }, { data: invites }] = await Promise.all([
     supabase.from('users')
@@ -171,20 +163,18 @@ export async function getTeam(): Promise<{ members: TeamMember[]; pending: Pendi
 
   const now = Date.now()
   return {
-    members: (users ?? []).map((u: any) => ({
+    members: (users ?? []).map((u) => ({
       id: u.id, name: u.full_name, email: u.email,
       isOwner: u.org_role === 'owner', isYou: u.id === ctx.userId,
     })),
     pending: (invites ?? [])
-      .filter((i: any) => new Date(i.expires_at).getTime() > now)
-      .map((i: any) => ({ id: i.id, email: i.email })),
+      .filter((i) => new Date(i.expires_at).getTime() > now)
+      .map((i) => ({ id: i.id, email: i.email })),
   }
 }
 
 export async function inviteOrganizer(rawEmail: string): Promise<void> {
-  const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
   await enforceRateLimitStrict(`team-invite:${ctx.schoolId}`, 10, 3600)
 
   const admin = createAdminClient()
@@ -204,9 +194,7 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
 }
 
 export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
-  const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -225,9 +213,7 @@ export async function revokeOrganizerInvite(inviteId: string): Promise<void> {
 }
 
 export async function removeOrganizer(userId: string): Promise<void> {
-  const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
 
   const admin = createAdminClient()
   // Target must be an ADMIN organizer in the caller's school. Excluding
@@ -282,8 +268,7 @@ async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exc
 
 export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
   const exchange = await getScopedExchange(supabase, ctx.schoolId, exchangeId)
 
   const [{ count: enrolled }, { count: applications }, { data: firstDeadline }] = await Promise.all([
@@ -307,8 +292,7 @@ export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
 
 export async function archiveExchange(exchangeId: string): Promise<void> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
   await getScopedExchange(supabase, ctx.schoolId, exchangeId)
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: new Date().toISOString() }).eq('id', exchangeId)
@@ -325,8 +309,7 @@ export async function archiveExchange(exchangeId: string): Promise<void> {
 
 export async function restoreExchange(exchangeId: string): Promise<void> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx(supabase)
-  assertOwner(ctx)
+  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
   await getScopedExchange(supabase, ctx.schoolId, exchangeId)
   const { error } = await supabase.from('exchanges')
     .update({ archived_at: null }).eq('id', exchangeId)

@@ -1,6 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { requireOrganizer } from '@/lib/auth/require'
 import { revalidatePath } from 'next/cache'
 
 // Persists the organizer's school name from the /onboarding page. Mirrors
@@ -8,11 +8,7 @@ import { revalidatePath } from 'next/cache'
 // updating their own school's name is the only client-permitted schools UPDATE.
 export async function completeOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { profile } = await requireOrganizer()
 
   const name = ((formData.get('name') as string) ?? '').trim()
   if (!name) throw new Error('Veuillez renseigner le nom de votre établissement')

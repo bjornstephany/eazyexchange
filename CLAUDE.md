@@ -88,10 +88,13 @@ Large features run in stages: brainstorm → spec → plan → execution → mer
 
 ## Database
 
-Migrations live in `supabase/migrations/`. Run with:
-```bash
-supabase db push
-```
+Migrations live in `supabase/migrations/`, but **prod's migration ledger is the source of truth for versions** (MCP `apply_migration` stamps its own timestamps). Never run `supabase db push` against prod — it would try to re-apply already-applied migrations under drifted versions. Canonical workflow for any schema change:
+
+1. Write the migration locally: `supabase/migrations/<YYYYMMDDHHMMSS>_<slug>.sql`.
+2. Apply it with the Supabase MCP `apply_migration` tool (`name` = the slug).
+3. Check MCP `list_migrations`: if the ledger stamped a different version than the filename, `git mv` the local file to the stamped version.
+4. Regenerate DB types: MCP `generate_typescript_types` → overwrite `types/supabase.ts` verbatim → `npx tsc --noEmit` (`types/db.ts` narrows the generated rows; schema drift fails compile there — fix the alias, never hand-edit `types/supabase.ts`).
+5. Routine drift check: every filename version in `supabase/migrations/` appears in `list_migrations` and vice versa.
 
 All tables use Row Level Security (RLS). Organizers can only access data for their own school. Students can only access their own assignments and submissions.
 
@@ -114,6 +117,9 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 - **Google OAuth goes through `app/auth/callback/route.ts`** (the `?code=` PKCE exchange), separate from `/auth/confirm` (email OTP `?token_hash=`). Invite-only is enforced *in the callback*: a Google user with no invited profile and no `intent=organizer_signup` is signed out and their orphan auth row deleted. Provider config is a manual dashboard step (not code): create a Google Cloud OAuth client whose redirect URI is Supabase's `https://<ref>.supabase.co/auth/v1/callback`, enable the Google provider in Supabase with that client's ID/secret, and add each app origin's `/auth/callback` under Supabase → Authentication → URL Configuration → Redirect URLs. The invited-student Google path relies on Supabase's automatic same-email identity linking, which is default-on — there is no toggle to enable (the only linking toggle in the dashboard is for *manual* linking, which this app does not use).
 - **Always escape user-supplied content in email HTML** (Resend) to prevent injection.
 - **Never log student/parent PII** — no student emails, names, or submission contents in logs, error messages, or analytics. This data belongs to minors; treat it as sensitive.
+- **Production redacts thrown Server Action/RSC error messages** (replaced by an opaque digest string). Never branch client-side on `error.message`. Expected outcomes (validation failures, plan caps, business rejections) must be **structured return values**; only throw for genuinely unexpected failures. See `lib/billing/exchange-limit.ts` for the pattern.
+- **Auth preambles are shared helpers** — server actions use `requireUser()` / `requireOrganizer()` / `requireStudent()` from `lib/auth/require.ts`; never hand-roll the `getAuthUser → getProfile → role check → throw` dance. Error strings (`'Unauthenticated'`, `'Unauthorized'`) are load-bearing for tests.
+- **Tripwire — `actions/applications.ts`:** the next feature that touches it must FIRST split it along trust lines (`actions/apply.ts` public-token flow, `actions/applications-review.ts` organizer, `actions/invitations.ts`) before adding behavior. It mixes three trust models and is the churn leader.
 - Package manager is **pnpm** (not npm).
 - **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` except `name`). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
 

@@ -1,6 +1,11 @@
 // Pure derivation library for the organizer dashboard (Phase 1 recruitment
 // funnel + Phase 2 dossier rollup). No React, no Supabase — only Intl.
 
+import { frShortDate } from '@/lib/dates'
+
+// Re-export: dashboard components historically import frShortDate from here.
+export { frShortDate }
+
 export type Pill = { kind: 'ok' | 'warn' | 'info' | 'bad' | 'neutral'; label: string }
 export type AppRow = { id: string; status: string; submitted_at: string | null; data: Record<string, string>; email: string }
 export type TemplateInfo = { id: string; type: 'data_entry' | 'document_upload'; name: string; deadline: string }
@@ -20,14 +25,6 @@ export type ActionCard = { title: string; desc: string; cta: string; tone: 'acce
 // French pluralization helper: 's' when n > 1, else ''.
 export function p(n: number): string {
   return n > 1 ? 's' : ''
-}
-
-export function frShortDate(iso: string | null): string {
-  if (!iso) return ''
-  const date = new Date(iso.includes('T') ? iso : iso + 'T00:00:00')
-  if (Number.isNaN(date.getTime())) return ''
-  const formatted = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date)
-  return formatted.replace(/\.$/, '')
 }
 
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
