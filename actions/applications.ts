@@ -2,7 +2,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
@@ -343,8 +343,7 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 // ---- Organizer actions (authenticated, RLS-enforced) ----
 
 async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>, applicationId: string) {
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { profile } = await requireOrganizer()
   const { data: app } = await supabase
     .from('applications').select('*').eq('id', applicationId).maybeSingle()
   if (!app) throw new Error('Application not found')
@@ -354,10 +353,7 @@ async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>
 
 export async function listApplications(exchangeId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
-  const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  const { profile } = await requireOrganizer()
   // Belt-and-suspenders with RLS (which already scopes rows to the caller's
   // school — proven by tests/rls/matrix.test.ts): refuse foreign exchange ids
   // outright so a future RLS refactor can never silently open this read.
@@ -384,8 +380,7 @@ export async function listApplications(exchangeId: string) {
 
 export async function getApplicationForReview(applicationId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
   const application = await assertOrganizerOwnsApplication(supabase, applicationId)
 
   let photoUrl: string | null = null
@@ -402,8 +397,7 @@ export async function getApplicationForReview(applicationId: string) {
 
 export async function acceptApplication(applicationId: string): Promise<void> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const app = await assertOrganizerOwnsApplication(supabase, applicationId)
   if (app.status !== 'submitted' && app.status !== 'rejected') {
     throw new Error('Only a submitted application can be accepted')
@@ -441,8 +435,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const app = await assertOrganizerOwnsApplication(supabase, applicationId)
   // Never reject an application that has already enrolled (which would leave the
   // student's account, enrollment and assignments live while showing rejected),
