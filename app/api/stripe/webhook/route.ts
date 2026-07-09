@@ -26,16 +26,19 @@ export async function POST(req: Request) {
   const admin = createAdminClient()
 
   if (update.setGraceIfNull) {
-    const { data: school } = await admin
+    const { data: school, error: lookupError } = await admin
       .from('schools')
       .select('id, grace_until')
       .eq('stripe_customer_id', update.customerId)
       .maybeSingle()
+    // 500 → Stripe retries with backoff. A swallowed error drops the event forever.
+    if (lookupError) return new Response('school lookup failed', { status: 500 })
     if (school && !school.grace_until) {
-      await admin
+      const { error: graceError } = await admin
         .from('schools')
         .update({ grace_until: new Date(Date.now() + GRACE_MS).toISOString() })
         .eq('id', school.id)
+      if (graceError) return new Response('grace update failed', { status: 500 })
       await logAudit({
         action: 'billing.grace_started',
         actorUserId: null, // system actor: Stripe webhook
@@ -48,11 +51,12 @@ export async function POST(req: Request) {
   }
 
   if (Object.keys(update.patch).length > 0) {
-    const { data: patched } = await admin
+    const { data: patched, error: patchError } = await admin
       .from('schools')
       .update(update.patch)
       .eq('stripe_customer_id', update.customerId)
       .select('id')
+    if (patchError) return new Response('school update failed', { status: 500 })
     for (const school of patched ?? []) {
       await logAudit({
         action: 'billing.subscription_updated',
