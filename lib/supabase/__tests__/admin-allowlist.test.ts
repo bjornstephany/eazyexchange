@@ -16,6 +16,7 @@ const ALLOWLIST = [
   'app/auth/callback/route.ts',
   'app/billing/checkout/route.ts',
   'app/billing/portal/route.ts',
+  'lib/audit.ts',
   'lib/auth/provision.ts',
   'lib/email-log.ts',
   'lib/rate-limit.ts',
