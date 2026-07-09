@@ -4,7 +4,7 @@ import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { enforceRateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit, enforceRateLimitStrict } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyError, PWNED_MESSAGE } from '@/lib/auth/hibp'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
@@ -185,7 +185,7 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx(supabase)
   assertOwner(ctx)
-  await enforceRateLimit(`team-invite:${ctx.schoolId}`, 10, 3600)
+  await enforceRateLimitStrict(`team-invite:${ctx.schoolId}`, 10, 3600)
 
   const admin = createAdminClient()
   const result = await createAndSendOrganizerInvite(admin, {

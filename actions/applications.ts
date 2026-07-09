@@ -7,7 +7,7 @@ import { randomToken } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile } from '@/lib/uploads'
-import { enforceRateLimit, clientIp } from '@/lib/rate-limit'
+import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
 import {
   sendApplicationResumeEmail, sendApplicationConfirmationEmail, sendNewApplicationAlertEmail,
   sendInvitationEmail, sendApplicationRejectionEmail,
@@ -64,7 +64,7 @@ export async function startApplication(
   // sending domain. Per-email is the tighter limit (don't re-mail the same victim).
   const ip = await clientIp()
   await enforceRateLimit(`apply_ip:${ip}`, 10, 3600)
-  await enforceRateLimit(`apply_email:${email}`, 3, 3600)
+  await enforceRateLimitStrict(`apply_email:${email}`, 3, 3600)
 
   const admin = createAdminClient()
   const { data: exchange } = await admin
@@ -239,7 +239,7 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
   // mail-bombing from our sending domain (mirrors startApplication's old gate).
   const ip = await clientIp()
   await enforceRateLimit(`resume_ip:${ip}`, 10, 3600)
-  await enforceRateLimit(`resume_email:${app.email}`, 3, 3600)
+  await enforceRateLimitStrict(`resume_email:${app.email}`, 3, 3600)
 
   await sendApplicationResumeEmail({
     to: app.email,
