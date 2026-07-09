@@ -43,7 +43,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
     supabase.from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId),
   ])
 
-  const enrolledIds = (enrollments ?? []).map((e: any) => e.user_id)
+  const enrolledIds = (enrollments ?? []).map((e) => e.user_id)
   const students: { id: string; full_name: string; email: string }[] = enrolledIds.length > 0
     ? ((await supabase
         .from('users').select('id, full_name, email')
@@ -52,7 +52,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
     : []
   if (students.length === 0) return { students: [] }
 
-  const templateIds = (templates ?? []).map((t: any) => t.id)
+  const templateIds = (templates ?? []).map((t) => t.id)
   const studentIds = students.map(s => s.id)
 
   const [assignments, applications] = await Promise.all([
@@ -63,7 +63,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
           .in('template_id', templateIds)
           .in('student_id', studentIds)
           .then(r => r.data ?? [])
-      : Promise.resolve([] as any[]),
+      : Promise.resolve([]),
     supabase
       .from('applications')
       .select('id, enrolled_user_id, data')
@@ -73,12 +73,12 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
   ])
 
   const cellMap: CellMap = {}
-  for (const a of assignments as any[]) {
+  for (const a of assignments) {
     const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
     cellMap[`${a.student_id}:${a.template_id}`] = { assignmentId: a.id, status: submission?.status }
   }
   const appByStudent = new Map<string, { id: string; data: Record<string, string> }>()
-  for (const a of applications as any[]) {
+  for (const a of applications) {
     if (a.enrolled_user_id) appByStudent.set(a.enrolled_user_id, { id: a.id, data: a.data ?? {} })
   }
 
@@ -122,8 +122,8 @@ export async function remindStudent(
     .from('form_templates')
     .select('id, name, deadline')
     .eq('exchange_id', exchangeId).eq('school_id', schoolId).eq('status', 'active')
-  const templateIds = (templates ?? []).map((t: any) => t.id)
-  const byId = new Map((templates ?? []).map((t: any) => [t.id, t]))
+  const templateIds = (templates ?? []).map((t) => t.id)
+  const byId = new Map((templates ?? []).map((t) => [t.id, t]))
   if (templateIds.length === 0) throw new Error('Le dossier est complet — rien à relancer.')
 
   const { data: rows } = await supabase
@@ -132,7 +132,7 @@ export async function remindStudent(
     .eq('student_id', studentId)
     .in('template_id', templateIds)
 
-  const outstanding = ((rows ?? []) as any[]).filter(r => {
+  const outstanding = (rows ?? []).filter(r => {
     const submission = Array.isArray(r.submissions) ? r.submissions[0] : r.submissions
     const status = submission?.status ?? null
     return status !== 'submitted' && status !== 'approved'
