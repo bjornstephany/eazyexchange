@@ -98,12 +98,21 @@ curl -X POST https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders \
    | `RESEND_API_KEY` | from step 2 |
    | `EMAIL_FROM` | from step 2 |
    | `NEXT_PUBLIC_APP_URL` | your Vercel domain, e.g. `https://eazyexchange.vercel.app` |
+   | `STRIPE_SECRET_KEY` | Stripe secret key (payments; app runs without it — `/billing` 500s until set) |
+   | `STRIPE_WEBHOOK_SECRET` | signing secret of the prod webhook endpoint (step: register `/api/stripe/webhook` — see CLAUDE.md → Billing) |
+   | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
+   | `STRIPE_PRICE_STARTER` / `STRIPE_PRICE_GROWTH` / `STRIPE_PRICE_SCALE` | the three yearly Price IDs |
+   | `FEEDBACK_EMAIL` | recipient for the in-app feedback widget notifications |
 
    > **⚠️ The last 3 can't be filled in on the first deploy — set them afterward:**
    > - `RESEND_API_KEY` and `EMAIL_FROM` depend on the Resend setup (step 2). Until they're set, email **degrades gracefully** — the app and submissions work fine; rejection/reminder emails are just skipped (logged as a warning).
    > - `NEXT_PUBLIC_APP_URL` isn't known until the first deploy assigns a domain. Deploy once, copy the production URL, set this var, then **redeploy** so the value is baked in (it's a `NEXT_PUBLIC_` build-time var).
    >
    > Only the first three (Supabase URL + the two keys) are required for the initial build to succeed. Add the others and redeploy once you've done step 2 / have your domain.
+
+   > **`EMAIL_FROM` format:** must be `Name <mailbox@domain>` — a bare domain silently fails Resend sends.
+   >
+   > **`NEXT_PUBLIC_APP_URL` must be a NON-sensitive Vercel var.** Vercel refuses to expose Sensitive vars to the client bundle, so a Sensitive value bakes in as an empty string (dashboard shows it "set", the app disagrees). `vercel env add NEXT_PUBLIC_APP_URL production --no-sensitive ...`. Preview deploys don't need it — `lib/app-url.ts` falls back to `VERCEL_BRANCH_URL`/`VERCEL_URL`.
 
 3. Deploy:
 
@@ -114,12 +123,35 @@ vercel --prod # production
 
 ---
 
-## 5. Supabase Auth redirect config
+## 5. Supabase Auth configuration (dashboard, not code)
 
-The invite flow redirects to `/accept-invite` on your domain. In **Authentication → URL Configuration**:
+In **Authentication → URL Configuration**:
 
-- **Site URL**: `https://<your-vercel-domain>`
-- **Redirect URLs**: add `https://<your-vercel-domain>/accept-invite` (and `http://localhost:3000/accept-invite` for local dev).
+- **Site URL**: `https://eazyexchange.com` (the production domain — `{{ .SiteURL }}` drives every auth email link; if this is still `localhost`, real users' confirmation/invite links point at their own machine).
+- **Redirect URLs**: add, for the production domain AND `http://localhost:3000`:
+  - `/auth/confirm` (email OTP: signup confirmation, student invites)
+  - `/auth/callback` (Google OAuth PKCE)
+  - `/accept-invite`
+
+### Invite email template (load-bearing, silently breaks student invites)
+
+The **Invite user** email template MUST link to:
+
+```
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/accept-invite
+```
+
+The default template (`{{ .ConfirmationURL }}` → `GET /auth/v1/verify`) bypasses `app/auth/confirm/route.ts`, so no SSR session cookie is ever set and the student's "Get started" click fails with **"Auth session missing!"**.
+
+- **Diagnose:** Supabase auth logs — `GET /verify` entries = default template (broken); `POST /verify` = the app's `verifyOtp` route (correct).
+- **Free-tier prerequisite:** template editing requires custom SMTP first (Resend: host `smtp.resend.com`, port 465, user `resend`, password = Resend API key). Set both via the dashboard or `PATCH https://api.supabase.com/v1/projects/<ref>/config/auth`.
+
+### Other manual dashboard steps (pointers)
+
+- **Google OAuth provider** — full setup steps in `CLAUDE.md` → Gotchas (Google Cloud client, Supabase provider config, redirect URLs).
+- **Stripe prod webhook** — register `https://<domain>/api/stripe/webhook` for the 4 events listed in `CLAUDE.md` → Billing; see also `docs/stripe-billing-setup.md`.
+
+Organizers now self-register at `/signup` (email-confirmed; creates their school), so the manual steps below are only needed to bootstrap the very first account without sending an email.
 
 The first organizer account has no UI to self-register (invite-only app). Create it manually:
 
@@ -148,6 +180,18 @@ Run against the deployed app:
 7. Confirm the rejection email arrives; the student's checklist shows **Rejected** with the note.
 8. Student resubmits → organizer **Approves** → grid shows **Approved**.
 9. (Optional) trigger `send-reminders` manually (step 3) and confirm a summary email for forms due in 7/3 days.
+
+---
+
+## 7. Previewing changes (don't push to prod to look at a branch)
+
+Per-branch **Vercel Preview URLs** are the "see it on the website" step:
+
+1. branch → build → local gate (`pnpm lint`, `pnpm test`, `npx tsc --noEmit` — `pnpm build` only works on Vercel; local `.env.local` has placeholders)
+2. `git push` the branch → Vercel builds a Preview URL → live-drive the real flow there
+3. only then merge to `main` (= production deploy). Merging is the boring last step, not how you learn whether it works.
+
+**⚠️ Data caveat (current state):** Preview deploys share the **production** Supabase project and Resend key — a preview writes real rows and sends real emails. No destructive or bulk actions on previews. The planned fix is a separate staging Supabase project with Preview-scoped env keys (see `docs/superpowers/specs/2026-07-07-architecture-scalability-design.md`); until that ships, treat previews as read-mostly.
 
 ---
 
