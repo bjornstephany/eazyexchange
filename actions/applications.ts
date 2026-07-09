@@ -1,5 +1,6 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { randomToken } from '@/lib/tokens'
@@ -209,18 +210,16 @@ export async function getApplicationDraft(token: string) {
 export async function peekApplicationDraft(
   token: string,
 ): Promise<{ live: boolean; firstName: string | null; language: 'en' | 'fr' }> {
-  const admin = createAdminClient()
-  const { data: app } = await admin
-    .from('applications')
-    .select('status, data, language, resume_token_expires_at')
-    .eq('resume_token', token)
+  // Anon-key RPC (not the service role): returns status + first name only.
+  const anon = createAnonClient()
+  const { data: app } = await anon
+    .rpc('peek_application_draft', { p_token: token })
     .maybeSingle()
-  const language: 'en' | 'fr' = (app?.language === 'fr' ? 'fr' : 'en')
+  const language: 'en' | 'fr' = app?.language === 'fr' ? 'fr' : 'en'
   if (!app || tokenExpired(app.resume_token_expires_at) || app.status !== 'draft') {
     return { live: false, firstName: null, language }
   }
-  const first = (app.data as Record<string, unknown> | null)?.first_name
-  return { live: true, firstName: typeof first === 'string' ? first : null, language }
+  return { live: true, firstName: app.first_name, language }
 }
 
 // Emails the applicant their private resume link on demand ("Finish later").

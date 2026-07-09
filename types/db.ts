@@ -159,6 +159,19 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      get_apply_page_exchange: {
+        Args: { p_slug: string }
+        Returns: { name: string; application_open: boolean; application_deadline: string | null }[]
+      }
+      peek_application_draft: {
+        Args: { p_token: string }
+        Returns: {
+          status: string
+          first_name: string | null
+          language: string
+          resume_token_expires_at: string | null
+        }[]
+      }
     }
   }
 }

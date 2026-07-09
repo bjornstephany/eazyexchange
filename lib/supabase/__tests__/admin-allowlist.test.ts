@@ -13,7 +13,6 @@ const ALLOWLIST = [
   'actions/join.ts',
   'actions/settings.ts',
   'app/api/stripe/webhook/route.ts',
-  'app/apply/[slug]/page.tsx',
   'app/auth/callback/route.ts',
   'app/billing/checkout/route.ts',
   'app/billing/portal/route.ts',
