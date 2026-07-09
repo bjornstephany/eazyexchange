@@ -17,7 +17,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/apply') ||
     pathname.startsWith('/invite') ||
     pathname.startsWith('/join') ||
-    pathname.startsWith('/api/stripe')
+    pathname.startsWith('/api/stripe') ||
+    pathname === '/api/health'
 
   if (!user && !isAuthRoute && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))

@@ -92,4 +92,9 @@ describe('middleware', () => {
     const res = await middleware(req('/'))
     expect(res.headers.get('location')).toBeNull()
   })
+
+  it('lets the unauthenticated keep-warm pinger reach /api/health (no redirect)', async () => {
+    const res = await middleware(req('/api/health'))
+    expect(res.headers.get('location')).toBeNull()
+  })
 })
