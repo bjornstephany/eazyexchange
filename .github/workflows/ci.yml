@@ -38,3 +38,18 @@ jobs:
           version: latest
       - run: supabase start   # applies supabase/migrations to the local stack
       - run: pnpm test:rls
+
+  # Sole path to production once vercel.json sets git.deploymentEnabled.main: false.
+  # Builds on Vercel's infra (env vars live there), not in Actions. Gated on both
+  # check jobs so a red test or RLS leak blocks the deploy.
+  deploy:
+    needs: [unit, rls]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install --global vercel@latest
+      - run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
