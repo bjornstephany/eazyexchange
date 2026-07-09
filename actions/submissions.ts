@@ -7,6 +7,7 @@ import { sendRejectionEmail } from '@/lib/email'
 import { hasOverlongAnswer, hasMissingRequired, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { logAudit } from '@/lib/audit'
+import type { FormTemplate, FormField, DocumentSlot, Submission, FieldAnswer, DocumentUpload } from '@/types/db'
 
 // Verify the assignment belongs to the calling student. Throws if not.
 // Returns the assignment's exchange id (via its template) for the write guard.
@@ -20,9 +21,9 @@ async function assertStudentOwnsAssignment(
     .select('id, form_templates!inner(exchange_id)')
     .eq('id', assignmentId)
     .eq('student_id', userId)
-    .maybeSingle() as any
+    .maybeSingle<{ id: string; form_templates: { exchange_id: string } }>()
   if (!assignment) throw new Error('Assignment not found')
-  return { exchangeId: assignment.form_templates.exchange_id as string }
+  return { exchangeId: assignment.form_templates.exchange_id }
 }
 
 // Verify the caller is an organizer for the school that owns the assignment's
@@ -35,7 +36,7 @@ async function assertOrganizerOwnsAssignment(
     .from('assignments')
     .select('form_templates!inner(school_id, exchange_id)')
     .eq('id', assignmentId)
-    .maybeSingle() as any
+    .maybeSingle<{ form_templates: { school_id: string; exchange_id: string } }>()
   if (!ctx) throw new Error('Assignment not found')
 
   const profile = await getProfile()
@@ -43,8 +44,8 @@ async function assertOrganizerOwnsAssignment(
     throw new Error('Unauthorized')
   }
   return {
-    exchangeId: ctx.form_templates.exchange_id as string,
-    schoolId: ctx.form_templates.school_id as string,
+    exchangeId: ctx.form_templates.exchange_id,
+    schoolId: ctx.form_templates.school_id,
   }
 }
 
@@ -67,14 +68,14 @@ export async function getAssignmentDetails(assignmentId: string) {
     .eq('id', assignment.template_id)
     .order('order', { referencedTable: 'form_fields', ascending: true })
     .order('order', { referencedTable: 'document_slots', ascending: true })
-    .single() as any
+    .single<FormTemplate & { form_fields: FormField[]; document_slots: DocumentSlot[] }>()
   if (tErr) throw tErr
 
   const { data: submission } = await supabase
     .from('submissions')
     .select('*, field_answers(*), document_uploads(*)')
     .eq('assignment_id', assignmentId)
-    .maybeSingle() as any
+    .maybeSingle<Submission & { field_answers: FieldAnswer[]; document_uploads: DocumentUpload[] }>()
 
   return { assignment, template, submission }
 }
@@ -255,7 +256,7 @@ export async function getSubmissionForReview(assignmentId: string) {
       .eq('id', assignment.template_id)
       .order('order', { referencedTable: 'form_fields', ascending: true })
       .order('order', { referencedTable: 'document_slots', ascending: true })
-      .single() as any,
+      .single<FormTemplate & { form_fields: FormField[]; document_slots: DocumentSlot[] }>(),
     supabase
       .from('users')
       .select('id, full_name, email')
@@ -265,13 +266,16 @@ export async function getSubmissionForReview(assignmentId: string) {
       .from('submissions')
       .select('*, field_answers(*), document_uploads(*)')
       .eq('assignment_id', assignmentId)
-      .maybeSingle() as any,
+      .maybeSingle<Submission & {
+        field_answers: FieldAnswer[]
+        document_uploads: (DocumentUpload & { signed_url?: string | null })[]
+      }>(),
   ])
 
   // Attach short-lived signed download URLs for any uploaded documents
   if (submission?.document_uploads?.length) {
     await Promise.all(
-      submission.document_uploads.map(async (upload: any) => {
+      submission.document_uploads.map(async (upload) => {
         const { data } = await supabase.storage
           .from('documents')
           // download: true sets content-disposition=attachment so a crafted
@@ -283,7 +287,9 @@ export async function getSubmissionForReview(assignmentId: string) {
     )
   }
 
-  return { assignment, template, student, submission }
+  // template is guaranteed by the assignments.template_id FK — assignment
+  // lookup above already succeeded, so the referenced template row exists.
+  return { assignment, template: template!, student, submission }
 }
 
 export async function approveSubmission(assignmentId: string) {
@@ -362,7 +368,10 @@ export async function rejectSubmission(assignmentId: string, note: string) {
     .from('assignments')
     .select('student:users!student_id(email, full_name), form_templates!inner(name)')
     .eq('id', assignmentId)
-    .single() as any
+    .single<{
+      student: { email: string | null; full_name: string | null } | null
+      form_templates: { name: string }
+    }>()
   if (info?.student?.email) {
     await sendRejectionEmail({
       to: info.student.email,
