@@ -171,13 +171,13 @@ export async function getTeam(): Promise<{ members: TeamMember[]; pending: Pendi
 
   const now = Date.now()
   return {
-    members: (users ?? []).map((u: any) => ({
+    members: (users ?? []).map((u) => ({
       id: u.id, name: u.full_name, email: u.email,
       isOwner: u.org_role === 'owner', isYou: u.id === ctx.userId,
     })),
     pending: (invites ?? [])
-      .filter((i: any) => new Date(i.expires_at).getTime() > now)
-      .map((i: any) => ({ id: i.id, email: i.email })),
+      .filter((i) => new Date(i.expires_at).getTime() > now)
+      .map((i) => ({ id: i.id, email: i.email })),
   }
 }
 
