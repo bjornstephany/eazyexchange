@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { getProfile } from '@/lib/supabase/request'
+import { requireUser } from '@/lib/auth/require'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendRejectionEmail } from '@/lib/email'
@@ -51,8 +52,7 @@ async function assertOrganizerOwnsAssignment(
 
 export async function getAssignmentDetails(assignmentId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
 
   const { data: assignment, error: aErr } = await supabase
     .from('assignments')
@@ -86,8 +86,7 @@ export async function saveFormAnswers(
   submit: boolean
 ) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -179,8 +178,7 @@ export async function recordDocumentUpload(
   fileName: string,
 ) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -238,8 +236,7 @@ export async function recordDocumentUpload(
 
 export async function getSubmissionForReview(assignmentId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  await requireUser()
   await assertOrganizerOwnsAssignment(supabase, assignmentId)
 
   const { data: assignment, error: aErr } = await supabase
@@ -294,8 +291,7 @@ export async function getSubmissionForReview(assignmentId: string) {
 
 export async function approveSubmission(assignmentId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const { exchangeId, schoolId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -326,8 +322,7 @@ export async function approveSubmission(assignmentId: string) {
 
 export async function rejectSubmission(assignmentId: string, note: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const { exchangeId, schoolId } = await assertOrganizerOwnsAssignment(supabase, assignmentId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -388,8 +383,7 @@ export async function rejectSubmission(assignmentId: string, note: string) {
 
 export async function submitDocumentAssignment(assignmentId: string) {
   const supabase = await createClient()
-  const user = await getAuthUser()
-  if (!user) throw new Error('Unauthenticated')
+  const user = await requireUser()
   const { exchangeId } = await assertStudentOwnsAssignment(supabase, assignmentId, user.id)
   await assertExchangeWritable(supabase, exchangeId)
 
