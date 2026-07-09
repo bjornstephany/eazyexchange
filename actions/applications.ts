@@ -356,6 +356,18 @@ export async function listApplications(exchangeId: string) {
   if (!user) throw new Error('Unauthenticated')
   const profile = await getProfile()
   if (!profile || profile.role !== 'organizer') throw new Error('Unauthorized')
+  // Belt-and-suspenders with RLS (which already scopes rows to the caller's
+  // school — proven by tests/rls/matrix.test.ts): refuse foreign exchange ids
+  // outright so a future RLS refactor can never silently open this read.
+  // Same shape as assertOrganizerInExchange in actions/students.ts.
+  const { data: exchange } = await supabase
+    .from('exchanges')
+    .select('school_a_id, school_b_id')
+    .eq('id', exchangeId)
+    .maybeSingle()
+  if (!exchange || (exchange.school_a_id !== profile.school_id && exchange.school_b_id !== profile.school_id)) {
+    throw new Error('Unauthorized')
+  }
   const { data, error } = await supabase
     .from('applications')
     // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
