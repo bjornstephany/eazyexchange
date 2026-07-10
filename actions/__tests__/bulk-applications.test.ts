@@ -67,6 +67,7 @@ vi.mock('@/lib/email', () => ({
   sendApplicationRejectionEmail: vi.fn(async () => {}),
 }))
 
+import { revalidatePath } from 'next/cache'
 import { acceptApplications, rejectApplications } from '../applications'
 
 beforeEach(() => {
@@ -84,6 +85,9 @@ describe('acceptApplications', () => {
   it('accepts each id and reports partial failure', async () => {
     const res = await acceptApplications(['app-ok', 'app-bad'])
     expect(res).toEqual({ succeeded: 1, failed: 1 })
+    // Phase-1 progress on the exchanges-list card is derived from application
+    // status, so an accept must invalidate the router cache for /exchanges too.
+    expect(revalidatePath).toHaveBeenCalledWith('/exchanges')
   })
 
   it('empty input is a no-op', async () => {
@@ -95,6 +99,7 @@ describe('rejectApplications', () => {
   it('rejects each id with the shared note', async () => {
     const res = await rejectApplications(['app-ok'], 'note', false)
     expect(res).toEqual({ succeeded: 1, failed: 0 })
+    expect(revalidatePath).toHaveBeenCalledWith('/exchanges')
   })
 
   it('empty input is a no-op', async () => {

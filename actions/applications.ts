@@ -431,6 +431,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
   revalidatePath('/applications')
   revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
@@ -471,6 +472,7 @@ export async function rejectApplication(applicationId: string, note: string, sen
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
   revalidatePath('/applications')
   revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 // ---- Public invitation response (keyed by invite_token) ----
