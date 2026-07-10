@@ -282,3 +282,41 @@ describe('anon sees nothing', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// PARTNER BOUNDARY (multi-tenancy spec D1): an exchange can span two schools
+// via school_b_id. The shared fixture pairs school A with school C (NOT school
+// B — B stays an unpaired tenant so the cross-tenant deny matrix above keeps
+// its coverage). The partner organizer (C) sees the shared exchange and its
+// enrollment rows, but never school A's user profiles or templates, and can
+// only enroll their own school's students. The tenant graph is one hop deep;
+// these cases pin that edge.
+// ---------------------------------------------------------------------------
+describe('partner boundary on the shared exchange', () => {
+  it('partner organizer C reads the shared exchange (pair scope, positive)', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select id from exchanges where id = ${fx.exchangeShared}`)).toHaveLength(1)
+  })
+  it('partner organizer C reads enrollment rows on the shared exchange (positive)', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select user_id from exchange_enrollments where exchange_id = ${fx.exchangeShared}`)).toHaveLength(1)
+  })
+  it('partner organizer C cannot read the enrolled school-A student profile', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select id from users where id = ${fx.studentSharedA}`)).toHaveLength(0)
+  })
+  it('partner organizer C cannot read school A templates on the shared exchange', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select id from form_templates where id = ${fx.templateShared}`)).toHaveLength(0)
+  })
+  it('partner organizer C cannot enroll a school-A student (user_in_my_school guard)', async () => {
+    expectBlocked(await writeOutcome(sql, fx.orgC, (tx) =>
+      tx`insert into exchange_enrollments (exchange_id, user_id)
+         values (${fx.exchangeShared}, ${fx.studentA})`))
+  })
+  it('partner organizer C can enroll their own student into the shared exchange (positive)', async () => {
+    expect(await writeOutcome(sql, fx.orgC, (tx) =>
+      tx`insert into exchange_enrollments (exchange_id, user_id)
+         values (${fx.exchangeShared}, ${fx.studentC})`)).toBe(1)
+  })
+})
