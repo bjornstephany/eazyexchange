@@ -55,7 +55,10 @@ export async function addField(templateId: string, label: string, fieldType: Fie
     required, options: options ?? null, order: nextOrder,
   })
   if (error) throw error
-  revalidatePath('/exchanges', 'layout')
+  // FormBuilder only renders for kind !== 'doc' templates, which live under
+  // /forms/[templateId] (not the legacy /exchanges/[id]/forms/* route these
+  // used to point at) — without this the editor's own page never refreshes.
+  revalidatePath('/forms', 'layout')
 }
 
 export async function removeField(fieldId: string) {
@@ -69,7 +72,7 @@ export async function removeField(fieldId: string) {
 
   const { error } = await supabase.from('form_fields').delete().eq('id', fieldId)
   if (error) throw error
-  revalidatePath('/exchanges', 'layout')
+  revalidatePath('/forms', 'layout')
 }
 
 // Fetch a template the caller's school owns (with fields), or throw.
@@ -183,6 +186,10 @@ export async function updateTemplateMeta(
   }).eq('id', id)
   if (error) throw error
   revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  // Name/deadline also feed the dashboard grid and the exchange cards' %
+  // complete once the template is active.
+  revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 export async function replaceTemplateFile(formData: FormData): Promise<void> {
@@ -247,6 +254,9 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
   }
 
   revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  // Newly active → now appears in the dashboard grid and exchange % complete.
+  revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
@@ -284,6 +294,9 @@ export async function deleteTemplate(id: string): Promise<void> {
   const { error } = await supabase.from('form_templates').delete().eq('id', id)
   if (error) throw error
   revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  // If it was active, it drops off the dashboard grid and exchange % complete.
+  revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 const REMIND_COOLDOWN_MS = 24 * 3600 * 1000

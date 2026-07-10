@@ -318,6 +318,12 @@ export async function approveSubmission(assignmentId: string) {
   })
 
   revalidatePath(`/exchanges`)
+  // Approval status also drives the dashboard grid, the student directory
+  // cellMap, and the student's own assignment view.
+  revalidatePath('/dashboard')
+  revalidatePath('/students')
+  revalidatePath(`/my-forms/${assignmentId}`)
+  revalidatePath('/my-forms')
 }
 
 export async function rejectSubmission(assignmentId: string, note: string) {
@@ -379,6 +385,11 @@ export async function rejectSubmission(assignmentId: string, note: string) {
   }
 
   revalidatePath(`/exchanges`)
+  // Same surfaces as approveSubmission above.
+  revalidatePath('/dashboard')
+  revalidatePath('/students')
+  revalidatePath(`/my-forms/${assignmentId}`)
+  revalidatePath('/my-forms')
 }
 
 export async function submitDocumentAssignment(assignmentId: string) {

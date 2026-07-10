@@ -594,6 +594,11 @@ export async function respondToInvitation(
   const { error: finalErr } = await admin.from('applications')
     .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
   if (finalErr) throw finalErr
+
+  // The new enrollment now shows up in the organizer's student directory and
+  // dashboard grid.
+  revalidatePath('/students')
+  revalidatePath('/dashboard')
 }
 
 // ---- Bulk organizer actions (dashboard Candidatures view) ----

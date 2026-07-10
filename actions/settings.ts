@@ -56,6 +56,9 @@ export async function updateProfile(input: {
   }
 
   revalidatePath('/settings')
+  // organizerName/schoolName are read in the shared shell layout (rail nav),
+  // not just on /settings — bust the whole tree so other tabs pick it up too.
+  revalidatePath('/', 'layout')
 }
 
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
