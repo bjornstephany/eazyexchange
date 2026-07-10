@@ -431,6 +431,7 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
   revalidatePath('/applications')
   revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
@@ -471,6 +472,7 @@ export async function rejectApplication(applicationId: string, note: string, sen
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)
   revalidatePath('/applications')
   revalidatePath('/dashboard')
+  revalidatePath('/exchanges')
 }
 
 // ---- Public invitation response (keyed by invite_token) ----
@@ -594,6 +596,10 @@ export async function respondToInvitation(
   const { error: finalErr } = await admin.from('applications')
     .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
   if (finalErr) throw finalErr
+  // No revalidatePath: the caller is the unauthenticated invitee, whose browser
+  // never renders organizer tabs — revalidation here would be inert. The
+  // organizer seeing the enrollment within staleTimes.dynamic is the spec's
+  // accepted cross-actor staleness trade-off (§1c).
 }
 
 // ---- Bulk organizer actions (dashboard Candidatures view) ----

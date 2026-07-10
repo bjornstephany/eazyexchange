@@ -50,6 +50,7 @@ function RailItem({
   return (
     <Link
       href={href}
+      prefetch={true}
       className={cn(
         'flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium',
         active ? 'bg-white/10 text-white' : 'text-rail-inactive hover:bg-white/5 hover:text-white'
