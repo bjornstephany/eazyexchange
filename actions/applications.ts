@@ -594,11 +594,10 @@ export async function respondToInvitation(
   const { error: finalErr } = await admin.from('applications')
     .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
   if (finalErr) throw finalErr
-
-  // The new enrollment now shows up in the organizer's student directory and
-  // dashboard grid.
-  revalidatePath('/students')
-  revalidatePath('/dashboard')
+  // No revalidatePath: the caller is the unauthenticated invitee, whose browser
+  // never renders organizer tabs — revalidation here would be inert. The
+  // organizer seeing the enrollment within staleTimes.dynamic is the spec's
+  // accepted cross-actor staleness trade-off (§1c).
 }
 
 // ---- Bulk organizer actions (dashboard Candidatures view) ----
