@@ -3,9 +3,11 @@ import { randomUUID, randomBytes } from 'node:crypto'
 
 export type Fixtures = {
   suffix: string
-  schoolA: string; schoolB: string
+  schoolA: string; schoolB: string; schoolC: string
   orgA: string; orgB: string; studentA: string; studentB: string
+  orgC: string; studentC: string; studentSharedA: string
   exchangeA: string; applySlugA: string
+  exchangeShared: string; templateShared: string
   templateA: string; fieldA: string; fieldA2: string; slotA: string; slotA2: string
   assignmentA: string; submissionA: string; answerA: string
   applicationA: string; resumeTokenA: string; feedbackA: string
@@ -20,9 +22,11 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   const id = () => randomUUID()
   const fx: Fixtures = {
     suffix,
-    schoolA: id(), schoolB: id(),
+    schoolA: id(), schoolB: id(), schoolC: id(),
     orgA: id(), orgB: id(), studentA: id(), studentB: id(),
+    orgC: id(), studentC: id(), studentSharedA: id(),
     exchangeA: id(), applySlugA: `rls-matrix-${suffix}`,
+    exchangeShared: id(), templateShared: id(),
     templateA: id(), fieldA: id(), fieldA2: id(), slotA: id(), slotA2: id(),
     assignmentA: '', submissionA: id(), answerA: id(),
     applicationA: id(), resumeTokenA: `rls-resume-${suffix}`, feedbackA: id(),
@@ -30,9 +34,14 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   }
 
   await sql`insert into schools (id, name) values
-    (${fx.schoolA}, ${'RLS École A ' + suffix}), (${fx.schoolB}, ${'RLS École B ' + suffix})`
+    (${fx.schoolA}, ${'RLS École A ' + suffix}),
+    (${fx.schoolB}, ${'RLS École B ' + suffix}),
+    (${fx.schoolC}, ${'RLS École C ' + suffix})`
 
-  const authRows = [fx.orgA, fx.orgB, fx.studentA, fx.studentB].map((uid) => ({
+  const authRows = [
+    fx.orgA, fx.orgB, fx.studentA, fx.studentB,
+    fx.orgC, fx.studentC, fx.studentSharedA,
+  ].map((uid) => ({
     id: uid,
     instance_id: '00000000-0000-0000-0000-000000000000',
     aud: 'authenticated',
@@ -46,6 +55,12 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
     { id: fx.orgB, school_id: fx.schoolB, role: 'organizer', org_role: 'owner', full_name: 'Org B', email: `${fx.orgB}@rls.test` },
     { id: fx.studentA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant A', email: `${fx.studentA}@rls.test` },
     { id: fx.studentB, school_id: fx.schoolB, role: 'student', org_role: 'admin', full_name: 'Étudiant B', email: `${fx.studentB}@rls.test` },
+    // School C is school A's partner on the shared exchange; studentSharedA is a
+    // second school-A student enrolled there (so studentA's own enrollment count
+    // stays 1 for the W1 allow cases). See the partner-boundary block in matrix.test.ts.
+    { id: fx.orgC, school_id: fx.schoolC, role: 'organizer', org_role: 'owner', full_name: 'Org C', email: `${fx.orgC}@rls.test` },
+    { id: fx.studentC, school_id: fx.schoolC, role: 'student', org_role: 'admin', full_name: 'Étudiant C', email: `${fx.studentC}@rls.test` },
+    { id: fx.studentSharedA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant partagé A', email: `${fx.studentSharedA}@rls.test` },
   ])}`
 
   await sql`insert into exchanges (id, name, year, school_a_id, school_b_id, apply_slug, application_open)
@@ -90,6 +105,23 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   await sql`insert into feedback (id, user_id, school_id, type, message)
     values (${fx.feedbackA}, ${fx.orgA}, ${fx.schoolA}, 'suggestion', 'ligne de test RLS')`
 
+  // Shared exchange (school A ↔ school C) — the partner boundary the matrix's
+  // partner-boundary block exercises. School B is deliberately NOT the partner:
+  // it stays an unpaired tenant so the W1 "orgB cannot read school A" leak-guard
+  // (the W2 billing-columns leak fix) keeps its coverage. studentSharedA's
+  // enrollment plus school A's active template auto-creates an assignment via
+  // trg_assign_on_template_insert; it is untracked here and removed by the
+  // exchange-delete cascade in cleanup.
+  await sql`insert into exchanges (id, name, year, school_a_id, school_b_id, apply_slug, application_open)
+    values (${fx.exchangeShared}, ${'RLS Échange partagé ' + suffix}, 2026,
+      ${fx.schoolA}, ${fx.schoolC}, ${'rls-shared-' + suffix}, false)`
+  await sql`insert into exchange_enrollments (exchange_id, user_id)
+    values (${fx.exchangeShared}, ${fx.studentSharedA})`
+  await sql`insert into form_templates
+      (id, exchange_id, school_id, name, description, type, kind, status, audience, deadline, created_by)
+    values (${fx.templateShared}, ${fx.exchangeShared}, ${fx.schoolA}, ${'Fiche partagée ' + suffix}, null,
+      'data_entry', 'online', 'active', 'all', current_date + 30, ${fx.orgA})`
+
   fx.photoPathA = `${fx.applicationA}/photo.jpg`
   fx.tplPathA = `${fx.schoolA}/${fx.templateA}.pdf`
   await sql`insert into storage.objects (bucket_id, name) values
@@ -109,8 +141,11 @@ export async function cleanupFixtures(sql: postgres.Sql, fx: Fixtures): Promise<
   })
   // exchange delete cascades templates → fields/slots/assignments → submissions
   // → answers/uploads, plus applications and enrollments.
-  await sql`delete from exchanges where id = ${fx.exchangeA}`
+  await sql`delete from exchanges where id in (${fx.exchangeA}, ${fx.exchangeShared})`
   // auth.users delete cascades the public.users profiles and feedback.
-  await sql`delete from auth.users where id in (${fx.orgA}, ${fx.orgB}, ${fx.studentA}, ${fx.studentB})`
-  await sql`delete from schools where id in (${fx.schoolA}, ${fx.schoolB})`
+  await sql`delete from auth.users where id in (
+    ${fx.orgA}, ${fx.orgB}, ${fx.studentA}, ${fx.studentB},
+    ${fx.orgC}, ${fx.studentC}, ${fx.studentSharedA}
+  )`
+  await sql`delete from schools where id in (${fx.schoolA}, ${fx.schoolB}, ${fx.schoolC})`
 }

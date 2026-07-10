@@ -31,7 +31,12 @@ not "deny all".
 - `tests/rls/db.ts` — connection + `runAs` impersonation (request.jwt.claims +
   `set local role`, always inside rolled-back transactions)
 - `tests/rls/seed.ts` — committed two-school fixture world (superuser)
-- `tests/rls/matrix.test.ts` — table matrix
+- `tests/rls/matrix.test.ts` — table matrix. Also pins the **partner boundary**:
+  a shared (two-school) exchange — school A paired with a third school C, so
+  school B stays unpaired and keeps guarding the "unrelated organizer can't read
+  another school" case — where the partner organizer sees the exchange +
+  enrollment rows but not the other school's user profiles or templates, and can
+  only enroll their own school's students.
 - `tests/rls/storage.test.ts` — storage.objects matrix (documents,
   application-photos, form-templates)
 - The older one-shot SQL tests in `supabase/tests/*.test.sql` cover in-school
