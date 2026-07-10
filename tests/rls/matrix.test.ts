@@ -191,6 +191,14 @@ describe.each([
       tx`insert into feedback (user_id, school_id, type, message)
          values (${fx.orgA}, ${fx.schoolA}, 'bug', 'forged')`))
   })
+
+  it('feedback: cannot stamp another school on own feedback (D3)', async () => {
+    // Today only user_id is pinned — this insert SUCCEEDS until migration
+    // 20260709000003 lands. uid() is the persona's own id; the school is A's.
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into feedback (user_id, school_id, type, message)
+         values (${uid()}, ${fx.schoolA}, 'bug', 'cross-school stamp')`))
+  })
 })
 
 // ---------------------------------------------------------------------------
