@@ -20,9 +20,9 @@ to change those, tell a Claude session instead of editing.
 
 ## In progress
 
-- [reviewing] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md — plan: docs/superpowers/plans/2026-07-13-reminder-apostrophe-tests.md — branch: auto/reminder-apostrophe-tests
-
 ## PRs awaiting merge
+
+- [#11] reminder-apostrophe-tests — 6 decisions flagged — merge-time steps: yes, see PR body (optional edge-fn redeploy)
 
 ## Blocked
 

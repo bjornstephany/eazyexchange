@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:38 — reminder-apostrophe-tests: security review VERDICT: ship (escaping byte-identical, no regressions, no PII); both reviews clean — PR ships next cycle._
+_Last cycle: 2026-07-14 00:42 — reminder-apostrophe-tests: PR #11 opened (branch pushed, both reviews ship, gate green). First backlog item is through the full pipeline._
 
 ## Needs Bjorn
-- Nothing.
+- **Merge:** PR #11 — reminder-apostrophe-tests — https://github.com/bjornstephany/eazyexchange/pull/11 — merge with a **merge commit** — merge-time steps: optional `supabase functions deploy send-reminders` (no urgency, behavior-identical)
 
 ## In flight
-- reminder-apostrophe-tests — reviewing (both reviews: ship) — next: push auto/reminder-apostrophe-tests + open PR
+- Nothing.
 
 ## Queue
 7 item(s) queued — top: «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:42 — PR #11 opened: «test: lock French typographic apostrophes in reminder/email/landing copy» — 23 new tests, no product copy changes; item moved to PRs awaiting merge
 - 2026-07-14 00:38 — security review: VERDICT ship (esc() byte-identical incl. escape order; subject-path exchange name unescaped = pre-existing on main, informational only; no admin-client imports; fixtures fictional)
 - 2026-07-14 00:33 — code review: VERDICT ship (extraction reverse-diffed byte-identical vs main; 18/18 re-run independently; 2 informational nits only; reminder to list the optional edge-fn redeploy as a PR merge-time step)
 - 2026-07-14 00:26 — Task 3/3 done (0b20217): recursive fr-tree apostrophe guard in landing content test, mutation-proofed; gate GREEN on the branch (lint ✓, 663/663 ✓, tsc ✓); diff scan clean (6 expected files)
