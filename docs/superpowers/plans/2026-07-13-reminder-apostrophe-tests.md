@@ -324,7 +324,7 @@ git commit -m "test: extract send-reminders copy builders, lock French apostroph
 - Consumes: `sendStudentReminderEmail`, `sendTemplateReminderEmail`, `sendPhase2ChecklistEmail`, `sendInvitationEmail`, `sendOrganizerInviteEmail` from `@/lib/email` (existing exports — no production change in this task).
 - Produces: nothing (test-only).
 
-- [ ] **Step 1: Write the test file**
+- [x] **Step 1: Write the test file**
 
 Create `lib/__tests__/email-french-copy.test.ts` with exactly this content (same Resend-mock pattern as `lib/__tests__/student-reminder-email.test.ts`, which stays untouched — it owns escaping/content, this file owns typography):
 
@@ -424,14 +424,14 @@ describe('French email copy uses typographic apostrophes only', () => {
 })
 ```
 
-- [ ] **Step 2: Run the new file — it must pass immediately**
+- [x] **Step 2: Run the new file — it must pass immediately**
 
 (The spec's audit found zero existing ASCII-apostrophe bugs, so unlike a classic TDD red step, these tests pass against current production copy. The "red" proof is Step 3.)
 
 Run: `pnpm vitest run lib/__tests__/email-french-copy.test.ts`
 Expected: PASS — 5 tests.
 
-- [ ] **Step 3: Prove the guard actually bites (temporary mutation)**
+- [x] **Step 3: Prove the guard actually bites (temporary mutation)**
 
 Temporarily change `STUDENT_FOOTER` in `lib/email.ts` from `d’échange` to `d'échange` (ASCII), re-run:
 
@@ -441,7 +441,7 @@ Expected: FAIL — the student-reminder and template-reminder tests fail on both
 Then **revert the mutation** (restore `d’échange`) and re-run:
 Expected: PASS — 5 tests. Verify with `git diff lib/email.ts` → empty diff.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add lib/__tests__/email-french-copy.test.ts
