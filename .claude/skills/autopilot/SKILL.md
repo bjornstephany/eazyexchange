@@ -35,7 +35,7 @@ with ScheduleWakeup (§ Sleep).
    open loop-PR (§ Overlap check).
 5. **No student/parent PII** in logs, commits, briefs, or PR bodies.
    Implementers stage files by name (never `git add -A` / `git add .`);
-   after every implementer dispatch, scan `git diff --stat HEAD~1` for
+   after every implementer dispatch, scan `git diff --stat main...HEAD` for
    unexpected files before proceeding. `docs/exampleSchoolFiles/` and any
    stray PDFs must never enter a commit.
 6. **Bjorn's edits win.** Any `BACKLOG.md` conflict resolves in favor of his
@@ -71,13 +71,23 @@ item's life (they name the branch, spec, plan, and work dir).
 ```bash
 git checkout main
 git checkout -- docs/autopilot/status.md 2>/dev/null || true   # derived state, regenerated in Record
+git diff --quiet -- BACKLOG.md || { git add BACKLOG.md && git commit -m "chore(autopilot): ingest Bjorn's BACKLOG.md edits"; }
 git fetch origin
 git rebase origin/main
 ```
 
+- Bjorn's blessed input path is appending Queue lines / Blocked answers
+  straight into `BACKLOG.md` from his own editor — an uncommitted,
+  working-tree change here. The commit above ingests it before fetch/rebase
+  (guardrail 6: his edits win), so a dirty `BACKLOG.md` is never mistaken
+  for the unrecognized-dirty-tree case in § Failure handling & resumability.
 - If the rebase conflicts on `BACKLOG.md`: resolve by hand — Bjorn's Queue
   and Blocked lines win verbatim; your own loop-owned sections win for the
   rest — then `git add BACKLOG.md && git rebase --continue`.
+- If the rebase conflicts on **any other file** (status.md, a spec, a plan,
+  the CLAUDE.md pointer, …): `git rebase --abort`, record a Watchouts note
+  in status.md (« rebase conflict on <file> — résolution manuelle requise »),
+  and sleep long (1800) — degrade safely, never leave a rebase in progress.
 - **Detect merged loop-PRs:**
   `gh pr list --state merged --json number,headRefName,mergedAt --limit 20`,
   filter `headRefName` starting `auto/`. For each newly merged one: move its
@@ -120,6 +130,16 @@ Anything writing French user-facing copy → sonnet or better, **never haiku**
 (it strips accents).
 
 ### 4. Record
+
+Record **always** runs on `main`. Any Execute exit — happy path or not (task
+dispatch failed twice, fix budget exhausted, gate blocked) — leaves the
+controller wherever that stage left it, possibly still on `auto/<slug>`:
+```bash
+git checkout main   # no-op if already there
+```
+first, before anything below. `BACKLOG.md` / `status.md` edits carry over as
+working-tree changes (those files match across the branch point), so this
+checkout never discards them.
 
 - Update the item's `BACKLOG.md` line and rewrite `docs/autopilot/status.md`
   (template below) — full rewrite, not append.
@@ -172,9 +192,12 @@ self-review; commit as `docs: <slug> implementation plan (autopilot)`.
   embeds the plan task **verbatim** plus the § Brief template rules. TDD is
   mandatory for billing, RLS, and auth code; the implementer ticks its plan
   checkboxes and commits its own named files on the branch.
-- After each report: PII/surprise scan via `git diff --stat HEAD~1`; update
-  `building (n/m)`.
-- Failed task dispatch → retry once fresh; second failure → `blocked`.
+- After each report: PII/surprise scan via `git diff --stat main...HEAD`
+  (the branch-relative diff catches multi-commit tasks, not just the last
+  commit); update `building (n/m)`.
+- Failed task dispatch → retry once fresh; second failure → `blocked`;
+  return to `main` before Record runs (§ Record — any Execute exit, happy
+  or not, returns to `main` first).
 
 **Gate** (after the last task, on the branch — run it yourself, it is not a
 dispatch):
@@ -203,8 +226,11 @@ surfaces → `security-report.md`. Same fix budget.
 git push -u origin auto/<slug>
 gh pr create --title "<type>: <summary>" --body-file .superpowers/autopilot/<slug>/pr-body.md
 ```
-Body per § PR body template. Move the item to PRs awaiting merge; return to
-`main`.
+Body per § PR body template. The pushed branch's diff against `origin/main`
+carries the accumulated local-`main` doc commits (status/specs/plans) by
+design — they merge cleanly by SHA — so reviewers shouldn't be surprised to
+see them alongside the code diff. Move the item to PRs awaiting merge;
+return to `main`.
 
 ## Migrations (staging only)
 
@@ -253,7 +279,8 @@ normally. Max 1 `[auto]` item in flight. In order:
   `blocked` with the failure notes in its work dir and a Q for Bjorn only if
   one exists (otherwise the Blocked line says what broke).
 - Restart after reboot/kill: `/loop /autopilot` — Sync reconstructs reality.
-- A dirty working tree at Sync that you don't recognize → don't touch it;
+- A dirty working tree at Sync you don't recognize, **other than
+  `BACKLOG.md`** (which Sync always ingests — § 1. Sync) → don't touch it;
   note it in Watchouts and sleep long (Bjorn may be mid-edit).
 
 ## Brief template
@@ -329,6 +356,7 @@ _Last cycle: <YYYY-MM-DD HH:MM> — <one line: what this cycle did>_
 
 ## In flight
 - <slug> — <status> — next: <next stage>
+- <« Nothing. » when empty>
 
 ## Queue
 <N> item(s) queued — top: «<first Queue line>»
