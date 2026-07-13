@@ -1,6 +1,6 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 01:36 — claimed split-applications-trust-lines and committed its spec (013d9be) — a pure behavior-neutral split of actions/applications.ts along three trust lines, no shim, 30 files edited. GitHub still unreachable, so landingnav's PR stays held._
+_Last cycle: 2026-07-14 01:48 — split-applications-trust-lines: implementation plan committed (6503def); 4 tasks, byte-for-byte transcriptions, single-commit refactor. GitHub still unreachable (~1h) — landingnav PR still held._
 
 ## Needs Bjorn
 - **Fix WSL DNS** (blocks all PR pushes/merges): GitHub unreachable ~1h — see Watchouts. `sudo sh -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'` then the loop self-heals.
@@ -8,12 +8,13 @@ _Last cycle: 2026-07-14 01:36 — claimed split-applications-trust-lines and com
 
 ## In flight
 - landingnav-focus-management — reviewing (code review: ship) — next: push branch + open PR (BLOCKED on GitHub DNS)
-- split-applications-trust-lines — specced — next: plan (doc-only, works offline)
+- split-applications-trust-lines — planned — next: execute on auto/split-applications-trust-lines (NOTE: plan says branch `refactor/…`; controller overrides to `auto/…` so the loop tracks it). Single-commit refactor; run gate + moved-code review before PR.
 
 ## Queue
 6 item(s) queued — top: «batch the bulk-accept applications flow (deferred from perf-cold-starts)»
 
 ## Recent activity (last 10)
+- 2026-07-14 01:48 — split-applications-trust-lines: plan committed (6503def); 4 tasks (branch/split/import-sites/verify), 3 new action files transcribed byte-for-byte, 25 import sites + allowlist + 2 docs as exact one-liners; single stage-by-name commit in Task 3 (no shim → tree green only as a whole); overlap constraints honored (no landing/**, no PR#11 files)
 - 2026-07-14 01:36 — split-applications-trust-lines: spec committed (013d9be); no re-export shim, shared helpers → lib/tokens.ts + lib/uploads.ts (use-server constraint), allowlist test reflects the 3 new paths, CLAUDE.md tripwire retired in build PR; 2 pre-existing bugs flagged as separate backlog candidates (not fixed). Spec wrapper hit the Fable-5 limit AFTER committing — work intact.
 - 2026-07-14 01:20 — landingnav-focus-management code review: VERDICT ship (focus logic, wrap math, preventDefault scope verified; 7/7 tests fail-if-regressed; 2 no-action nits); GitHub unreachable — PR push deferred
 - 2026-07-14 01:14 — landingnav Task 2/2 done (44a5960): Tab/arrow wrap cycle + 2 tests; final component byte-identical vs plan; gate green (647/647)
