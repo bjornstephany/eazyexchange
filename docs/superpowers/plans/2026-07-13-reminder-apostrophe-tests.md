@@ -38,7 +38,7 @@
   - `export function buildSubject(exchangeNames: string[], anyOverdue: boolean): string`
   - `export function buildEmail(studentName: string, exchangeNames: string[], forms: ReminderForm[], appUrl: string): string`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `supabase/functions/send-reminders/email-copy.test.ts` with exactly this content (extensionless import, matching `filter.test.ts`):
 
@@ -138,12 +138,12 @@ describe('ASCII-apostrophe guard across the rendered matrix', () => {
 })
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `pnpm vitest run supabase/functions/send-reminders/email-copy.test.ts`
 Expected: FAIL — cannot resolve `./email-copy` (module does not exist yet).
 
-- [ ] **Step 3: Create the pure module (byte-identical move)**
+- [x] **Step 3: Create the pure module (byte-identical move)**
 
 Create `supabase/functions/send-reminders/email-copy.ts` with exactly this content. `esc`, `frDateFormat`, `frShortDate`, `dossierRef` and the `buildEmail` body are moved **verbatim** from `index.ts` lines 44–95; the only deltas are the two documented in Global Constraints.
 
@@ -219,12 +219,12 @@ export function buildEmail(studentName: string, exchangeNames: string[], forms: 
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm vitest run supabase/functions/send-reminders/email-copy.test.ts`
 Expected: PASS — 3 (buildSubject) + 7 (buildEmail) + 8 (guard matrix) = 18 tests.
 
-- [ ] **Step 5: Rewire `index.ts` to use the module**
+- [x] **Step 5: Rewire `index.ts` to use the module**
 
 Three edits to `supabase/functions/send-reminders/index.ts`:
 
@@ -283,7 +283,7 @@ with:
     const result = await sendEmail(email, subject, buildEmail(name, [...exchangeNames], forms, APP_URL))
 ```
 
-- [ ] **Step 6: Verify the move is byte-identical**
+- [x] **Step 6: Verify the move is byte-identical**
 
 Confirm the moved literals match the originals (the deleted block vs the new module):
 
@@ -301,12 +301,12 @@ Also sanity-check the edge function still type-checks under Deno **if** deno is 
 Run: `command -v deno >/dev/null && deno check supabase/functions/send-reminders/index.ts || echo "deno not installed — skipped (vitest is the gate)"`
 Expected: either a clean `deno check` or the skip message. If deno reports errors in the rewired imports/calls, fix them.
 
-- [ ] **Step 7: Run the full send-reminders test directory**
+- [x] **Step 7: Run the full send-reminders test directory**
 
 Run: `pnpm vitest run supabase/functions/send-reminders/`
 Expected: PASS — email-copy, filter, pacing, fair-share, fetch-all tests all green.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add supabase/functions/send-reminders/email-copy.ts supabase/functions/send-reminders/email-copy.test.ts supabase/functions/send-reminders/index.ts
