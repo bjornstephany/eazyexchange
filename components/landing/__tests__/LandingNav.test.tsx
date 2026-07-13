@@ -56,3 +56,30 @@ describe('LandingNav language menu — focus management', () => {
     expect(trigger).not.toHaveFocus()
   })
 })
+
+describe('LandingNav language menu — keyboard cycling', () => {
+  it('traps Tab inside the menu, wrapping in both directions', async () => {
+    const { user, trigger } = setup()
+    await user.click(trigger)
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+  })
+
+  it('moves focus between menuitems with ArrowDown and ArrowUp (wrapping)', async () => {
+    const { user, trigger } = setup()
+    await user.click(trigger)
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    await user.keyboard('{ArrowUp}')
+    expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
+  })
+})

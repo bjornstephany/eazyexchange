@@ -270,7 +270,7 @@ git commit -m "feat(a11y): LandingNav language menu — focus on open, focus res
 - Consumes: from Task 1 — `menuRef: RefObject<HTMLDivElement>` (wrapper div around trigger + menu), `tabIndex={-1}` menuitems, the focus-on-open effect (first menuitem is focused when the menu opens), and the `setup()` helper in the test file (returns `{ user, setLanguage, trigger }`).
 - Produces: `onMenuKeyDown(e: ReactKeyboardEvent<HTMLDivElement>)` attached as `onKeyDown` on the `role="menu"` div. Handles `Tab`, `Shift+Tab`, `ArrowDown`, `ArrowUp` with `preventDefault()` and wrapping cycle; all other keys (notably `Escape` and `Enter`) fall through untouched.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append this describe block at the very end of `components/landing/__tests__/LandingNav.test.tsx` (after the closing `})` of the existing describe; no import changes needed):
 
@@ -303,13 +303,13 @@ describe('LandingNav language menu — keyboard cycling', () => {
 })
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 Run: `pnpm vitest run components/landing/__tests__/LandingNav.test.tsx`
 
 Expected: the 5 Task-1 tests PASS; the 2 new tests FAIL with `toHaveFocus` assertion errors (Tab currently escapes the menu into the Signup link because nothing handles it; arrows do nothing).
 
-- [ ] **Step 3: Implement the keydown handler**
+- [x] **Step 3: Implement the keydown handler**
 
 Three edits to `components/landing/LandingNav.tsx` (full final file below for verification):
 
@@ -496,13 +496,13 @@ export function LandingNav({
 }
 ```
 
-- [ ] **Step 4: Run the component tests to verify they pass**
+- [x] **Step 4: Run the component tests to verify they pass**
 
 Run: `pnpm vitest run components/landing/__tests__/LandingNav.test.tsx`
 
 Expected: all 7 tests PASS.
 
-- [ ] **Step 5: Run the full verification gate**
+- [x] **Step 5: Run the full verification gate**
 
 ```bash
 pnpm lint
@@ -512,7 +512,7 @@ pnpm build
 
 Expected: lint clean, all tests PASS, build succeeds. If `pnpm build` fails **only** on missing/placeholder env vars (known local `.env.local` condition), run `npx tsc --noEmit` (expected: no errors) and note in the report that CI runs the real build.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/landing/LandingNav.tsx components/landing/__tests__/LandingNav.test.tsx

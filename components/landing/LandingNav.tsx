@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Logo } from './Logo'
 import type { Lang, LandingContent } from '@/lib/landing/content'
 
@@ -49,6 +49,20 @@ export function LandingNav({
     triggerRef.current?.focus()
   }
 
+  function onMenuKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    const forward = (e.key === 'Tab' && !e.shiftKey) || e.key === 'ArrowDown'
+    const backward = (e.key === 'Tab' && e.shiftKey) || e.key === 'ArrowUp'
+    if (!forward && !backward) return
+    e.preventDefault()
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []
+    )
+    if (items.length === 0) return
+    const idx = items.indexOf(document.activeElement as HTMLButtonElement)
+    const next = forward ? (idx + 1) % items.length : (idx - 1 + items.length) % items.length
+    items[next]?.focus()
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-[#EEF1F7] bg-white/[.86] backdrop-blur-[12px]">
       <div className="mx-auto flex h-[70px] max-w-[1180px] items-center justify-between px-6 sm:px-10">
@@ -92,6 +106,7 @@ export function LandingNav({
               <div
                 role="menu"
                 id={menuId}
+                onKeyDown={onMenuKeyDown}
                 className="absolute right-0 top-full z-50 mt-1.5 w-36 overflow-hidden rounded-[10px] border border-[#E4E9F2] bg-white py-1 shadow-lg"
               >
                 <button
