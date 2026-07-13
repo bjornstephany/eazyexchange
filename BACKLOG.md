@@ -16,6 +16,7 @@ to change those, tell a Claude session instead of editing.
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)
 - Google search appearance: add favicon + fix meta description getting cut off in results
 - signup email verification: replace the confirmation link (opens new tab) with a code (OTP) the user types into the original tab, then continues onboarding there
+- optional modern click-through professional onboarding tour explaining the features to new users
 
 ## In progress
 
