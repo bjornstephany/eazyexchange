@@ -10,7 +10,6 @@ to change those, tell a Claude session instead of editing.
 
 ## Queue
 
-- LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)
 - split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)
 - batch the bulk-accept applications flow (deferred from perf-cold-starts)
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — Bjorn: delete this line if still unwanted)
@@ -19,6 +18,8 @@ to change those, tell a Claude session instead of editing.
 - signup email verification: replace the confirmation link (opens new tab) with a code (OTP) the user types into the original tab, then continues onboarding there
 
 ## In progress
+
+- [specced] landingnav-focus-management — «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-14-landingnav-focus-management-design.md
 
 ## PRs awaiting merge
 

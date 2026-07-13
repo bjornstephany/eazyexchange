@@ -1,17 +1,19 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:42 — reminder-apostrophe-tests: PR #11 opened (branch pushed, both reviews ship, gate green). First backlog item is through the full pipeline._
+_Last cycle: 2026-07-14 00:49 — claimed landingnav-focus-management and committed its spec (fa0a7f4). Finding: no mobile menu exists in LandingNav — item scoped to the language dropdown's focus management._
 
 ## Needs Bjorn
 - **Merge:** PR #11 — reminder-apostrophe-tests — https://github.com/bjornstephany/eazyexchange/pull/11 — merge with a **merge commit** — merge-time steps: optional `supabase functions deploy send-reminders` (no urgency, behavior-identical)
 
 ## In flight
-- Nothing.
+- landingnav-focus-management — specced — next: plan
 
 ## Queue
-7 item(s) queued — top: «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)»
+6 item(s) queued — top: «split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:49 — landingnav-focus-management: spec committed (fa0a7f4); scoped to the language dropdown (no mobile menu exists); hand-rolled trap, no new dependency; zero overlap with PR #11
+- 2026-07-14 00:45 — claimed landingnav-focus-management; GitHub API briefly unreachable during sync (git fetch fine) — degraded to cached PR state from 3 min earlier
 - 2026-07-14 00:42 — PR #11 opened: «test: lock French typographic apostrophes in reminder/email/landing copy» — 23 new tests, no product copy changes; item moved to PRs awaiting merge
 - 2026-07-14 00:38 — security review: VERDICT ship (esc() byte-identical incl. escape order; subject-path exchange name unescaped = pre-existing on main, informational only; no admin-client imports; fixtures fictional)
 - 2026-07-14 00:33 — code review: VERDICT ship (extraction reverse-diffed byte-identical vs main; 18/18 re-run independently; 2 informational nits only; reminder to list the optional edge-fn redeploy as a PR merge-time step)
