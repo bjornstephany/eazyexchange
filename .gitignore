@@ -37,8 +37,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code local config
-.claude/
+# Claude Code local config (skills are tracked; everything else stays local)
+.claude/*
+!.claude/skills/
 .env*
 # ...but the values-free reference IS committed (see docs/security/key-rotation-runbook.md).
 !.env.example
