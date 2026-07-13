@@ -33,7 +33,7 @@
 - Consumes: `LandingNav` props (`nav: LandingContent['nav']`, `lang: Lang`, `setLanguage: (l: Lang) => void`) from `@/lib/landing/content`; `landingContent.fr.nav` fixture.
 - Produces: `LandingNav.tsx` with `triggerRef` (`useRef<HTMLButtonElement>`), `menuId` (`useId()`), menu div `id={menuId}`, trigger `aria-controls={menuId}` + `ref={triggerRef}`, both menuitems `tabIndex={-1}`, a focus-on-open effect, and focus restore in the Escape handler and `pick()`. Task 2 relies on `menuRef` (existing), `triggerRef`, and the `tabIndex={-1}` menuitems exactly as written here.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `components/landing/__tests__/LandingNav.test.tsx` with exactly this content:
 
@@ -98,13 +98,13 @@ describe('LandingNav language menu — focus management', () => {
 })
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 Run: `pnpm vitest run components/landing/__tests__/LandingNav.test.tsx`
 
 Expected: tests 1 (“moves focus to the first menuitem…”), 3 (“selecting a language…”) and 4 (“wires aria-controls…”) FAIL with `toHaveFocus` / `toHaveAttribute('aria-controls', …)` assertion errors (the component compiles and renders — only the new focus/ARIA behavior is missing). Tests 2 (“closes on Escape…”) and 5 (“closes on outside pointerdown…”) may already PASS vacuously today: before focus-on-open exists, focus never leaves the trigger, so the Escape test’s `trigger` focus assertion holds trivially — it becomes a real restore test once Step 3 lands (focus is then on a menuitem when Escape fires); test 5 guards spec Decision 4 (outside-click close must NOT restore focus) against regressions from this task, not a missing feature. At least tests 1, 3 and 4 must fail before implementing.
 
-- [ ] **Step 3: Implement the component changes**
+- [x] **Step 3: Implement the component changes**
 
 Replace the entire content of `components/landing/LandingNav.tsx` with the following (changes vs. today: `useId` import, `triggerRef`, `menuId`, the focus-on-open effect, focus restore in `onKey` and `pick`, `ref`/`aria-controls` on the trigger, `id` on the menu div, `tabIndex={-1}` on both menuitems — everything else is byte-identical):
 
@@ -239,19 +239,19 @@ export function LandingNav({
 }
 ```
 
-- [ ] **Step 4: Run the new tests to verify they pass**
+- [x] **Step 4: Run the new tests to verify they pass**
 
 Run: `pnpm vitest run components/landing/__tests__/LandingNav.test.tsx`
 
 Expected: all 5 tests PASS.
 
-- [ ] **Step 5: Run the full unit suite (regression check on LandingPage tests)**
+- [x] **Step 5: Run the full unit suite (regression check on LandingPage tests)**
 
 Run: `pnpm test`
 
 Expected: all tests PASS — in particular `components/landing/__tests__/LandingPage.test.tsx` (its `fireEvent`-based menuitem clicks must keep working; `pick` still fires `setLanguage`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/landing/LandingNav.tsx components/landing/__tests__/LandingNav.test.tsx
