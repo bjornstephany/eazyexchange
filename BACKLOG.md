@@ -17,7 +17,7 @@ to change those, tell a Claude session instead of editing.
 
 ## In progress
 
-- [specced] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md
+- [planned] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md — plan: docs/superpowers/plans/2026-07-13-reminder-apostrophe-tests.md
 
 ## PRs awaiting merge
 

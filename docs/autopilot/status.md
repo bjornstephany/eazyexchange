@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-13 20:36 — claimed reminder-apostrophe-tests from Queue and produced its design spec (commit 3566188)._
+_Last cycle: 2026-07-14 00:07 — reminder-apostrophe-tests: implementation plan written and committed (c93baaf); next cycle starts execution on auto/reminder-apostrophe-tests._
 
 ## Needs Bjorn
 - Nothing.
 
 ## In flight
-- reminder-apostrophe-tests — specced — next: plan
+- reminder-apostrophe-tests — planned — next: execute (3 tasks: T1 extract email-copy.ts + tests + rewire index.ts; T2 lib/__tests__/email-french-copy.test.ts for the 5 French senders; T3 recursive fr-tree guard in landing content test)
 
 ## Queue
 4 item(s) queued — top: «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:07 — reminder-apostrophe-tests: plan committed (c93baaf); 3 transcription-tier tasks, plan's extraction block machine-diffed against index.ts (0 drift)
 - 2026-07-13 20:36 — reminder-apostrophe-tests: spec committed (3566188); zero existing ASCII-apostrophe bugs found; design = pure email-copy extraction + generic /\p{L}'\p{L}/u guard + positive ’ assertions
 - 2026-07-13 20:26 — claimed reminder-apostrophe-tests (top Queue line) as [brainstorming]
 
