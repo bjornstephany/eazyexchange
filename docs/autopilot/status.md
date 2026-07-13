@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 01:05 — landingnav-focus-management: Task 1/2 done on auto/landingnav-focus-management (cbb5c1f) — ARIA wiring, focus-on-open, focus restore; 645/645 suite green._
+_Last cycle: 2026-07-14 01:14 — landingnav-focus-management: Task 2/2 done (44a5960) and controller gate GREEN (lint ✓, 647/647 ✓, tsc ✓); code review next._
 
 ## Needs Bjorn
 - **Merge:** PR #11 — reminder-apostrophe-tests — https://github.com/bjornstephany/eazyexchange/pull/11 — merge with a **merge commit** — merge-time steps: optional `supabase functions deploy send-reminders` (no urgency, behavior-identical)
 
 ## In flight
-- landingnav-focus-management — building (1/2) — next: Task 2 (Tab/arrow wrap cycle), then gate + review + PR (PR push needs GitHub DNS back — see Watchouts)
+- landingnav-focus-management — building (2/2), gate green — next: code review, then PR (PR push needs GitHub DNS back — see Watchouts)
 
 ## Queue
 6 item(s) queued — top: «split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)»
 
 ## Recent activity (last 10)
+- 2026-07-14 01:14 — Task 2/2 done (44a5960): Tab/arrow wrap cycle + 2 tests (7/7 component file); final component diffed byte-identical vs the plan; gate green (647/647); GitHub DNS still down (local-only work unaffected)
 - 2026-07-14 01:05 — Task 1/2 done (cbb5c1f): 5 new LandingNav tests, pre-impl failures matched the plan's corrected list exactly; 645/645, lint clean, build ok; diff scan clean (3 expected files)
 - 2026-07-14 00:58 — landingnav-focus-management: plan committed (61c438c); self-review caught a vacuous-pass TDD trap (Escape-restore test) and corrected the expected-failure list; GitHub API still unreachable this cycle (not needed for doc stage)
 - 2026-07-14 00:49 — landingnav-focus-management: spec committed (fa0a7f4); scoped to the language dropdown (no mobile menu exists); hand-rolled trap, no new dependency; zero overlap with PR #11
