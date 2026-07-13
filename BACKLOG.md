@@ -19,7 +19,7 @@ to change those, tell a Claude session instead of editing.
 
 ## In progress
 
-- [specced] landingnav-focus-management — «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-14-landingnav-focus-management-design.md
+- [planned] landingnav-focus-management — «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-14-landingnav-focus-management-design.md — plan: docs/superpowers/plans/2026-07-14-landingnav-focus-management.md
 
 ## PRs awaiting merge
 

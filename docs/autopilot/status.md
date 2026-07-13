@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:49 — claimed landingnav-focus-management and committed its spec (fa0a7f4). Finding: no mobile menu exists in LandingNav — item scoped to the language dropdown's focus management._
+_Last cycle: 2026-07-14 00:58 — landingnav-focus-management: implementation plan committed (61c438c); 2 TDD tasks, whole-file code blocks; execution starts next cycle on auto/landingnav-focus-management._
 
 ## Needs Bjorn
 - **Merge:** PR #11 — reminder-apostrophe-tests — https://github.com/bjornstephany/eazyexchange/pull/11 — merge with a **merge commit** — merge-time steps: optional `supabase functions deploy send-reminders` (no urgency, behavior-identical)
 
 ## In flight
-- landingnav-focus-management — specced — next: plan
+- landingnav-focus-management — planned — next: execute (T1 ARIA wiring + focus-on-open + restore; T2 Tab/arrow wrap cycle)
 
 ## Queue
 6 item(s) queued — top: «split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:58 — landingnav-focus-management: plan committed (61c438c); self-review caught a vacuous-pass TDD trap (Escape-restore test) and corrected the expected-failure list; GitHub API still unreachable this cycle (not needed for doc stage)
 - 2026-07-14 00:49 — landingnav-focus-management: spec committed (fa0a7f4); scoped to the language dropdown (no mobile menu exists); hand-rolled trap, no new dependency; zero overlap with PR #11
 - 2026-07-14 00:45 — claimed landingnav-focus-management; GitHub API briefly unreachable during sync (git fetch fine) — degraded to cached PR state from 3 min earlier
 - 2026-07-14 00:42 — PR #11 opened: «test: lock French typographic apostrophes in reminder/email/landing copy» — 23 new tests, no product copy changes; item moved to PRs awaiting merge
