@@ -20,7 +20,7 @@ to change those, tell a Claude session instead of editing.
 
 ## In progress
 
-- [building (1/3)] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md — plan: docs/superpowers/plans/2026-07-13-reminder-apostrophe-tests.md — branch: auto/reminder-apostrophe-tests
+- [building (2/3)] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md — plan: docs/superpowers/plans/2026-07-13-reminder-apostrophe-tests.md — branch: auto/reminder-apostrophe-tests
 
 ## PRs awaiting merge
 

@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:15 — reminder-apostrophe-tests: execution started on auto/reminder-apostrophe-tests; Task 1/3 done (email-copy.ts extraction + 18 tests, commit 4dcd39d). Also ingested Bjorn's 3 new Queue items (ec4d170)._
+_Last cycle: 2026-07-14 00:21 — reminder-apostrophe-tests: Task 2/3 done (lib/__tests__/email-french-copy.test.ts, commit 4e45c1e); Task 3 next, then gate + review._
 
 ## Needs Bjorn
 - Nothing.
 
 ## In flight
-- reminder-apostrophe-tests — building (1/3) — next: Task 2 (lib/__tests__/email-french-copy.test.ts for the 5 French senders), then Task 3 (fr-tree guard in landing content test)
+- reminder-apostrophe-tests — building (2/3) — next: Task 3 (recursive fr-tree apostrophe guard in landing content test), then gate + review + PR
 
 ## Queue
 7 item(s) queued — top: «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:21 — Task 2/3 done (4e45c1e): 5 apostrophe-guard tests for the French lib/email.ts senders; mutation proof failed 3/5 as expected-plus (Phase2 also renders STUDENT_FOOTER); plan defect noted: Step 3's literal mutation instruction would be a JS parse error, implementer correctly used the \'-escaped form
 - 2026-07-14 00:15 — Task 1/3 done on auto/reminder-apostrophe-tests (4dcd39d): email-copy.ts pure extraction, 18 new tests, 52/52 edge-fn suite green, lint clean; diff --stat scan clean
 - 2026-07-14 00:12 — Task 1 first dispatch died mid-run (API connection closed, no writes); retried fresh per playbook — retry succeeded
 - 2026-07-14 00:10 — ingested Bjorn's 3 new Queue items: cross-form consistency review aid, Google search favicon/meta description, signup OTP-instead-of-link (ec4d170)
