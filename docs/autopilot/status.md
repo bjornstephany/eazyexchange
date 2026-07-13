@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:33 — reminder-apostrophe-tests: code review returned VERDICT: ship (0 blocking, 0 should-fix; extraction mechanically verified byte-identical); security review next (diff touches the esc() user-input escaping path), then PR._
+_Last cycle: 2026-07-14 00:38 — reminder-apostrophe-tests: security review VERDICT: ship (escaping byte-identical, no regressions, no PII); both reviews clean — PR ships next cycle._
 
 ## Needs Bjorn
 - Nothing.
 
 ## In flight
-- reminder-apostrophe-tests — reviewing (code review: ship) — next: security review (esc()/email-HTML surface), then PR
+- reminder-apostrophe-tests — reviewing (both reviews: ship) — next: push auto/reminder-apostrophe-tests + open PR
 
 ## Queue
 7 item(s) queued — top: «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)»
 
 ## Recent activity (last 10)
+- 2026-07-14 00:38 — security review: VERDICT ship (esc() byte-identical incl. escape order; subject-path exchange name unescaped = pre-existing on main, informational only; no admin-client imports; fixtures fictional)
 - 2026-07-14 00:33 — code review: VERDICT ship (extraction reverse-diffed byte-identical vs main; 18/18 re-run independently; 2 informational nits only; reminder to list the optional edge-fn redeploy as a PR merge-time step)
 - 2026-07-14 00:26 — Task 3/3 done (0b20217): recursive fr-tree apostrophe guard in landing content test, mutation-proofed; gate GREEN on the branch (lint ✓, 663/663 ✓, tsc ✓); diff scan clean (6 expected files)
 - 2026-07-14 00:21 — Task 2/3 done (4e45c1e): 5 apostrophe-guard tests for the French lib/email.ts senders; mutation proof failed 3/5 as expected-plus (Phase2 also renders STUDENT_FOOTER); plan defect noted: Step 3's literal mutation instruction would be a JS parse error, implementer correctly used the \'-escaped form
