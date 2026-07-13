@@ -459,7 +459,7 @@ git commit -m "test: apostrophe guard for French senders in lib/email.ts"
 - Consumes: `landingContent` from `@/lib/landing/content` (existing export).
 - Produces: nothing (test-only).
 
-- [ ] **Step 1: Replace the apostrophe test with a recursive guard**
+- [x] **Step 1: Replace the apostrophe test with a recursive guard**
 
 In `lib/landing/__tests__/content.test.ts`, replace exactly this block:
 
@@ -495,14 +495,14 @@ with:
 
 (Everything else in the file — the shape test — stays untouched.)
 
-- [ ] **Step 2: Run the file — it must pass immediately**
+- [x] **Step 2: Run the file — it must pass immediately**
 
 (The spec's recursive fr-tree scan verified the content is clean today; red proof is Step 3.)
 
 Run: `pnpm vitest run lib/landing/__tests__/content.test.ts`
 Expected: PASS — 2 tests.
 
-- [ ] **Step 3: Prove the guard bites (temporary mutation)**
+- [x] **Step 3: Prove the guard bites (temporary mutation)**
 
 The fr `how.reminder` strings contain no apostrophes today, so mutate the pinned string instead: in `lib/landing/content.ts`, temporarily change `fr.features.title` from `"Tout le dossier de l’élève, au même endroit."` to `"Tout le dossier de l'élève, au même endroit."` (ASCII '), re-run:
 
@@ -512,7 +512,7 @@ Expected: FAIL — the walk assertion fails naming `landingContent.fr.features.t
 Then **revert the mutation** and re-run:
 Expected: PASS — 2 tests. Verify with `git diff lib/landing/content.ts` → empty diff.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add lib/landing/__tests__/content.test.ts

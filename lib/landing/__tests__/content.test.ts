@@ -18,7 +18,23 @@ describe('landingContent', () => {
     expect(en.how.reminder.checklist).toHaveLength(2)
   })
 
-  it('fr copy uses typographic apostrophes', () => {
+  it('fr copy uses typographic apostrophes everywhere', () => {
+    // ASCII apostrophe between two letters = French typography regression
+    // (copy must use ’). Walk every string in the fr tree — this includes the
+    // mock reminder email (fr.how.reminder), the original UI-polish leftover.
+    // The en tree is not scanned: ASCII apostrophes are legitimate English.
+    const ASCII_APOSTROPHE = /\p{L}'\p{L}/u
+    const walk = (node: unknown, path: string): void => {
+      if (typeof node === 'string') {
+        expect(node, `landingContent.fr${path} contains an ASCII apostrophe`).not.toMatch(ASCII_APOSTROPHE)
+      } else if (Array.isArray(node)) {
+        node.forEach((item, i) => walk(item, `${path}[${i}]`))
+      } else if (node !== null && typeof node === 'object') {
+        for (const [key, value] of Object.entries(node)) walk(value, `${path}.${key}`)
+      }
+    }
+    walk(landingContent.fr, '')
+    // Positive pin: proves the walk visits real ’ copy (guard stays honest).
     expect(landingContent.fr.features.title).toContain('’')
   })
 })
