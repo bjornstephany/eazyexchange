@@ -71,7 +71,7 @@ item's life (they name the branch, spec, plan, and work dir).
 ```bash
 git checkout main
 git checkout -- docs/autopilot/status.md 2>/dev/null || true   # derived state, regenerated in Record
-git diff --quiet -- BACKLOG.md || { git add BACKLOG.md && git commit -m "chore(autopilot): ingest Bjorn's BACKLOG.md edits"; }
+git diff --quiet HEAD -- BACKLOG.md || { git add BACKLOG.md && git commit -m "chore(autopilot): ingest Bjorn's BACKLOG.md edits"; }
 git fetch origin
 git rebase origin/main
 ```
@@ -137,9 +137,10 @@ controller wherever that stage left it, possibly still on `auto/<slug>`:
 ```bash
 git checkout main   # no-op if already there
 ```
-first, before anything below. `BACKLOG.md` / `status.md` edits carry over as
-working-tree changes (those files match across the branch point), so this
-checkout never discards them.
+first, before anything below. All `BACKLOG.md` / `status.md` edits happen
+only here, on `main`, after that checkout — never on the item branch. (A
+stale committed copy of `BACKLOG.md` on the branch is harmless: those paths
+are rebase-managed and merge cleanly by SHA.)
 
 - Update the item's `BACKLOG.md` line and rewrite `docs/autopilot/status.md`
   (template below) — full rewrite, not append.
@@ -194,7 +195,9 @@ self-review; commit as `docs: <slug> implementation plan (autopilot)`.
   checkboxes and commits its own named files on the branch.
 - After each report: PII/surprise scan via `git diff --stat main...HEAD`
   (the branch-relative diff catches multi-commit tasks, not just the last
-  commit); update `building (n/m)`.
+  commit); note the new `building (n/m)` progress for Record — the
+  `BACKLOG.md`/`status.md` edits themselves happen in Record, on `main`,
+  never while on the item branch.
 - Failed task dispatch → retry once fresh; second failure → `blocked`;
   return to `main` before Record runs (§ Record — any Execute exit, happy
   or not, returns to `main` first).
