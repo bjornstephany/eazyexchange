@@ -1,17 +1,18 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 00:58 — landingnav-focus-management: implementation plan committed (61c438c); 2 TDD tasks, whole-file code blocks; execution starts next cycle on auto/landingnav-focus-management._
+_Last cycle: 2026-07-14 01:05 — landingnav-focus-management: Task 1/2 done on auto/landingnav-focus-management (cbb5c1f) — ARIA wiring, focus-on-open, focus restore; 645/645 suite green._
 
 ## Needs Bjorn
 - **Merge:** PR #11 — reminder-apostrophe-tests — https://github.com/bjornstephany/eazyexchange/pull/11 — merge with a **merge commit** — merge-time steps: optional `supabase functions deploy send-reminders` (no urgency, behavior-identical)
 
 ## In flight
-- landingnav-focus-management — planned — next: execute (T1 ARIA wiring + focus-on-open + restore; T2 Tab/arrow wrap cycle)
+- landingnav-focus-management — building (1/2) — next: Task 2 (Tab/arrow wrap cycle), then gate + review + PR (PR push needs GitHub DNS back — see Watchouts)
 
 ## Queue
 6 item(s) queued — top: «split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)»
 
 ## Recent activity (last 10)
+- 2026-07-14 01:05 — Task 1/2 done (cbb5c1f): 5 new LandingNav tests, pre-impl failures matched the plan's corrected list exactly; 645/645, lint clean, build ok; diff scan clean (3 expected files)
 - 2026-07-14 00:58 — landingnav-focus-management: plan committed (61c438c); self-review caught a vacuous-pass TDD trap (Escape-restore test) and corrected the expected-failure list; GitHub API still unreachable this cycle (not needed for doc stage)
 - 2026-07-14 00:49 — landingnav-focus-management: spec committed (fa0a7f4); scoped to the language dropdown (no mobile menu exists); hand-rolled trap, no new dependency; zero overlap with PR #11
 - 2026-07-14 00:45 — claimed landingnav-focus-management; GitHub API briefly unreachable during sync (git fetch fine) — degraded to cached PR state from 3 min earlier
@@ -28,5 +29,6 @@ _Last cycle: 2026-07-14 00:58 — landingnav-focus-management: implementation pl
 - 2026-07-13 20:26 — claimed reminder-apostrophe-tests (top Queue line) as [brainstorming]
 
 ## Watchouts
+- **GitHub unreachable from WSL since ~00:45** (API first, now git fetch too: DNS64 poisoning — system resolver returns unroutable 64:ff9b:: IPv6 for github.com; 8.8.8.8 resolves fine). Known gotcha (memory: point /etc/resolv.conf at 8.8.8.8). The loop degrades safely — local work continues on cached PR state — but the next PR push/create and merged-PR detection need DNS back. Bjorn: `sudo nano /etc/resolv.conf` → `nameserver 8.8.8.8` if it persists.
 - Spec flags: (1) sendRejectionEmail copy is currently English — backlog candidate, out of scope here; (2) merge-time: send-reminders edge fn will trail the repo until the next manual `supabase functions deploy send-reminders` (behavior-identical; a redeploy was already pending from perf-cold-starts).
 - Open PR #10 (chore/claude-md-lean-2026-07-13, Bjorn's) also edits CLAUDE.md — expect a one-time rebase conflict for the loop's local main when it merges.
