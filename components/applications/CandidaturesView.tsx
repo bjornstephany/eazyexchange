@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AppRow } from '@/lib/dashboard/rollup'
-import { p1StatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
+import { applicantStatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 import { acceptApplications, rejectApplications } from '@/actions/applications-review'
 import { setApplicationOpen } from '@/actions/exchanges'
@@ -311,7 +311,7 @@ export function CandidaturesView({
               <span className="text-sm text-muted-foreground">{a.data.grade ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{a.data.native_language ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{frShortDate(a.submitted_at)}</span>
-              <StatusPill pill={p1StatusPill(a.status)} />
+              <StatusPill pill={applicantStatusPill(a.status)} />
               <span className="text-muted-foreground">›</span>
             </div>
           ))

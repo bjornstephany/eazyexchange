@@ -31,23 +31,6 @@ export function p(n: number): string {
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
 const ACCEPTED_GROUP_STATUSES = ['accepted', 'maybe', 'declined', 'enrolling', 'enrolled']
 
-// Kept: still consumed by components/applications/ApplicationDetail.tsx and
-// CandidaturesView.tsx (the standalone /applications route, outside this
-// plan's scope) — see task-3-report.md for why this wasn't deleted with the
-// rest of the p1*/p2* API.
-export function p1StatusPill(status: string): Pill {
-  switch (status) {
-    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
-    case 'accepted': return { kind: 'warn', label: 'En attente' }
-    case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: 'Confirmé' }
-    case 'maybe': return { kind: 'warn', label: 'Hésite' }
-    case 'declined': return { kind: 'bad', label: 'A décliné' }
-    case 'rejected': return { kind: 'bad', label: 'Refusé' }
-    default: return { kind: 'neutral', label: '—' }
-  }
-}
-
 // per-assignment completion state
 type AssignmentState = 'incomplete' | 'awaiting' | 'done'
 

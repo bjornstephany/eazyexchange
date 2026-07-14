@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  frShortDate, p1StatusPill,
+  frShortDate,
   rollupStudent, formsPill, docsPill,
   timelineFor, nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
@@ -10,18 +10,6 @@ import {
 
 const app = (status: string, over: Partial<AppRow> = {}): AppRow =>
   ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', data: {}, email: 'x@y.fr', ...over })
-
-// p1StatusPill is kept for components/applications/ApplicationDetail.tsx and
-// CandidaturesView.tsx (the standalone /applications route, outside this
-// plan's scope) — see task-3-report.md.
-describe('p1StatusPill', () => {
-  it.each([
-    ['submitted', 'neutral', 'À examiner'], ['accepted', 'warn', 'En attente'],
-    ['enrolled', 'ok', 'Confirmé'], ['enrolling', 'ok', 'Confirmé'],
-    ['maybe', 'warn', 'Hésite'], ['declined', 'bad', 'A décliné'], ['rejected', 'bad', 'Refusé'],
-    ['bogus', 'neutral', '—'],
-  ])('%s → %s %s', (s, kind, label) => expect(p1StatusPill(s)).toEqual({ kind, label }))
-})
 
 const T: TemplateInfo[] = [
   { id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' },
