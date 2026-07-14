@@ -101,6 +101,12 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.queryByText("Vue d'ensemble")).toBeNull()
   })
 
+  it('shows the normal overview once applications are open, even with nobody yet', () => {
+    render(<OverviewView {...base} apps={[]} students={[]} rollups={[]} />)
+    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Commencez votre échange/ })).toBeNull()
+  })
+
   it('directly-invited students suppress the empty state even if applications never opened', () => {
     render(<OverviewView {...base} apps={[]} applicationOpen={false} applicationDeadline={null} />)
     expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()

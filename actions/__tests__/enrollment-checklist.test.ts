@@ -86,6 +86,23 @@ describe('enrollment checklist email (respondToInvitation « yes »)', () => {
     expect(call.items).toEqual([{ name: 'Passeport', deadline: '2026-10-10' }])
   })
 
+  it('rejected and draft submissions still count as pending', async () => {
+    activeTemplates = [
+      { id: 't1', name: 'Passeport', deadline: '2026-10-10' },
+      { id: 't2', name: 'Fiche santé', deadline: null },
+    ]
+    assignmentRows = [
+      { template_id: 't1', submissions: { status: 'rejected' } },
+      { template_id: 't2', submissions: { status: 'draft' } },
+    ]
+    await respondToInvitation('inv-1', 'yes', '')
+    expect(checklistMock).toHaveBeenCalledTimes(1)
+    expect(checklistMock.mock.calls[0][0].items).toEqual([
+      { name: 'Passeport', deadline: '2026-10-10' },
+      { name: 'Fiche santé', deadline: null },
+    ])
+  })
+
   it('skips the email when nothing is pending', async () => {
     activeTemplates = [{ id: 't1', name: 'Passeport', deadline: '2026-10-10' }]
     assignmentRows = [{ template_id: 't1', submissions: { status: 'approved' } }]
