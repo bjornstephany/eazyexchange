@@ -24,12 +24,12 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const { data: exchangeRows } = await supabase
     .from('exchanges')
-    .select('id, name, year, phase, archived_at, school_a_id')
+    .select('id, name, year, archived_at, school_a_id')
     .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
     .order('created_at', { ascending: false })
   const rows = (exchangeRows ?? []) as any[]
   const exchanges: ExchangeOption[] = rows.map(e => ({
-    id: e.id, name: e.name, year: e.year, phase: e.phase, archived: !!e.archived_at,
+    id: e.id, name: e.name, year: e.year, archived: !!e.archived_at,
   }))
 
   // Count only exchanges this school owns (it is always school_a on ones it

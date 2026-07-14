@@ -1,7 +1,8 @@
-// Pure derivation library for the organizer dashboard (Phase 1 recruitment
-// funnel + Phase 2 dossier rollup). No React, no Supabase — only Intl.
+// Pure derivation library for the organizer dashboard (unified lifecycle view:
+// candidature → dossier complet). No React, no Supabase — only Intl.
 
 import { frShortDate } from '@/lib/dates'
+import { applicantName } from '@/lib/application-form'
 
 // Re-export: dashboard components historically import frShortDate from here.
 export { frShortDate }
@@ -19,7 +20,7 @@ export type DossierRollup = {
   late: boolean
   overall: Pill
 }
-export type FunnelStage = { key: string; label: string; count: number }
+export type FunnelStage = { key: string; label: string; count: number; display?: string }
 export type ActionCard = { title: string; desc: string; cta: string; tone: 'accent' | 'warn' | 'bad'; filterKey: string; href?: string }
 
 // French pluralization helper: 's' when n > 1, else ''.
@@ -29,51 +30,6 @@ export function p(n: number): string {
 
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
 const ACCEPTED_GROUP_STATUSES = ['accepted', 'maybe', 'declined', 'enrolling', 'enrolled']
-
-export function p1Funnel(apps: AppRow[]): FunnelStage[] {
-  return [
-    { key: 'all', label: 'Reçues', count: apps.length },
-    { key: 'toreview', label: 'À examiner', count: apps.filter(a => a.status === 'submitted').length },
-    { key: 'accepted', label: 'Acceptés', count: apps.filter(a => ACCEPTED_GROUP_STATUSES.includes(a.status)).length },
-    { key: 'waiting', label: 'En attente', count: apps.filter(a => a.status === 'accepted').length },
-    { key: 'confirmed', label: 'Confirmés', count: apps.filter(a => CONFIRMED_STATUSES.includes(a.status)).length },
-  ]
-}
-
-export function p1Filter(apps: AppRow[], key: string | null): AppRow[] {
-  if (key === null || key === 'all') return apps
-  switch (key) {
-    case 'toreview': return apps.filter(a => a.status === 'submitted')
-    case 'accepted': return apps.filter(a => ACCEPTED_GROUP_STATUSES.includes(a.status))
-    case 'waiting': return apps.filter(a => a.status === 'accepted')
-    case 'confirmed': return apps.filter(a => CONFIRMED_STATUSES.includes(a.status))
-    case 'maybe': return apps.filter(a => a.status === 'maybe')
-    default: return apps
-  }
-}
-
-export function p1StatusPill(status: string): Pill {
-  switch (status) {
-    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
-    case 'accepted': return { kind: 'warn', label: 'En attente' }
-    case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: 'Confirmé' }
-    case 'maybe': return { kind: 'warn', label: 'Hésite' }
-    case 'declined': return { kind: 'bad', label: 'A décliné' }
-    case 'rejected': return { kind: 'bad', label: 'Refusé' }
-    default: return { kind: 'neutral', label: '—' }
-  }
-}
-
-export function p1ResponsePill(status: string): Pill | null {
-  switch (status) {
-    case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: 'Oui' }
-    case 'maybe': return { kind: 'warn', label: 'Peut-être' }
-    case 'declined': return { kind: 'bad', label: 'Non' }
-    default: return null
-  }
-}
 
 // per-assignment completion state
 type AssignmentState = 'incomplete' | 'awaiting' | 'done'
@@ -143,27 +99,6 @@ export function rollupStudent(
   return { studentId: student.id, name: student.full_name, forms, docs, due, late, overall }
 }
 
-export function p2Funnel(rollups: DossierRollup[]): FunnelStage[] {
-  return [
-    { key: 'p2all', label: 'Confirmés', count: rollups.length },
-    { key: 'pendingforms', label: 'Formul. en attente', count: rollups.filter(r => r.forms !== 'complete').length },
-    { key: 'review', label: 'À vérifier', count: rollups.filter(r => r.overall.kind === 'info').length },
-    { key: 'missingdocs', label: 'Docs manquants', count: rollups.filter(r => r.docs === 'missing' || r.docs === 'pending').length },
-    { key: 'late', label: 'En retard', count: rollups.filter(r => r.late).length },
-  ]
-}
-
-export function p2Filter(rollups: DossierRollup[], key: string | null): DossierRollup[] {
-  if (key === null || key === 'all' || key === 'p2all') return rollups
-  switch (key) {
-    case 'pendingforms': return rollups.filter(r => r.forms !== 'complete')
-    case 'review': return rollups.filter(r => r.overall.kind === 'info')
-    case 'missingdocs': return rollups.filter(r => r.docs === 'missing' || r.docs === 'pending')
-    case 'late': return rollups.filter(r => r.late)
-    default: return rollups
-  }
-}
-
 export function formsPill(f: DossierRollup['forms']): Pill {
   switch (f) {
     case 'complete': return { kind: 'ok', label: 'Reçu' }
@@ -179,97 +114,6 @@ export function docsPill(d: DossierRollup['docs']): Pill {
     case 'pending': return { kind: 'warn', label: 'En cours' }
     case 'missing': return { kind: 'bad', label: 'Manquant' }
   }
-}
-
-function countP1(apps: AppRow[], key: string): number {
-  return p1Filter(apps, key).length
-}
-
-export function actionCards(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[], activeTemplateCount?: number): ActionCard[] {
-  const cards: ActionCard[] = []
-  if (activeTemplateCount === 0) {
-    cards.push({
-      title: 'Aucun formulaire actif',
-      desc: 'Préparez les documents et formulaires à demander aux familles.',
-      cta: 'Préparer les formulaires', tone: 'accent', filterKey: 'noforms', href: '/forms',
-    })
-  }
-  if (phase === 1) {
-    const a = countP1(apps, 'toreview')
-    if (a > 0) {
-      cards.push({
-        title: `${a} candidature${p(a)} à examiner`,
-        desc: 'Nouveaux dossiers en attente de votre décision. L’invitation part automatiquement dès l’acceptation.',
-        cta: 'Examiner', tone: 'accent', filterKey: 'toreview',
-      })
-    }
-    const c = countP1(apps, 'maybe')
-    if (c > 0) {
-      cards.push({
-        title: `${c} élève${p(c)} hésite${c > 1 ? 'nt' : ''} — à relancer`,
-        desc: 'Réponses « Peut-être » à convertir en confirmation.',
-        cta: 'Relancer', tone: 'warn', filterKey: 'maybe',
-      })
-    }
-    return cards
-  }
-
-  const r = rollups.filter(x => x.overall.kind === 'info').length
-  if (r > 0) {
-    cards.push({
-      title: `${r} dossier${p(r)} à vérifier`,
-      desc: 'Formulaires et documents reçus, en attente de validation.',
-      cta: 'Vérifier', tone: 'accent', filterKey: 'review',
-    })
-  }
-  const m = rollups.filter(x => x.docs === 'missing' || x.docs === 'pending').length
-  if (m > 0) {
-    cards.push({
-      title: `${m} élève${p(m)} : documents manquants`,
-      desc: 'Pièces non reçues avant l’échéance.',
-      cta: 'Voir les élèves', tone: 'warn', filterKey: 'missingdocs',
-    })
-  }
-  const l = rollups.filter(x => x.late).length
-  if (l > 0) {
-    cards.push({
-      title: `${l} élève${p(l)} en retard`,
-      desc: 'Échéance dépassée — relance renforcée en cours.',
-      cta: 'Relancer', tone: 'bad', filterKey: 'late',
-    })
-  }
-  return cards
-}
-
-export function reminderLine(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[]): string {
-  if (phase === 1) {
-    const n = countP1(apps, 'waiting') + countP1(apps, 'maybe')
-    return `Relance automatique demain 8h — ${n} élève${p(n)} relancé${p(n)} sur leur candidature ou leur réponse, avec la date limite.`
-  }
-  const n = rollups.filter(r => (r.docs === 'missing' || r.docs === 'pending') || r.forms !== 'complete').length
-  return `Relance automatique demain 8h — ${n} élève${p(n)} relancé${p(n)} sur les documents manquants, avec la date limite.`
-}
-
-export function overviewSubline(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[]): string {
-  if (phase === 1) {
-    const a = countP1(apps, 'toreview')
-    const c = countP1(apps, 'confirmed')
-    return `Phase 1 · Recrutement — ${a} candidature${p(a)} à examiner, ${c} élève${p(c)} déjà confirmé${p(c)}.`
-  }
-  const r = rollups.filter(x => x.overall.kind === 'info').length
-  const m = rollups.filter(x => x.docs === 'missing' || x.docs === 'pending').length
-  return `Phase 2 · Préparation — ${r} dossier${p(r)} à vérifier, ${m} en attente de documents.`
-}
-
-export function progress(phase: 1 | 2, apps: AppRow[], rollups: DossierRollup[]): { done: number; total: number; label: string } {
-  if (phase === 1) {
-    const total = apps.length
-    const done = apps.filter(a => a.status !== 'submitted').length
-    return { done, total, label: `${done} / ${total} candidatures traitées` }
-  }
-  const total = rollups.length
-  const done = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
-  return { done, total, label: `${done} / ${total} dossiers validés` }
 }
 
 export function nextDeadline(rollups: DossierRollup[]): string | null {
@@ -309,4 +153,183 @@ export function timelineFor(app: AppRow): { dot: Pill['kind']; title: string; su
     }
   }
   return entries
+}
+
+// ---- Unified lifecycle view (single dashboard, no phases) ----
+
+export type EnrolledStudent = { id: string; full_name: string; email: string }
+
+export type LifecycleRow =
+  | { kind: 'applicant'; key: string; name: string; candidature: Pill; statut: Pill; closed: boolean; app: AppRow }
+  | { kind: 'enrolled'; key: string; name: string; candidature: Pill; rollup: DossierRollup }
+
+const CLOSED_STATUSES = ['rejected', 'declined']
+
+// Candidature column: where the person stands in the recruitment funnel.
+// `null` = enrolled student with no application row (directly invited).
+export function candidaturePill(status: string | null): Pill {
+  switch (status) {
+    case null:
+    case 'enrolling':
+    case 'enrolled': return { kind: 'ok', label: 'Confirmé(e)' }
+    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
+    case 'accepted': return { kind: 'warn', label: 'Invité — en attente' }
+    case 'maybe': return { kind: 'warn', label: 'Peut-être' }
+    case 'declined': return { kind: 'bad', label: 'A décliné' }
+    case 'rejected': return { kind: 'bad', label: 'Refusé' }
+    default: return { kind: 'neutral', label: '—' }
+  }
+}
+
+// Statut column for applicant rows (enrolled rows show rollup.overall instead).
+export function applicantStatusPill(status: string): Pill {
+  switch (status) {
+    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
+    case 'accepted': return { kind: 'warn', label: 'En attente' }
+    case 'enrolling':
+    case 'enrolled': return { kind: 'ok', label: 'Confirmé' }
+    case 'maybe': return { kind: 'warn', label: 'Hésite' }
+    case 'declined': return { kind: 'bad', label: 'A décliné' }
+    case 'rejected': return { kind: 'bad', label: 'Refusé' }
+    default: return { kind: 'neutral', label: '—' }
+  }
+}
+
+function normEmail(e: string): string {
+  return e.trim().toLowerCase()
+}
+
+// One row per person, applicants first then enrolled students. An application
+// that reached enrolling/enrolled and matches an enrolled student's email is
+// merged into that student's row; a confirmed application with no matching
+// student (shouldn't happen — enrollment reuses the application email) falls
+// back to an applicant row with a Confirmé pill, never silently dropped.
+export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], rollups: DossierRollup[]): LifecycleRow[] {
+  const rollupByStudent = new Map(rollups.map(r => [r.studentId, r]))
+  const enrolledEmails = new Set(students.map(s => normEmail(s.email)))
+
+  const applicantRows: LifecycleRow[] = apps
+    .filter(a => !(CONFIRMED_STATUSES.includes(a.status) && enrolledEmails.has(normEmail(a.email))))
+    .map(a => ({
+      kind: 'applicant' as const,
+      key: `app:${a.id}`,
+      name: applicantName(a.data) || a.email,
+      candidature: candidaturePill(a.status),
+      statut: applicantStatusPill(a.status),
+      closed: CLOSED_STATUSES.includes(a.status),
+      app: a,
+    }))
+
+  const enrolledRows: LifecycleRow[] = students.flatMap(s => {
+    const rollup = rollupByStudent.get(s.id)
+    if (!rollup) return []
+    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name: rollup.name, candidature: candidaturePill(null), rollup }]
+  })
+
+  return [...applicantRows, ...enrolledRows]
+}
+
+export function closedCount(rows: LifecycleRow[]): number {
+  return rows.filter(r => r.kind === 'applicant' && r.closed).length
+}
+
+// Candidatures counts ALL received applications, including rejected/declined
+// (historical volume) — the hide-closed toggle only affects the table.
+export function lifecycleFunnel(apps: AppRow[], rollups: DossierRollup[]): FunnelStage[] {
+  const complete = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
+  return [
+    { key: 'all', label: 'Candidatures', count: apps.length },
+    { key: 'toreview', label: 'À examiner', count: apps.filter(a => a.status === 'submitted').length },
+    { key: 'confirmed', label: 'Confirmés', count: rollups.length },
+    { key: 'review', label: 'À vérifier', count: rollups.filter(r => r.overall.kind === 'info').length },
+    { key: 'late', label: 'En retard', count: rollups.filter(r => r.late).length },
+    { key: 'complete', label: 'Complets', count: complete, display: `${complete} / ${rollups.length}` },
+  ]
+}
+
+export function lifecycleFilter(rows: LifecycleRow[], key: string | null, showClosed: boolean): LifecycleRow[] {
+  const visible = showClosed ? rows : rows.filter(r => r.kind === 'enrolled' || !r.closed)
+  if (key === null || key === 'all') return visible
+  switch (key) {
+    case 'toreview': return visible.filter(r => r.kind === 'applicant' && r.app.status === 'submitted')
+    case 'maybe': return visible.filter(r => r.kind === 'applicant' && r.app.status === 'maybe')
+    case 'confirmed': return visible.filter(r => r.kind === 'enrolled' || CONFIRMED_STATUSES.includes(r.app.status))
+    case 'review': return visible.filter(r => r.kind === 'enrolled' && r.rollup.overall.kind === 'info')
+    case 'late': return visible.filter(r => r.kind === 'enrolled' && r.rollup.late)
+    case 'missingdocs': return visible.filter(r => r.kind === 'enrolled' && (r.rollup.docs === 'missing' || r.rollup.docs === 'pending'))
+    case 'complete': return visible.filter(r => r.kind === 'enrolled' && r.rollup.forms === 'complete' && r.rollup.docs === 'complete')
+    default: return visible
+  }
+}
+
+export function lifecycleSubline(apps: AppRow[], rollups: DossierRollup[]): string {
+  const a = apps.filter(x => x.status === 'submitted').length
+  const r = rollups.filter(x => x.overall.kind === 'info').length
+  const l = rollups.filter(x => x.late).length
+  return `${a} candidature${p(a)} à examiner, ${r} dossier${p(r)} à vérifier, ${l} élève${p(l)} en retard.`
+}
+
+// « À faire maintenant » cards mixing both worlds, ordered by urgency.
+export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], activeTemplateCount?: number): ActionCard[] {
+  const cards: ActionCard[] = []
+  if (activeTemplateCount === 0) {
+    cards.push({
+      title: 'Aucun formulaire actif',
+      desc: 'Préparez les documents et formulaires à demander aux familles.',
+      cta: 'Préparer les formulaires', tone: 'accent', filterKey: 'noforms', href: '/forms',
+    })
+  }
+  const a = apps.filter(x => x.status === 'submitted').length
+  if (a > 0) {
+    cards.push({
+      title: `${a} candidature${p(a)} à examiner`,
+      desc: 'Nouveaux dossiers en attente de votre décision. L’invitation part automatiquement dès l’acceptation.',
+      cta: 'Examiner', tone: 'accent', filterKey: 'toreview',
+    })
+  }
+  const r = rollups.filter(x => x.overall.kind === 'info').length
+  if (r > 0) {
+    cards.push({
+      title: `${r} dossier${p(r)} à vérifier`,
+      desc: 'Formulaires et documents reçus, en attente de validation.',
+      cta: 'Vérifier', tone: 'accent', filterKey: 'review',
+    })
+  }
+  const l = rollups.filter(x => x.late).length
+  if (l > 0) {
+    cards.push({
+      title: `${l} élève${p(l)} en retard`,
+      desc: 'Échéance dépassée — relance renforcée en cours.',
+      cta: 'Relancer', tone: 'bad', filterKey: 'late',
+    })
+  }
+  const m = rollups.filter(x => x.docs === 'missing' || x.docs === 'pending').length
+  if (m > 0) {
+    cards.push({
+      title: `${m} élève${p(m)} : documents manquants`,
+      desc: 'Pièces non reçues avant l’échéance.',
+      cta: 'Voir les élèves', tone: 'warn', filterKey: 'missingdocs',
+    })
+  }
+  const c = apps.filter(x => x.status === 'maybe').length
+  if (c > 0) {
+    cards.push({
+      title: `${c} élève${p(c)} hésite${c > 1 ? 'nt' : ''} — à relancer`,
+      desc: 'Réponses « Peut-être » à convertir en confirmation.',
+      cta: 'Relancer', tone: 'warn', filterKey: 'maybe',
+    })
+  }
+  return cards
+}
+
+// Exchange-card progress (Échanges page): dossier progress once anyone is
+// enrolled, candidature progress before that.
+export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[]): { done: number; total: number; label: string } {
+  if (rollups.length > 0) {
+    const done = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
+    return { done, total: rollups.length, label: `${done} / ${rollups.length} dossiers validés` }
+  }
+  const total = apps.length
+  const done = apps.filter(a => a.status !== 'submitted').length
+  return { done, total, label: `${done} / ${total} candidatures traitées` }
 }

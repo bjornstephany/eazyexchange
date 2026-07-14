@@ -3,7 +3,7 @@ import { ApplicationReadView } from '@/components/ApplicationReadView'
 import { ApplicationReviewActions } from '@/components/ApplicationReviewActions'
 import { PrintButton } from '@/components/applications/PrintButton'
 import { StatusPill } from '@/components/dashboard/StatusPill'
-import { p1StatusPill } from '@/lib/dashboard/rollup'
+import { applicantStatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 
 export function ApplicationDetail({
@@ -31,7 +31,7 @@ export function ApplicationDetail({
       <div className="mb-5">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold">{name}</h1>
-          <StatusPill pill={p1StatusPill(application.status)} />
+          <StatusPill pill={applicantStatusPill(application.status)} />
         </div>
         <p className="font-mono text-[12px] text-tertiary uppercase tracking-[.08em]">
           Candidature · {exchangeName} · {year}

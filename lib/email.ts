@@ -201,7 +201,7 @@ export async function sendStudentReminderEmail(opts: {
   return send(opts.to, `Rappel : ton dossier pour ${opts.exchangeName}`, html, 'student reminder email', opts.ctx)
 }
 
-export async function sendPhase2ChecklistEmail(opts: {
+export async function sendChecklistEmail(opts: {
   to: string; studentName: string; exchangeName: string; items: { name: string; deadline: string | null }[]
   ctx?: EmailLogContext
 }): Promise<boolean> {
@@ -215,7 +215,7 @@ export async function sendPhase2ChecklistEmail(opts: {
     <ul>${rows}</ul>
     <p><a href="${APP_URL}/my-forms" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Ouvrir mon dossier</a></p>
   `, STUDENT_FOOTER)
-  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'phase-2 checklist email', opts.ctx)
+  return send(opts.to, `Ton dossier pour ${opts.exchangeName} — c’est parti !`, html, 'checklist email', opts.ctx)
 }
 
 const ORGANIZER_FOOTER = "Vous recevez cet e-mail car un collègue vous invite à rejoindre son équipe sur Eazyexchange."

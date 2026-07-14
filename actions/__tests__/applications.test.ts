@@ -124,6 +124,7 @@ vi.mock('@/lib/email', () => ({
   sendApplicationConfirmationEmail: vi.fn().mockResolvedValue(undefined),
   sendNewApplicationAlertEmail: vi.fn().mockResolvedValue(undefined),
   sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
+  sendChecklistEmail: vi.fn().mockResolvedValue(true),
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'

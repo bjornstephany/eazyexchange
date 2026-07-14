@@ -23,7 +23,7 @@ vi.mock('next/link', () => ({
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
-const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, archived: false }]
+const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: false }]
 
 describe('rail prefetch', () => {
   it('every rail tab prefetches its full payload', () => {

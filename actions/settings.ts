@@ -253,7 +253,7 @@ export async function removeOrganizer(userId: string): Promise<void> {
 }
 
 export type ProgramInfo = {
-  id: string; name: string; year: number; phase: 1 | 2; archived: boolean
+  id: string; name: string; year: number; archived: boolean
   enrolled: number; applications: number; earliestDeadline: string | null
 }
 
@@ -261,7 +261,7 @@ export type ProgramInfo = {
 async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exchangeId: string) {
   const { data: exchange } = await supabase
     .from('exchanges')
-    .select('id, name, year, phase, archived_at, school_a_id, school_b_id')
+    .select('id, name, year, archived_at, school_a_id, school_b_id')
     .eq('id', exchangeId).maybeSingle()
   if (!exchange || (exchange.school_a_id !== schoolId && exchange.school_b_id !== schoolId)) {
     throw new Error('Unauthorized')
@@ -287,7 +287,7 @@ export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
 
   return {
     id: exchange.id, name: exchange.name, year: exchange.year,
-    phase: (exchange.phase ?? 1) as 1 | 2, archived: !!exchange.archived_at,
+    archived: !!exchange.archived_at,
     enrolled: enrolled ?? 0, applications: applications ?? 0,
     earliestDeadline: (firstDeadline?.deadline as string | null) ?? null,
   }
