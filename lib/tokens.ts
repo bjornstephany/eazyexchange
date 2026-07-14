@@ -14,3 +14,8 @@ export function applySlug(name: string): string {
     .slice(0, 40)
   return `${base || 'exchange'}-${randomBytes(4).toString('hex')}`
 }
+
+// Shared expiry check for resume/invite token links.
+export function tokenExpired(expiresAt: string | null): boolean {
+  return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
+}

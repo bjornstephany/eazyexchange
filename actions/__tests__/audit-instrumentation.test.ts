@@ -60,7 +60,7 @@ vi.mock('@/lib/supabase/anon', () => ({
 }))
 
 import { approveSubmission } from '../submissions'
-import { rejectApplication } from '../applications'
+import { rejectApplication } from '../applications-review'
 
 describe('audit instrumentation', () => {
   beforeEach(() => logAudit.mockClear())

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { AppRow } from '@/lib/dashboard/rollup'
 import { p1StatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
-import { acceptApplications, rejectApplications } from '@/actions/applications'
+import { acceptApplications, rejectApplications } from '@/actions/applications-review'
 import { setApplicationOpen } from '@/actions/exchanges'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 

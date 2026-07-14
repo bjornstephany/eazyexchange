@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { getExchanges } from '@/actions/exchanges'
-import { listApplications, getApplicationForReview } from '@/actions/applications'
+import { listApplications, getApplicationForReview } from '@/actions/applications-review'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import { ApplicationDetail } from '@/components/applications/ApplicationDetail'

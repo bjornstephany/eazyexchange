@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { peekApplicationDraft } from '@/actions/applications'
+import { peekApplicationDraft } from '@/actions/apply'
 import { readResumeToken, clearResumeToken } from '@/lib/apply-storage'
 import { ApplicationStartForm } from '@/components/ApplicationStartForm'
 import { Button } from '@/components/ui/button'

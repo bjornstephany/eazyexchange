@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { respondToInvitation } from '@/actions/applications'
+import { respondToInvitation } from '@/actions/invitations'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { EXCHANGE_TERMS_RESPOND } from '@/lib/exchange-terms'

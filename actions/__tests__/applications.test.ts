@@ -126,7 +126,8 @@ vi.mock('@/lib/email', () => ({
   sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
 }))
 
-import { startApplication, submitApplication, saveApplicationDraft, respondToInvitation, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../applications'
+import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
+import { respondToInvitation } from '../invitations'
 import { sendApplicationResumeEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 

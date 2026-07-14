@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { APPLICATION_SECTIONS, missingRequiredApplication, parentGroupFields, type AppField } from '@/lib/application-form'
-import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/applications'
+import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/apply'
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/button'

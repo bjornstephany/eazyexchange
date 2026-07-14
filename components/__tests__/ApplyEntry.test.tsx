@@ -4,13 +4,13 @@ import userEvent from '@testing-library/user-event'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/apply', () => ({
   peekApplicationDraft: vi.fn(),
   startApplication: vi.fn(async () => ({ token: 'tok-new' })),
 }))
 
 import { ApplyEntry } from '@/components/ApplyEntry'
-import { peekApplicationDraft } from '@/actions/applications'
+import { peekApplicationDraft } from '@/actions/apply'
 import { storeResumeToken, readResumeToken } from '@/lib/apply-storage'
 
 describe('ApplyEntry', () => {

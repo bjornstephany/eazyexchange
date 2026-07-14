@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/apply', () => ({
   saveApplicationDraft: vi.fn(async () => {}),
   submitApplication: vi.fn(async () => {}),
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
@@ -17,7 +17,7 @@ vi.mock('@/lib/application-form', async (orig) => {
 })
 
 import { ApplicationForm } from '@/components/ApplicationForm'
-import { sendApplicationResumeLink, submitApplication } from '@/actions/applications'
+import { sendApplicationResumeLink, submitApplication } from '@/actions/apply'
 import { storeResumeToken, readResumeToken } from '@/lib/apply-storage'
 
 beforeEach(() => { vi.clearAllMocks(); missingMock.mockReturnValue([]); localStorage.clear() })

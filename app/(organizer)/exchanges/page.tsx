@@ -1,7 +1,7 @@
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { redirect } from 'next/navigation'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
-import { listApplications } from '@/actions/applications'
+import { listApplications } from '@/actions/applications-review'
 import { exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
 import { rollupStudent, progress, type AppRow } from '@/lib/dashboard/rollup'
 import { ExchangesView, type ExchangeCardData } from '@/components/exchanges/ExchangesView'

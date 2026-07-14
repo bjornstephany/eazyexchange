@@ -21,12 +21,13 @@ directly PostgREST-callable.
 | `actions/settings.ts` inviteOrganizer / revokeOrganizerInvite / removeOrganizer | a | organizer_invites has no client policies (deliberate); removeOrganizer needs auth.admin.deleteUser |
 | `actions/exchanges.ts` createExchange (collaborator invites) | a | same organizer_invites rationale |
 | `actions/join.ts` | a | anonymous token claim + auth.admin.createUser |
-| `actions/applications.ts` startApplication / saveApplicationDraft / submitApplication / uploadApplicationPhoto / respondToInvitation | a | token is the only auth; multi-table writes + auth.admin + storage |
-| `actions/applications.ts` sendApplicationResumeLink | a | reads the applicant email to send mail; must stay behind the rate-limited action |
-| `actions/applications.ts` getApplicationDraft | a | returns the full draft PII + signs a storage URL — stays off the anon RPC surface by the first-name rule |
-| `actions/applications.ts` getInvitation | a | returns applicant full name — same rule |
-| `actions/applications.ts` getApplicationForReview | a | signs an application-photos URL (bucket has no organizer storage policy; authz is asserted in code first) |
-| `actions/applications.ts` peekApplicationDraft | b | **migrated** → anon RPC `peek_application_draft` (Task 13) |
+| `actions/apply.ts` startApplication / saveApplicationDraft / submitApplication / uploadApplicationPhoto | a | token is the only auth; multi-table writes + auth.admin + storage |
+| `actions/invitations.ts` respondToInvitation | a | token is the only auth; multi-table writes + auth.admin + storage |
+| `actions/apply.ts` sendApplicationResumeLink | a | reads the applicant email to send mail; must stay behind the rate-limited action |
+| `actions/apply.ts` getApplicationDraft | a | returns the full draft PII + signs a storage URL — stays off the anon RPC surface by the first-name rule |
+| `actions/invitations.ts` getInvitation | a | returns applicant full name — same rule |
+| `actions/applications-review.ts` getApplicationForReview | a | signs an application-photos URL (bucket has no organizer storage policy; authz is asserted in code first) |
+| `actions/apply.ts` peekApplicationDraft | b | **migrated** → anon RPC `peek_application_draft` (Task 13) |
 | `app/apply/[slug]/page.tsx` | b | **migrated** → anon RPC `get_apply_page_exchange` (Task 13) |
 
 Review checklist for future code: a new `createAdminClient()` call needs a row

@@ -1,6 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
-import { uploadApplicationPhoto } from '@/actions/applications'
+import { uploadApplicationPhoto } from '@/actions/apply'
 import { Button } from '@/components/ui/button'
 import { ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
 

@@ -4,12 +4,12 @@ import userEvent from '@testing-library/user-event'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/apply', () => ({
   startApplication: vi.fn(async () => ({ token: 'tok-xyz' })),
 }))
 
 import { ApplicationStartForm } from '@/components/ApplicationStartForm'
-import { startApplication } from '@/actions/applications'
+import { startApplication } from '@/actions/apply'
 import { readResumeToken } from '@/lib/apply-storage'
 
 describe('ApplicationStartForm', () => {

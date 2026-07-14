@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
 const bulkAccept = vi.fn().mockResolvedValue({ succeeded: 2, failed: 0 })
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/applications-review', () => ({
   acceptApplications: (...a: unknown[]) => bulkAccept(...a),
   rejectApplications: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
 }))
