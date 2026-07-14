@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const sendMock = vi.fn().mockResolvedValue({ error: null })
 vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
 
-import { sendTemplateReminderEmail, sendPhase2ChecklistEmail } from '@/lib/email'
+import { sendTemplateReminderEmail, sendChecklistEmail } from '@/lib/email'
 
 describe('forms emails', () => {
   beforeEach(() => { sendMock.mockClear(); process.env.RESEND_API_KEY = 'test-key' })
@@ -23,7 +23,7 @@ describe('forms emails', () => {
   })
 
   it('checklist email lists every pending item', async () => {
-    await sendPhase2ChecklistEmail({
+    await sendChecklistEmail({
       to: 's@x.fr', studentName: 'Léa', exchangeName: 'Espagne',
       items: [{ name: 'Passeport', deadline: '2026-10-10T00:00:00+00:00' }, { name: 'AST', deadline: null }],
     })

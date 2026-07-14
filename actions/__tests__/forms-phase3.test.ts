@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const reminderMock = vi.fn().mockResolvedValue(true)
 vi.mock('@/lib/email', () => ({
   sendTemplateReminderEmail: (...a: unknown[]) => reminderMock(...a),
-  sendPhase2ChecklistEmail: vi.fn().mockResolvedValue(true),
+  sendChecklistEmail: vi.fn().mockResolvedValue(true),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 

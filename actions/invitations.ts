@@ -4,6 +4,7 @@ import { applicantName as buildApplicantName } from '@/lib/application-form'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
 import { tokenExpired } from '@/lib/tokens'
+import { sendChecklistEmail } from '@/lib/email'
 
 const APP_URL = getAppUrl()
 
@@ -69,7 +70,7 @@ export async function respondToInvitation(
     // it with the newer click.
     .update({ ...base, status: 'enrolling', terms_acknowledged_at: new Date().toISOString() })
     .eq('invite_token', token).in('status', ['accepted', 'maybe'])
-    .select('id, email, school_id, exchange_id').maybeSingle()
+    .select('id, email, school_id, exchange_id, data').maybeSingle()
   if (!claimed) {
     const { data: cur } = await admin
       .from('applications').select('status').eq('invite_token', token).maybeSingle()
@@ -132,4 +133,55 @@ export async function respondToInvitation(
   // never renders organizer tabs — revalidation here would be inert. The
   // organizer seeing the enrollment within staleTimes.dynamic is the spec's
   // accepted cross-actor staleness trade-off (§1c).
+
+  // One checklist email at enrollment: the DB trigger
+  // (trg_assign_on_enrollment_insert) has just fanned out the assignments,
+  // so list what's pending. Best-effort — never breaks the enrollment.
+  await sendEnrollmentChecklist(admin, {
+    userId,
+    email: claimed.email,
+    studentName: buildApplicantName(claimed.data as Record<string, string> | null),
+    schoolId: claimed.school_id,
+    exchangeId: claimed.exchange_id,
+  })
+}
+
+async function sendEnrollmentChecklist(
+  admin: ReturnType<typeof createAdminClient>,
+  opts: { userId: string; email: string; studentName: string; schoolId: string; exchangeId: string },
+): Promise<void> {
+  try {
+    const [{ data: exchange }, { data: templates }] = await Promise.all([
+      admin.from('exchanges').select('name').eq('id', opts.exchangeId).single(),
+      admin.from('form_templates')
+        .select('id, name, deadline')
+        .eq('exchange_id', opts.exchangeId).eq('school_id', opts.schoolId).eq('status', 'active'),
+    ])
+    if (!exchange || !templates || templates.length === 0) return
+
+    const templateById = new Map(templates.map(t => [t.id, t]))
+    const { data: assignments } = await admin
+      .from('assignments')
+      .select('template_id, submissions(status)')
+      .eq('student_id', opts.userId)
+      .in('template_id', templates.map(t => t.id))
+
+    const items: { name: string; deadline: string | null }[] = []
+    for (const a of assignments ?? []) {
+      const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
+      const status = submission?.status ?? null
+      if (status === 'submitted' || status === 'approved') continue
+      const t = templateById.get(a.template_id)
+      if (t) items.push({ name: t.name, deadline: t.deadline })
+    }
+    if (items.length === 0) return
+
+    await sendChecklistEmail({
+      to: opts.email, studentName: opts.studentName, exchangeName: exchange.name, items,
+      ctx: { schoolId: opts.schoolId, exchangeId: opts.exchangeId },
+    })
+  } catch {
+    // Never log the student email (PII); the enrollment itself already succeeded.
+    console.warn('[invitations] enrollment checklist email failed — enrollment unaffected')
+  }
 }

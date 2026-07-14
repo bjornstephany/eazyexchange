@@ -6,7 +6,7 @@ vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
 import {
   sendStudentReminderEmail,
   sendTemplateReminderEmail,
-  sendPhase2ChecklistEmail,
+  sendChecklistEmail,
   sendInvitationEmail,
   sendOrganizerInviteEmail,
 } from '@/lib/email'
@@ -57,8 +57,8 @@ describe('French email copy uses typographic apostrophes only', () => {
     expect(html).toContain('d’échange scolaire') // STUDENT_FOOTER
   })
 
-  it('sendPhase2ChecklistEmail', async () => {
-    await sendPhase2ChecklistEmail({
+  it('sendChecklistEmail', async () => {
+    await sendChecklistEmail({
       to: 'x@y.fr', studentName: 'Yanis', exchangeName: 'Espagne 2026',
       items: [{ name: 'Passeport', deadline: '2026-10-10' }],
     })
