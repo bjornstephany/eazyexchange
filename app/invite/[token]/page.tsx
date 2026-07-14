@@ -1,4 +1,4 @@
-import { getInvitation } from '@/actions/applications'
+import { getInvitation } from '@/actions/invitations'
 import { InviteResponseForm } from '@/components/InviteResponseForm'
 import { CenteredCard } from '@/components/auth/CenteredCard'
 import { InvalidLinkState } from '@/components/InvalidLinkState'

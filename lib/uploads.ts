@@ -32,3 +32,7 @@ export function validateUploadFile(file: { type: string; size: number }): string
   }
   return null
 }
+
+// Private bucket for applicant photos (see migration
+// 20260629000002_application_photos_bucket.sql).
+export const APPLICATION_PHOTO_BUCKET = 'application-photos'

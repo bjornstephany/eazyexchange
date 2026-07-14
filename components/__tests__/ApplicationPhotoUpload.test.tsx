@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/apply', () => ({
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
 }))
 
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
-import { uploadApplicationPhoto } from '@/actions/applications'
+import { uploadApplicationPhoto } from '@/actions/apply'
 
 beforeEach(() => {
   vi.clearAllMocks()

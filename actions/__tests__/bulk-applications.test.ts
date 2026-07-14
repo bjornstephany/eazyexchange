@@ -68,7 +68,7 @@ vi.mock('@/lib/email', () => ({
 }))
 
 import { revalidatePath } from 'next/cache'
-import { acceptApplications, rejectApplications } from '../applications'
+import { acceptApplications, rejectApplications } from '../applications-review'
 
 beforeEach(() => {
   vi.clearAllMocks()

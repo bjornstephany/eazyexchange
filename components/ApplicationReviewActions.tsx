@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { acceptApplication, rejectApplication } from '@/actions/applications'
+import { acceptApplication, rejectApplication } from '@/actions/applications-review'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 const accept = vi.fn().mockResolvedValue(undefined)
-vi.mock('@/actions/applications', () => ({
+vi.mock('@/actions/applications-review', () => ({
   acceptApplication: (...a: unknown[]) => accept(...a),
   rejectApplication: vi.fn().mockResolvedValue(undefined),
 }))

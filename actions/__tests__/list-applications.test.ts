@@ -38,7 +38,7 @@ function makeClient() {
 }
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient() }))
 
-import { listApplications } from '../applications'
+import { listApplications } from '../applications-review'
 
 describe('listApplications scope check', () => {
   it("refuses an exchange belonging to another school (even if RLS would return rows)", async () => {

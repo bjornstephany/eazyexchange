@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-vi.mock('@/actions/applications', () => ({ respondToInvitation: vi.fn(async () => {}) }))
+vi.mock('@/actions/invitations', () => ({ respondToInvitation: vi.fn(async () => {}) }))
 
 import { InviteResponseForm } from '@/components/InviteResponseForm'
-import { respondToInvitation } from '@/actions/applications'
+import { respondToInvitation } from '@/actions/invitations'
 import { EXCHANGE_TERMS_RESPOND } from '@/lib/exchange-terms'
 
 describe('InviteResponseForm (French)', () => {

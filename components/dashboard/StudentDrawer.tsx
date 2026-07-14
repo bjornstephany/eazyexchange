@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import type { AppRow, DossierRollup, Pill } from '@/lib/dashboard/rollup'
 import { timelineFor, frShortDate, p1StatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
-import { acceptApplication, rejectApplication } from '@/actions/applications'
+import { acceptApplication, rejectApplication } from '@/actions/applications-review'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 
 export type DrawerSubject =

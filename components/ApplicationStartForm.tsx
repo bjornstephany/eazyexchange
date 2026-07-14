@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { startApplication } from '@/actions/applications'
+import { startApplication } from '@/actions/apply'
 import { storeResumeToken } from '@/lib/apply-storage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

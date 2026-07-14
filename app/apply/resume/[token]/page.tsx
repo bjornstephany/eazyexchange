@@ -1,4 +1,4 @@
-import { getApplicationDraft } from '@/actions/applications'
+import { getApplicationDraft } from '@/actions/apply'
 import { ApplicationForm } from '@/components/ApplicationForm'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
 

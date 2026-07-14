@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }) }))
 vi.mock('@/actions/exchanges', () => ({ setExchangePhase: vi.fn() }))
-vi.mock('@/actions/applications', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
+vi.mock('@/actions/applications-review', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
 vi.mock('@/components/dashboard/InviteModal', () => ({
   InviteModal: ({ open }: { open: boolean }) => (open ? <div>invite-modal</div> : null),
 }))

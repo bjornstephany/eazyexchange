@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
-import { listApplications } from '@/actions/applications'
+import { listApplications } from '@/actions/applications-review'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { rollupStudent, type AppRow } from '@/lib/dashboard/rollup'
 import { OverviewView } from '@/components/dashboard/OverviewView'
