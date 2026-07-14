@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase/middleware', () => ({
   }),
 }))
 
-import { middleware } from '@/middleware'
+import { middleware, config } from '@/middleware'
 
 beforeEach(() => { user = null; profileRow = { role: 'organizer', full_name: 'Org' } })
 
@@ -96,5 +96,31 @@ describe('middleware', () => {
   it('lets the unauthenticated keep-warm pinger reach /api/health (no redirect)', async () => {
     const res = await middleware(req('/api/health'))
     expect(res.headers.get('location')).toBeNull()
+  })
+})
+
+// The matcher decides which paths the middleware even RUNS on. The public
+// next/og metadata image routes have no file extension, so they must be listed
+// explicitly here or anonymous crawlers get 302'd to /login (breaking the
+// favicon, OG/Twitter cards, and the JSON-LD logo). We validate the matcher
+// pattern as a regex; the runtime proof is a post-deploy fetch of /icon etc.
+describe('middleware matcher', () => {
+  const re = new RegExp(`^${config.matcher[0]}$`)
+
+  it.each(['/icon', '/apple-icon', '/opengraph-image', '/twitter-image'])(
+    'excludes the public image route %s from the middleware matcher',
+    (path) => {
+      expect(re.test(path)).toBe(false)
+    },
+  )
+
+  it('still runs the middleware on gated app routes', () => {
+    expect(re.test('/dashboard')).toBe(true)
+    expect(re.test('/my-forms')).toBe(true)
+  })
+
+  it('keeps the existing static-asset exclusions', () => {
+    expect(re.test('/sitemap.xml')).toBe(false)
+    expect(re.test('/robots.txt')).toBe(false)
   })
 })
