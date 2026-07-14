@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LandingPage } from '@/components/landing/LandingPage'
+import { organizationJsonLd } from '@/lib/seo/structured-data'
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://eazyexchange.com'
 
@@ -28,7 +29,17 @@ export const metadata: Metadata = {
 
 // No auth calls here — the logged-in redirect happens in middleware.ts. Keeping
 // this component synchronous and dependency-free is what lets Next prerender the
-// landing page so anonymous visitors never pay a function cold start.
+// landing page so anonymous visitors never pay a function cold start. The
+// JSON-LD below is static markup, not a data fetch.
 export default function RootPage() {
-  return <LandingPage />
+  const jsonLd = organizationJsonLd(baseUrl)
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <LandingPage />
+    </>
+  )
 }

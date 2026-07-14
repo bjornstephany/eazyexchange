@@ -18,11 +18,14 @@ describe('RootPage metadata', () => {
   })
 })
 
-// Unchanged from the original test — RootPage still returns <LandingPage/> after
-// this task. Task 4 rewrites this spec when RootPage gains the JSON-LD fragment.
 describe('RootPage', () => {
-  it('renders the landing page unconditionally', () => {
+  it('renders the landing page with Organization JSON-LD', () => {
     const result = RootPage()
-    expect(result.type).toBe(LandingPage)
+    const children = ([] as unknown[]).concat(result.props.children)
+    expect(children.some((c) => (c as { type?: unknown })?.type === LandingPage)).toBe(true)
+    const script = children.find(
+      (c) => (c as { props?: { type?: string } })?.props?.type === 'application/ld+json',
+    )
+    expect(script).toBeDefined()
   })
 })
