@@ -1,33 +1,27 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill } from '@/lib/dashboard/rollup'
+import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent, LifecycleRow } from '@/lib/dashboard/rollup'
 import {
-  p1Funnel,
-  p1Filter,
-  p1StatusPill,
-  p1ResponsePill,
-  p2Funnel,
-  p2Filter,
+  buildLifecycleRows,
+  lifecycleFunnel,
+  lifecycleFilter,
+  lifecycleSubline,
+  lifecycleActionCards,
+  closedCount,
   formsPill,
   docsPill,
-  actionCards,
-  reminderLine,
-  overviewSubline,
-  progress as computeProgress,
   nextDeadline,
   frShortDate,
 } from '@/lib/dashboard/rollup'
-import { applicantName } from '@/lib/application-form'
 import { StatusPill } from '@/components/dashboard/StatusPill'
-import { PhaseStepper } from '@/components/dashboard/PhaseStepper'
 import { StudentDrawer, type DrawerSubject } from '@/components/dashboard/StudentDrawer'
 import { InviteModal } from '@/components/dashboard/InviteModal'
 
 export type OverviewProps = {
   exchangeId: string
-  phase: 1 | 2
   apps: AppRow[]
+  students: EnrolledStudent[]
   rollups: DossierRollup[]
   templates: TemplateInfo[]
   cellMap: CellMap
@@ -39,10 +33,10 @@ export type OverviewProps = {
 // Labels for filter keys that only exist on action cards, not as funnel tiles.
 const ACTION_ONLY_FILTER_LABELS: Record<string, string> = {
   maybe: 'Hésitent',
+  missingdocs: 'Docs manquants',
 }
 
-const P1_GRID = 'grid-cols-[1.7fr_1fr_1.15fr_1fr_22px]'
-const P2_GRID = 'grid-cols-[1.7fr_1fr_1.1fr_.9fr_1fr_22px]'
+const GRID = 'grid-cols-[1.7fr_1.15fr_1fr_1fr_1fr_22px]'
 
 const ACTION_BORDER: Record<ActionCard['tone'], string> = {
   accent: 'border-l-brand',
@@ -63,8 +57,9 @@ function checklistItemPill(group: 'form' | 'doc', status: string | undefined): P
 }
 
 export function OverviewView(props: OverviewProps) {
-  const { exchangeId, phase, apps, rollups, templates, cellMap, applicationOpen, applicationDeadline, applySlug } = props
+  const { exchangeId, apps, students, rollups, templates, cellMap, applicationOpen, applicationDeadline, applySlug } = props
   const [filter, setFilter] = useState<string | null>(null)
+  const [showClosed, setShowClosed] = useState(false)
   const [selected, setSelected] = useState<DrawerSubject | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
 
@@ -77,27 +72,33 @@ export function OverviewView(props: OverviewProps) {
     return { kind: 'student', rollup, items }
   }
 
+  function rowSubject(row: LifecycleRow): DrawerSubject {
+    return row.kind === 'applicant' ? { kind: 'application', app: row.app } : studentSubject(row.rollup)
+  }
+
+  const rows = buildLifecycleRows(apps, students, rollups)
+
   // Opening applications revalidates /dashboard, which flips these props and so
   // flips `neverOpened`. The InviteModal is therefore rendered once, outside this
   // branch (see the return), so that mid-flow flip can't unmount the one-time link.
-  const neverOpened = phase === 1 && !applicationOpen && applicationDeadline == null
+  // Directly-invited students (rows > 0) must see the table even if applications
+  // never opened — hence the rows.length guard.
+  const neverOpened = !applicationOpen && applicationDeadline == null && rows.length === 0
 
-  const funnel = phase === 1 ? p1Funnel(apps) : p2Funnel(rollups)
+  const funnel = lifecycleFunnel(apps, rollups)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
   const filterLabel =
     filter && filter !== 'all' ? activeStage?.label ?? ACTION_ONLY_FILTER_LABELS[filter] ?? filter : null
 
-  const filteredApps = phase === 1 ? p1Filter(apps, filter) : []
-  const filteredRollups = phase === 2 ? p2Filter(rollups, filter) : []
+  const filteredRows = lifecycleFilter(rows, filter, showClosed)
+  const nClosed = closedCount(rows)
 
-  const cards = actionCards(phase, apps, rollups, templates.length)
+  const cards = lifecycleActionCards(apps, rollups, templates.length)
   const next = nextDeadline(rollups)
-  const prog = computeProgress(phase, apps, rollups)
-  const subline = overviewSubline(phase, apps, rollups)
-  const reminder = reminderLine(phase, apps, rollups)
+  const subline = lifecycleSubline(apps, rollups)
 
   function handleStageClick(key: string) {
-    if (key === 'all' || key === 'p2all') {
+    if (key === 'all') {
       setFilter(null)
       return
     }
@@ -136,7 +137,7 @@ export function OverviewView(props: OverviewProps) {
           <div className="bg-card border rounded-[14px] p-[18px] px-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-                {phase === 1 ? 'Progression des candidatures' : 'Progression des dossiers'}
+                Progression de l&apos;échange
               </span>
               {filterLabel && (
                 <button
@@ -161,7 +162,7 @@ export function OverviewView(props: OverviewProps) {
                     }`}
                   >
                     <span className={`font-display text-[22px] font-bold leading-none ${isActive ? 'text-brand' : 'text-navy'}`}>
-                      {stage.count}
+                      {stage.display ?? stage.count}
                     </span>
                     <span className="text-[11.5px] text-muted-foreground">{stage.label}</span>
                   </button>
@@ -170,122 +171,93 @@ export function OverviewView(props: OverviewProps) {
             </div>
           </div>
 
-          {/* Table card */}
+          {/* Lifecycle table card */}
           <div className="bg-card border rounded-[14px] overflow-hidden">
-            {phase === 1 ? (
-              <div className={`grid ${P1_GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
-                <span>Élève</span>
-                <span>Candidature</span>
-                <span>Statut</span>
-                <span>Réponse</span>
-                <span>&rsaquo;</span>
-              </div>
-            ) : (
-              <div className={`grid ${P2_GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
-                <span>Élève</span>
-                <span>Formulaires</span>
-                <span>Documents</span>
-                <span>Échéance</span>
-                <span>Statut</span>
-                <span>&rsaquo;</span>
-              </div>
-            )}
+            <div className={`grid ${GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
+              <span>Élève</span>
+              <span>Candidature</span>
+              <span>Formulaires</span>
+              <span>Documents</span>
+              <span>Statut</span>
+              <span>&rsaquo;</span>
+            </div>
 
-            {phase === 1 && filteredApps.length === 0 && (
+            {filteredRows.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-8">Aucun élève ne correspond à ce filtre.</p>
             )}
-            {phase === 1 &&
-              filteredApps.map((app) => {
-                const responsePill = p1ResponsePill(app.status)
-                return (
-                  <div
-                    key={app.id}
-                    onClick={() => setSelected({ kind: 'application', app })}
-                    className={`grid ${P1_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
-                  >
-                    <span className="font-medium text-navy">{applicantName(app.data) || app.email}</span>
-                    <span className="text-muted-foreground text-[13px]">{frShortDate(app.submitted_at)}</span>
-                    <span>
-                      <StatusPill pill={p1StatusPill(app.status)} />
-                    </span>
-                    <span>{responsePill ? <StatusPill pill={responsePill} /> : '—'}</span>
-                    <span className="text-placeholder">&rsaquo;</span>
-                  </div>
-                )
-              })}
+            {filteredRows.map((row) => (
+              <div
+                key={row.key}
+                onClick={() => setSelected(rowSubject(row))}
+                className={`grid ${GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
+              >
+                <span className="font-medium text-navy">{row.name}</span>
+                <span>
+                  <StatusPill pill={row.candidature} />
+                </span>
+                <span>
+                  {row.kind === 'enrolled' ? <StatusPill pill={formsPill(row.rollup.forms)} /> : <span className="text-placeholder">—</span>}
+                </span>
+                <span>
+                  {row.kind === 'enrolled' ? <StatusPill pill={docsPill(row.rollup.docs)} /> : <span className="text-placeholder">—</span>}
+                </span>
+                <span>
+                  <StatusPill pill={row.kind === 'enrolled' ? row.rollup.overall : row.statut} />
+                </span>
+                <span className="text-placeholder">&rsaquo;</span>
+              </div>
+            ))}
 
-            {phase === 2 && filteredRollups.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">Aucun élève ne correspond à ce filtre.</p>
-            )}
-            {phase === 2 &&
-              filteredRollups.map((rollup) => (
-                <div
-                  key={rollup.studentId}
-                  onClick={() => setSelected(studentSubject(rollup))}
-                  className={`grid ${P2_GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
+            {nClosed > 0 && (
+              <div className="border-t px-5 py-3">
+                <button
+                  type="button"
+                  onClick={() => setShowClosed((v) => !v)}
+                  className="text-[12.5px] text-muted-foreground underline-offset-2 hover:underline"
                 >
-                  <span className="font-medium text-navy">{rollup.name}</span>
-                  <span>
-                    <StatusPill pill={formsPill(rollup.forms)} />
-                  </span>
-                  <span>
-                    <StatusPill pill={docsPill(rollup.docs)} />
-                  </span>
-                  <span className="text-muted-foreground text-[13px]">{frShortDate(rollup.due)}</span>
-                  <span>
-                    <StatusPill pill={rollup.overall} />
-                  </span>
-                  <span className="text-placeholder">&rsaquo;</span>
-                </div>
-              ))}
+                  {showClosed ? 'Masquer les refusés et déclinés' : `Afficher les refusés et déclinés (${nClosed})`}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right rail */}
-        <div className="w-full xl:w-[344px] flex-none flex flex-col gap-5">
-          <PhaseStepper exchangeId={exchangeId} phase={phase} progress={prog} />
-
-          <div className="flex flex-col gap-3">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-              À faire maintenant
-            </span>
-            {cards.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Tout est à jour ✓{next ? ` — prochaine échéance le ${frShortDate(next)}.` : ''}
-              </p>
-            ) : (
-              cards.map((card) => (
-                <div
-                  key={card.filterKey}
-                  className={`bg-card border rounded-[12px] p-[17px] pl-[19px] flex flex-col gap-1.5 border-l-[3px] ${ACTION_BORDER[card.tone]}`}
-                >
-                  <span className="text-sm font-semibold text-navy">{card.title}</span>
-                  <span className="text-[12.5px] text-muted-foreground">{card.desc}</span>
-                  {card.href ? (
-                    <Link
-                      href={card.href}
-                      className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
-                    >
-                      {card.cta}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setFilter(card.filterKey)}
-                      className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
-                    >
-                      {card.cta}
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="bg-card border rounded-[14px] p-[15px] flex gap-2.5 items-start">
-            <span className="text-brand">&#8635;</span>
-            <span className="text-[12.5px] text-muted-foreground">{reminder}</span>
-          </div>
+        {/* Right rail — only the « À faire maintenant » action cards */}
+        <div className="w-full xl:w-[344px] flex-none flex flex-col gap-3">
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
+            À faire maintenant
+          </span>
+          {cards.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Tout est à jour ✓{next ? ` — prochaine échéance le ${frShortDate(next)}.` : ''}
+            </p>
+          ) : (
+            cards.map((card) => (
+              <div
+                key={card.filterKey}
+                className={`bg-card border rounded-[12px] p-[17px] pl-[19px] flex flex-col gap-1.5 border-l-[3px] ${ACTION_BORDER[card.tone]}`}
+              >
+                <span className="text-sm font-semibold text-navy">{card.title}</span>
+                <span className="text-[12.5px] text-muted-foreground">{card.desc}</span>
+                {card.href ? (
+                  <Link
+                    href={card.href}
+                    className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
+                  >
+                    {card.cta}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setFilter(card.filterKey)}
+                    className={`self-start rounded-[8px] px-[15px] py-2 text-[12.5px] font-semibold ${ACTION_CTA[card.tone]}`}
+                  >
+                    {card.cta}
+                  </button>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 

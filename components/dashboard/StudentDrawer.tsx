@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type { AppRow, DossierRollup, Pill } from '@/lib/dashboard/rollup'
-import { timelineFor, frShortDate, p1StatusPill } from '@/lib/dashboard/rollup'
+import { timelineFor, frShortDate, applicantStatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 import { acceptApplication, rejectApplication } from '@/actions/applications-review'
 import { StatusPill } from '@/components/dashboard/StatusPill'
@@ -65,7 +65,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
   const drawerSubject = subject
 
   const name = drawerSubject.kind === 'application' ? applicantName(drawerSubject.app.data) || drawerSubject.app.email : drawerSubject.rollup.name
-  const statusPill = drawerSubject.kind === 'application' ? p1StatusPill(drawerSubject.app.status) : drawerSubject.rollup.overall
+  const statusPill = drawerSubject.kind === 'application' ? applicantStatusPill(drawerSubject.app.status) : drawerSubject.rollup.overall
 
   async function handleAccept() {
     if (drawerSubject.kind !== 'application') return
