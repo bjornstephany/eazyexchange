@@ -3,7 +3,9 @@ import {
   frShortDate, p1Funnel, p1Filter, p1StatusPill, p1ResponsePill,
   rollupStudent, p2Funnel, p2Filter, formsPill, docsPill, actionCards,
   reminderLine, overviewSubline, progress, timelineFor, nextDeadline, p,
-  type AppRow, type TemplateInfo, type CellMap,
+  candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
+  lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
+  type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent,
 } from '@/lib/dashboard/rollup'
 
 const app = (status: string, over: Partial<AppRow> = {}): AppRow =>
@@ -297,5 +299,160 @@ describe('timelineFor', () => {
   it('confirmed app has the full happy path', () => {
     expect(timelineFor(app('enrolled')).map(e => e.title))
       .toEqual(['Candidature reçue', 'Candidature acceptée', 'Invitation envoyée automatiquement', 'A répondu : Oui'])
+  })
+})
+
+// ---- Unified lifecycle view ----
+
+const STUDENTS: EnrolledStudent[] = [{ id: 's1', full_name: 'Camille Laurent', email: 'c@l.fr' }]
+const ROLLUPS = [rollupStudent(student, T, cell('approved', 'approved'), TODAY)]
+
+describe('candidaturePill', () => {
+  it.each([
+    [null, 'ok', 'Confirmé(e)'],
+    ['enrolled', 'ok', 'Confirmé(e)'], ['enrolling', 'ok', 'Confirmé(e)'],
+    ['submitted', 'neutral', 'À examiner'], ['accepted', 'warn', 'Invité — en attente'],
+    ['maybe', 'warn', 'Peut-être'], ['declined', 'bad', 'A décliné'], ['rejected', 'bad', 'Refusé'],
+    ['bogus', 'neutral', '—'],
+  ])('%s → %s %s', (s, kind, label) => expect(candidaturePill(s as string | null)).toEqual({ kind, label }))
+})
+
+describe('applicantStatusPill', () => {
+  it.each([
+    ['submitted', 'neutral', 'À examiner'], ['accepted', 'warn', 'En attente'],
+    ['enrolled', 'ok', 'Confirmé'], ['enrolling', 'ok', 'Confirmé'],
+    ['maybe', 'warn', 'Hésite'], ['declined', 'bad', 'A décliné'], ['rejected', 'bad', 'Refusé'],
+    ['bogus', 'neutral', '—'],
+  ])('%s → %s %s', (s, kind, label) => expect(applicantStatusPill(s)).toEqual({ kind, label }))
+})
+
+describe('buildLifecycleRows', () => {
+  it('applicant rows first (apps order), then enrolled rows (students order)', () => {
+    const apps = [app('submitted', { id: 'a1' }), app('maybe', { id: 'a2' })]
+    const rows = buildLifecycleRows(apps, STUDENTS, ROLLUPS)
+    expect(rows.map(r => r.kind)).toEqual(['applicant', 'applicant', 'enrolled'])
+    expect(rows[2].name).toBe('Camille Laurent')
+    expect(rows[2].candidature).toEqual({ kind: 'ok', label: 'Confirmé(e)' })
+  })
+  it('merges an enrolled application into the matching student row (dedupe by email)', () => {
+    const apps = [app('enrolled', { id: 'a1', email: 'c@l.fr', data: { first_name: 'Camille', last_name: 'Laurent' } })]
+    const rows = buildLifecycleRows(apps, STUDENTS, ROLLUPS)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].kind).toBe('enrolled')
+  })
+  it('dedupe is case- and whitespace-insensitive', () => {
+    const apps = [app('enrolling', { id: 'a1', email: ' C@L.FR ' })]
+    expect(buildLifecycleRows(apps, STUDENTS, ROLLUPS)).toHaveLength(1)
+  })
+  it('an enrolled application with no matching student falls back to a Confirmé applicant row (never dropped)', () => {
+    const apps = [app('enrolled', { id: 'a1', email: 'orphan@x.fr', data: { first_name: 'Léo', last_name: 'Roy' } })]
+    const rows = buildLifecycleRows(apps, [], [])
+    expect(rows).toHaveLength(1)
+    expect(rows[0].kind).toBe('applicant')
+    expect(rows[0].candidature).toEqual({ kind: 'ok', label: 'Confirmé(e)' })
+  })
+  it('a non-confirmed application is NOT merged even if its email matches a student', () => {
+    const apps = [app('declined', { id: 'a1', email: 'c@l.fr' })]
+    expect(buildLifecycleRows(apps, STUDENTS, ROLLUPS)).toHaveLength(2)
+  })
+  it('flags rejected and declined rows as closed; names fall back to email', () => {
+    const apps = [app('rejected', { id: 'a1', email: 'r@x.fr' }), app('declined', { id: 'a2' }), app('submitted', { id: 'a3' })]
+    const rows = buildLifecycleRows(apps, [], [])
+    expect(rows.map(r => r.kind === 'applicant' && r.closed)).toEqual([true, true, false])
+    expect(rows[0].name).toBe('r@x.fr')
+  })
+})
+
+describe('closedCount', () => {
+  it('counts rejected + declined applicant rows', () => {
+    const rows = buildLifecycleRows([app('rejected'), app('declined'), app('submitted')], STUDENTS, ROLLUPS)
+    expect(closedCount(rows)).toBe(2)
+  })
+})
+
+describe('lifecycleFunnel', () => {
+  const APPS2 = [app('submitted'), app('submitted'), app('rejected'), app('declined'), app('accepted')]
+  const R2 = [
+    rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'approved' } }, TODAY), // complete
+    rollupStudent({ id: 's2', full_name: 'B' }, T, { 's2:f1': { assignmentId: 'a3', status: 'approved' }, 's2:d1': { assignmentId: 'a4', status: 'submitted' } }, TODAY), // review
+    rollupStudent({ id: 's3', full_name: 'C' }, T, {}, new Date('2026-10-11T12:00:00')), // late, missing
+  ]
+  it('counts: Candidatures includes closed; Complets shows « x / y »', () => {
+    const f = Object.fromEntries(lifecycleFunnel(APPS2, R2).map(s => [s.key, s.count]))
+    expect(f).toEqual({ all: 5, toreview: 2, confirmed: 3, review: 1, late: 1, complete: 1 })
+    const complets = lifecycleFunnel(APPS2, R2).find(s => s.key === 'complete')!
+    expect(complets.display).toBe('1 / 3')
+  })
+  it('labels are the French design strings in order', () => {
+    expect(lifecycleFunnel([], []).map(s => s.label))
+      .toEqual(['Candidatures', 'À examiner', 'Confirmés', 'À vérifier', 'En retard', 'Complets'])
+  })
+})
+
+describe('lifecycleFilter', () => {
+  const late = rollupStudent({ id: 's2', full_name: 'Zoé Blanc' }, T, {}, new Date('2026-10-11T12:00:00'))
+  const students2: EnrolledStudent[] = [...STUDENTS, { id: 's2', full_name: 'Zoé Blanc', email: 'z@b.fr' }]
+  const rows = buildLifecycleRows(
+    [app('submitted', { id: 'a1' }), app('maybe', { id: 'a2' }), app('rejected', { id: 'a3' })],
+    students2, [...ROLLUPS, late],
+  )
+  it('default view hides closed rows; showClosed reveals them; null and "all" behave alike', () => {
+    expect(lifecycleFilter(rows, null, false)).toHaveLength(4)
+    expect(lifecycleFilter(rows, 'all', false)).toHaveLength(4)
+    expect(lifecycleFilter(rows, null, true)).toHaveLength(5)
+  })
+  it('"toreview" → submitted applicants; "maybe" → hesitating applicants', () => {
+    expect(lifecycleFilter(rows, 'toreview', false).map(r => r.kind === 'applicant' && r.app.status)).toEqual(['submitted'])
+    expect(lifecycleFilter(rows, 'maybe', false).map(r => r.kind === 'applicant' && r.app.status)).toEqual(['maybe'])
+  })
+  it('"confirmed" → enrolled rows', () => {
+    expect(lifecycleFilter(rows, 'confirmed', false).map(r => r.name)).toEqual(['Camille Laurent', 'Zoé Blanc'])
+  })
+  it('"late"/"missingdocs"/"complete" filter by rollup state', () => {
+    expect(lifecycleFilter(rows, 'late', false).map(r => r.name)).toEqual(['Zoé Blanc'])
+    expect(lifecycleFilter(rows, 'missingdocs', false).map(r => r.name)).toEqual(['Zoé Blanc'])
+    expect(lifecycleFilter(rows, 'complete', false).map(r => r.name)).toEqual(['Camille Laurent'])
+  })
+})
+
+describe('lifecycleSubline', () => {
+  it('mixes both worlds with pluralization', () => {
+    const R2 = [
+      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY),
+      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00')),
+    ]
+    expect(lifecycleSubline([app('submitted'), app('submitted')], R2))
+      .toBe('2 candidatures à examiner, 1 dossier à vérifier, 1 élève en retard.')
+  })
+})
+
+describe('lifecycleActionCards', () => {
+  it('orders by urgency: toreview, review, late, missingdocs, maybe — omitting zero counts', () => {
+    const R2 = [
+      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY), // review
+      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00')), // late + missing docs
+    ]
+    const cards = lifecycleActionCards([app('submitted'), app('maybe')], R2)
+    expect(cards.map(c => c.filterKey)).toEqual(['toreview', 'review', 'late', 'missingdocs', 'maybe'])
+    expect(cards[0].title).toBe('1 candidature à examiner')
+  })
+  it('prepends the no-active-forms card when activeTemplateCount is 0', () => {
+    const cards = lifecycleActionCards([], [], 0)
+    expect(cards.map(c => c.filterKey)).toEqual(['noforms'])
+    expect(cards[0].href).toBe('/forms')
+  })
+  it('returns nothing when all is quiet', () => {
+    expect(lifecycleActionCards([app('enrolled')], ROLLUPS, 3)).toEqual([])
+  })
+})
+
+describe('exchangeProgress', () => {
+  it('dossier progress once students are enrolled', () => {
+    const R2 = [ROLLUPS[0], rollupStudent({ id: 's2', full_name: 'B' }, T, {}, TODAY)]
+    expect(exchangeProgress([app('submitted')], R2)).toEqual({ done: 1, total: 2, label: '1 / 2 dossiers validés' })
+  })
+  it('candidature progress before any enrollment', () => {
+    expect(exchangeProgress([app('submitted'), app('accepted')], []))
+      .toEqual({ done: 1, total: 2, label: '1 / 2 candidatures traitées' })
   })
 })
