@@ -149,6 +149,70 @@
           }
         }
       }
+    },
+    "forms": {
+      "title": "Formulaires",
+      "subtitle": "Les documents et formulaires que les familles complètent pour valider le dossier de leur enfant. Utilisez les modèles standard ou ajoutez les vôtres.",
+      "yourFormsCount": "Vos formulaires · {count}",
+      "addFormLabel": "Ajouter un formulaire",
+      "close": "Fermer",
+      "activeFormsCount": "{count, plural, one {Formulaire actif} other {Formulaires actifs}}",
+      "studentsConcerned": "Élèves concernés",
+      "requestedInLabel": "Demandés en",
+      "requestedInValue": "Phase 2",
+      "responsesReceivedLabel": "Réponses reçues",
+      "autoSendBanner": "Les formulaires actifs sont envoyés automatiquement aux familles à l’ouverture de la Phase 2, avec relance jusqu’à réception.",
+      "standardBadge": "STANDARD",
+      "customBadge": "PERSONNALISÉ",
+      "previewButton": "Aperçu",
+      "editButton": "Modifier",
+      "deleteConfirm": "Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées.",
+      "addPanel": {
+        "onlineTile": {
+          "title": "Créer un formulaire en ligne",
+          "description": "Composez vos propres questions — remplies directement dans l’application.",
+          "button": "Composer les questions"
+        },
+        "pdfTile": {
+          "title": "Importer un PDF",
+          "description": "Téléversez un document que les familles impriment, signent et renvoient.",
+          "button": "Téléverser un PDF"
+        },
+        "nameLabel": "Nom du formulaire",
+        "namePlaceholderPdf": "Autorisation parentale",
+        "namePlaceholderOnline": "Questionnaire famille",
+        "deadlineLabel": "Échéance (facultatif)",
+        "fileLabel": "PDF à faire signer",
+        "back": "Retour",
+        "createDraft": "Créer le brouillon",
+        "creating": "Création…"
+      },
+      "deleteButton": {
+        "deleting": "Suppression…"
+      },
+      "drawer": {
+        "pdfPreviewLabel": "modèle PDF · aperçu du document",
+        "fieldsHeadingPdf": "Champs à renseigner",
+        "fieldsHeadingOnline": "Questions du formulaire",
+        "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
+        "activate": "Activer",
+        "activating": "Activation…",
+        "editTemplate": "Modifier le modèle",
+        "download": "Télécharger"
+      },
+      "editor": {
+        "nameLabel": "Nom",
+        "descriptionLabel": "Description",
+        "deadlineLabel": "Échéance",
+        "conditionLabel": "Condition",
+        "conditionPlaceholder": "si parents divorcés",
+        "saving": "Enregistrement…",
+        "saved": "Enregistré ✓",
+        "replacePdfHeading": "Remplacer le PDF",
+        "downloadCurrentPdf": "Télécharger le PDF actuel",
+        "newPdfLabel": "Nouveau PDF",
+        "replace": "Remplacer"
+      }
     }
   }
 }

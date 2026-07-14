@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { statusPill } from '@/lib/forms/rollup'
 import { updateTemplateMeta, replaceTemplateFile, getTemplateFileUrl } from '@/actions/forms'
@@ -26,6 +27,8 @@ export function TemplateEditor({
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -41,7 +44,7 @@ export function TemplateEditor({
       })
       setSaved(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
@@ -58,7 +61,7 @@ export function TemplateEditor({
       await replaceTemplateFile(fd)
       setFile(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
@@ -68,7 +71,7 @@ export function TemplateEditor({
       const url = await getTemplateFileUrl(template.id)
       window.open(url, '_blank', 'noopener')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
   }
 
@@ -86,24 +89,24 @@ export function TemplateEditor({
 
       <form onSubmit={handleSave} className="mb-8 flex flex-col gap-4 rounded-[14px] border bg-card p-5">
         <div className="flex flex-col gap-1">
-          <label htmlFor="ed-name" className="text-[13px] font-semibold text-navy">Nom</label>
+          <label htmlFor="ed-name" className="text-[13px] font-semibold text-navy">{t('forms.editor.nameLabel')}</label>
           <input id="ed-name" value={name} onChange={e => setName(e.target.value)} required className={inputCls} />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="ed-desc" className="text-[13px] font-semibold text-navy">Description</label>
+          <label htmlFor="ed-desc" className="text-[13px] font-semibold text-navy">{t('forms.editor.descriptionLabel')}</label>
           <textarea id="ed-desc" value={description} onChange={e => setDescription(e.target.value)} rows={2}
             className="rounded-[10px] border border-frame bg-card p-3 text-[15px] focus:border-brand focus:outline-none" />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="ed-deadline" className="text-[13px] font-semibold text-navy">Échéance</label>
+            <label htmlFor="ed-deadline" className="text-[13px] font-semibold text-navy">{t('forms.editor.deadlineLabel')}</label>
             <input id="ed-deadline" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={inputCls} />
           </div>
           {template.audience === 'conditional' && (
             <div className="flex flex-col gap-1">
-              <label htmlFor="ed-cond" className="text-[13px] font-semibold text-navy">Condition</label>
+              <label htmlFor="ed-cond" className="text-[13px] font-semibold text-navy">{t('forms.editor.conditionLabel')}</label>
               <input id="ed-cond" value={conditionLabel} onChange={e => setConditionLabel(e.target.value)}
-                placeholder="si parents divorcés" className={inputCls} />
+                placeholder={t('forms.editor.conditionPlaceholder')} className={inputCls} />
             </div>
           )}
         </div>
@@ -111,26 +114,26 @@ export function TemplateEditor({
         <div className="flex items-center gap-3">
           <button type="submit" disabled={busy}
             className="self-start rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-            {busy ? 'Enregistrement…' : 'Enregistrer'}
+            {busy ? t('forms.editor.saving') : c('actions.save')}
           </button>
-          {saved && <span className="text-[12.5px] text-success-text">Enregistré ✓</span>}
+          {saved && <span className="text-[12.5px] text-success-text">{t('forms.editor.saved')}</span>}
         </div>
       </form>
 
       {template.kind === 'pdf' && (
         <div className="mb-8 rounded-[14px] border bg-card p-5">
-          <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">Remplacer le PDF</div>
+          <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('forms.editor.replacePdfHeading')}</div>
           {template.template_file_path && (
             <button type="button" onClick={handleDownload} className="mb-3 text-sm text-brand underline">
-              Télécharger le PDF actuel
+              {t('forms.editor.downloadCurrentPdf')}
             </button>
           )}
           <form onSubmit={handleReplaceFile} className="flex items-end gap-2.5">
-            <input type="file" accept="application/pdf" aria-label="Nouveau PDF"
+            <input type="file" accept="application/pdf" aria-label={t('forms.editor.newPdfLabel')}
               onChange={e => setFile(e.target.files?.[0] ?? null)} className="text-[13px] text-muted-foreground" />
             <button type="submit" disabled={busy || !file}
               className="rounded-[9px] border border-frame-dashed bg-card px-4 py-2.5 text-[13px] font-semibold text-navy disabled:opacity-60">
-              Remplacer
+              {t('forms.editor.replace')}
             </button>
           </form>
         </div>

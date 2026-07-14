@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import fr from '@/messages/fr.json'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
 const createDraft = vi.fn().mockResolvedValue('new-id')
@@ -26,7 +29,7 @@ const vm = (over: Partial<TemplateVM>): TemplateVM => ({
 })
 
 function renderWith(ui: React.ReactElement) {
-  return render(ui)
+  return renderWithIntl(ui)
 }
 
 describe('FormsView', () => {
@@ -65,7 +68,11 @@ describe('FormsView', () => {
   it('shows Supprimer only for custom templates', () => {
     const { rerender } = renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />)
     expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(<FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />)
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />
+      </NextIntlClientProvider>
+    )
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom template when the confirm is accepted', async () => {

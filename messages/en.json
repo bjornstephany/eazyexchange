@@ -149,6 +149,70 @@
           }
         }
       }
+    },
+    "forms": {
+      "title": "Forms",
+      "subtitle": "The documents and forms families complete to finalize their child's file. Use the standard templates or add your own.",
+      "yourFormsCount": "Your forms · {count}",
+      "addFormLabel": "Add a form",
+      "close": "Close",
+      "activeFormsCount": "{count, plural, one {Active form} other {Active forms}}",
+      "studentsConcerned": "Students concerned",
+      "requestedInLabel": "Requested in",
+      "requestedInValue": "Phase 2",
+      "responsesReceivedLabel": "Responses received",
+      "autoSendBanner": "Active forms are sent to families automatically when Phase 2 opens, with reminders until received.",
+      "standardBadge": "STANDARD",
+      "customBadge": "CUSTOM",
+      "previewButton": "Preview",
+      "editButton": "Edit",
+      "deleteConfirm": "Delete this template? Responses already submitted by students will be permanently deleted.",
+      "addPanel": {
+        "onlineTile": {
+          "title": "Create an online form",
+          "description": "Compose your own questions — filled out directly in the app.",
+          "button": "Compose the questions"
+        },
+        "pdfTile": {
+          "title": "Import a PDF",
+          "description": "Upload a document that families print, sign and send back.",
+          "button": "Upload a PDF"
+        },
+        "nameLabel": "Form name",
+        "namePlaceholderPdf": "Parental authorization",
+        "namePlaceholderOnline": "Family questionnaire",
+        "deadlineLabel": "Deadline (optional)",
+        "fileLabel": "PDF to be signed",
+        "back": "Back",
+        "createDraft": "Create the draft",
+        "creating": "Creating…"
+      },
+      "deleteButton": {
+        "deleting": "Deleting…"
+      },
+      "drawer": {
+        "pdfPreviewLabel": "PDF template · document preview",
+        "fieldsHeadingPdf": "Fields to fill in",
+        "fieldsHeadingOnline": "Form questions",
+        "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
+        "activate": "Activate",
+        "activating": "Activating…",
+        "editTemplate": "Edit template",
+        "download": "Download"
+      },
+      "editor": {
+        "nameLabel": "Name",
+        "descriptionLabel": "Description",
+        "deadlineLabel": "Deadline",
+        "conditionLabel": "Condition",
+        "conditionPlaceholder": "if parents are divorced",
+        "saving": "Saving…",
+        "saved": "Saved ✓",
+        "replacePdfHeading": "Replace the PDF",
+        "downloadCurrentPdf": "Download the current PDF",
+        "newPdfLabel": "New PDF",
+        "replace": "Replace"
+      }
     }
   }
 }
