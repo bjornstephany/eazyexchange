@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { createClient } from '@/lib/supabase/server'
+import type { Locale } from '@/lib/i18n/config'
 
 // React.cache dedupes per server request (RSC render or action invocation).
 // Vitest runs the stable React 18 build, which has no `cache` export — fall
@@ -14,6 +15,7 @@ export type Profile = {
   full_name: string
   email: string
   org_role: string | null
+  locale: Locale
   schools: {
     name: string
     subscription_status: string | null
@@ -37,7 +39,7 @@ export const getProfile = requestCache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('users')
-    .select('id, role, school_id, full_name, email, org_role, schools(name, subscription_status, plan, grace_until)')
+    .select('id, role, school_id, full_name, email, org_role, locale, schools(name, subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<Profile>()
   return data ?? null
