@@ -268,6 +268,24 @@
         "sending": "Sending…",
         "remindFamilies": "Remind families"
       }
+    },
+    "students": {
+      "title": "Students",
+      "emptyFilter": "No student matches the filter.",
+      "selectPrompt": "Select a student.",
+      "detail": {
+        "identityHeading": "Identity",
+        "noApplication": "No application found for this student.",
+        "parentsHeading": "Parents",
+        "fileHeading": "File",
+        "piecesProvided": "{provided}/{total} documents provided",
+        "emptyChecklist": "No documents requested yet.",
+        "applicationLink": "Application",
+        "remindButton": "Remind",
+        "sending": "Sending…",
+        "reminderSent": "Reminder sent.",
+        "reminderCooldown": "Already reminded recently — try again later."
+      }
     }
   }
 }
