@@ -16,6 +16,7 @@ import {
 } from '@/lib/billing/display'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 import { logAudit } from '@/lib/audit'
+import { isLocale, type Locale } from '@/lib/i18n/config'
 import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
@@ -58,6 +59,17 @@ export async function updateProfile(input: {
   revalidatePath('/settings')
   // organizerName/schoolName are read in the shared shell layout (rail nav),
   // not just on /settings — bust the whole tree so other tabs pick it up too.
+  revalidatePath('/', 'layout')
+}
+
+export async function updateLocale(locale: Locale): Promise<void> {
+  if (!isLocale(locale)) throw new Error('Unsupported locale')
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx()
+  const { error } = await supabase.from('users').update({ locale }).eq('id', ctx.userId)
+  if (error) throw error
+  // The active locale drives the whole organizer shell (server-resolved), so
+  // bust the layout tree, not just /settings.
   revalidatePath('/', 'layout')
 }
 

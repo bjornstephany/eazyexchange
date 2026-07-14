@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
+import type { Locale } from '@/lib/i18n/config'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
 import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
+import { LanguageSelect } from './LanguageSelect'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
@@ -14,6 +16,7 @@ export type SettingsProps = {
   team: { members: TeamMember[]; pending: PendingInvite[] }
   billing: BillingOverview | null
   program: ProgramInfo | null
+  locale: Locale
 }
 
 type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog'
@@ -52,6 +55,7 @@ export function SettingsView(props: SettingsProps) {
           {section === 'compte' && (
             <>
               <ProfileCard profile={props.profile} isOwner={props.isOwner} />
+              <LanguageSelect current={props.locale} />
               <SecurityCard canChangePassword={props.canChangePassword} />
             </>
           )}

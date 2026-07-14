@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import fr from '@/messages/fr.json'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 const updateProfile = vi.fn().mockResolvedValue(undefined)
 const changePassword = vi.fn().mockResolvedValue(undefined)
@@ -10,8 +13,11 @@ vi.mock('@/actions/settings', () => ({
   revokeOrganizerInvite: vi.fn().mockResolvedValue(undefined),
   archiveExchange: vi.fn().mockResolvedValue(undefined),
   restoreExchange: vi.fn().mockResolvedValue(undefined),
+  updateLocale: vi.fn().mockResolvedValue(undefined),
 }))
 import { SettingsView } from '@/components/settings/SettingsView'
+
+const render = renderWithIntl
 
 const baseProps = {
   profile: {
@@ -23,6 +29,7 @@ const baseProps = {
   team: { members: [], pending: [] },
   billing: null,
   program: null,
+  locale: 'fr' as const,
 }
 
 describe('SettingsView — Compte', () => {
@@ -41,7 +48,11 @@ describe('SettingsView — Compte', () => {
     const { rerender } = render(<SettingsView {...baseProps} />) // admin
     expect(screen.getByLabelText('Établissement')).toBeDisabled()
     expect(screen.getByText('Seul le propriétaire peut modifier le nom de l’établissement.')).toBeInTheDocument()
-    rerender(<SettingsView {...baseProps} isOwner={true} />)
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <SettingsView {...baseProps} isOwner={true} />
+      </NextIntlClientProvider>
+    )
     expect(screen.getByLabelText('Établissement')).toBeEnabled()
   })
 

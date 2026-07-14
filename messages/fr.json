@@ -14,5 +14,12 @@
       "generic": "Une erreur est survenue."
     }
   },
-  "organizer": {}
+  "organizer": {
+    "settings": {
+      "language": {
+        "label": "Langue de l’interface",
+        "hint": "S’applique à votre compte sur tous vos appareils."
+      }
+    }
+  }
 }

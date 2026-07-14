@@ -7,6 +7,7 @@ import {
   type BillingOverview, type ProgramInfo,
 } from '@/actions/settings'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { resolveLocale } from '@/lib/i18n/resolve'
 import { SettingsView } from '@/components/settings/SettingsView'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,7 @@ export default async function SettingsPage() {
   const isOwner = profile.org_role === 'owner'
   const canChangePassword = (user.identities ?? []).some(i => i.provider === 'email')
   const team = await getTeam()
+  const locale = await resolveLocale()
 
   let billing: BillingOverview | null = null
   let program: ProgramInfo | null = null
@@ -46,6 +48,7 @@ export default async function SettingsPage() {
       team={team}
       billing={billing}
       program={program}
+      locale={locale}
     />
   )
 }

@@ -14,5 +14,12 @@
       "generic": "Something went wrong."
     }
   },
-  "organizer": {}
+  "organizer": {
+    "settings": {
+      "language": {
+        "label": "Interface language",
+        "hint": "Applies to your account across all your devices."
+      }
+    }
+  }
 }
