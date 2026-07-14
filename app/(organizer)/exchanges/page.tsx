@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications-review'
 import { exchangeCap, TRIAL_EXCHANGE_CAP } from '@/lib/billing/limits'
-import { rollupStudent, progress, type AppRow } from '@/lib/dashboard/rollup'
+import { rollupStudent, exchangeProgress, type AppRow } from '@/lib/dashboard/rollup'
 import { ExchangesView, type ExchangeCardData } from '@/components/exchanges/ExchangesView'
 
 export default async function ExchangesPage() {
@@ -30,7 +30,7 @@ export default async function ExchangesPage() {
       const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
       const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
 
-      const prog = phase === 1 ? progress(1, apps, []) : progress(2, [], rollups)
+      const prog = exchangeProgress(apps, rollups)
       const pct = prog.total === 0 ? null : Math.round((prog.done / prog.total) * 100)
       const pctLabel = pct === null ? '—' : prog.label
 

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  frShortDate, p1Funnel, p1Filter, p1StatusPill, p1ResponsePill,
-  rollupStudent, p2Funnel, p2Filter, formsPill, docsPill, actionCards,
-  reminderLine, overviewSubline, progress, timelineFor, nextDeadline, p,
+  frShortDate, p1StatusPill,
+  rollupStudent, formsPill, docsPill,
+  timelineFor, nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
   lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
   type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent,
@@ -11,47 +11,16 @@ import {
 const app = (status: string, over: Partial<AppRow> = {}): AppRow =>
   ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', data: {}, email: 'x@y.fr', ...over })
 
-const APPS = [app('submitted'), app('submitted'), app('accepted'), app('maybe'), app('declined'), app('enrolled'), app('rejected')]
-
-describe('p1Funnel', () => {
-  it('counts every stage per the design mapping', () => {
-    const f = Object.fromEntries(p1Funnel(APPS).map(s => [s.key, s.count]))
-    expect(f).toEqual({ all: 7, toreview: 2, accepted: 4, waiting: 1, confirmed: 1 })
-  })
-  it('labels are the French design strings in order', () => {
-    expect(p1Funnel([]).map(s => s.label)).toEqual(['Reçues', 'À examiner', 'Acceptés', 'En attente', 'Confirmés'])
-  })
-})
-
-describe('p1Filter', () => {
-  it('null or "all" returns every row', () => {
-    expect(p1Filter(APPS, null)).toEqual(APPS)
-    expect(p1Filter(APPS, 'all')).toEqual(APPS)
-  })
-  it('"maybe" returns only maybe rows', () => {
-    const res = p1Filter(APPS, 'maybe')
-    expect(res.every(a => a.status === 'maybe')).toBe(true)
-    expect(res.length).toBe(1)
-  })
-  it('"toreview" returns only submitted rows', () => {
-    expect(p1Filter(APPS, 'toreview').length).toBe(2)
-  })
-})
-
-describe('pills', () => {
+// p1StatusPill is kept for components/applications/ApplicationDetail.tsx and
+// CandidaturesView.tsx (the standalone /applications route, outside this
+// plan's scope) — see task-3-report.md.
+describe('p1StatusPill', () => {
   it.each([
     ['submitted', 'neutral', 'À examiner'], ['accepted', 'warn', 'En attente'],
     ['enrolled', 'ok', 'Confirmé'], ['enrolling', 'ok', 'Confirmé'],
     ['maybe', 'warn', 'Hésite'], ['declined', 'bad', 'A décliné'], ['rejected', 'bad', 'Refusé'],
     ['bogus', 'neutral', '—'],
   ])('%s → %s %s', (s, kind, label) => expect(p1StatusPill(s)).toEqual({ kind, label }))
-  it('response pill', () => {
-    expect(p1ResponsePill('enrolled')).toEqual({ kind: 'ok', label: 'Oui' })
-    expect(p1ResponsePill('enrolling')).toEqual({ kind: 'ok', label: 'Oui' })
-    expect(p1ResponsePill('maybe')).toEqual({ kind: 'warn', label: 'Peut-être' })
-    expect(p1ResponsePill('declined')).toEqual({ kind: 'bad', label: 'Non' })
-    expect(p1ResponsePill('submitted')).toBeNull()
-  })
 })
 
 const T: TemplateInfo[] = [
@@ -120,38 +89,6 @@ describe('rollupStudent', () => {
   })
 })
 
-describe('p2Funnel', () => {
-  it('counts every stage per the design mapping', () => {
-    const rollups = [
-      rollupStudent(student, T, cell('approved', 'approved'), TODAY), // complete
-      rollupStudent(student, T, cell('approved', 'submitted'), TODAY), // review
-      rollupStudent(student, T, cell('', ''), TODAY), // missing forms+docs
-      rollupStudent(student, T, cell('draft', ''), new Date('2026-10-11T12:00:00')), // late
-    ]
-    const f = Object.fromEntries(p2Funnel(rollups).map(s => [s.key, s.count]))
-    expect(f).toEqual({ p2all: 4, pendingforms: 2, review: 1, missingdocs: 2, late: 1 })
-  })
-  it('labels are the French design strings in order', () => {
-    expect(p2Funnel([]).map(s => s.label)).toEqual(['Confirmés', 'Formul. en attente', 'À vérifier', 'Docs manquants', 'En retard'])
-  })
-})
-
-describe('p2Filter', () => {
-  it('null or "all"/"p2all" returns every row (mirrors p1Filter shape)', () => {
-    const rollups = [rollupStudent(student, T, cell('approved', 'approved'), TODAY)]
-    expect(p2Filter(rollups, null)).toEqual(rollups)
-  })
-  it('"late" returns only late rollups', () => {
-    const rollups = [
-      rollupStudent(student, T, cell('approved', 'approved'), TODAY),
-      rollupStudent(student, T, cell('draft', ''), new Date('2026-10-11T12:00:00')),
-    ]
-    const res = p2Filter(rollups, 'late')
-    expect(res.every(r => r.late)).toBe(true)
-    expect(res.length).toBe(1)
-  })
-})
-
 describe('formsPill / docsPill', () => {
   it.each([
     ['complete', 'ok', 'Reçu'], ['pending', 'warn', 'En cours'], ['missing', 'bad', 'Manquant'],
@@ -177,88 +114,6 @@ describe('nextDeadline', () => {
 })
 
 describe('copy builders', () => {
-  it('action cards P1 pluralize and omit zero counts', () => {
-    const cards = actionCards(1, [app('submitted'), app('submitted'), app('maybe')], [])
-    expect(cards.map(c => c.title)).toEqual(['2 candidatures à examiner', '1 élève hésite — à relancer'])
-    expect(actionCards(1, [app('enrolled')], [])).toEqual([])
-  })
-  it('action cards P1 pluralizes hésitent for multiple maybes', () => {
-    const cards = actionCards(1, [app('maybe'), app('maybe')], [])
-    expect(cards.map(c => c.title)).toEqual(['2 élèves hésitent — à relancer'])
-  })
-  it('action cards P2 pluralize and omit zero counts', () => {
-    const T2: TemplateInfo[] = [
-      { id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' },
-      { id: 'd1', type: 'document_upload', name: 'Passeport', deadline: '2026-10-10' },
-    ]
-    const rollups = [
-      rollupStudent({ id: 's1', full_name: 'A' }, T2, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY), // review
-      rollupStudent({ id: 's2', full_name: 'B' }, T2, {}, new Date('2026-10-11T12:00:00')), // late + missing docs
-    ]
-    const cards = actionCards(2, [], rollups)
-    expect(cards.map(c => c.title)).toEqual([
-      '1 dossier à vérifier', '1 élève : documents manquants', '1 élève en retard',
-    ])
-  })
-  it('prepends the no-active-forms card when activeTemplateCount is 0 (phase 1)', () => {
-    const cards = actionCards(1, [app('submitted')], [], 0)
-    expect(cards[0].title).toBe('Aucun formulaire actif')
-    expect(cards[0].href).toBe('/forms')
-    expect(cards.some(c => c.title === '1 candidature à examiner')).toBe(true)
-  })
-  it('prepends the no-active-forms card when activeTemplateCount is 0 (phase 2)', () => {
-    expect(actionCards(2, [], [], 0).map(c => c.title)).toEqual(['Aucun formulaire actif'])
-  })
-  it('omits the no-active-forms card when at least one template is active', () => {
-    expect(actionCards(1, [], [], 3)).toEqual([])
-    expect(actionCards(2, [], [])).toEqual([])
-  })
-  it('reminder line P1 counts waiting + maybe', () => {
-    expect(reminderLine(1, [app('accepted'), app('maybe')], []))
-      .toBe('Relance automatique demain 8h — 2 élèves relancés sur leur candidature ou leur réponse, avec la date limite.')
-  })
-  it('reminder line P2 counts missingdocs + pendingforms', () => {
-    const rollups = [rollupStudent(student, T, cell('', ''), TODAY)]
-    expect(reminderLine(2, [], rollups))
-      .toBe('Relance automatique demain 8h — 1 élève relancé sur les documents manquants, avec la date limite.')
-  })
-  it('reminder line P2 counts distinct students: one missing both forms and docs is one distinct student', () => {
-    const s1 = { id: 's1', full_name: 'Alice' }
-    const s2 = { id: 's2', full_name: 'Bob' }
-    const rollups = [
-      rollupStudent(s1, T, cell('', ''), TODAY), // missing both forms and docs
-      rollupStudent(s2, T, { 's2:f1': { assignmentId: 'a1', status: 'approved' }, 's2:d1': { assignmentId: 'a2', status: 'approved' } }, TODAY), // complete
-    ]
-    expect(reminderLine(2, [], rollups))
-      .toBe('Relance automatique demain 8h — 1 élève relancé sur les documents manquants, avec la date limite.')
-  })
-  it('progress P1', () => {
-    expect(progress(1, [app('submitted'), app('enrolled')], []))
-      .toEqual({ done: 1, total: 2, label: '1 / 2 candidatures traitées' })
-  })
-  it('progress P2', () => {
-    const rollups = [
-      rollupStudent(student, T, cell('approved', 'approved'), TODAY),
-      rollupStudent(student, T, cell('', ''), TODAY),
-    ]
-    expect(progress(2, [], rollups)).toEqual({ done: 1, total: 2, label: '1 / 2 dossiers validés' })
-  })
-  it('overviewSubline P1', () => {
-    expect(overviewSubline(1, [app('submitted'), app('enrolled')], []))
-      .toBe('Phase 1 · Recrutement — 1 candidature à examiner, 1 élève déjà confirmé.')
-  })
-  it('overviewSubline P2', () => {
-    const T2: TemplateInfo[] = [
-      { id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' },
-      { id: 'd1', type: 'document_upload', name: 'Passeport', deadline: '2026-10-10' },
-    ]
-    const rollups = [
-      rollupStudent({ id: 's1', full_name: 'A' }, T2, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY),
-      rollupStudent({ id: 's2', full_name: 'B' }, T2, {}, TODAY),
-    ]
-    expect(overviewSubline(2, [], rollups))
-      .toBe('Phase 2 · Préparation — 1 dossier à vérifier, 1 en attente de documents.')
-  })
   it('frShortDate strips the dot', () => {
     expect(frShortDate('2026-09-12')).toBe('12 sept')
     expect(frShortDate(null)).toBe('')
