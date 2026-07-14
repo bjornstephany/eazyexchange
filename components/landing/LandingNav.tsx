@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Logo } from './Logo'
 import type { Lang, LandingContent } from '@/lib/landing/content'
 
@@ -14,6 +14,13 @@ export function LandingNav({
 }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuId = useId()
+
+  useEffect(() => {
+    if (!open) return
+    menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')[0]?.focus()
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -23,7 +30,10 @@ export function LandingNav({
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
     }
     document.addEventListener('pointerdown', onPointer)
     document.addEventListener('keydown', onKey)
@@ -36,6 +46,21 @@ export function LandingNav({
   function pick(l: Lang) {
     setLanguage(l)
     setOpen(false)
+    triggerRef.current?.focus()
+  }
+
+  function onMenuKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    const forward = (e.key === 'Tab' && !e.shiftKey) || e.key === 'ArrowDown'
+    const backward = (e.key === 'Tab' && e.shiftKey) || e.key === 'ArrowUp'
+    if (!forward && !backward) return
+    e.preventDefault()
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []
+    )
+    if (items.length === 0) return
+    const idx = items.indexOf(document.activeElement as HTMLButtonElement)
+    const next = forward ? (idx + 1) % items.length : (idx - 1 + items.length) % items.length
+    items[next]?.focus()
   }
 
   return (
@@ -61,9 +86,11 @@ export function LandingNav({
           <div ref={menuRef} className="relative">
             <button
               type="button"
+              ref={triggerRef}
               aria-label="Changer de langue"
               aria-haspopup="menu"
               aria-expanded={open}
+              aria-controls={menuId}
               onClick={() => setOpen((o) => !o)}
               className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono text-[12px] font-semibold uppercase text-[#5B6B8C] hover:bg-[#F1F4F9] hover:text-[#10203F]"
             >
@@ -78,11 +105,14 @@ export function LandingNav({
             {open && (
               <div
                 role="menu"
+                id={menuId}
+                onKeyDown={onMenuKeyDown}
                 className="absolute right-0 top-full z-50 mt-1.5 w-36 overflow-hidden rounded-[10px] border border-[#E4E9F2] bg-white py-1 shadow-lg"
               >
                 <button
                   type="button"
                   role="menuitem"
+                  tabIndex={-1}
                   onClick={() => pick('fr')}
                   className={`block w-full px-3.5 py-2 text-left text-[13px] hover:bg-[#F1F4F9] ${lang === 'fr' ? 'font-semibold text-[#10203F]' : 'text-[#5B6B8C]'}`}
                 >
@@ -91,6 +121,7 @@ export function LandingNav({
                 <button
                   type="button"
                   role="menuitem"
+                  tabIndex={-1}
                   onClick={() => pick('en')}
                   className={`block w-full px-3.5 py-2 text-left text-[13px] hover:bg-[#F1F4F9] ${lang === 'en' ? 'font-semibold text-[#10203F]' : 'text-[#5B6B8C]'}`}
                 >

@@ -10,7 +10,6 @@ to change those, tell a Claude session instead of editing.
 
 ## Queue
 
-- LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)
 - split actions/applications.ts along trust lines: actions/apply.ts (public token), actions/applications-review.ts (organizer), actions/invitations.ts (CLAUDE.md tripwire)
 - batch the bulk-accept applications flow (deferred from perf-cold-starts)
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — Bjorn: delete this line if still unwanted)
@@ -20,9 +19,11 @@ to change those, tell a Claude session instead of editing.
 
 ## In progress
 
-- [planned] reminder-apostrophe-tests — «add unit-test assertions locking the French apostrophes (’) in the reminder email copy (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-13-reminder-apostrophe-tests-design.md — plan: docs/superpowers/plans/2026-07-13-reminder-apostrophe-tests.md
+- [planned] landingnav-focus-management — «LandingNav focus management — focus trap/restore for the mobile landing nav (UI-polish leftover)» — spec: docs/superpowers/specs/2026-07-14-landingnav-focus-management-design.md — plan: docs/superpowers/plans/2026-07-14-landingnav-focus-management.md
 
 ## PRs awaiting merge
+
+- [#11] reminder-apostrophe-tests — 6 decisions flagged — merge-time steps: yes, see PR body (optional edge-fn redeploy)
 
 ## Blocked
 
