@@ -1,0 +1,18 @@
+{
+  "common": {
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "newExchange": "+ Nouvel échange"
+    },
+    "states": {
+      "saved": "✓ Modifications enregistrées",
+      "loading": "Chargement…"
+    },
+    "errors": {
+      "generic": "Une erreur est survenue."
+    }
+  },
+  "organizer": {}
+}
