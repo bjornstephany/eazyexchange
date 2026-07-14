@@ -122,6 +122,33 @@
       "formsAndDocsHeading": "Formulaires & documents",
       "dueSuffix": " · échéance {date}",
       "autoReminderHint": "Relances automatiques quotidiennes en période d'échéance."
+    },
+    "exchanges": {
+      "title": "Échanges",
+      "subtitle": "Suivez tous vos programmes d'échange — passés, en cours et à venir.",
+      "listLabel": "Vos échanges",
+      "emptyState": "Aucun échange pour l'instant — créez le premier.",
+      "reminders": {
+        "heading": "Rappels automatiques",
+        "description": "Des e-mails de rappel sont envoyés aux élèves dont le dossier est incomplet. La relance manuelle reste disponible même si les rappels sont désactivés.",
+        "enabledToggle": "Activés",
+        "disabledToggle": "Désactivés",
+        "readOnlyNotice": "Programme archivé — lecture seule.",
+        "cadences": {
+          "douce": {
+            "label": "Douce",
+            "description": "un rappel par semaine, sans accélération"
+          },
+          "normale": {
+            "label": "Normale",
+            "description": "hebdomadaire, puis quotidien la dernière semaine"
+          },
+          "insistante": {
+            "label": "Insistante",
+            "description": "tous les 3 jours, puis quotidien les 2 dernières semaines"
+          }
+        }
+      }
     }
   }
 }

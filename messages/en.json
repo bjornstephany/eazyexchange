@@ -122,6 +122,33 @@
       "formsAndDocsHeading": "Forms & documents",
       "dueSuffix": " · due {date}",
       "autoReminderHint": "Automatic reminders sent daily as the deadline approaches."
+    },
+    "exchanges": {
+      "title": "Exchanges",
+      "subtitle": "Track all your exchange programs — past, ongoing and upcoming.",
+      "listLabel": "Your exchanges",
+      "emptyState": "No exchange yet — create the first one.",
+      "reminders": {
+        "heading": "Automatic reminders",
+        "description": "Reminder emails are sent to students whose file is incomplete. Manual follow-up remains available even if reminders are disabled.",
+        "enabledToggle": "Enabled",
+        "disabledToggle": "Disabled",
+        "readOnlyNotice": "Archived program — read-only.",
+        "cadences": {
+          "douce": {
+            "label": "Gentle",
+            "description": "one reminder per week, no acceleration"
+          },
+          "normale": {
+            "label": "Normal",
+            "description": "weekly, then daily during the final week"
+          },
+          "insistante": {
+            "label": "Insistent",
+            "description": "every 3 days, then daily during the final 2 weeks"
+          }
+        }
+      }
     }
   }
 }
