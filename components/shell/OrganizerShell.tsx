@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
@@ -83,6 +84,8 @@ export function OrganizerShell({
   orgRole?: 'owner' | 'admin'
   children: React.ReactNode
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const pathname = usePathname()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -150,28 +153,28 @@ export function OrganizerShell({
           <Mark variant="dark" className="h-[19px] w-[26px]" />
         </div>
         <div className="flex w-full flex-col items-center gap-1.5">
-          <RailItem href="/dashboard" label="Aperçu" active={pathname === '/dashboard'}>
+          <RailItem href="/dashboard" label={t('shell.nav.dashboard')} active={pathname === '/dashboard'}>
             <IconOverview />
           </RailItem>
           <RailItem
             href="/exchanges"
-            label="Échanges"
+            label={t('shell.nav.exchanges')}
             active={pathname === '/exchanges' || (pathname.startsWith('/exchanges/') && !pathname.includes('/applications'))}
           >
             <IconExchanges />
           </RailItem>
           {active && (
             <>
-              <RailItem href="/applications" label="Candid." active={pathname.startsWith('/applications')}>
+              <RailItem href="/applications" label={t('shell.nav.applications')} active={pathname.startsWith('/applications')}>
                 <IconApplications />
               </RailItem>
-              <RailItem href="/forms" label="Formul." active={pathname.startsWith('/forms')}>
+              <RailItem href="/forms" label={t('shell.nav.forms')} active={pathname.startsWith('/forms')}>
                 <IconForms />
               </RailItem>
-              <RailItem href="/documents" label="Docs" active={pathname.startsWith('/documents')}>
+              <RailItem href="/documents" label={t('shell.nav.documents')} active={pathname.startsWith('/documents')}>
                 <IconDocs />
               </RailItem>
-              <RailItem href="/students" label="Élèves" active={pathname.startsWith('/students')}>
+              <RailItem href="/students" label={t('shell.nav.students')} active={pathname.startsWith('/students')}>
                 <IconStudents />
               </RailItem>
             </>
@@ -183,7 +186,7 @@ export function OrganizerShell({
           className="mt-auto flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium text-rail-inactive hover:bg-white/5 hover:text-white"
         >
           <IconFeedback />
-          <span>Feedback</span>
+          <span>{t('shell.nav.feedback')}</span>
         </button>
         <div ref={menuRef} className="relative mt-2.5">
           {menuOpen && (
@@ -193,21 +196,21 @@ export function OrganizerShell({
                 onClick={() => setMenuOpen(false)}
                 className="block w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
               >
-                Réglages
+                {t('shell.accountMenu.settings')}
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
                 className="w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
               >
-                Se déconnecter
+                {t('shell.accountMenu.signOut')}
               </button>
             </div>
           )}
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Compte"
+            aria-label={t('shell.accountMenu.trigger')}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-mono text-[11px] text-white"
@@ -231,7 +234,7 @@ export function OrganizerShell({
                 />
                 {active.archived && (
                   <span className="rounded-pill bg-subtle px-3 py-1 font-mono text-[11px] font-semibold text-muted-foreground">
-                    Archivé
+                    {t('shell.archivedBadge')}
                   </span>
                 )}
               </>
@@ -241,7 +244,7 @@ export function OrganizerShell({
                 onClick={handleNewExchange}
                 className="flex h-[38px] items-center gap-1.5 rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover"
               >
-                <span className="text-base leading-none">+</span> Nouvel échange
+                {c('actions.newExchange')}
               </button>
             )}
           </div>
@@ -250,7 +253,7 @@ export function OrganizerShell({
               type="search"
               value={listSearch}
               onChange={(e) => setListSearch(e.target.value)}
-              placeholder="Rechercher un élève…"
+              placeholder={t('shell.studentSearch.placeholder')}
               className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
             />
           )}

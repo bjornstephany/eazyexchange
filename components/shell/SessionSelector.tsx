@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { setActiveExchange } from '@/actions/session'
 import type { ExchangeOption } from './OrganizerShell'
 import { cn } from '@/lib/utils'
@@ -14,6 +15,8 @@ export function SessionSelector({
   active: ExchangeOption
   onNewExchange: () => void
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -74,7 +77,7 @@ export function SessionSelector({
               <span className="flex items-center gap-2">
                 {ex.name}
                 {ex.archived && (
-                  <span className="rounded-pill bg-subtle px-2 py-px text-[10px] font-semibold text-muted-foreground">Archivé</span>
+                  <span className="rounded-pill bg-subtle px-2 py-px text-[10px] font-semibold text-muted-foreground">{t('shell.archivedBadge')}</span>
                 )}
               </span>
               <span className="text-muted-foreground">{ex.year}</span>
@@ -89,7 +92,7 @@ export function SessionSelector({
             }}
             className="w-full rounded-[9px] px-3 py-2 text-left text-sm font-semibold text-brand hover:bg-hoverrow"
           >
-            + Nouvel échange
+            {c('actions.newExchange')}
           </button>
         </div>
       )}

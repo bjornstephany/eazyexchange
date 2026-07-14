@@ -4,14 +4,18 @@
       "save": "Save",
       "cancel": "Cancel",
       "delete": "Delete",
-      "newExchange": "+ New exchange"
+      "newExchange": "+ New exchange",
+      "add": "Add",
+      "continue": "Continue"
     },
     "states": {
       "saved": "✓ Changes saved",
       "loading": "Loading…"
     },
     "errors": {
-      "generic": "Something went wrong."
+      "generic": "Something went wrong.",
+      "invalidEmail": "Invalid email address.",
+      "retry": "Something went wrong. Please try again."
     }
   },
   "organizer": {
@@ -19,6 +23,48 @@
       "language": {
         "label": "Interface language",
         "hint": "Applies to your account across all your devices."
+      }
+    },
+    "shell": {
+      "nav": {
+        "dashboard": "Overview",
+        "exchanges": "Exchanges",
+        "applications": "Apps.",
+        "forms": "Forms",
+        "documents": "Docs",
+        "students": "Students",
+        "feedback": "Feedback"
+      },
+      "accountMenu": {
+        "trigger": "Account",
+        "settings": "Settings",
+        "signOut": "Sign out"
+      },
+      "archivedBadge": "Archived",
+      "studentSearch": {
+        "placeholder": "Search for a student…"
+      },
+      "newExchangeModal": {
+        "title": "New exchange",
+        "description": "Give your exchange a name to get started.",
+        "nameLabel": "Exchange name",
+        "namePlaceholder": "Spain 2026",
+        "inviteToggle": "+ Invite a collaborator (optional)",
+        "inviteLabel": "Invite a collaborator (optional)",
+        "invitePlaceholder": "address@school.edu",
+        "removeInvite": "Remove {email}",
+        "inviteErrorsIntro": "The exchange was created, but some invitations failed:",
+        "submit": "Create the exchange",
+        "submitting": "Creating…"
+      },
+      "feedbackModal": {
+        "title": "A suggestion? A problem?",
+        "thanks": "Thanks! Your message has been sent.",
+        "typeSuggestion": "Suggestion",
+        "typeBug": "Bug or problem",
+        "placeholder": "Describe your idea or the problem you ran into…",
+        "submit": "Send",
+        "submitting": "Sending…"
       }
     }
   }

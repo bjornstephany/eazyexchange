@@ -4,14 +4,18 @@
       "save": "Enregistrer",
       "cancel": "Annuler",
       "delete": "Supprimer",
-      "newExchange": "+ Nouvel échange"
+      "newExchange": "+ Nouvel échange",
+      "add": "Ajouter",
+      "continue": "Continuer"
     },
     "states": {
       "saved": "✓ Modifications enregistrées",
       "loading": "Chargement…"
     },
     "errors": {
-      "generic": "Une erreur est survenue."
+      "generic": "Une erreur est survenue.",
+      "invalidEmail": "Adresse e-mail invalide.",
+      "retry": "Une erreur est survenue. Veuillez réessayer."
     }
   },
   "organizer": {
@@ -19,6 +23,48 @@
       "language": {
         "label": "Langue de l’interface",
         "hint": "S’applique à votre compte sur tous vos appareils."
+      }
+    },
+    "shell": {
+      "nav": {
+        "dashboard": "Aperçu",
+        "exchanges": "Échanges",
+        "applications": "Candid.",
+        "forms": "Formul.",
+        "documents": "Docs",
+        "students": "Élèves",
+        "feedback": "Feedback"
+      },
+      "accountMenu": {
+        "trigger": "Compte",
+        "settings": "Réglages",
+        "signOut": "Se déconnecter"
+      },
+      "archivedBadge": "Archivé",
+      "studentSearch": {
+        "placeholder": "Rechercher un élève…"
+      },
+      "newExchangeModal": {
+        "title": "Nouvel échange",
+        "description": "Donnez un nom à votre échange pour commencer.",
+        "nameLabel": "Nom de l’échange",
+        "namePlaceholder": "Espagne 2026",
+        "inviteToggle": "+ Inviter un collaborateur (optionnel)",
+        "inviteLabel": "Inviter un collaborateur (optionnel)",
+        "invitePlaceholder": "adresse@etablissement.fr",
+        "removeInvite": "Retirer {email}",
+        "inviteErrorsIntro": "L’échange est créé, mais certaines invitations ont échoué :",
+        "submit": "Créer l’échange",
+        "submitting": "Création…"
+      },
+      "feedbackModal": {
+        "title": "Une suggestion ? Un problème ?",
+        "thanks": "Merci ! Votre message a bien été envoyé.",
+        "typeSuggestion": "Suggestion",
+        "typeBug": "Bug ou problème",
+        "placeholder": "Décrivez votre idée ou le problème rencontré…",
+        "submit": "Envoyer",
+        "submitting": "Envoi…"
       }
     }
   }

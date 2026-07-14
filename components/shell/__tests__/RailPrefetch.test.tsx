@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
@@ -27,7 +28,7 @@ const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archiv
 
 describe('rail prefetch', () => {
   it('every rail tab prefetches its full payload', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
