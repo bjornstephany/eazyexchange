@@ -78,6 +78,19 @@ exists, record the advisory and the accepted-risk rationale in
 - Default to committing small changes to `main`; suggest a branch when a change is big or risky.
 - **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
 
+## Autopilot (autonomous backlog loop)
+
+`/loop /autopilot` (playbook: `.claude/skills/autopilot/SKILL.md`) works
+`BACKLOG.md` items through brainstorm → spec → plan → build → review → PR,
+one at a time. Autonomy stops at the PR: the loop never pushes or merges
+`main` and never touches prod (no prod migrations, edge-function deploys,
+Vercel config, or real email). Bjorn's touchpoints: append one-liners to the
+**Queue** section of `BACKLOG.md`, answer **Blocked** questions inline
+(`- A: …`), read `docs/autopilot/status.md`, merge PRs **with a merge
+commit** and run their listed merge-time steps. Any session asked to « add X
+to the backlog » just appends one line to Queue. All hard guardrails live in
+the skill file and bind every session and subagent.
+
 ## Session & Token Hygiene (multi-stage features)
 
 Large features run in stages: brainstorm → spec → plan → execution → merge. Conversation history from a finished stage is dead weight once its artifact is committed — carrying it into the next stage multiplies token spend for no benefit.
