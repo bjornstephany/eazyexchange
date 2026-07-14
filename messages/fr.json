@@ -213,6 +213,61 @@
         "newPdfLabel": "Nouveau PDF",
         "replace": "Remplacer"
       }
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "Les pièces justificatives que les familles téléversent pour compléter le dossier. Utilisez la liste standard ou demandez les vôtres.",
+      "requestedCount": "Documents demandés",
+      "studentsConcerned": "Élèves concernés",
+      "toReviewCount": "Pièces à vérifier",
+      "receivedLabel": "Pièces reçues",
+      "bannerText": "Chaque pièce téléversée est mise en file de vérification. Les familles sont relancées automatiquement pour les pièces manquantes.",
+      "bannerTextWithDeadline": "Chaque pièce téléversée est mise en file de vérification. Les familles sont relancées automatiquement pour les pièces manquantes jusqu’à l’échéance du {date}.",
+      "requestedHeading": "Pièces demandées · {count}",
+      "addDocLabel": "Demander un document",
+      "close": "Fermer",
+      "standardBadge": "STANDARD",
+      "customBadge": "PERSONNALISÉ",
+      "detailButton": "Détail",
+      "editButton": "Modifier",
+      "deleteConfirm": "Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés.",
+      "addPanel": {
+        "mandatoryTile": {
+          "title": "Obligatoire pour tous",
+          "description": "Demandé à chaque élève confirmé — compte dans la complétude du dossier."
+        },
+        "conditionalTile": {
+          "title": "Selon la situation",
+          "description": "Demandé uniquement aux élèves concernés — vous choisissez qui, sans pénaliser les autres dossiers."
+        },
+        "addButton": "Ajouter la pièce",
+        "nameLabel": "Nom de la pièce",
+        "namePlaceholder": "Carte européenne d’assurance maladie",
+        "deadlineLabel": "Échéance (facultatif)",
+        "conditionLabel": "Condition (facultatif)",
+        "conditionPlaceholder": "si parents divorcés",
+        "back": "Retour",
+        "createDraft": "Créer le brouillon",
+        "creating": "Création…"
+      },
+      "drawer": {
+        "acceptedFormats": "PDF · JPG · PNG",
+        "maxSize": "10 Mo max",
+        "deadlineChip": "Échéance {date}",
+        "trackingHeading": "Suivi par élève",
+        "draftEmptyConditional": "Cette pièce n’a pas encore été demandée. Choisissez les élèves concernés puis activez-la pour lancer les demandes.",
+        "draftEmptyAll": "Cette pièce n’a pas encore été demandée. Activez-la pour lancer les demandes.",
+        "noEnrolledStudents": "Aucun élève inscrit pour l’instant.",
+        "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
+        "remindedCount": "{count, plural, one {# relancé} other {# relancés}}",
+        "skippedRecently": " · {count, plural, one {# déjà relancé récemment} other {# déjà relancés récemment}}",
+        "failedCount": " · {count} en échec",
+        "activate": "Activer",
+        "activating": "Activation…",
+        "chooseAndActivate": "Choisir les élèves & activer",
+        "sending": "Envoi…",
+        "remindFamilies": "Relancer les familles"
+      }
     }
   }
 }

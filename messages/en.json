@@ -213,6 +213,61 @@
         "newPdfLabel": "New PDF",
         "replace": "Replace"
       }
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "The supporting documents families upload to complete the file. Use the standard list or request your own.",
+      "requestedCount": "Documents requested",
+      "studentsConcerned": "Students concerned",
+      "toReviewCount": "Documents to review",
+      "receivedLabel": "Documents received",
+      "bannerText": "Every uploaded document is queued for review. Families are reminded automatically for missing documents.",
+      "bannerTextWithDeadline": "Every uploaded document is queued for review. Families are reminded automatically for missing documents until the deadline on {date}.",
+      "requestedHeading": "Requested documents · {count}",
+      "addDocLabel": "Request a document",
+      "close": "Close",
+      "standardBadge": "STANDARD",
+      "customBadge": "CUSTOM",
+      "detailButton": "Details",
+      "editButton": "Edit",
+      "deleteConfirm": "Delete this document? Files already sent by families will be permanently deleted.",
+      "addPanel": {
+        "mandatoryTile": {
+          "title": "Mandatory for everyone",
+          "description": "Requested from every confirmed student — counts toward file completeness."
+        },
+        "conditionalTile": {
+          "title": "Depending on the situation",
+          "description": "Requested only from the students concerned — you choose who, without penalizing other files."
+        },
+        "addButton": "Add the document",
+        "nameLabel": "Document name",
+        "namePlaceholder": "European health insurance card",
+        "deadlineLabel": "Deadline (optional)",
+        "conditionLabel": "Condition (optional)",
+        "conditionPlaceholder": "if parents are divorced",
+        "back": "Back",
+        "createDraft": "Create the draft",
+        "creating": "Creating…"
+      },
+      "drawer": {
+        "acceptedFormats": "PDF · JPG · PNG",
+        "maxSize": "10 MB max",
+        "deadlineChip": "Deadline {date}",
+        "trackingHeading": "Student tracking",
+        "draftEmptyConditional": "This document hasn't been requested yet. Choose the students concerned then activate it to send the requests.",
+        "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
+        "noEnrolledStudents": "No enrolled students yet.",
+        "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
+        "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
+        "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",
+        "failedCount": " · {count} failed",
+        "activate": "Activate",
+        "activating": "Activating…",
+        "chooseAndActivate": "Choose students & activate",
+        "sending": "Sending…",
+        "remindFamilies": "Remind families"
+      }
     }
   }
 }
