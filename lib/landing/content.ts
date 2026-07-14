@@ -1,4 +1,6 @@
-export type Lang = 'fr' | 'en'
+import type { Locale } from '@/lib/i18n/config'
+
+export type Lang = Locale
 export type MockStatus = 'complete' | 'pending' | 'review' | 'missing'
 
 export interface MockRow {
@@ -53,7 +55,7 @@ const rows: MockRow[] = [
   { name: "Inès Garcia", app: "complete", forms: "complete", docs: "complete", status: "complete" },
 ]
 
-export const landingContent: Record<Lang, LandingContent> = {
+const baseContent: Record<'fr' | 'en', LandingContent> = {
   fr: {
     nav: { features: "Fonctionnalités", login: "Connexion", demo: "Démarrer gratuitement" },
     hero: {
@@ -168,4 +170,13 @@ export const landingContent: Record<Lang, LandingContent> = {
     },
     footerTag: "The platform for school exchange organizers.",
   },
+}
+
+export const landingContent: Record<Locale, LandingContent> = {
+  fr: baseContent.fr,
+  en: baseContent.en,
+  // Temporary English stand-ins — replaced with real es/it/de translations in Task 4.
+  es: baseContent.en,
+  it: baseContent.en,
+  de: baseContent.en,
 }

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Logo } from './Logo'
-import type { Lang, LandingContent } from '@/lib/landing/content'
+import type { LandingContent } from '@/lib/landing/content'
+import type { Locale } from '@/lib/i18n/config'
 
 export function LandingNav({
   nav,
@@ -9,8 +10,8 @@ export function LandingNav({
   setLanguage,
 }: {
   nav: LandingContent['nav']
-  lang: Lang
-  setLanguage: (l: Lang) => void
+  lang: Locale
+  setLanguage: (l: Locale) => void
 }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -43,7 +44,7 @@ export function LandingNav({
     }
   }, [open])
 
-  function pick(l: Lang) {
+  function pick(l: Locale) {
     setLanguage(l)
     setOpen(false)
     triggerRef.current?.focus()
