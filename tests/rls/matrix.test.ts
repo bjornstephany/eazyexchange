@@ -55,6 +55,11 @@ describe.each([
       tx`update users set full_name = 'pwned' where id = ${fx.studentA}`))
   })
 
+  it('users: cannot change a school A profile locale', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update users set locale = 'de' where id = ${fx.studentA}`))
+  })
+
   it('exchanges: cannot read exchange A', async () => {
     expect(await readRows(uid(), (tx) => tx`select id from exchanges where id = ${fx.exchangeA}`)).toHaveLength(0)
   })
@@ -263,6 +268,11 @@ describe('own-school allow', () => {
   it('student A can update their own answer', async () => {
     expect(await writeOutcome(sql, fx.studentA, (tx) =>
       tx`update field_answers set value = 'quarante-trois' where id = ${fx.answerA}`)).toBe(1)
+  })
+
+  it('student A can set their own locale', async () => {
+    expect(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update users set locale = 'es' where id = ${fx.studentA}`)).toBe(1)
   })
 
   it('any authenticated user can insert feedback stamped with their own uid', async () => {
