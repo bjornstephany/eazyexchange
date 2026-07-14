@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent, LifecycleRow } from '@/lib/dashboard/rollup'
 import {
   buildLifecycleRows,
@@ -30,12 +31,6 @@ export type OverviewProps = {
   applySlug: string
 }
 
-// Labels for filter keys that only exist on action cards, not as funnel tiles.
-const ACTION_ONLY_FILTER_LABELS: Record<string, string> = {
-  maybe: 'Hésitent',
-  missingdocs: 'Docs manquants',
-}
-
 const GRID = 'grid-cols-[1.7fr_1.15fr_1fr_1fr_1fr_22px]'
 
 const ACTION_BORDER: Record<ActionCard['tone'], string> = {
@@ -49,25 +44,27 @@ const ACTION_CTA: Record<ActionCard['tone'], string> = {
   bad: 'bg-danger text-danger-text',
 }
 
-function checklistItemPill(group: 'form' | 'doc', status: string | undefined): Pill {
-  if (status === 'approved') return { kind: 'ok', label: group === 'form' ? 'Reçu' : 'Fourni' }
-  if (status === 'submitted') return { kind: 'info', label: 'À vérifier' }
-  if (status === 'draft' || status === 'rejected') return { kind: 'warn', label: 'En cours' }
-  return { kind: 'bad', label: 'Manquant' }
+function checklistItemPill(group: 'form' | 'doc', status: string | undefined, c: ReturnType<typeof useTranslations>): Pill {
+  if (status === 'approved') return { kind: 'ok', label: group === 'form' ? c('status.received') : c('status.provided') }
+  if (status === 'submitted') return { kind: 'info', label: c('status.toVerify') }
+  if (status === 'draft' || status === 'rejected') return { kind: 'warn', label: c('status.inProgress') }
+  return { kind: 'bad', label: c('status.missing') }
 }
 
 export function OverviewView(props: OverviewProps) {
   const { exchangeId, apps, students, rollups, templates, cellMap, applicationOpen, applicationDeadline, applySlug } = props
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [filter, setFilter] = useState<string | null>(null)
   const [showClosed, setShowClosed] = useState(false)
   const [selected, setSelected] = useState<DrawerSubject | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
 
   function studentSubject(rollup: DossierRollup): DrawerSubject {
-    const items = templates.map((t) => {
-      const group: 'form' | 'doc' = t.type === 'data_entry' ? 'form' : 'doc'
-      const status = cellMap[`${rollup.studentId}:${t.id}`]?.status
-      return { label: t.name, group, pill: checklistItemPill(group, status) }
+    const items = templates.map((tmpl) => {
+      const group: 'form' | 'doc' = tmpl.type === 'data_entry' ? 'form' : 'doc'
+      const status = cellMap[`${rollup.studentId}:${tmpl.id}`]?.status
+      return { label: tmpl.name, group, pill: checklistItemPill(group, status, c) }
     })
     return { kind: 'student', rollup, items }
   }
@@ -87,8 +84,15 @@ export function OverviewView(props: OverviewProps) {
 
   const funnel = lifecycleFunnel(apps, rollups)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
+  // Labels for filter keys that only exist on action cards, not as funnel tiles.
+  function actionOnlyFilterLabel(key: string): string | undefined {
+    if (key === 'maybe') return t('dashboard.filterLabelMaybe')
+    if (key === 'missingdocs') return t('dashboard.filterLabelMissingDocs')
+    return undefined
+  }
+
   const filterLabel =
-    filter && filter !== 'all' ? activeStage?.label ?? ACTION_ONLY_FILTER_LABELS[filter] ?? filter : null
+    filter && filter !== 'all' ? activeStage?.label ?? actionOnlyFilterLabel(filter) ?? filter : null
 
   const filteredRows = lifecycleFilter(rows, filter, showClosed)
   const nClosed = closedCount(rows)
@@ -110,23 +114,23 @@ export function OverviewView(props: OverviewProps) {
       {neverOpened ? (
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
           <h1 className="font-display text-[26px] font-bold tracking-tight text-navy">
-            Commencez votre échange
+            {t('dashboard.startTitle')}
           </h1>
           <p className="mt-2 max-w-[420px] text-[15px] text-muted-foreground">
-            Commencez votre échange en invitant vos élèves à postuler.
+            {t('dashboard.startBody')}
           </p>
           <button
             type="button"
             onClick={() => setInviteOpen(true)}
             className="mt-6 flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
           >
-            <span className="text-base leading-none">+</span> Inviter vos élèves à postuler
+            <span className="text-base leading-none">+</span> {t('dashboard.inviteCta')}
           </button>
         </div>
       ) : (
         <div>
       <div className="mb-[22px]">
-        <h1 className="font-display text-[26px] font-bold tracking-tight">Vue d&apos;ensemble</h1>
+        <h1 className="font-display text-[26px] font-bold tracking-tight">{t('dashboard.overviewTitle')}</h1>
         <p className="text-sm text-muted-foreground">{subline}</p>
       </div>
 
@@ -137,7 +141,7 @@ export function OverviewView(props: OverviewProps) {
           <div className="bg-card border rounded-[14px] p-[18px] px-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-                Progression de l&apos;échange
+                {t('dashboard.progressLabel')}
               </span>
               {filterLabel && (
                 <button
@@ -145,7 +149,7 @@ export function OverviewView(props: OverviewProps) {
                   onClick={() => setFilter(null)}
                   className="border bg-hint rounded-pill px-[11px] py-1 text-[11px] font-medium text-muted-foreground"
                 >
-                  Filtre : {filterLabel} ✕
+                  {t('dashboard.filterBadge', { label: filterLabel })}
                 </button>
               )}
             </div>
@@ -174,16 +178,16 @@ export function OverviewView(props: OverviewProps) {
           {/* Lifecycle table card */}
           <div className="bg-card border rounded-[14px] overflow-hidden">
             <div className={`grid ${GRID} font-mono text-[10px] uppercase tracking-[.08em] text-tertiary bg-[#FBFCFE] border-b px-5 py-2.5`}>
-              <span>Élève</span>
-              <span>Candidature</span>
-              <span>Formulaires</span>
-              <span>Documents</span>
-              <span>Statut</span>
+              <span>{t('dashboard.tableHeaderStudent')}</span>
+              <span>{t('dashboard.tableHeaderApplication')}</span>
+              <span>{t('dashboard.tableHeaderForms')}</span>
+              <span>{t('dashboard.tableHeaderDocs')}</span>
+              <span>{t('dashboard.tableHeaderStatus')}</span>
               <span>&rsaquo;</span>
             </div>
 
             {filteredRows.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">Aucun élève ne correspond à ce filtre.</p>
+              <p className="text-center text-sm text-muted-foreground py-8">{t('dashboard.noRowsMatch')}</p>
             )}
             {filteredRows.map((row) => (
               <div
@@ -215,7 +219,7 @@ export function OverviewView(props: OverviewProps) {
                   onClick={() => setShowClosed((v) => !v)}
                   className="text-[12.5px] text-muted-foreground underline-offset-2 hover:underline"
                 >
-                  {showClosed ? 'Masquer les refusés et déclinés' : `Afficher les refusés et déclinés (${nClosed})`}
+                  {showClosed ? t('dashboard.hideClosed') : t('dashboard.showClosed', { n: nClosed })}
                 </button>
               </div>
             )}
@@ -225,11 +229,12 @@ export function OverviewView(props: OverviewProps) {
         {/* Right rail — only the « À faire maintenant » action cards */}
         <div className="w-full xl:w-[344px] flex-none flex flex-col gap-3">
           <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-            À faire maintenant
+            {t('dashboard.actionsHeading')}
           </span>
           {cards.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Tout est à jour ✓{next ? ` — prochaine échéance le ${frShortDate(next)}.` : ''}
+              {t('dashboard.upToDate')}
+              {next ? t('dashboard.nextDeadlineSuffix', { date: frShortDate(next) }) : ''}
             </p>
           ) : (
             cards.map((card) => (

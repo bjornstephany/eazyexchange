@@ -16,6 +16,13 @@
       "generic": "Something went wrong.",
       "invalidEmail": "Invalid email address.",
       "retry": "Something went wrong. Please try again."
+    },
+    "status": {
+      "received": "Received",
+      "provided": "Provided",
+      "toVerify": "To review",
+      "inProgress": "In progress",
+      "missing": "Missing"
     }
   },
   "organizer": {
@@ -66,6 +73,55 @@
         "submit": "Send",
         "submitting": "Sending…"
       }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "emptyHeading": "No exchange yet",
+      "emptyBody": "Create your first exchange to invite students, assign forms and track submissions all in one place.",
+      "inviteModal": {
+        "title": "Invite your students",
+        "description": "Choose a deadline. Applications will open right away.",
+        "deadlineLabel": "Application deadline",
+        "openSubmitting": "Opening…",
+        "openSubmit": "Open applications",
+        "openedTitle": "Applications open ✓",
+        "openedDescription": "Share this link with the students you want to invite to apply.",
+        "linkLabel": "Application link",
+        "copied": "Copied ✓",
+        "copy": "Copy",
+        "closeWarning": "You won't see this link again — copy it before closing.",
+        "closeAnyway": "Close anyway",
+        "close": "Close"
+      },
+      "filterLabelMaybe": "Undecided",
+      "filterLabelMissingDocs": "Missing docs",
+      "startTitle": "Start your exchange",
+      "startBody": "Start your exchange by inviting your students to apply.",
+      "inviteCta": "Invite your students to apply",
+      "overviewTitle": "Overview",
+      "progressLabel": "Exchange progress",
+      "filterBadge": "Filter: {label} ✕",
+      "tableHeaderStudent": "Student",
+      "tableHeaderApplication": "Application",
+      "tableHeaderForms": "Forms",
+      "tableHeaderDocs": "Documents",
+      "tableHeaderStatus": "Status",
+      "noRowsMatch": "No student matches this filter.",
+      "hideClosed": "Hide rejected and declined",
+      "showClosed": "Show rejected and declined ({n})",
+      "actionsHeading": "To do now",
+      "upToDate": "All caught up ✓",
+      "nextDeadlineSuffix": " — next deadline on {date}.",
+      "sending": "Sending…",
+      "timelineHeading": "Timeline",
+      "acceptCta": "Accept & invite",
+      "rejectCta": "Reject",
+      "notePlaceholder": "Note for the student (optional)",
+      "notifyByEmail": "Notify by email",
+      "confirmRejectCta": "Confirm rejection",
+      "formsAndDocsHeading": "Forms & documents",
+      "dueSuffix": " · due {date}",
+      "autoReminderHint": "Automatic reminders sent daily as the deadline approaches."
     }
   }
 }

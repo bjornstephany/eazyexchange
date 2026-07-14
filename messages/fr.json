@@ -16,6 +16,13 @@
       "generic": "Une erreur est survenue.",
       "invalidEmail": "Adresse e-mail invalide.",
       "retry": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "status": {
+      "received": "Reçu",
+      "provided": "Fourni",
+      "toVerify": "À vérifier",
+      "inProgress": "En cours",
+      "missing": "Manquant"
     }
   },
   "organizer": {
@@ -66,6 +73,55 @@
         "submit": "Envoyer",
         "submitting": "Envoi…"
       }
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "emptyHeading": "Aucun échange pour l’instant",
+      "emptyBody": "Créez votre premier échange pour inviter des élèves, assigner des formulaires et suivre les dossiers au même endroit.",
+      "inviteModal": {
+        "title": "Inviter vos élèves",
+        "description": "Choisissez une date limite. Les candidatures ouvriront aussitôt.",
+        "deadlineLabel": "Date limite des candidatures",
+        "openSubmitting": "Ouverture…",
+        "openSubmit": "Ouvrir les candidatures",
+        "openedTitle": "Candidatures ouvertes ✓",
+        "openedDescription": "Partagez ce lien avec les élèves que vous souhaitez inviter à postuler.",
+        "linkLabel": "Lien de candidature",
+        "copied": "Copié ✓",
+        "copy": "Copier",
+        "closeWarning": "Vous ne reverrez plus ce lien — copiez-le avant de fermer.",
+        "closeAnyway": "Fermer quand même",
+        "close": "Fermer"
+      },
+      "filterLabelMaybe": "Hésitent",
+      "filterLabelMissingDocs": "Docs manquants",
+      "startTitle": "Commencez votre échange",
+      "startBody": "Commencez votre échange en invitant vos élèves à postuler.",
+      "inviteCta": "Inviter vos élèves à postuler",
+      "overviewTitle": "Vue d'ensemble",
+      "progressLabel": "Progression de l'échange",
+      "filterBadge": "Filtre : {label} ✕",
+      "tableHeaderStudent": "Élève",
+      "tableHeaderApplication": "Candidature",
+      "tableHeaderForms": "Formulaires",
+      "tableHeaderDocs": "Documents",
+      "tableHeaderStatus": "Statut",
+      "noRowsMatch": "Aucun élève ne correspond à ce filtre.",
+      "hideClosed": "Masquer les refusés et déclinés",
+      "showClosed": "Afficher les refusés et déclinés ({n})",
+      "actionsHeading": "À faire maintenant",
+      "upToDate": "Tout est à jour ✓",
+      "nextDeadlineSuffix": " — prochaine échéance le {date}.",
+      "sending": "Envoi…",
+      "timelineHeading": "Parcours",
+      "acceptCta": "Accepter & inviter",
+      "rejectCta": "Refuser",
+      "notePlaceholder": "Note pour l'élève (facultatif)",
+      "notifyByEmail": "Prévenir par e-mail",
+      "confirmRejectCta": "Confirmer le refus",
+      "formsAndDocsHeading": "Formulaires & documents",
+      "dueSuffix": " · échéance {date}",
+      "autoReminderHint": "Relances automatiques quotidiennes en période d'échéance."
     }
   }
 }
