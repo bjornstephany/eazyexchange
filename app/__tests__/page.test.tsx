@@ -1,13 +1,31 @@
 import { describe, it, expect } from 'vitest'
-import RootPage from '@/app/page'
+import RootPage, { metadata } from '@/app/page'
 import { LandingPage } from '@/components/landing/LandingPage'
 
-// The logged-in redirect for / lives in middleware.ts (see middleware.test.ts).
-// This page must stay free of auth/DB reads so it prerenders — RootPage is a
-// plain synchronous component that always renders the landing page.
+describe('RootPage metadata', () => {
+  it('has a title short enough to survive Google truncation, keeping the key phrase', () => {
+    const title = metadata.title as string
+    expect(typeof title).toBe('string')
+    expect(title.length).toBeLessThanOrEqual(60)
+    expect(title).toContain('échanges scolaires')
+  })
+
+  it('declares Open Graph and a large-image Twitter card', () => {
+    expect(metadata.openGraph).toBeDefined()
+    expect(metadata.openGraph?.title).toBe(metadata.title)
+    expect(metadata.twitter).toBeDefined()
+    expect((metadata.twitter as { card?: string }).card).toBe('summary_large_image')
+  })
+})
+
 describe('RootPage', () => {
-  it('renders the landing page unconditionally', () => {
+  it('renders the landing page with Organization JSON-LD', () => {
     const result = RootPage()
-    expect(result.type).toBe(LandingPage)
+    const children = ([] as unknown[]).concat(result.props.children)
+    expect(children.some((c) => (c as { type?: unknown })?.type === LandingPage)).toBe(true)
+    const script = children.find(
+      (c) => (c as { props?: { type?: string } })?.props?.type === 'application/ld+json',
+    )
+    expect(script).toBeDefined()
   })
 })

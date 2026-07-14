@@ -56,11 +56,12 @@ describe('RootPage metadata', () => {
   })
 })
 
-describe('RootPage render', () => {
+// Unchanged from the original test — RootPage still returns <LandingPage/> after
+// this task. Task 4 rewrites this spec when RootPage gains the JSON-LD fragment.
+describe('RootPage', () => {
   it('renders the landing page unconditionally', () => {
     const result = RootPage()
-    const children = ([] as unknown[]).concat(result.props.children)
-    expect(children.some((c) => (c as { type?: unknown })?.type === LandingPage)).toBe(true)
+    expect(result.type).toBe(LandingPage)
   })
 })
 ```
@@ -68,7 +69,7 @@ describe('RootPage render', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- app/__tests__/page.test.tsx`
-Expected: FAIL — current title is 66 chars (`>60`) and `metadata.openGraph`/`twitter` are undefined. (The render test also fails until Task 4 wraps the fragment; that's expected — it passes after Task 4.)
+Expected: FAIL — current title is 66 chars (`>60`) and `metadata.openGraph`/`twitter` are undefined. The `RootPage` render spec passes (unchanged behaviour).
 
 - [ ] **Step 3: Rewrite `app/page.tsx` metadata**
 
@@ -111,10 +112,10 @@ export default function RootPage() {
 }
 ```
 
-- [ ] **Step 4: Run the metadata tests to verify they pass**
+- [ ] **Step 4: Run the page tests to verify they pass**
 
-Run: `pnpm test -- app/__tests__/page.test.tsx -t "RootPage metadata"`
-Expected: PASS (both metadata specs). The "RootPage render" spec still fails — it needs the Task 4 fragment; that is expected and fixed there.
+Run: `pnpm test -- app/__tests__/page.test.tsx`
+Expected: PASS — both new metadata specs and the unchanged `RootPage` render spec.
 
 - [ ] **Step 5: Commit**
 
@@ -367,15 +368,36 @@ export default function RootPage() {
 
 (`baseUrl` is already defined at module top from Task 1.)
 
-- [ ] **Step 6: Run the full page test suite to verify everything passes**
+- [ ] **Step 6: Update the render spec in `app/__tests__/page.test.tsx`**
+
+`RootPage` now returns a fragment, so `result.type === LandingPage` is no longer
+true. Replace the `describe('RootPage', ...)` block (leave the
+`describe('RootPage metadata', ...)` block from Task 1 untouched) with one that
+asserts both the landing page and the JSON-LD are rendered:
+
+```tsx
+describe('RootPage', () => {
+  it('renders the landing page with Organization JSON-LD', () => {
+    const result = RootPage()
+    const children = ([] as unknown[]).concat(result.props.children)
+    expect(children.some((c) => (c as { type?: unknown })?.type === LandingPage)).toBe(true)
+    const script = children.find(
+      (c) => (c as { props?: { type?: string } })?.props?.type === 'application/ld+json',
+    )
+    expect(script).toBeDefined()
+  })
+})
+```
+
+- [ ] **Step 7: Run the full page test suite to verify everything passes**
 
 Run: `pnpm test -- app/__tests__/page.test.tsx`
-Expected: PASS — including the "RootPage render" spec, which now finds `LandingPage` among the fragment's children.
+Expected: PASS — metadata specs plus the updated render spec, which finds both `LandingPage` and the `application/ld+json` script among the fragment's children.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add lib/seo/structured-data.ts lib/seo/__tests__/structured-data.test.ts app/page.tsx
+git add lib/seo/structured-data.ts lib/seo/__tests__/structured-data.test.ts app/page.tsx app/__tests__/page.test.tsx
 git commit -m "feat(seo): add Organization JSON-LD declaring name and logo"
 ```
 
