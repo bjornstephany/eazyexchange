@@ -1,10 +1,9 @@
 # Autopilot — status
 
-_Last cycle: 2026-07-14 16:45 — GitHub DNS recovered; all 3 in-flight PRs MERGED to main with merge commits (#11 e18e3f6, #12 7dd25df, #13 fb46091). CI unit→rls→deploy running on the #13 merge (final prod deploy). WIP now empty → next loop wake can claim from Queue (top: bulk-accept batching)._
+_Last cycle: 2026-07-14 17:00 — all follow-ups closed out: PR #10 merged (clean, #13 tripwire retirement preserved; c11d0c9), and send-reminders edge fn deployed to prod v21→v22 (verify_jwt:false preserved). No open PRs; WIP empty → next loop wake can claim from Queue (top: bulk-accept batching)._
 
 ## Needs Bjorn
-- **Optional:** `supabase functions deploy send-reminders` — the edge fn trails the repo (behavior-identical; from PR #11). No urgency.
-- **PR #10** (chore/claude-md-lean, Bjorn's) still open and now CONFLICTS with main's CLAUDE.md (PR #13 retired the tripwire). Rebase/resolve taking both sides, or close it.
+- (nothing outstanding) — next 08:00 send-reminders cron run exercises edge fn v22; watch for the recurring pg_net 5s timeout.
 
 ## In flight
 - (none) — all three merged.
@@ -13,6 +12,7 @@ _Last cycle: 2026-07-14 16:45 — GitHub DNS recovered; all 3 in-flight PRs MERG
 6 item(s) queued — top: «batch the bulk-accept applications flow (deferred from perf-cold-starts)»
 
 ## Recent activity (last 10)
+- 2026-07-14 17:00 — PR #10 merged (trial-merge confirmed clean, no conflict with #13; c11d0c9); send-reminders edge fn deployed to prod (v21→v22, verify_jwt:false preserved, sha b67e135). All follow-ups closed; no open PRs.
 - 2026-07-14 16:45 — DNS recovered; re-verified both held branches green, pushed, opened PR #12/#13, then MERGED all three (#11/#12/#13) with merge commits. Local main reset to origin/main (fb46091). CI deploying. WIP cleared.
 - 2026-07-14 01:48 — split-applications-trust-lines: plan committed (6503def); 4 tasks (branch/split/import-sites/verify), 3 new action files transcribed byte-for-byte, 25 import sites + allowlist + 2 docs as exact one-liners; single stage-by-name commit in Task 3 (no shim → tree green only as a whole); overlap constraints honored (no landing/**, no PR#11 files)
 - 2026-07-14 01:36 — split-applications-trust-lines: spec committed (013d9be); no re-export shim, shared helpers → lib/tokens.ts + lib/uploads.ts (use-server constraint), allowlist test reflects the 3 new paths, CLAUDE.md tripwire retired in build PR; 2 pre-existing bugs flagged as separate backlog candidates (not fixed). Spec wrapper hit the Fable-5 limit AFTER committing — work intact.
