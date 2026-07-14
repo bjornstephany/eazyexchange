@@ -12,7 +12,7 @@ let role = 'organizer'
 let template: any
 let assignments: any[] = []
 let enrolledUsers: any[] = []
-let exchange: any = { phase: 1, name: 'Espagne' }
+let exchange: any = { name: 'Espagne' }
 const templateUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
 const assignmentInsert = vi.fn().mockResolvedValue({ error: null })
 const assignmentUpdate = vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ error: null }) })
@@ -65,7 +65,7 @@ import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/form
 beforeEach(() => {
   vi.clearAllMocks()
   role = 'organizer'
-  exchange = { phase: 1, name: 'Espagne' }
+  exchange = { name: 'Espagne' }
   enrolledUsers = []
   assignments = []
   template = {

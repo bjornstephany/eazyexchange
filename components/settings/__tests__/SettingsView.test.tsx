@@ -100,7 +100,7 @@ const owner = {
     payment: { note: 'Aucun moyen de paiement enregistré.', cta: 'Ajouter une carte', href: '/billing' },
   },
   program: {
-    id: 'ex1', name: 'Programme Espagne', year: 2026, phase: 2 as const, archived: false,
+    id: 'ex1', name: 'Programme Espagne', year: 2026, archived: false,
     enrolled: 10, applications: 12, earliestDeadline: '2026-10-10',
   },
 }

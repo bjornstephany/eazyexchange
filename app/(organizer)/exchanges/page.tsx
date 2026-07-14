@@ -19,7 +19,6 @@ export default async function ExchangesPage() {
 
   const exchangesData: ExchangeCardData[] = await Promise.all(
     exchanges.map(async (exchange: any) => {
-      const phase = (exchange.phase ?? 1) as 1 | 2
       const [applications, grid] = await Promise.all([
         listApplications(exchange.id),
         getExchangeGrid(exchange.id),
@@ -38,7 +37,6 @@ export default async function ExchangesPage() {
         id: exchange.id,
         name: exchange.name,
         year: exchange.year,
-        phase,
         pct,
         pctLabel,
       }

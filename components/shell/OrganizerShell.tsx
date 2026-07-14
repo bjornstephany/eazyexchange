@@ -11,7 +11,7 @@ import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
 
-export type ExchangeOption = { id: string; name: string; year: number; phase: 1 | 2; archived: boolean }
+export type ExchangeOption = { id: string; name: string; year: number; archived: boolean }
 
 function initials(name: string) {
   return name
@@ -229,16 +229,11 @@ export function OrganizerShell({
                   active={active}
                   onNewExchange={handleNewExchange}
                 />
-                <span
-                  className={cn(
-                    'rounded-pill px-3 py-1 font-mono text-[11px] font-semibold',
-                    active.archived ? 'bg-subtle text-muted-foreground' : 'bg-tint text-tint-text'
-                  )}
-                >
-                  {active.archived
-                    ? 'Archivé'
-                    : active.phase === 1 ? 'Phase 1 · Recrutement' : 'Phase 2 · Préparation'}
-                </span>
+                {active.archived && (
+                  <span className="rounded-pill bg-subtle px-3 py-1 font-mono text-[11px] font-semibold text-muted-foreground">
+                    Archivé
+                  </span>
+                )}
               </>
             ) : (
               <button

@@ -244,15 +244,6 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
     if (insertError) throw insertError
   }
 
-  // Exchange already in Phase 2 → tell the newly assigned students now
-  // (otherwise the Phase-2 checklist email / daily cron covers it).
-  const { data: exchange } = await supabase
-    .from('exchanges').select('phase, name').eq('id', tmpl.exchange_id).single()
-  if (exchange?.phase === 2) {
-    const activated = { ...tmpl, status: 'active' as const }
-    await notifyIncompleteAssignees(supabase, activated, exchange.name, 0)
-  }
-
   revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
   // Newly active → now appears in the dashboard grid and exchange % complete.
   revalidatePath('/dashboard')
@@ -301,26 +292,24 @@ export async function deleteTemplate(id: string): Promise<void> {
 
 const REMIND_COOLDOWN_MS = 24 * 3600 * 1000
 
-// Shared by remindTemplate (24 h cooldown) and activateTemplate-in-phase-2
-// (cooldownMs = 0: fresh assignments have never been emailed).
+// Emails incomplete assignees of a template (24 h cooldown). Used by remindTemplate.
 async function notifyIncompleteAssignees(
   supabase: SupabaseClient,
   tmpl: { id: string; name: string; deadline: string | null; exchange_id: string; school_id: string },
   exchangeName: string,
-  cooldownMs: number,
 ): Promise<{ reminded: number; skipped: number; failed: number }> {
   const { data: rows } = await supabase
     .from('assignments')
     .select('id, last_reminded_at, submissions(status), users!student_id(email, full_name)')
     .eq('template_id', tmpl.id)
-  const cutoff = Date.now() - cooldownMs
+  const cutoff = Date.now() - REMIND_COOLDOWN_MS
   let reminded = 0, skipped = 0, failed = 0
   const remindedIds: string[] = []
   for (const row of rows ?? []) {
     const submission = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions
     const status = submission?.status ?? null
     if (status === 'submitted' || status === 'approved') continue
-    if (cooldownMs > 0 && row.last_reminded_at && new Date(row.last_reminded_at).getTime() > cutoff) { skipped++; continue }
+    if (row.last_reminded_at && new Date(row.last_reminded_at).getTime() > cutoff) { skipped++; continue }
     const student = Array.isArray(row.users) ? row.users[0] : row.users
     if (!student?.email) { failed++; continue }
     const ok = await sendTemplateReminderEmail({
@@ -346,7 +335,7 @@ export async function remindTemplate(id: string): Promise<{ reminded: number; sk
   if (tmpl.status !== 'active') throw new Error('Activez le modèle avant de relancer.')
   const { data: exchange } = await supabase
     .from('exchanges').select('name').eq('id', tmpl.exchange_id).single()
-  return notifyIncompleteAssignees(supabase, tmpl, exchange?.name ?? '', REMIND_COOLDOWN_MS)
+  return notifyIncompleteAssignees(supabase, tmpl, exchange?.name ?? '')
 }
 
 export async function getTemplateFileUrl(id: string): Promise<string> {
@@ -365,7 +354,6 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
   templates: TemplateVM[]
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
-  phase: 1 | 2
   exchangeName: string
 }> {
   const supabase = await createClient()
@@ -373,7 +361,7 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
   const schoolId = await assertOrganizer()
 
   const { data: exchange } = await supabase
-    .from('exchanges').select('name, phase, school_a_id, school_b_id').eq('id', exchangeId).maybeSingle()
+    .from('exchanges').select('name, school_a_id, school_b_id').eq('id', exchangeId).maybeSingle()
   if (!exchange || (exchange.school_a_id !== schoolId && exchange.school_b_id !== schoolId)) {
     throw new Error('Unauthorized')
   }
@@ -433,7 +421,6 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
     templates: vms,
     studentCount: enrolledStudents.length,
     enrolledStudents,
-    phase: (exchange.phase ?? 1) as 1 | 2,
     exchangeName: exchange.name,
   }
 }

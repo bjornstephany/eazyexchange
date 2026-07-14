@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 import { ExchangesView } from '@/components/exchanges/ExchangesView'
 
-const ex = { id: 'e1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, pct: 40, pctLabel: '2 / 5 candidatures traitées' }
+const ex = { id: 'e1', name: 'France–Canada 2026', year: 2026, pct: 40, pctLabel: '2 / 5 candidatures traitées' }
 
 describe('ExchangesView', () => {
   it('renders no billing block', () => {
@@ -12,10 +12,10 @@ describe('ExchangesView', () => {
     expect(screen.queryByText('POPULAIRE')).toBeNull()
     expect(screen.queryByText(/Forfait/)).toBeNull()
   })
-  it('exchange card shows name, phase tag and progress', () => {
+  it('exchange card shows name, year and progress', () => {
     render(<ExchangesView exchangesData={[ex]} atCap={false} />)
     expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
-    expect(screen.getByText('Phase 1 · Recrutement')).toBeInTheDocument()
+    expect(screen.getByText('2026')).toBeInTheDocument()
     expect(screen.getByText('40%')).toBeInTheDocument()
   })
   it('under cap: create button opens the modal (no /billing link)', () => {

@@ -6,18 +6,12 @@ export type ExchangeCardData = {
   id: string
   name: string
   year: number
-  phase: 1 | 2
   pct: number | null
   pctLabel: string
 }
 
-const PHASE_LABEL: Record<1 | 2, string> = {
-  1: 'Phase 1 · Recrutement',
-  2: 'Phase 2 · Préparation',
-}
-
 function ExchangeCard({ exchange }: { exchange: ExchangeCardData }) {
-  const { id, name, year, phase, pct, pctLabel } = exchange
+  const { id, name, year, pct, pctLabel } = exchange
   return (
     <Link
       href={`/exchanges/${id}`}
@@ -27,9 +21,6 @@ function ExchangeCard({ exchange }: { exchange: ExchangeCardData }) {
         <span className="font-display text-base font-bold text-navy">{name}</span>
         <span className="rounded-pill bg-subtle px-2.5 py-0.5 font-mono text-[11px] text-muted-foreground">
           {year}
-        </span>
-        <span className="rounded-pill bg-tint text-tint-text px-2.5 py-0.5 font-mono text-[11px]">
-          {PHASE_LABEL[phase]}
         </span>
       </div>
       <div className="text-[13px] text-muted-foreground mt-1">{pctLabel}</div>

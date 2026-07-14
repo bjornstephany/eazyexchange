@@ -28,12 +28,8 @@ export function ProgramCard({ program }: { program: ProgramInfo }) {
         <div>
           <div className="flex items-center gap-2.5">
             <span className="font-display text-[15px] font-semibold text-foreground">{program.name} · {program.year}</span>
-            {program.archived ? (
+            {program.archived && (
               <span className="rounded-pill bg-subtle px-2.5 py-[3px] text-[11px] font-semibold text-muted-foreground">Archivé</span>
-            ) : (
-              <span className="rounded-pill bg-tint px-2.5 py-[3px] text-[11px] font-semibold text-tint-text">
-                {program.phase === 1 ? 'Phase 1 · Recrutement' : 'Phase 2 · Préparation'}
-              </span>
             )}
           </div>
           <div className="mt-1 text-[12.5px] text-tertiary">{stats}</div>

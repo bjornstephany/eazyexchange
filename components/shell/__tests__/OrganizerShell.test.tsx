@@ -18,7 +18,7 @@ vi.mock('@/components/shell/FeedbackModal', () => ({
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
-const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, archived: false }]
+const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: false }]
 
 function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
   mockPathname = pathname
@@ -54,7 +54,6 @@ describe('OrganizerShell', () => {
     )
     expect(screen.getByRole('link', { name: /Échanges/ })).toHaveAttribute('href', '/exchanges')
     expect(screen.getByRole('link', { name: /Candid\./ })).toHaveAttribute('href', '/applications')
-    expect(screen.getByText('Phase 1 · Recrutement')).toBeInTheDocument()
   })
 
   it('Échanges stays visible with zero exchanges', () => {
@@ -178,7 +177,7 @@ describe('OrganizerShell', () => {
     mockPathname = '/dashboard'
     render(
       <OrganizerShell
-        exchanges={[{ id: 'ex1', name: 'France–Canada 2026', year: 2026, phase: 1 as const, archived: true }]}
+        exchanges={[{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: true }]}
         activeExchangeId="ex1"
         organizerName="Marie Bernard"
         schoolName="Lycée Mistral"
@@ -187,7 +186,6 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     expect(screen.getByText('Archivé')).toBeInTheDocument()
-    expect(screen.queryByText('Phase 1 · Recrutement')).toBeNull()
   })
 
   it('rail contains Élèves but not Réglages when an exchange is active', () => {
