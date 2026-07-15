@@ -321,6 +321,7 @@
         "noteLabel": "Note:",
         "currentlyRejected": "Currently rejected. You can still accept.",
         "accept": "Accept",
+        "notePlaceholder": "Optional note to the applicant",
         "sendRejectionEmail": "Send a rejection email to the applicant"
       }
     },

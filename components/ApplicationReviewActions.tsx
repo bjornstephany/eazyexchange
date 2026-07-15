@@ -49,7 +49,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
         </div>
       ) : (
         <div className="space-y-2">
-          <Textarea placeholder={t('organizer.applications.notePlaceholder')} value={rejectNote} onChange={e => setRejectNote(e.target.value)} />
+          <Textarea placeholder={t('organizer.applications.review.notePlaceholder')} value={rejectNote} onChange={e => setRejectNote(e.target.value)} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
             {t('organizer.applications.review.sendRejectionEmail')}

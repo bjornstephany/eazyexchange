@@ -321,6 +321,7 @@
         "noteLabel": "Note :",
         "currentlyRejected": "Actuellement refusée. Vous pouvez toujours l’accepter.",
         "accept": "Accepter",
+        "notePlaceholder": "Note facultative à l’intention du candidat",
         "sendRejectionEmail": "Envoyer un e-mail de refus au candidat"
       }
     },
