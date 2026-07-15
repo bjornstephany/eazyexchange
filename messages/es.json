@@ -1,0 +1,563 @@
+{
+  "common": {
+    "actions": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "newExchange": "+ Nuevo intercambio",
+      "add": "Añadir",
+      "continue": "Continuar"
+    },
+    "states": {
+      "saved": "✓ Cambios guardados",
+      "loading": "Cargando…",
+      "loadingLabel": "Cargando"
+    },
+    "errors": {
+      "generic": "Se ha producido un error.",
+      "invalidEmail": "Dirección de correo electrónico no válida.",
+      "retry": "Se ha producido un error. Vuelva a intentarlo."
+    },
+    "status": {
+      "received": "Recibido",
+      "provided": "Proporcionado",
+      "toVerify": "Por verificar",
+      "inProgress": "En curso",
+      "missing": "Faltante"
+    }
+  },
+  "organizer": {
+    "settings": {
+      "heading": "Ajustes",
+      "subtitle": "Su cuenta, su equipo y su suscripción.",
+      "language": {
+        "label": "Idioma de la interfaz",
+        "hint": "Se aplica a su cuenta en todos sus dispositivos."
+      },
+      "nav": {
+        "compte": "Cuenta personal",
+        "equipe": "Equipo y roles",
+        "fact": "Facturación",
+        "prog": "Programa"
+      },
+      "profile": {
+        "fullNameLabel": "Nombre completo",
+        "emailLabel": "Dirección de correo electrónico",
+        "emailHint": "Contacte con el soporte para cambiar su dirección.",
+        "schoolNameLabel": "Centro educativo",
+        "schoolNameHint": "Solo el propietario puede modificar el nombre del centro educativo."
+      },
+      "security": {
+        "heading": "Seguridad",
+        "passwordLabel": "Contraseña",
+        "googleNotice": "Conexión mediante Google — la gestión de contraseña no se aplica a su cuenta.",
+        "updated": "✓ Contraseña actualizada",
+        "changeButton": "Cambiar la contraseña",
+        "currentPasswordLabel": "Contraseña actual",
+        "newPasswordLabel": "Nueva contraseña",
+        "confirmPasswordLabel": "Confirmar",
+        "submitButton": "Actualizar la contraseña"
+      },
+      "team": {
+        "heading": "Equipo y roles",
+        "description": "Invite a compañeros a gestionar sus intercambios. Solo el propietario tiene acceso a la facturación.",
+        "invitePlaceholder": "direccion@centro.edu",
+        "inviteButton": "Invitar",
+        "inviteSuccess": "Invitación enviada.",
+        "youBadge": "USTED",
+        "ownerBadge": "Propietario",
+        "adminBadge": "Administrador",
+        "removeButton": "Retirar",
+        "pendingBadge": "Invitación enviada",
+        "revokeButton": "Revocar",
+        "ownerRoleDesc": "Gestionar todo, incluido el equipo y la facturación.",
+        "adminRoleDesc": "Gestionar alumnos, candidaturas, formularios y documentos.",
+        "removeDialog": {
+          "title": "¿Retirar a este colaborador?",
+          "description": "{name} perderá el acceso a todos los intercambios de su centro educativo.",
+          "confirm": "Confirmar la retirada",
+          "confirming": "Retirando…"
+        }
+      },
+      "billing": {
+        "heading": "Facturación",
+        "viewPlansCta": "Ver los planes",
+        "paymentMethodLabel": "Método de pago"
+      },
+      "program": {
+        "heading": "Programa",
+        "archivedBadge": "Archivado",
+        "archiveHeading": "Archivar el programa",
+        "archiveDescription": "El programa pasa a modo de solo lectura. Los expedientes siguen siendo consultables, pero ya no se podrá modificar nada.",
+        "restoreButton": "Restaurar",
+        "archiveButton": "Archivar el programa…",
+        "stats": {
+          "enrolled": "{count, plural, one {# alumno confirmado} other {# alumnos confirmados}}",
+          "applications": "{count, plural, one {# candidatura} other {# candidaturas}}",
+          "deadline": "plazo de expedientes {date}"
+        },
+        "modal": {
+          "title": "¿Archivar este programa?",
+          "body": "«{name}» pasará a modo de solo lectura: los alumnos, las candidaturas y los documentos seguirán siendo consultables, pero ya no se podrá realizar ninguna modificación. Podrá restaurarlo en cualquier momento.",
+          "confirm": "Archivar el programa"
+        }
+      },
+      "errors": {
+        "nameEmpty": "El nombre no puede estar vacío.",
+        "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",
+        "passwordUpdateFailed": "No se ha podido actualizar la contraseña. Vuelva a intentarlo.",
+        "passwordMismatch": "Las contraseñas no coinciden."
+      }
+    },
+    "billing": {
+      "per": "/ año",
+      "usage": "{used} / {cap} {cap, plural, one {intercambio} other {intercambios}} {used, plural, one {utilizado} other {utilizados}}",
+      "usageUnlimited": "{used} {used, plural, one {intercambio activo} other {intercambios activos}} · intercambios ilimitados",
+      "plans": {
+        "starter": { "label": "Esencial", "price": "199 €", "desc": "Para un organizador independiente." },
+        "growth": { "label": "Asociación", "price": "499 €", "desc": "Para asociaciones en pleno crecimiento." },
+        "scale": { "label": "Red", "price": "799 €", "desc": "Para grandes redes de intercambio." }
+      },
+      "trial": {
+        "label": "Prueba gratuita",
+        "price": "0 €",
+        "desc": "Su primer intercambio es gratis — no se requiere ningún pago."
+      },
+      "payment": {
+        "noneNote": "No hay ningún método de pago registrado.",
+        "addCta": "Añadir una tarjeta",
+        "editCta": "Modificar",
+        "card": "{brand} •••• {last4} — caduca el {exp}"
+      }
+    },
+    "shell": {
+      "nav": {
+        "dashboard": "Resumen",
+        "exchanges": "Intercambios",
+        "applications": "Candid.",
+        "forms": "Formul.",
+        "documents": "Docs",
+        "students": "Alumnos",
+        "feedback": "Comentarios"
+      },
+      "accountMenu": {
+        "trigger": "Cuenta",
+        "settings": "Ajustes",
+        "signOut": "Cerrar sesión"
+      },
+      "archivedBadge": "Archivado",
+      "studentSearch": {
+        "placeholder": "Buscar un alumno…"
+      },
+      "newExchangeModal": {
+        "title": "Nuevo intercambio",
+        "description": "Dé un nombre a su intercambio para empezar.",
+        "nameLabel": "Nombre del intercambio",
+        "namePlaceholder": "España 2026",
+        "inviteToggle": "+ Invitar a un colaborador (opcional)",
+        "inviteLabel": "Invitar a un colaborador (opcional)",
+        "invitePlaceholder": "direccion@centro.edu",
+        "removeInvite": "Retirar {email}",
+        "inviteErrorsIntro": "El intercambio se ha creado, pero algunas invitaciones han fallado:",
+        "submit": "Crear el intercambio",
+        "submitting": "Creando…"
+      },
+      "feedbackModal": {
+        "title": "¿Una sugerencia? ¿Un problema?",
+        "thanks": "¡Gracias! Su mensaje se ha enviado correctamente.",
+        "typeSuggestion": "Sugerencia",
+        "typeBug": "Error o problema",
+        "placeholder": "Describa su idea o el problema encontrado…",
+        "submit": "Enviar",
+        "submitting": "Enviando…"
+      }
+    },
+    "dashboard": {
+      "title": "Panel de control",
+      "emptyHeading": "Ningún intercambio por el momento",
+      "emptyBody": "Cree su primer intercambio para invitar a alumnos, asignar formularios y hacer seguimiento de los expedientes en un mismo lugar.",
+      "inviteModal": {
+        "title": "Invite a sus alumnos",
+        "description": "Elija una fecha límite. Las candidaturas se abrirán de inmediato.",
+        "deadlineLabel": "Fecha límite de las candidaturas",
+        "openSubmitting": "Abriendo…",
+        "openSubmit": "Abrir las candidaturas",
+        "openedTitle": "Candidaturas abiertas ✓",
+        "openedDescription": "Comparta este enlace con los alumnos a los que desea invitar a postularse.",
+        "linkLabel": "Enlace de candidatura",
+        "copied": "Copiado ✓",
+        "copy": "Copiar",
+        "closeWarning": "No volverá a ver este enlace — cópielo antes de cerrar.",
+        "closeAnyway": "Cerrar de todos modos",
+        "close": "Cerrar"
+      },
+      "filterLabelMaybe": "Indecisos",
+      "filterLabelMissingDocs": "Docs faltantes",
+      "startTitle": "Empiece su intercambio",
+      "startBody": "Empiece su intercambio invitando a sus alumnos a postularse.",
+      "inviteCta": "Invitar a sus alumnos a postularse",
+      "overviewTitle": "Resumen general",
+      "progressLabel": "Progreso del intercambio",
+      "filterBadge": "Filtro: {label} ✕",
+      "tableHeaderStudent": "Alumno",
+      "tableHeaderApplication": "Candidatura",
+      "tableHeaderForms": "Formularios",
+      "tableHeaderDocs": "Documentos",
+      "tableHeaderStatus": "Estado",
+      "noRowsMatch": "Ningún alumno coincide con este filtro.",
+      "hideClosed": "Ocultar rechazados y declinados",
+      "showClosed": "Mostrar rechazados y declinados ({n})",
+      "actionsHeading": "Por hacer ahora",
+      "upToDate": "Todo al día ✓",
+      "nextDeadlineSuffix": " — próxima fecha límite el {date}.",
+      "sending": "Enviando…",
+      "timelineHeading": "Recorrido",
+      "acceptCta": "Aceptar e invitar",
+      "rejectCta": "Rechazar",
+      "notePlaceholder": "Nota para el alumno (opcional)",
+      "notifyByEmail": "Avisar por correo electrónico",
+      "confirmRejectCta": "Confirmar el rechazo",
+      "formsAndDocsHeading": "Formularios y documentos",
+      "dueSuffix": " · fecha límite {date}",
+      "autoReminderHint": "Recordatorios automáticos diarios durante el periodo de vencimiento.",
+      "pills": {
+        "complete": "Completo",
+        "confirmedParen": "Confirmado(a)",
+        "toExamine": "Por examinar",
+        "invitedWaiting": "Invitado — a la espera",
+        "maybe": "Quizás",
+        "declined": "Ha declinado",
+        "rejected": "Rechazado",
+        "dash": "—",
+        "waiting": "En espera",
+        "confirmed": "Confirmado",
+        "hesitates": "Indeciso"
+      },
+      "timeline": {
+        "received": "Candidatura recibida",
+        "awaitingReview": "A la espera de examen",
+        "awaitingReviewSub": "Por aceptar o rechazar",
+        "rejected": "Candidatura rechazada",
+        "accepted": "Candidatura aceptada",
+        "inviteSent": "Invitación enviada automáticamente",
+        "inviteSentSub": "Correo enviado nada más aceptar",
+        "awaitingResponse": "A la espera de respuesta",
+        "respondedYes": "Ha respondido: Sí",
+        "respondedYesSub": "Participación confirmada",
+        "respondedMaybe": "Ha respondido: Quizás",
+        "respondedNo": "Ha respondido: No"
+      },
+      "funnel": {
+        "candidatures": "Candidaturas",
+        "confirmed": "Confirmados",
+        "late": "Con retraso",
+        "complete": "Completos"
+      },
+      "actionCards": {
+        "noFormsTitle": "Ningún formulario activo",
+        "noFormsDesc": "Prepare los documentos y formularios que va a solicitar a las familias.",
+        "noFormsCta": "Preparar los formularios",
+        "toReviewTitle": "{n, plural, one {# candidatura por examinar} other {# candidaturas por examinar}}",
+        "toReviewDesc": "Nuevos expedientes a la espera de su decisión. La invitación se envía automáticamente en cuanto se acepta.",
+        "toReviewCta": "Examinar",
+        "reviewTitle": "{n, plural, one {# expediente por verificar} other {# expedientes por verificar}}",
+        "reviewDesc": "Formularios y documentos recibidos, a la espera de validación.",
+        "reviewCta": "Verificar",
+        "lateTitle": "{n, plural, one {# alumno con retraso} other {# alumnos con retraso}}",
+        "lateDesc": "Fecha límite superada — recordatorio reforzado en curso.",
+        "lateCta": "Enviar recordatorio",
+        "missingDocsTitle": "{n, plural, one {# alumno: documentos faltantes} other {# alumnos: documentos faltantes}}",
+        "missingDocsDesc": "Documentos no recibidos antes de la fecha límite.",
+        "missingDocsCta": "Ver los alumnos",
+        "maybeTitle": "{n, plural, one {# alumno indeciso — a recordar} other {# alumnos indecisos — a recordar}}",
+        "maybeDesc": "Respuestas «Quizás» a convertir en confirmación.",
+        "maybeCta": "Enviar recordatorio"
+      },
+      "subline": "{a, plural, one {# candidatura} other {# candidaturas}} por examinar, {r, plural, one {# expediente} other {# expedientes}} por verificar, {l, plural, one {# alumno} other {# alumnos}} con retraso.",
+      "progressDossiers": "{done} / {total} expedientes validados",
+      "progressCandidatures": "{done} / {total} candidaturas procesadas"
+    },
+    "applications": {
+      "backLink": "‹ Volver a las candidaturas",
+      "printCta": "⎙ Imprimir la candidatura",
+      "subtitle": "Candidatura · {exchangeName} · {year}",
+      "heading": "Candidaturas",
+      "emptyState": "Ninguna candidatura recibida por el momento — comparta el enlace de candidatura con sus alumnos.",
+      "countSummary": "{n, plural, one {# candidatura recibida} other {# candidaturas recibidas}} para {exchangeName}.",
+      "stateOpen": "Abierto",
+      "stateClosed": "Cerrado",
+      "deadlineLabel": "Fecha límite",
+      "linkLabel": "Enlace de candidatura",
+      "copyCta": "Copiar",
+      "copiedCta": "Copiado ✓",
+      "tabs": {
+        "all": "Todas",
+        "toReview": "Por examinar",
+        "accepted": "Aceptadas",
+        "rejected": "Rechazadas"
+      },
+      "selectedCount": "{n, plural, one {# seleccionada} other {# seleccionadas}}",
+      "acceptCta": "Aceptar e invitar",
+      "rejectCta": "Rechazar",
+      "sending": "Enviando…",
+      "notePlaceholder": "Nota para el alumno (opcional)",
+      "notifyByEmail": "Avisar por correo electrónico",
+      "confirmRejectCta": "Confirmar el rechazo",
+      "bulkResult": "{s, plural, one {# procesada} other {# procesadas}} · {f} fallidas",
+      "tableHeader": {
+        "student": "Alumno",
+        "level": "Curso 26-27",
+        "nativeLanguage": "Lengua mat.",
+        "receivedDate": "Recibida el",
+        "status": "Estado"
+      },
+      "emptyTab": "Ninguna candidatura en esta pestaña.",
+      "review": {
+        "statusAccepted": "Aceptado — a la espera de respuesta",
+        "statusEnrolled": "Inscrito(a) (ha respondido Sí)",
+        "statusDeclined": "Ha declinado la invitación",
+        "statusMaybe": "Ha respondido Quizás",
+        "responseLabel": "Respuesta:",
+        "noteLabel": "Nota:",
+        "currentlyRejected": "Actualmente rechazada. Aún puede aceptarla.",
+        "accept": "Aceptar",
+        "notePlaceholder": "Nota opcional para el candidato",
+        "sendRejectionEmail": "Enviar un correo de rechazo al candidato"
+      }
+    },
+    "exchanges": {
+      "title": "Intercambios",
+      "subtitle": "Haga seguimiento de todos sus programas de intercambio — pasados, en curso y próximos.",
+      "listLabel": "Sus intercambios",
+      "emptyState": "Ningún intercambio por el momento — cree el primero.",
+      "reminders": {
+        "heading": "Recordatorios automáticos",
+        "description": "Se envían correos de recordatorio a los alumnos cuyo expediente está incompleto. El recordatorio manual sigue disponible aunque los recordatorios estén desactivados.",
+        "enabledToggle": "Activados",
+        "disabledToggle": "Desactivados",
+        "readOnlyNotice": "Programa archivado — solo lectura.",
+        "cadences": {
+          "douce": {
+            "label": "Suave",
+            "description": "un recordatorio por semana, sin aceleración"
+          },
+          "normale": {
+            "label": "Normal",
+            "description": "semanal, luego diario la última semana"
+          },
+          "insistante": {
+            "label": "Insistente",
+            "description": "cada 3 días, luego diario las 2 últimas semanas"
+          }
+        }
+      }
+    },
+    "forms": {
+      "title": "Formularios",
+      "subtitle": "Los documentos y formularios que las familias completan para validar el expediente de su hijo/a. Utilice las plantillas estándar o añada las suyas propias.",
+      "yourFormsCount": "Sus formularios · {count}",
+      "addFormLabel": "Añadir un formulario",
+      "close": "Cerrar",
+      "activeFormsCount": "{count, plural, one {Formulario activo} other {Formularios activos}}",
+      "studentsConcerned": "Alumnos afectados",
+      "requestedInLabel": "Solicitados en",
+      "requestedInValue": "Fase 2",
+      "responsesReceivedLabel": "Respuestas recibidas",
+      "autoSendBanner": "Los formularios activos se envían automáticamente a las familias al abrirse la Fase 2, con recordatorios hasta su recepción.",
+      "standardBadge": "ESTÁNDAR",
+      "customBadge": "PERSONALIZADO",
+      "previewButton": "Vista previa",
+      "editButton": "Modificar",
+      "deleteConfirm": "¿Eliminar esta plantilla? Las respuestas ya enviadas por los alumnos se eliminarán definitivamente.",
+      "addPanel": {
+        "onlineTile": {
+          "title": "Crear un formulario en línea",
+          "description": "Componga sus propias preguntas — cumplimentadas directamente en la aplicación.",
+          "button": "Componer las preguntas"
+        },
+        "pdfTile": {
+          "title": "Importar un PDF",
+          "description": "Suba un documento que las familias imprimen, firman y devuelven.",
+          "button": "Subir un PDF"
+        },
+        "nameLabel": "Nombre del formulario",
+        "namePlaceholderPdf": "Autorización parental",
+        "namePlaceholderOnline": "Cuestionario familiar",
+        "deadlineLabel": "Fecha límite (opcional)",
+        "fileLabel": "PDF a firmar",
+        "back": "Volver",
+        "createDraft": "Crear el borrador",
+        "creating": "Creando…"
+      },
+      "deleteButton": {
+        "deleting": "Eliminando…"
+      },
+      "drawer": {
+        "pdfPreviewLabel": "plantilla PDF · vista previa del documento",
+        "fieldsHeadingPdf": "Campos a cumplimentar",
+        "fieldsHeadingOnline": "Preguntas del formulario",
+        "emptyFields": "Este formulario todavía no tiene campos. Añada sus preguntas y luego actívelo para enviarlo a las familias.",
+        "activate": "Activar",
+        "activating": "Activando…",
+        "editTemplate": "Modificar la plantilla",
+        "download": "Descargar"
+      },
+      "editor": {
+        "nameLabel": "Nombre",
+        "descriptionLabel": "Descripción",
+        "deadlineLabel": "Fecha límite",
+        "conditionLabel": "Condición",
+        "conditionPlaceholder": "si los padres están divorciados",
+        "saving": "Guardando…",
+        "saved": "Guardado ✓",
+        "replacePdfHeading": "Reemplazar el PDF",
+        "downloadCurrentPdf": "Descargar el PDF actual",
+        "newPdfLabel": "Nuevo PDF",
+        "replace": "Reemplazar"
+      },
+      "pills": {
+        "onlineForm": "Formulario en línea",
+        "pdfToSign": "PDF · para firmar",
+        "active": "Activo",
+        "draft": "Borrador",
+        "mandatory": "Obligatorio",
+        "dependsOnSituation": "según situación",
+        "complete": "Completo",
+        "toRedo": "Por rehacer",
+        "missingCount": "{count, plural, one {# faltante} other {# faltantes}}",
+        "toVerifyCount": "{count} por verificar"
+      },
+      "progress": {
+        "notRequestedDoc": "Aún no solicitado",
+        "notSentForm": "Aún no enviado",
+        "provided": "{done} / {total} {done, plural, one {proporcionado} other {proporcionados}}",
+        "received": "{done} / {total} recibidos"
+      }
+    },
+    "documents": {
+      "title": "Documentos",
+      "subtitle": "Los justificantes que las familias suben para completar el expediente. Utilice la lista estándar o solicite los suyos propios.",
+      "requestedCount": "Documentos solicitados",
+      "studentsConcerned": "Alumnos afectados",
+      "toReviewCount": "Documentos por verificar",
+      "receivedLabel": "Documentos recibidos",
+      "bannerText": "Cada documento subido se pone en cola de verificación. Se recuerda automáticamente a las familias los documentos faltantes.",
+      "bannerTextWithDeadline": "Cada documento subido se pone en cola de verificación. Se recuerda automáticamente a las familias los documentos faltantes hasta la fecha límite del {date}.",
+      "requestedHeading": "Documentos solicitados · {count}",
+      "addDocLabel": "Solicitar un documento",
+      "close": "Cerrar",
+      "standardBadge": "ESTÁNDAR",
+      "customBadge": "PERSONALIZADO",
+      "detailButton": "Detalle",
+      "editButton": "Modificar",
+      "deleteConfirm": "¿Eliminar este documento? Los archivos ya enviados por las familias se eliminarán definitivamente.",
+      "addPanel": {
+        "mandatoryTile": {
+          "title": "Obligatorio para todos",
+          "description": "Solicitado a cada alumno confirmado — cuenta para la integridad del expediente."
+        },
+        "conditionalTile": {
+          "title": "Según la situación",
+          "description": "Solicitado únicamente a los alumnos afectados — usted elige a quién, sin penalizar los demás expedientes."
+        },
+        "addButton": "Añadir el documento",
+        "nameLabel": "Nombre del documento",
+        "namePlaceholder": "Tarjeta sanitaria europea",
+        "deadlineLabel": "Fecha límite (opcional)",
+        "conditionLabel": "Condición (opcional)",
+        "conditionPlaceholder": "si los padres están divorciados",
+        "back": "Volver",
+        "createDraft": "Crear el borrador",
+        "creating": "Creando…"
+      },
+      "drawer": {
+        "acceptedFormats": "PDF · JPG · PNG",
+        "maxSize": "10 MB máx.",
+        "deadlineChip": "Fecha límite {date}",
+        "trackingHeading": "Seguimiento por alumno",
+        "draftEmptyConditional": "Este documento aún no se ha solicitado. Elija a los alumnos afectados y luego actívelo para lanzar las solicitudes.",
+        "draftEmptyAll": "Este documento aún no se ha solicitado. Actívelo para lanzar las solicitudes.",
+        "noEnrolledStudents": "Ningún alumno inscrito por el momento.",
+        "restCount": "+ {count, plural, one {# alumno} other {# alumnos}} — documento proporcionado y validado",
+        "remindedCount": "{count, plural, one {# recordado} other {# recordados}}",
+        "skippedRecently": " · {count, plural, one {# ya recordado recientemente} other {# ya recordados recientemente}}",
+        "failedCount": " · {count} fallidos",
+        "activate": "Activar",
+        "activating": "Activando…",
+        "chooseAndActivate": "Elegir alumnos y activar",
+        "sending": "Enviando…",
+        "remindFamilies": "Recordar a las familias"
+      }
+    },
+    "students": {
+      "title": "Alumnos",
+      "emptyFilter": "Ningún alumno coincide con el filtro.",
+      "selectPrompt": "Seleccione un alumno.",
+      "detail": {
+        "identityHeading": "Identidad",
+        "noApplication": "No se ha encontrado candidatura para este alumno.",
+        "parentsHeading": "Padres",
+        "fileHeading": "Expediente",
+        "piecesProvided": "{provided}/{total} documentos proporcionados",
+        "emptyChecklist": "Ningún documento solicitado por el momento.",
+        "applicationLink": "Candidatura",
+        "remindButton": "Recordar",
+        "sending": "Enviando…",
+        "reminderSent": "Recordatorio enviado.",
+        "reminderCooldown": "Ya recordado recientemente — vuelva a intentarlo más tarde."
+      },
+      "overall": {
+        "complete": "Completo",
+        "late": "Con retraso",
+        "incomplete": "Incompleto"
+      },
+      "chips": {
+        "all": "Todos",
+        "complete": "Completo",
+        "incomplete": "Incompleto",
+        "late": "Con retraso"
+      },
+      "summary": {
+        "complete": "Expediente completo",
+        "toVerify": "{n, plural, one {# documento por verificar} other {# documentos por verificar}}",
+        "late": "Fecha límite superada — {n, plural, one {# documento esperado} other {# documentos esperados}}",
+        "pending": "{n, plural, one {# documento esperado} other {# documentos esperados}}"
+      },
+      "dueLabel": "Fecha límite {date}",
+      "listSummary": "{n, plural, one {# alumno confirmado} other {# alumnos confirmados}} · {done, plural, one {# expediente completo} other {# expedientes completos}}",
+      "reminderNote": {
+        "complete": "Expediente completo — ningún recordatorio previsto para {firstName}.",
+        "pending": "Recordatorios automáticos por correo electrónico hasta su recepción — {firstName} y sus padres reciben la lista de documentos esperados.",
+        "pendingWithDue": "Recordatorios automáticos por correo electrónico hasta su recepción — {firstName} y sus padres reciben la lista de documentos esperados ({dueLabel})."
+      }
+    },
+    "pages": {
+      "documentDetail": {
+        "backLabel": "Volver a documentos"
+      },
+      "formDetail": {
+        "backLabel": "Volver a formularios"
+      },
+      "students": {
+        "emptyHeading": "Ningún alumno confirmado para esta sesión.",
+        "emptyBodyPrefix": "Los alumnos aparecen aquí una vez aceptada su candidatura y creada su cuenta.",
+        "emptyBodyLink": "Ver las candidaturas"
+      },
+      "submissionReview": {
+        "backLink": "← Volver al intercambio",
+        "unknownStudent": "Desconocido",
+        "notSubmitted": "No enviado",
+        "notStarted": "Este alumno aún no ha empezado este formulario.",
+        "noAnswer": "Ninguna respuesta",
+        "notUploaded": "No transmitido",
+        "reviewNoteHeading": "Nota de revisión",
+        "status": {
+          "approved": "Aprobado",
+          "submitted": "Enviado",
+          "rejected": "Rechazado",
+          "draft": "Borrador"
+        }
+      }
+    }
+  }
+}
