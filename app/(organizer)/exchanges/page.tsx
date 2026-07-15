@@ -1,4 +1,5 @@
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
+import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications-review'
@@ -16,6 +17,7 @@ export default async function ExchangesPage() {
   const school = profile.schools ?? null
 
   const exchanges = await getExchanges()
+  const tr = await getTranslations()
 
   const exchangesData: ExchangeCardData[] = await Promise.all(
     exchanges.map(async (exchange: any) => {
@@ -29,7 +31,7 @@ export default async function ExchangesPage() {
       const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
       const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
 
-      const prog = exchangeProgress(apps, rollups)
+      const prog = exchangeProgress(apps, rollups, tr)
       const pct = prog.total === 0 ? null : Math.round((prog.done / prog.total) * 100)
       const pctLabel = pct === null ? '—' : prog.label
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { ApplicationReadView } from '@/components/ApplicationReadView'
 import { ApplicationReviewActions } from '@/components/ApplicationReviewActions'
 import { PrintButton } from '@/components/applications/PrintButton'
@@ -6,7 +7,7 @@ import { StatusPill } from '@/components/dashboard/StatusPill'
 import { applicantStatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 
-export function ApplicationDetail({
+export async function ApplicationDetail({
   application,
   photoUrl,
   exchangeName,
@@ -17,6 +18,7 @@ export function ApplicationDetail({
   exchangeName: string
   year: number
 }) {
+  const tr = await getTranslations()
   const name = applicantName(application.data) || application.email
 
   return (
@@ -31,7 +33,7 @@ export function ApplicationDetail({
       <div className="mb-5">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold">{name}</h1>
-          <StatusPill pill={applicantStatusPill(application.status)} />
+          <StatusPill pill={applicantStatusPill(application.status, tr)} />
         </div>
         <p className="font-mono text-[12px] text-tertiary uppercase tracking-[.08em]">
           Candidature · {exchangeName} · {year}

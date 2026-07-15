@@ -32,6 +32,7 @@ function initials(name: string): string {
 export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | null; onClose: () => void }) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState(false)
@@ -68,7 +69,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
   const drawerSubject = subject
 
   const name = drawerSubject.kind === 'application' ? applicantName(drawerSubject.app.data) || drawerSubject.app.email : drawerSubject.rollup.name
-  const statusPill = drawerSubject.kind === 'application' ? applicantStatusPill(drawerSubject.app.status) : drawerSubject.rollup.overall
+  const statusPill = drawerSubject.kind === 'application' ? applicantStatusPill(drawerSubject.app.status, tr) : drawerSubject.rollup.overall
 
   async function handleAccept() {
     if (drawerSubject.kind !== 'application') return
@@ -121,7 +122,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
               {t('dashboard.timelineHeading')}
             </div>
             <div>
-              {timelineFor(subject.app).map((entry, i, arr) => (
+              {timelineFor(subject.app, tr).map((entry, i, arr) => (
                 <div key={i} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <span className={`h-[10px] w-[10px] rounded-full mt-1 ${DOT_CLASSES[entry.dot]}`} />

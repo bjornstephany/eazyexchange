@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { AppRow } from '@/lib/dashboard/rollup'
 import { applicantStatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
@@ -45,6 +46,7 @@ export function CandidaturesView({
   applySlug: string
 }) {
   const router = useRouter()
+  const tr = useTranslations()
   const [tab, setTab] = useState<TabKey>('all')
   const [open, setOpen] = useState(applicationOpen)
   const [deadline, setDeadline] = useState(applicationDeadline ?? '')
@@ -311,7 +313,7 @@ export function CandidaturesView({
               <span className="text-sm text-muted-foreground">{a.data.grade ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{a.data.native_language ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{frShortDate(a.submitted_at)}</span>
-              <StatusPill pill={applicantStatusPill(a.status)} />
+              <StatusPill pill={applicantStatusPill(a.status, tr)} />
               <span className="text-muted-foreground">›</span>
             </div>
           ))

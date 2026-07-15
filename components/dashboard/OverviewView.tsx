@@ -55,6 +55,7 @@ export function OverviewView(props: OverviewProps) {
   const { exchangeId, apps, students, rollups, templates, cellMap, applicationOpen, applicationDeadline, applySlug } = props
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
   const [filter, setFilter] = useState<string | null>(null)
   const [showClosed, setShowClosed] = useState(false)
   const [selected, setSelected] = useState<DrawerSubject | null>(null)
@@ -73,7 +74,7 @@ export function OverviewView(props: OverviewProps) {
     return row.kind === 'applicant' ? { kind: 'application', app: row.app } : studentSubject(row.rollup)
   }
 
-  const rows = buildLifecycleRows(apps, students, rollups)
+  const rows = buildLifecycleRows(apps, students, rollups, tr)
 
   // Opening applications revalidates /dashboard, which flips these props and so
   // flips `neverOpened`. The InviteModal is therefore rendered once, outside this
@@ -82,7 +83,7 @@ export function OverviewView(props: OverviewProps) {
   // never opened — hence the rows.length guard.
   const neverOpened = !applicationOpen && applicationDeadline == null && rows.length === 0
 
-  const funnel = lifecycleFunnel(apps, rollups)
+  const funnel = lifecycleFunnel(apps, rollups, tr)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
   // Labels for filter keys that only exist on action cards, not as funnel tiles.
   function actionOnlyFilterLabel(key: string): string | undefined {
@@ -97,9 +98,9 @@ export function OverviewView(props: OverviewProps) {
   const filteredRows = lifecycleFilter(rows, filter, showClosed)
   const nClosed = closedCount(rows)
 
-  const cards = lifecycleActionCards(apps, rollups, templates.length)
+  const cards = lifecycleActionCards(apps, rollups, templates.length, tr)
   const next = nextDeadline(rollups)
-  const subline = lifecycleSubline(apps, rollups)
+  const subline = lifecycleSubline(apps, rollups, tr)
 
   function handleStageClick(key: string) {
     if (key === 'all') {
@@ -200,10 +201,10 @@ export function OverviewView(props: OverviewProps) {
                   <StatusPill pill={row.candidature} />
                 </span>
                 <span>
-                  {row.kind === 'enrolled' ? <StatusPill pill={formsPill(row.rollup.forms)} /> : <span className="text-placeholder">—</span>}
+                  {row.kind === 'enrolled' ? <StatusPill pill={formsPill(row.rollup.forms, tr)} /> : <span className="text-placeholder">—</span>}
                 </span>
                 <span>
-                  {row.kind === 'enrolled' ? <StatusPill pill={docsPill(row.rollup.docs)} /> : <span className="text-placeholder">—</span>}
+                  {row.kind === 'enrolled' ? <StatusPill pill={docsPill(row.rollup.docs, tr)} /> : <span className="text-placeholder">—</span>}
                 </span>
                 <span>
                   <StatusPill pill={row.kind === 'enrolled' ? row.rollup.overall : row.statut} />
