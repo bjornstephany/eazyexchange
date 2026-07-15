@@ -10,11 +10,12 @@ import { StudentDetail } from './StudentDetail'
 
 export function StudentsView({ exchangeId, students }: { exchangeId: string; students: StudentVM[] }) {
   const t = useTranslations('organizer')
+  const tr = useTranslations()
   const { listSearch } = useShellUi()
   const [statusFilter, setStatusFilter] = useState<StatusKey | null>(null)
   const [selId, setSelId] = useState<string | null>(null)
 
-  const chips = chipDefs(students)
+  const chips = chipDefs(students, tr)
   const visible = filterStudents(students, statusFilter, listSearch)
   const selected = visible.find(v => v.id === selId) ?? visible[0] ?? null
 
@@ -25,7 +26,7 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
         <div className="w-[340px] flex-none">
           <div className="mb-[13px]">
             <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">{t('students.title')}</h1>
-            <p className="text-[13px] text-muted-foreground">{listSummary(students)}</p>
+            <p className="text-[13px] text-muted-foreground">{listSummary(students, tr)}</p>
           </div>
           <div className="mb-[13px] flex flex-wrap gap-1.5">
             {chips.map(c => {

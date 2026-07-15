@@ -457,6 +457,30 @@
         "sending": "Envoi…",
         "reminderSent": "Relance envoyée.",
         "reminderCooldown": "Déjà relancé récemment — réessayez plus tard."
+      },
+      "overall": {
+        "complete": "Complet",
+        "late": "En retard",
+        "incomplete": "Incomplet"
+      },
+      "chips": {
+        "all": "Tous",
+        "complete": "Complet",
+        "incomplete": "Incomplet",
+        "late": "En retard"
+      },
+      "summary": {
+        "complete": "Dossier complet",
+        "toVerify": "{n, plural, one {# pièce à vérifier} other {# pièces à vérifier}}",
+        "late": "Échéance dépassée — {n, plural, one {# pièce attendue} other {# pièces attendues}}",
+        "pending": "{n, plural, one {# pièce attendue} other {# pièces attendues}}"
+      },
+      "dueLabel": "Échéance {date}",
+      "listSummary": "{n, plural, one {# élève confirmé} other {# élèves confirmés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
+      "reminderNote": {
+        "complete": "Dossier complet — aucune relance prévue pour {firstName}.",
+        "pending": "Relances automatiques par e-mail jusqu’à réception — {firstName} et ses parents reçoivent la liste des pièces attendues.",
+        "pendingWithDue": "Relances automatiques par e-mail jusqu’à réception — {firstName} et ses parents reçoivent la liste des pièces attendues ({dueLabel})."
       }
     },
     "pages": {

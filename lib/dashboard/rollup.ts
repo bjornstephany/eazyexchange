@@ -67,7 +67,7 @@ function sameDate(a: Date, b: Date): number {
 }
 
 export function rollupStudent(
-  student: StudentInfo, templates: TemplateInfo[], cellMap: CellMap, today: Date = new Date(),
+  student: StudentInfo, templates: TemplateInfo[], cellMap: CellMap, today: Date = new Date(), t: T,
 ): DossierRollup {
   const dataTemplates = templates.filter(t => t.type === 'data_entry')
   const docTemplates = templates.filter(t => t.type === 'document_upload')
@@ -100,10 +100,10 @@ export function rollupStudent(
   const late = due !== null && sameDate(today, new Date(due + 'T00:00:00')) > 0
 
   let overall: Pill
-  if (docs === 'review') overall = { kind: 'info', label: 'À vérifier' }
-  else if (forms === 'complete' && docs === 'complete') overall = { kind: 'ok', label: 'Complet' }
-  else if (late) overall = { kind: 'bad', label: 'En retard' }
-  else overall = { kind: 'warn', label: 'Incomplet' }
+  if (docs === 'review') overall = { kind: 'info', label: t('common.status.toVerify') }
+  else if (forms === 'complete' && docs === 'complete') overall = { kind: 'ok', label: t('organizer.students.overall.complete') }
+  else if (late) overall = { kind: 'bad', label: t('organizer.students.overall.late') }
+  else overall = { kind: 'warn', label: t('organizer.students.overall.incomplete') }
 
   return { studentId: student.id, name: student.full_name, forms, docs, due, late, overall }
 }

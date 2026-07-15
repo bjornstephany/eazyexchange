@@ -457,6 +457,30 @@
         "sending": "Sending…",
         "reminderSent": "Reminder sent.",
         "reminderCooldown": "Already reminded recently — try again later."
+      },
+      "overall": {
+        "complete": "Complete",
+        "late": "Late",
+        "incomplete": "Incomplete"
+      },
+      "chips": {
+        "all": "All",
+        "complete": "Complete",
+        "incomplete": "Incomplete",
+        "late": "Late"
+      },
+      "summary": {
+        "complete": "File complete",
+        "toVerify": "{n, plural, one {# document to review} other {# documents to review}}",
+        "late": "Deadline passed — {n, plural, one {# document expected} other {# documents expected}}",
+        "pending": "{n, plural, one {# document expected} other {# documents expected}}"
+      },
+      "dueLabel": "Deadline {date}",
+      "listSummary": "{n, plural, one {# confirmed student} other {# confirmed students}} · {done, plural, one {# complete file} other {# complete files}}",
+      "reminderNote": {
+        "complete": "File complete — no reminder scheduled for {firstName}.",
+        "pending": "Automatic email reminders until received — {firstName} and their parents receive the list of expected documents.",
+        "pendingWithDue": "Automatic email reminders until received — {firstName} and their parents receive the list of expected documents ({dueLabel})."
       }
     },
     "pages": {

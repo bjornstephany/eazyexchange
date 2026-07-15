@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { getTranslations } from 'next-intl/server'
 import { getExchanges, getExchangeGrid } from '@/actions/exchanges'
 import { listApplications } from '@/actions/applications-review'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
@@ -12,16 +13,17 @@ export default async function DashboardPage() {
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
   if (!active) return <EmptyDashboard />
 
-  const [applications, grid] = await Promise.all([
+  const [applications, grid, tr] = await Promise.all([
     listApplications(active.id),
     getExchangeGrid(active.id),
+    getTranslations(),
   ])
   const apps: AppRow[] = applications.map((a: any) => ({
     id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
   }))
   const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
   const students: EnrolledStudent[] = grid.students.map((s: any) => ({ id: s.id, full_name: s.full_name, email: s.email }))
-  const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
+  const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap, undefined, tr))
 
   return (
     <OverviewView

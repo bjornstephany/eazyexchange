@@ -33,42 +33,42 @@ const TODAY = new Date('2026-09-20T12:00:00')
 
 describe('rollupStudent', () => {
   it('complete dossier', () => {
-    const r = rollupStudent(student, T, cell('approved', 'approved'), TODAY)
+    const r = rollupStudent(student, T, cell('approved', 'approved'), TODAY, t)
     expect(r.forms).toBe('complete'); expect(r.docs).toBe('complete')
     expect(r.overall).toEqual({ kind: 'ok', label: 'Complet' }); expect(r.due).toBeNull(); expect(r.late).toBe(false)
   })
   it('doc awaiting review wins overall', () => {
-    const r = rollupStudent(student, T, cell('approved', 'submitted'), TODAY)
+    const r = rollupStudent(student, T, cell('approved', 'submitted'), TODAY, t)
     expect(r.docs).toBe('review'); expect(r.overall).toEqual({ kind: 'info', label: 'À vérifier' })
   })
   it('nothing started → missing + due', () => {
-    const r = rollupStudent(student, T, cell('', ''), TODAY)
+    const r = rollupStudent(student, T, cell('', ''), TODAY, t)
     expect(r.forms).toBe('missing'); expect(r.docs).toBe('missing'); expect(r.due).toBe('2026-10-10'); expect(r.late).toBe(false)
   })
   it('late when past deadline and incomplete', () => {
-    const r = rollupStudent(student, T, cell('draft', ''), new Date('2026-10-11T12:00:00'))
+    const r = rollupStudent(student, T, cell('draft', ''), new Date('2026-10-11T12:00:00'), t)
     expect(r.late).toBe(true); expect(r.overall).toEqual({ kind: 'bad', label: 'En retard' })
   })
   it('no templates → complete', () => {
-    const r = rollupStudent(student, [], {}, TODAY)
+    const r = rollupStudent(student, [], {}, TODAY, t)
     expect(r.overall).toEqual({ kind: 'ok', label: 'Complet' })
   })
   it('rejected submission counts as incomplete for due/late, but as started for forms/docs', () => {
-    const r = rollupStudent(student, T, cell('rejected', 'rejected'), TODAY)
+    const r = rollupStudent(student, T, cell('rejected', 'rejected'), TODAY, t)
     expect(r.forms).toBe('pending'); expect(r.docs).toBe('pending')
     // still incomplete for due/late purposes
     expect(r.due).toBe('2026-10-10')
   })
   it('draft submission on a data_entry template → forms pending (started, not complete)', () => {
-    const r = rollupStudent(student, T, cell('draft', ''), TODAY)
+    const r = rollupStudent(student, T, cell('draft', ''), TODAY, t)
     expect(r.forms).toBe('pending')
   })
   it('rejected submission on a document_upload template → docs pending (started, not complete)', () => {
-    const r = rollupStudent(student, T, cell('', 'rejected'), TODAY)
+    const r = rollupStudent(student, T, cell('', 'rejected'), TODAY, t)
     expect(r.docs).toBe('pending')
   })
   it('truly no submission rows → missing', () => {
-    const r = rollupStudent(student, T, cell('', ''), TODAY)
+    const r = rollupStudent(student, T, cell('', ''), TODAY, t)
     expect(r.forms).toBe('missing'); expect(r.docs).toBe('missing')
   })
   it('pending: some but not all forms submitted/approved', () => {
@@ -77,7 +77,7 @@ describe('rollupStudent', () => {
       { id: 'f2', type: 'data_entry', name: 'Autre', deadline: '2026-10-20' },
     ]
     const m: CellMap = { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:f2': { assignmentId: 'a2', status: undefined } }
-    const r = rollupStudent(student, T2, m, TODAY)
+    const r = rollupStudent(student, T2, m, TODAY, t)
     expect(r.forms).toBe('pending')
     // due = earliest deadline among incomplete assignments → f2's 2026-10-20
     expect(r.due).toBe('2026-10-20')
@@ -97,13 +97,13 @@ describe('formsPill / docsPill', () => {
 describe('nextDeadline', () => {
   it('earliest incomplete due across students', () => {
     const rollups = [
-      rollupStudent(student, T, cell('approved', 'approved'), TODAY), // due null
-      rollupStudent(student, T, cell('', ''), TODAY), // due 2026-10-10
+      rollupStudent(student, T, cell('approved', 'approved'), TODAY, t), // due null
+      rollupStudent(student, T, cell('', ''), TODAY, t), // due 2026-10-10
     ]
     expect(nextDeadline(rollups)).toBe('2026-10-10')
   })
   it('null when nothing incomplete', () => {
-    const rollups = [rollupStudent(student, T, cell('approved', 'approved'), TODAY)]
+    const rollups = [rollupStudent(student, T, cell('approved', 'approved'), TODAY, t)]
     expect(nextDeadline(rollups)).toBeNull()
   })
 })
@@ -155,7 +155,7 @@ describe('timelineFor', () => {
 // ---- Unified lifecycle view ----
 
 const STUDENTS: EnrolledStudent[] = [{ id: 's1', full_name: 'Camille Laurent', email: 'c@l.fr' }]
-const ROLLUPS = [rollupStudent(student, T, cell('approved', 'approved'), TODAY)]
+const ROLLUPS = [rollupStudent(student, T, cell('approved', 'approved'), TODAY, t)]
 
 describe('candidaturePill', () => {
   it.each([
@@ -223,9 +223,9 @@ describe('closedCount', () => {
 describe('lifecycleFunnel', () => {
   const APPS2 = [app('submitted'), app('submitted'), app('rejected'), app('declined'), app('accepted')]
   const R2 = [
-    rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'approved' } }, TODAY), // complete
-    rollupStudent({ id: 's2', full_name: 'B' }, T, { 's2:f1': { assignmentId: 'a3', status: 'approved' }, 's2:d1': { assignmentId: 'a4', status: 'submitted' } }, TODAY), // review
-    rollupStudent({ id: 's3', full_name: 'C' }, T, {}, new Date('2026-10-11T12:00:00')), // late, missing
+    rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'approved' } }, TODAY, t), // complete
+    rollupStudent({ id: 's2', full_name: 'B' }, T, { 's2:f1': { assignmentId: 'a3', status: 'approved' }, 's2:d1': { assignmentId: 'a4', status: 'submitted' } }, TODAY, t), // review
+    rollupStudent({ id: 's3', full_name: 'C' }, T, {}, new Date('2026-10-11T12:00:00'), t), // late, missing
   ]
   it('counts: Candidatures includes closed; Complets shows « x / y »', () => {
     const f = Object.fromEntries(lifecycleFunnel(APPS2, R2, t).map(s => [s.key, s.count]))
@@ -240,7 +240,7 @@ describe('lifecycleFunnel', () => {
 })
 
 describe('lifecycleFilter', () => {
-  const late = rollupStudent({ id: 's2', full_name: 'Zoé Blanc' }, T, {}, new Date('2026-10-11T12:00:00'))
+  const late = rollupStudent({ id: 's2', full_name: 'Zoé Blanc' }, T, {}, new Date('2026-10-11T12:00:00'), t)
   const students2: EnrolledStudent[] = [...STUDENTS, { id: 's2', full_name: 'Zoé Blanc', email: 'z@b.fr' }]
   const rows = buildLifecycleRows(
     [app('submitted', { id: 'a1' }), app('maybe', { id: 'a2' }), app('rejected', { id: 'a3' })],
@@ -268,8 +268,8 @@ describe('lifecycleFilter', () => {
 describe('lifecycleSubline', () => {
   it('mixes both worlds with pluralization', () => {
     const R2 = [
-      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY),
-      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00')),
+      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY, t),
+      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00'), t),
     ]
     expect(lifecycleSubline([app('submitted'), app('submitted')], R2, t))
       .toBe('2 candidatures à examiner, 1 dossier à vérifier, 1 élève en retard.')
@@ -279,8 +279,8 @@ describe('lifecycleSubline', () => {
 describe('lifecycleActionCards', () => {
   it('orders by urgency: toreview, review, late, missingdocs, maybe — omitting zero counts', () => {
     const R2 = [
-      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY), // review
-      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00')), // late + missing docs
+      rollupStudent({ id: 's1', full_name: 'A' }, T, { 's1:f1': { assignmentId: 'a1', status: 'approved' }, 's1:d1': { assignmentId: 'a2', status: 'submitted' } }, TODAY, t), // review
+      rollupStudent({ id: 's2', full_name: 'B' }, T, {}, new Date('2026-10-11T12:00:00'), t), // late + missing docs
     ]
     const cards = lifecycleActionCards([app('submitted'), app('maybe')], R2, undefined, t)
     expect(cards.map(c => c.filterKey)).toEqual(['toreview', 'review', 'late', 'missingdocs', 'maybe'])
@@ -298,7 +298,7 @@ describe('lifecycleActionCards', () => {
 
 describe('exchangeProgress', () => {
   it('dossier progress once students are enrolled', () => {
-    const R2 = [ROLLUPS[0], rollupStudent({ id: 's2', full_name: 'B' }, T, {}, TODAY)]
+    const R2 = [ROLLUPS[0], rollupStudent({ id: 's2', full_name: 'B' }, T, {}, TODAY, t)]
     expect(exchangeProgress([app('submitted')], R2, t)).toEqual({ done: 1, total: 2, label: '1 / 2 dossiers validés' })
   })
   it('candidature progress before any enrollment', () => {

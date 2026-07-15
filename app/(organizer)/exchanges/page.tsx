@@ -29,7 +29,7 @@ export default async function ExchangesPage() {
         id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
       }))
       const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
-      const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap))
+      const rollups = grid.students.map((s: any) => rollupStudent(s, templates, grid.cellMap, undefined, tr))
 
       const prog = exchangeProgress(apps, rollups, tr)
       const pct = prog.total === 0 ? null : Math.round((prog.done / prog.total) * 100)

@@ -9,6 +9,7 @@ import { reminderNote, type StudentVM } from '@/lib/students/directory'
 export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: string }) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -143,7 +144,7 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
           </div>
           <div className="mt-3.5 flex items-center gap-[9px] rounded-[11px] bg-hoverrow px-[15px] py-[13px]">
             <span className="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[7px] bg-brand text-[13px] text-white">↻</span>
-            <span className="text-[12.5px] leading-[1.45] text-muted-foreground">{reminderNote(vm)}</span>
+            <span className="text-[12.5px] leading-[1.45] text-muted-foreground">{reminderNote(vm, tr)}</span>
           </div>
         </div>
       </div>
