@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { updateProfile } from '@/actions/settings'
 
 const AVATAR_GRADIENT = 'linear-gradient(135deg,#3B6EF6,#0E1B38)' // handoff constant
@@ -12,6 +13,8 @@ export function ProfileCard({ profile, isOwner }: {
   profile: { fullName: string; email: string; schoolName: string }
   isOwner: boolean
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [f, setF] = useState({
     fullName: profile.fullName, schoolName: profile.schoolName,
   })
@@ -28,17 +31,17 @@ export function ProfileCard({ profile, isOwner }: {
       clearTimeout(timer.current)
       timer.current = setTimeout(() => setSaved(false), 2200)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
 
   const fields: { key: keyof typeof f | 'email'; label: string; disabled?: boolean; hint?: string }[] = [
-    { key: 'fullName', label: 'Nom complet' },
-    { key: 'email', label: 'Adresse e-mail', disabled: true, hint: 'Contactez le support pour changer d’adresse.' },
+    { key: 'fullName', label: t('settings.profile.fullNameLabel') },
+    { key: 'email', label: t('settings.profile.emailLabel'), disabled: true, hint: t('settings.profile.emailHint') },
     {
-      key: 'schoolName', label: 'Établissement', disabled: !isOwner,
-      hint: isOwner ? undefined : 'Seul le propriétaire peut modifier le nom de l’établissement.',
+      key: 'schoolName', label: t('settings.profile.schoolNameLabel'), disabled: !isOwner,
+      hint: isOwner ? undefined : t('settings.profile.schoolNameHint'),
     },
   ]
 
@@ -75,12 +78,12 @@ export function ProfileCard({ profile, isOwner }: {
       </div>
       <div className="mt-[22px] flex items-center justify-end gap-3.5">
         {error && <span className="text-[12.5px] font-medium text-danger-text">{error}</span>}
-        {saved && <span className="text-[12.5px] font-medium text-success-text">✓ Modifications enregistrées</span>}
+        {saved && <span className="text-[12.5px] font-medium text-success-text">{c('states.saved')}</span>}
         <button
           type="button" onClick={handleSave} disabled={busy}
           className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
         >
-          Enregistrer
+          {c('actions.save')}
         </button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { inviteOrganizer, revokeOrganizerInvite, removeOrganizer, type TeamMember, type PendingInvite } from '@/actions/settings'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -16,6 +17,8 @@ export function TeamCard({ team, isOwner }: {
   team: { members: TeamMember[]; pending: PendingInvite[] }
   isOwner: boolean
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [invite, setInvite] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
@@ -28,9 +31,9 @@ export function TeamCard({ team, isOwner }: {
     try {
       await inviteOrganizer(invite)
       setInvite('')
-      setFlash('Invitation envoyée.')
+      setFlash(t('settings.team.inviteSuccess'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
@@ -38,7 +41,7 @@ export function TeamCard({ team, isOwner }: {
   async function handleRevoke(id: string) {
     setError(null)
     try { await revokeOrganizerInvite(id) }
-    catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue.') }
+    catch (err) { setError(err instanceof Error ? err.message : c('errors.generic')) }
   }
 
   async function handleRemove() {
@@ -48,30 +51,30 @@ export function TeamCard({ team, isOwner }: {
       await removeOrganizer(removing.id)
       setRemoving(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setRemoveBusy(false)
   }
 
   return (
     <div className="rounded-2xl border bg-card px-7 py-[26px]">
-      <div className="mb-1 font-display text-[15px] font-bold tracking-[-.01em] text-foreground">Équipe & rôles</div>
+      <div className="mb-1 font-display text-[15px] font-bold tracking-[-.01em] text-foreground">{t('settings.team.heading')}</div>
       <p className="mb-[18px] text-[12.5px] text-tertiary">
-        Invitez des collègues à gérer vos échanges. Seul le propriétaire accède à la facturation.
+        {t('settings.team.description')}
       </p>
 
       {isOwner && (
         <div className="flex gap-2.5">
           <input
             value={invite} onChange={e => setInvite(e.target.value)}
-            placeholder="adresse@etablissement.fr"
+            placeholder={t('settings.team.invitePlaceholder')}
             className="h-10 min-w-0 flex-1 rounded-[9px] border px-3 text-[13.5px] focus:border-brand focus:outline-none"
           />
           <button
             type="button" onClick={handleInvite} disabled={busy}
             className="h-10 flex-none rounded-[9px] bg-brand px-4 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
           >
-            Inviter
+            {t('settings.team.inviteButton')}
           </button>
         </div>
       )}
@@ -94,15 +97,15 @@ export function TeamCard({ team, isOwner }: {
               <span className="flex items-center gap-2">
                 <span className="text-[13.5px] font-semibold text-foreground">{m.name}</span>
                 {m.isYou && (
-                  <span className="rounded-pill bg-tint px-2 py-px font-mono text-[10px] font-semibold text-tint-text">VOUS</span>
+                  <span className="rounded-pill bg-tint px-2 py-px font-mono text-[10px] font-semibold text-tint-text">{t('settings.team.youBadge')}</span>
                 )}
               </span>
               <span className="mt-px block truncate text-xs text-tertiary">{m.email}</span>
             </span>
             {m.isOwner ? (
-              <span className="rounded-pill bg-navy px-3 py-[5px] text-[11.5px] font-semibold text-white">Propriétaire</span>
+              <span className="rounded-pill bg-navy px-3 py-[5px] text-[11.5px] font-semibold text-white">{t('settings.team.ownerBadge')}</span>
             ) : (
-              <span className="rounded-pill bg-subtle px-3 py-[5px] text-[11.5px] font-semibold text-muted-foreground">Administrateur</span>
+              <span className="rounded-pill bg-subtle px-3 py-[5px] text-[11.5px] font-semibold text-muted-foreground">{t('settings.team.adminBadge')}</span>
             )}
             {isOwner && !m.isOwner && !m.isYou && (
               <button
@@ -110,7 +113,7 @@ export function TeamCard({ team, isOwner }: {
                 onClick={() => setRemoving(m)}
                 className="px-1.5 py-1 text-xs font-semibold text-tertiary hover:text-danger-text"
               >
-                Retirer
+                {t('settings.team.removeButton')}
               </button>
             )}
           </div>
@@ -120,15 +123,15 @@ export function TeamCard({ team, isOwner }: {
             <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full border-[1.5px] border-dashed border-placeholder text-[13px] font-semibold text-placeholder">@</span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13.5px] font-medium text-muted-foreground">{p.email}</span>
-              <span className="mt-px block text-xs text-tertiary">Administrateur</span>
+              <span className="mt-px block text-xs text-tertiary">{t('settings.team.adminBadge')}</span>
             </span>
-            <span className="rounded-pill bg-warn px-2.5 py-[3px] text-[11px] font-semibold text-warn-text">Invitation envoyée</span>
+            <span className="rounded-pill bg-warn px-2.5 py-[3px] text-[11px] font-semibold text-warn-text">{t('settings.team.pendingBadge')}</span>
             {isOwner && (
               <button
                 type="button" onClick={() => handleRevoke(p.id)}
                 className="px-1.5 py-1 text-xs font-semibold text-tertiary hover:text-danger-text"
               >
-                Révoquer
+                {t('settings.team.revokeButton')}
               </button>
             )}
           </div>
@@ -137,29 +140,29 @@ export function TeamCard({ team, isOwner }: {
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-[11px] border border-subtle px-[15px] py-[13px]">
-          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">Propriétaire</div>
-          <div className="text-[11.5px] leading-[1.45] text-tertiary">Tout gérer, y compris l’équipe et la facturation.</div>
+          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">{t('settings.team.ownerBadge')}</div>
+          <div className="text-[11.5px] leading-[1.45] text-tertiary">{t('settings.team.ownerRoleDesc')}</div>
         </div>
         <div className="rounded-[11px] border border-subtle px-[15px] py-[13px]">
-          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">Administrateur</div>
-          <div className="text-[11.5px] leading-[1.45] text-tertiary">Gérer élèves, candidatures, formulaires et documents.</div>
+          <div className="mb-[3px] text-[12.5px] font-semibold text-foreground">{t('settings.team.adminBadge')}</div>
+          <div className="text-[11.5px] leading-[1.45] text-tertiary">{t('settings.team.adminRoleDesc')}</div>
         </div>
       </div>
 
       <Dialog open={!!removing} onOpenChange={o => { if (!o) setRemoving(null) }}>
         <DialogContent className="max-w-[440px] rounded-card p-8">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl font-bold text-navy">Retirer ce collaborateur ?</DialogTitle>
+            <DialogTitle className="font-display text-xl font-bold text-navy">{t('settings.team.removeDialog.title')}</DialogTitle>
             <DialogDescription className="text-[14px] text-muted-foreground">
-              {removing?.name} perdra l’accès à tous les échanges de votre établissement.
+              {t('settings.team.removeDialog.description', { name: removing?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-2 flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={() => setRemoving(null)} className="text-muted-foreground">
-              Annuler
+              {c('actions.cancel')}
             </Button>
             <Button type="button" variant="destructive" onClick={handleRemove} disabled={removeBusy}>
-              {removeBusy ? 'Retrait…' : 'Confirmer le retrait'}
+              {removeBusy ? t('settings.team.removeDialog.confirming') : t('settings.team.removeDialog.confirm')}
             </Button>
           </div>
         </DialogContent>

@@ -1,8 +1,11 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { changePassword } from '@/actions/settings'
 
 export function SecurityCard({ canChangePassword }: { canChangePassword: boolean }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [open, setOpen] = useState(false)
   const [cur, setCur] = useState('')
   const [nw, setNw] = useState('')
@@ -13,36 +16,36 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
 
   async function handleSave() {
     setError(null); setDone(false)
-    if (nw !== cf) { setError('Les mots de passe ne correspondent pas.'); return }
+    if (nw !== cf) { setError(t('settings.errors.passwordMismatch')); return }
     setBusy(true)
     try {
       await changePassword(cur, nw)
       setDone(true); setOpen(false); setCur(''); setNw(''); setCf('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
 
   const pwFields = [
-    { key: 'cur', label: 'Mot de passe actuel', value: cur, set: setCur },
-    { key: 'nw', label: 'Nouveau mot de passe', value: nw, set: setNw },
-    { key: 'cf', label: 'Confirmer', value: cf, set: setCf },
+    { key: 'cur', label: t('settings.security.currentPasswordLabel'), value: cur, set: setCur },
+    { key: 'nw', label: t('settings.security.newPasswordLabel'), value: nw, set: setNw },
+    { key: 'cf', label: t('settings.security.confirmPasswordLabel'), value: cf, set: setCf },
   ]
 
   return (
     <div className="rounded-2xl border bg-card px-7 py-[26px]">
-      <div className="mb-4 font-display text-[15px] font-bold tracking-[-.01em] text-foreground">Sécurité</div>
+      <div className="mb-4 font-display text-[15px] font-bold tracking-[-.01em] text-foreground">{t('settings.security.heading')}</div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <div className="text-[13.5px] font-semibold text-foreground">Mot de passe</div>
+          <div className="text-[13.5px] font-semibold text-foreground">{t('settings.security.passwordLabel')}</div>
           {!canChangePassword && (
             <div className="mt-0.5 text-[12.5px] text-tertiary">
-              Connexion via Google — la gestion du mot de passe ne s’applique pas à votre compte.
+              {t('settings.security.googleNotice')}
             </div>
           )}
           {canChangePassword && done && (
-            <div className="mt-0.5 text-[12.5px] font-medium text-success-text">✓ Mot de passe mis à jour</div>
+            <div className="mt-0.5 text-[12.5px] font-medium text-success-text">{t('settings.security.updated')}</div>
           )}
         </div>
         {canChangePassword && (
@@ -50,7 +53,7 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
             type="button" onClick={() => { setOpen(o => !o); setError(null) }}
             className="rounded-[9px] border px-3.5 py-2 text-[12.5px] font-semibold text-foreground hover:bg-hoverrow"
           >
-            {open ? 'Annuler' : 'Modifier le mot de passe'}
+            {open ? c('actions.cancel') : t('settings.security.changeButton')}
           </button>
         )}
       </div>
@@ -74,7 +77,7 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
               type="button" onClick={handleSave} disabled={busy}
               className="rounded-[9px] bg-brand px-[15px] py-[9px] text-[12.5px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
             >
-              Mettre à jour le mot de passe
+              {t('settings.security.submitButton')}
             </button>
           </div>
         </div>

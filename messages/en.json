@@ -27,9 +27,106 @@
   },
   "organizer": {
     "settings": {
+      "heading": "Settings",
+      "subtitle": "Your account, your team and your subscription.",
       "language": {
         "label": "Interface language",
         "hint": "Applies to your account across all your devices."
+      },
+      "nav": {
+        "compte": "Personal account",
+        "equipe": "Team & roles",
+        "fact": "Billing",
+        "prog": "Program"
+      },
+      "profile": {
+        "fullNameLabel": "Full name",
+        "emailLabel": "Email address",
+        "emailHint": "Contact support to change your address.",
+        "schoolNameLabel": "School",
+        "schoolNameHint": "Only the owner can change the school name."
+      },
+      "security": {
+        "heading": "Security",
+        "passwordLabel": "Password",
+        "googleNotice": "Signed in via Google — password management doesn't apply to your account.",
+        "updated": "✓ Password updated",
+        "changeButton": "Change password",
+        "currentPasswordLabel": "Current password",
+        "newPasswordLabel": "New password",
+        "confirmPasswordLabel": "Confirm",
+        "submitButton": "Update password"
+      },
+      "team": {
+        "heading": "Team & roles",
+        "description": "Invite colleagues to manage your exchanges. Only the owner can access billing.",
+        "invitePlaceholder": "address@school.edu",
+        "inviteButton": "Invite",
+        "inviteSuccess": "Invitation sent.",
+        "youBadge": "YOU",
+        "ownerBadge": "Owner",
+        "adminBadge": "Admin",
+        "removeButton": "Remove",
+        "pendingBadge": "Invitation sent",
+        "revokeButton": "Revoke",
+        "ownerRoleDesc": "Manage everything, including the team and billing.",
+        "adminRoleDesc": "Manage students, applications, forms and documents.",
+        "removeDialog": {
+          "title": "Remove this collaborator?",
+          "description": "{name} will lose access to all of your school's exchanges.",
+          "confirm": "Confirm removal",
+          "confirming": "Removing…"
+        }
+      },
+      "billing": {
+        "heading": "Billing",
+        "viewPlansCta": "View plans",
+        "paymentMethodLabel": "Payment method"
+      },
+      "program": {
+        "heading": "Program",
+        "archivedBadge": "Archived",
+        "archiveHeading": "Archive the program",
+        "archiveDescription": "The program becomes read-only. Files remain viewable, but no further changes are possible.",
+        "restoreButton": "Restore",
+        "archiveButton": "Archive the program…",
+        "stats": {
+          "enrolled": "{count, plural, one {# confirmed student} other {# confirmed students}}",
+          "applications": "{count, plural, one {# application} other {# applications}}",
+          "deadline": "file deadline {date}"
+        },
+        "modal": {
+          "title": "Archive this program?",
+          "body": "“{name}” will become read-only: students, applications and documents will remain viewable, but no further changes will be possible. You can restore it at any time.",
+          "confirm": "Archive the program"
+        }
+      },
+      "errors": {
+        "nameEmpty": "Name cannot be empty.",
+        "schoolNameEmpty": "School name cannot be empty.",
+        "passwordUpdateFailed": "The password could not be updated. Please try again.",
+        "passwordMismatch": "Passwords do not match."
+      }
+    },
+    "billing": {
+      "per": "/ year",
+      "usage": "{used} / {cap} {cap, plural, one {exchange} other {exchanges}} used",
+      "usageUnlimited": "{used} {used, plural, one {active exchange} other {active exchanges}} · unlimited exchanges",
+      "plans": {
+        "starter": { "label": "Starter", "price": "€199", "desc": "For an independent organizer." },
+        "growth": { "label": "Growth", "price": "€499", "desc": "For growing associations." },
+        "scale": { "label": "Scale", "price": "€799", "desc": "For large exchange networks." }
+      },
+      "trial": {
+        "label": "Free trial",
+        "price": "€0",
+        "desc": "Your first exchange is on us — no payment required."
+      },
+      "payment": {
+        "noneNote": "No payment method on file.",
+        "addCta": "Add a card",
+        "editCta": "Edit",
+        "card": "{brand} •••• {last4} — expires {exp}"
       }
     },
     "shell": {

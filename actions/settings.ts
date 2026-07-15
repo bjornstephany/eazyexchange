@@ -8,15 +8,14 @@ import { enforceRateLimit, enforceRateLimitStrict } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyError, PWNED_MESSAGE } from '@/lib/auth/hibp'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
-import { isPlanKey } from '@/lib/billing/plans'
+import { isPlanKey, type PlanKey } from '@/lib/billing/plans'
 import { getStripe } from '@/lib/billing/stripe'
 import { getAppUrl } from '@/lib/app-url'
-import {
-  PLAN_LABEL_FR, PLAN_PRICE_FR, PLAN_DESC_FR, TRIAL_LABEL, TRIAL_PRICE, TRIAL_DESC, usageLine,
-} from '@/lib/billing/display'
+import { usageLine } from '@/lib/billing/display'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 import { logAudit } from '@/lib/audit'
 import { isLocale, type Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 import type Stripe from 'stripe'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
@@ -35,9 +34,10 @@ export async function updateProfile(input: {
 }): Promise<void> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx()
+  const t = await getTranslations('organizer')
 
   const fullName = input.fullName.trim()
-  if (!fullName) throw new Error('Le nom ne peut pas être vide.')
+  if (!fullName) throw new Error(t('settings.errors.nameEmpty'))
 
   const { error: userError } = await supabase.from('users').update({
     full_name: fullName,
@@ -50,7 +50,7 @@ export async function updateProfile(input: {
   // fields above but their submitted schoolName is ignored here.
   if (ctx.orgRole === 'owner') {
     const schoolName = input.schoolName.trim()
-    if (!schoolName) throw new Error('Le nom de l’établissement ne peut pas être vide.')
+    if (!schoolName) throw new Error(t('settings.errors.schoolNameEmpty'))
     const { error: schoolError } = await supabase.from('schools')
       .update({ name: schoolName }).eq('id', ctx.schoolId)
     if (schoolError) throw schoolError
@@ -76,6 +76,7 @@ export async function updateLocale(locale: Locale): Promise<void> {
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx()
+  const t = await getTranslations('organizer')
   await enforceRateLimit(`pwchange:${ctx.userId}`, 5, 3600)
 
   const policyError = passwordPolicyError(newPassword)
@@ -96,7 +97,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
   if (await isPasswordPwned(newPassword)) throw new Error(PWNED_MESSAGE)
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
-  if (error) throw new Error('Le mot de passe n’a pas pu être mis à jour. Réessayez.')
+  if (error) throw new Error(t('settings.errors.passwordUpdateFailed'))
 }
 
 export type BillingOverview = {
@@ -108,6 +109,7 @@ export type BillingOverview = {
 export async function getBillingOverview(): Promise<BillingOverview> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx({ orgRole: 'owner' })
+  const t = await getTranslations('organizer')
 
   const { data: school } = await supabase
     .from('schools')
@@ -125,8 +127,11 @@ export async function getBillingOverview(): Promise<BillingOverview> {
   const planKey = active && isPlanKey(school.plan) ? school.plan : null
   const cap = exchangeCap(school)
   const usage = usageLine(used, cap)
+  const usageLabel = cap === Infinity
+    ? t('billing.usageUnlimited', { used })
+    : t('billing.usage', { used, cap })
 
-  let payment = { note: 'Aucun moyen de paiement enregistré.', cta: 'Ajouter une carte', href: '/billing' }
+  let payment = { note: t('billing.payment.noneNote'), cta: t('billing.payment.addCta'), href: '/billing' }
   if (planKey && school.stripe_customer_id && process.env.STRIPE_SECRET_KEY) {
     try {
       const customer = await getStripe().customers.retrieve(school.stripe_customer_id, {
@@ -139,21 +144,32 @@ export async function getBillingOverview(): Promise<BillingOverview> {
       if (card) {
         const brand = card.brand.charAt(0).toUpperCase() + card.brand.slice(1)
         const exp = `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
-        payment = { note: `${brand} •••• ${card.last4} — expire ${exp}`, cta: 'Modifier', href: '/billing/portal' }
+        payment = {
+          note: t('billing.payment.card', { brand, last4: card.last4, exp }),
+          cta: t('billing.payment.editCta'), href: '/billing/portal',
+        }
       }
     } catch {
       // Stripe unavailable/misconfigured: fall through to the no-card note.
     }
   }
 
+  // Literal per-plan keys (not a template-literal lookup) so the global.d.ts
+  // key gate can check each one against en.json.
+  const planCatalog: Record<PlanKey, { label: string; price: string; desc: string }> = {
+    starter: { label: t('billing.plans.starter.label'), price: t('billing.plans.starter.price'), desc: t('billing.plans.starter.desc') },
+    growth: { label: t('billing.plans.growth.label'), price: t('billing.plans.growth.price'), desc: t('billing.plans.growth.desc') },
+    scale: { label: t('billing.plans.scale.label'), price: t('billing.plans.scale.price'), desc: t('billing.plans.scale.desc') },
+  }
+
   return planKey
     ? {
-        planLabel: PLAN_LABEL_FR[planKey], price: PLAN_PRICE_FR[planKey], per: '/ an',
-        desc: PLAN_DESC_FR[planKey], usageLabel: usage.label, usagePct: usage.pct, payment,
+        planLabel: planCatalog[planKey].label, price: planCatalog[planKey].price, per: t('billing.per'),
+        desc: planCatalog[planKey].desc, usageLabel, usagePct: usage.pct, payment,
       }
     : {
-        planLabel: TRIAL_LABEL, price: TRIAL_PRICE, per: '',
-        desc: TRIAL_DESC, usageLabel: usage.label, usagePct: usage.pct, payment,
+        planLabel: t('billing.trial.label'), price: t('billing.trial.price'), per: '',
+        desc: t('billing.trial.desc'), usageLabel, usagePct: usage.pct, payment,
       }
 }
 

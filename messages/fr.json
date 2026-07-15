@@ -27,9 +27,106 @@
   },
   "organizer": {
     "settings": {
+      "heading": "Réglages",
+      "subtitle": "Votre compte, votre équipe et votre abonnement.",
       "language": {
         "label": "Langue de l’interface",
         "hint": "S’applique à votre compte sur tous vos appareils."
+      },
+      "nav": {
+        "compte": "Compte personnel",
+        "equipe": "Équipe & rôles",
+        "fact": "Facturation",
+        "prog": "Programme"
+      },
+      "profile": {
+        "fullNameLabel": "Nom complet",
+        "emailLabel": "Adresse e-mail",
+        "emailHint": "Contactez le support pour changer d’adresse.",
+        "schoolNameLabel": "Établissement",
+        "schoolNameHint": "Seul le propriétaire peut modifier le nom de l’établissement."
+      },
+      "security": {
+        "heading": "Sécurité",
+        "passwordLabel": "Mot de passe",
+        "googleNotice": "Connexion via Google — la gestion du mot de passe ne s’applique pas à votre compte.",
+        "updated": "✓ Mot de passe mis à jour",
+        "changeButton": "Modifier le mot de passe",
+        "currentPasswordLabel": "Mot de passe actuel",
+        "newPasswordLabel": "Nouveau mot de passe",
+        "confirmPasswordLabel": "Confirmer",
+        "submitButton": "Mettre à jour le mot de passe"
+      },
+      "team": {
+        "heading": "Équipe & rôles",
+        "description": "Invitez des collègues à gérer vos échanges. Seul le propriétaire accède à la facturation.",
+        "invitePlaceholder": "adresse@etablissement.fr",
+        "inviteButton": "Inviter",
+        "inviteSuccess": "Invitation envoyée.",
+        "youBadge": "VOUS",
+        "ownerBadge": "Propriétaire",
+        "adminBadge": "Administrateur",
+        "removeButton": "Retirer",
+        "pendingBadge": "Invitation envoyée",
+        "revokeButton": "Révoquer",
+        "ownerRoleDesc": "Tout gérer, y compris l’équipe et la facturation.",
+        "adminRoleDesc": "Gérer élèves, candidatures, formulaires et documents.",
+        "removeDialog": {
+          "title": "Retirer ce collaborateur ?",
+          "description": "{name} perdra l’accès à tous les échanges de votre établissement.",
+          "confirm": "Confirmer le retrait",
+          "confirming": "Retrait…"
+        }
+      },
+      "billing": {
+        "heading": "Facturation",
+        "viewPlansCta": "Voir les forfaits",
+        "paymentMethodLabel": "Moyen de paiement"
+      },
+      "program": {
+        "heading": "Programme",
+        "archivedBadge": "Archivé",
+        "archiveHeading": "Archiver le programme",
+        "archiveDescription": "Le programme passe en lecture seule. Les dossiers restent consultables, plus aucune modification possible.",
+        "restoreButton": "Restaurer",
+        "archiveButton": "Archiver le programme…",
+        "stats": {
+          "enrolled": "{count, plural, one {# élève confirmé} other {# élèves confirmés}}",
+          "applications": "{count, plural, one {# candidature} other {# candidatures}}",
+          "deadline": "échéance dossiers {date}"
+        },
+        "modal": {
+          "title": "Archiver ce programme ?",
+          "body": "« {name} » passera en lecture seule : élèves, candidatures et documents resteront consultables, mais plus aucune modification ne sera possible. Vous pourrez le restaurer à tout moment.",
+          "confirm": "Archiver le programme"
+        }
+      },
+      "errors": {
+        "nameEmpty": "Le nom ne peut pas être vide.",
+        "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",
+        "passwordUpdateFailed": "Le mot de passe n’a pas pu être mis à jour. Réessayez.",
+        "passwordMismatch": "Les mots de passe ne correspondent pas."
+      }
+    },
+    "billing": {
+      "per": "/ an",
+      "usage": "{used} / {cap} {cap, plural, one {échange} other {échanges}} {used, plural, one {utilisé} other {utilisés}}",
+      "usageUnlimited": "{used} {used, plural, one {échange actif} other {échanges actifs}} · échanges illimités",
+      "plans": {
+        "starter": { "label": "Essentiel", "price": "199 €", "desc": "Pour un organisateur indépendant." },
+        "growth": { "label": "Association", "price": "499 €", "desc": "Pour les associations en pleine croissance." },
+        "scale": { "label": "Réseau", "price": "799 €", "desc": "Pour les grands réseaux d’échanges." }
+      },
+      "trial": {
+        "label": "Essai gratuit",
+        "price": "0 €",
+        "desc": "Votre premier échange est offert — aucun paiement requis."
+      },
+      "payment": {
+        "noneNote": "Aucun moyen de paiement enregistré.",
+        "addCta": "Ajouter une carte",
+        "editCta": "Modifier",
+        "card": "{brand} •••• {last4} — expire {exp}"
       }
     },
     "shell": {
