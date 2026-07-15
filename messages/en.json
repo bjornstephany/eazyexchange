@@ -277,6 +277,53 @@
       "progressDossiers": "{done} / {total} files validated",
       "progressCandidatures": "{done} / {total} applications processed"
     },
+    "applications": {
+      "backLink": "‹ Back to applications",
+      "printCta": "⎙ Print application",
+      "subtitle": "Application · {exchangeName} · {year}",
+      "heading": "Applications",
+      "emptyState": "No applications received yet — share the application link with your students.",
+      "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
+      "stateOpen": "Open",
+      "stateClosed": "Closed",
+      "deadlineLabel": "Deadline",
+      "linkLabel": "Application link",
+      "copyCta": "Copy",
+      "copiedCta": "Copied ✓",
+      "tabs": {
+        "all": "All",
+        "toReview": "To review",
+        "accepted": "Accepted",
+        "rejected": "Rejected"
+      },
+      "selectedCount": "{n, plural, one {# selected} other {# selected}}",
+      "acceptCta": "Accept & invite",
+      "rejectCta": "Reject",
+      "sending": "Sending…",
+      "notePlaceholder": "Note for the student (optional)",
+      "notifyByEmail": "Notify by email",
+      "confirmRejectCta": "Confirm rejection",
+      "bulkResult": "{s, plural, one {# processed} other {# processed}} · {f} failed",
+      "tableHeader": {
+        "student": "Student",
+        "level": "Grade 26-27",
+        "nativeLanguage": "Native lang.",
+        "receivedDate": "Received on",
+        "status": "Status"
+      },
+      "emptyTab": "No applications in this tab.",
+      "review": {
+        "statusAccepted": "Accepted — awaiting response",
+        "statusEnrolled": "Enrolled (said Yes)",
+        "statusDeclined": "Declined the invitation",
+        "statusMaybe": "Responded Maybe",
+        "responseLabel": "Response:",
+        "noteLabel": "Note:",
+        "currentlyRejected": "Currently rejected. You can still accept.",
+        "accept": "Accept",
+        "sendRejectionEmail": "Send a rejection email to the applicant"
+      }
+    },
     "exchanges": {
       "title": "Exchanges",
       "subtitle": "Track all your exchange programs — past, ongoing and upcoming.",

@@ -25,7 +25,7 @@ export async function ApplicationDetail({
     <div>
       <div data-noprint className="flex items-center justify-between mb-5">
         <Link href="/applications" className="text-sm text-muted-foreground hover:text-navy">
-          ‹ Retour aux candidatures
+          {tr('organizer.applications.backLink')}
         </Link>
         <PrintButton />
       </div>
@@ -36,7 +36,7 @@ export async function ApplicationDetail({
           <StatusPill pill={applicantStatusPill(application.status, tr)} />
         </div>
         <p className="font-mono text-[12px] text-tertiary uppercase tracking-[.08em]">
-          Candidature · {exchangeName} · {year}
+          {tr('organizer.applications.subtitle', { exchangeName, year })}
         </p>
       </div>
 

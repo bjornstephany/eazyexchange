@@ -277,6 +277,53 @@
       "progressDossiers": "{done} / {total} dossiers validés",
       "progressCandidatures": "{done} / {total} candidatures traitées"
     },
+    "applications": {
+      "backLink": "‹ Retour aux candidatures",
+      "printCta": "⎙ Imprimer la candidature",
+      "subtitle": "Candidature · {exchangeName} · {year}",
+      "heading": "Candidatures",
+      "emptyState": "Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.",
+      "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
+      "stateOpen": "Ouvert",
+      "stateClosed": "Fermé",
+      "deadlineLabel": "Échéance",
+      "linkLabel": "Lien de candidature",
+      "copyCta": "Copier",
+      "copiedCta": "Copié ✓",
+      "tabs": {
+        "all": "Toutes",
+        "toReview": "À examiner",
+        "accepted": "Acceptées",
+        "rejected": "Refusées"
+      },
+      "selectedCount": "{n, plural, one {# sélectionnée} other {# sélectionnées}}",
+      "acceptCta": "Accepter & inviter",
+      "rejectCta": "Refuser",
+      "sending": "Envoi…",
+      "notePlaceholder": "Note pour l'élève (facultatif)",
+      "notifyByEmail": "Prévenir par e-mail",
+      "confirmRejectCta": "Confirmer le refus",
+      "bulkResult": "{s, plural, one {# traitée} other {# traitées}} · {f} en échec",
+      "tableHeader": {
+        "student": "Élève",
+        "level": "Niveau 26-27",
+        "nativeLanguage": "Langue mat.",
+        "receivedDate": "Reçue le",
+        "status": "Statut"
+      },
+      "emptyTab": "Aucune candidature dans cet onglet.",
+      "review": {
+        "statusAccepted": "Accepté — en attente de réponse",
+        "statusEnrolled": "Inscrit(e) (a répondu Oui)",
+        "statusDeclined": "A décliné l’invitation",
+        "statusMaybe": "A répondu Peut-être",
+        "responseLabel": "Réponse :",
+        "noteLabel": "Note :",
+        "currentlyRejected": "Actuellement refusée. Vous pouvez toujours l’accepter.",
+        "accept": "Accepter",
+        "sendRejectionEmail": "Envoyer un e-mail de refus au candidat"
+      }
+    },
     "exchanges": {
       "title": "Échanges",
       "subtitle": "Suivez tous vos programmes d'échange — passés, en cours et à venir.",
