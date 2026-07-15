@@ -24,6 +24,7 @@ export function DocDrawer({
   const [remindResult, setRemindResult] = useState<{ reminded: number; skipped: number; failed: number } | null>(null)
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
 
   useEffect(() => {
     setBusy(false); setError(null); setPicking(false); setChosen([]); setRemindResult(null)
@@ -36,7 +37,7 @@ export function DocDrawer({
   }, [vm, onClose])
 
   if (!vm) return null
-  const { rows, restCount } = docDrawerRows(vm.assignees)
+  const { rows, restCount } = docDrawerRows(vm.assignees, tr)
   const isDraft = vm.status === 'draft'
   const needsPicker = vm.audience === 'conditional'
 
@@ -82,8 +83,8 @@ export function DocDrawer({
             <div>
               <div className="font-display text-lg font-semibold text-navy">{vm.name}</div>
               <div className="mt-[5px] flex items-center gap-[7px]">
-                <StatusPill pill={reqPill(vm)} />
-                <span className="text-xs font-medium text-tertiary">{progressLabel(vm)}</span>
+                <StatusPill pill={reqPill(vm, tr)} />
+                <span className="text-xs font-medium text-tertiary">{progressLabel(vm, tr)}</span>
               </div>
             </div>
           </div>

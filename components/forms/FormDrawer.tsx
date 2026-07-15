@@ -13,6 +13,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   const [error, setError] = useState<string | null>(null)
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
 
   useEffect(() => { setBusy(false); setError(null) }, [vm?.id])
   useEffect(() => {
@@ -62,8 +63,8 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
             <div>
               <div className="font-display text-lg font-semibold text-navy">{vm.name}</div>
               <div className="mt-[5px] flex items-center gap-[7px]">
-                <StatusPill pill={typePill(vm.kind)} />
-                <StatusPill pill={statusPill(vm.status)} />
+                <StatusPill pill={typePill(vm.kind, tr)} />
+                <StatusPill pill={statusPill(vm.status, tr)} />
               </div>
             </div>
           </div>

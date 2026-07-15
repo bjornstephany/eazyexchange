@@ -366,6 +366,24 @@
         "downloadCurrentPdf": "Télécharger le PDF actuel",
         "newPdfLabel": "Nouveau PDF",
         "replace": "Remplacer"
+      },
+      "pills": {
+        "onlineForm": "Formulaire en ligne",
+        "pdfToSign": "PDF · à signer",
+        "active": "Actif",
+        "draft": "Brouillon",
+        "mandatory": "Obligatoire",
+        "dependsOnSituation": "selon situation",
+        "complete": "Complet",
+        "toRedo": "À refaire",
+        "missingCount": "{count, plural, one {# manquant} other {# manquants}}",
+        "toVerifyCount": "{count} à vérifier"
+      },
+      "progress": {
+        "notRequestedDoc": "Pas encore demandé",
+        "notSentForm": "Pas encore envoyé",
+        "provided": "{done} / {total} {done, plural, one {fourni} other {fournis}}",
+        "received": "{done} / {total} reçus"
       }
     },
     "documents": {

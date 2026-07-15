@@ -366,6 +366,24 @@
         "downloadCurrentPdf": "Download the current PDF",
         "newPdfLabel": "New PDF",
         "replace": "Replace"
+      },
+      "pills": {
+        "onlineForm": "Online form",
+        "pdfToSign": "PDF · to sign",
+        "active": "Active",
+        "draft": "Draft",
+        "mandatory": "Mandatory",
+        "dependsOnSituation": "depends on situation",
+        "complete": "Complete",
+        "toRedo": "To redo",
+        "missingCount": "{count, plural, one {# missing} other {# missing}}",
+        "toVerifyCount": "{count} to review"
+      },
+      "progress": {
+        "notRequestedDoc": "Not requested yet",
+        "notSentForm": "Not sent yet",
+        "provided": "{done} / {total} provided",
+        "received": "{done} / {total} received"
       }
     },
     "documents": {

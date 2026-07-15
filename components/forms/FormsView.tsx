@@ -20,6 +20,7 @@ export function FormsView({
   const [showAdd, setShowAdd] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const t = useTranslations('organizer')
+  const tr = useTranslations()
 
   const visible = templates
   const stats = formsStats(templates)
@@ -67,7 +68,7 @@ export function FormsView({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-[9px]">
                   <span className="font-display text-base font-semibold text-navy">{tpl.name}</span>
-                  <StatusPill pill={typePill(tpl.kind)} />
+                  <StatusPill pill={typePill(tpl.kind, tr)} />
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-[.06em] text-placeholder">
                     {tpl.standard_key ? t('forms.standardBadge') : t('forms.customBadge')}
                   </span>
@@ -80,15 +81,15 @@ export function FormsView({
             <div className="flex flex-none items-center gap-[22px]">
               {tpl.status === 'active' ? (
                 <div className="w-[150px]">
-                  <div className="mb-1.5 text-right font-mono text-[11px] font-medium text-tertiary">{progressLabel(tpl)}</div>
+                  <div className="mb-1.5 text-right font-mono text-[11px] font-medium text-tertiary">{progressLabel(tpl, tr)}</div>
                   <div className="h-1.5 overflow-hidden rounded-pill bg-background">
                     <div className="h-full rounded-pill bg-brand" style={{ width: `${progressPct(tpl)}%` }} />
                   </div>
                 </div>
               ) : (
-                <span className="w-[150px] text-right text-xs font-medium text-placeholder">{progressLabel(tpl)}</span>
+                <span className="w-[150px] text-right text-xs font-medium text-placeholder">{progressLabel(tpl, tr)}</span>
               )}
-              <StatusPill pill={statusPill(tpl.status)} />
+              <StatusPill pill={statusPill(tpl.status, tr)} />
               <div className="flex flex-none gap-2">
                 <button type="button" onClick={() => setOpenId(tpl.id)}
                   className="rounded-lg border border-frame-dashed bg-card px-3.5 py-2 text-[12.5px] font-semibold text-navy hover:bg-hoverrow">

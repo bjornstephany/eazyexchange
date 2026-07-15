@@ -29,6 +29,7 @@ export function TemplateEditor({
   const [file, setFile] = useState<File | null>(null)
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const tr = useTranslations()
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -84,7 +85,7 @@ export function TemplateEditor({
       </Link>
       <div className="mb-6 mt-3 flex items-center gap-3">
         <h1 className="font-display text-[26px] font-bold leading-[1.1] tracking-[-.02em]">{template.name}</h1>
-        <StatusPill pill={statusPill(template.status as 'draft' | 'active')} />
+        <StatusPill pill={statusPill(template.status as 'draft' | 'active', tr)} />
       </div>
 
       <form onSubmit={handleSave} className="mb-8 flex flex-col gap-4 rounded-[14px] border bg-card p-5">
