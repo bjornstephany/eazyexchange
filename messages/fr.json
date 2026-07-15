@@ -10,7 +10,8 @@
     },
     "states": {
       "saved": "✓ Modifications enregistrées",
-      "loading": "Chargement…"
+      "loading": "Chargement…",
+      "loadingLabel": "Chargement"
     },
     "errors": {
       "generic": "Une erreur est survenue.",
@@ -382,6 +383,34 @@
         "sending": "Envoi…",
         "reminderSent": "Relance envoyée.",
         "reminderCooldown": "Déjà relancé récemment — réessayez plus tard."
+      }
+    },
+    "pages": {
+      "documentDetail": {
+        "backLabel": "Retour aux documents"
+      },
+      "formDetail": {
+        "backLabel": "Retour aux formulaires"
+      },
+      "students": {
+        "emptyHeading": "Aucun élève confirmé pour cette session.",
+        "emptyBodyPrefix": "Les élèves apparaissent ici une fois leur candidature acceptée et leur compte créé.",
+        "emptyBodyLink": "Voir les candidatures"
+      },
+      "submissionReview": {
+        "backLink": "← Retour à l’échange",
+        "unknownStudent": "Inconnu",
+        "notSubmitted": "Non soumis",
+        "notStarted": "Cet élève n’a pas encore commencé ce formulaire.",
+        "noAnswer": "Aucune réponse",
+        "notUploaded": "Non transmis",
+        "reviewNoteHeading": "Note de révision",
+        "status": {
+          "approved": "Approuvé",
+          "submitted": "Soumis",
+          "rejected": "Rejeté",
+          "draft": "Brouillon"
+        }
       }
     }
   }

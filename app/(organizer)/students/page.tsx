@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { getTranslations } from 'next-intl/server'
 import { getExchanges } from '@/actions/exchanges'
 import { getStudentsDirectory } from '@/actions/students'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
@@ -15,15 +16,16 @@ export default async function StudentsPage() {
   const { students } = await getStudentsDirectory(active.id)
 
   if (students.length === 0) {
+    const t = await getTranslations('organizer')
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
         <h3 className="font-display text-2xl font-bold tracking-tight text-navy">
-          Aucun élève confirmé pour cette session.
+          {t('pages.students.emptyHeading')}
         </h3>
         <p className="text-muted-foreground">
-          Les élèves apparaissent ici une fois leur candidature acceptée et leur compte créé.{' '}
+          {t('pages.students.emptyBodyPrefix')}{' '}
           <Link href="/applications" className="font-semibold text-brand hover:underline">
-            Voir les candidatures
+            {t('pages.students.emptyBodyLink')}
           </Link>
         </p>
       </div>

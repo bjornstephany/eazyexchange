@@ -10,7 +10,8 @@
     },
     "states": {
       "saved": "✓ Changes saved",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "loadingLabel": "Loading"
     },
     "errors": {
       "generic": "Something went wrong.",
@@ -382,6 +383,34 @@
         "sending": "Sending…",
         "reminderSent": "Reminder sent.",
         "reminderCooldown": "Already reminded recently — try again later."
+      }
+    },
+    "pages": {
+      "documentDetail": {
+        "backLabel": "Back to documents"
+      },
+      "formDetail": {
+        "backLabel": "Back to forms"
+      },
+      "students": {
+        "emptyHeading": "No confirmed students for this session yet.",
+        "emptyBodyPrefix": "Students appear here once their application is accepted and their account is created.",
+        "emptyBodyLink": "View applications"
+      },
+      "submissionReview": {
+        "backLink": "← Back to exchange",
+        "unknownStudent": "Unknown",
+        "notSubmitted": "Not submitted",
+        "notStarted": "This student has not started this form yet.",
+        "noAnswer": "No answer",
+        "notUploaded": "Not uploaded",
+        "reviewNoteHeading": "Review note",
+        "status": {
+          "approved": "Approved",
+          "submitted": "Submitted",
+          "rejected": "Rejected",
+          "draft": "Draft"
+        }
       }
     }
   }
