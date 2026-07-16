@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from './TemplateIcon'
-import { typePill, statusPill, type TemplateVM } from '@/lib/forms/rollup'
+import { typePill, statusPill, activationHints, type TemplateVM } from '@/lib/forms/rollup'
+import { isSafeExternalUrl } from '@/lib/forms/template-result'
 import { activateTemplate, deleteTemplate, getTemplateFileUrl } from '@/actions/forms'
 
 // Right preview drawer (460px) for a form template, per handoff.
@@ -24,6 +25,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   }, [vm, onClose])
 
   if (!vm) return null
+  const hints = activationHints(vm)
 
   async function run(fn: () => Promise<unknown>, closeAfter = false) {
     setBusy(true)
@@ -53,6 +55,18 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
     void run(() => deleteTemplate(vm!.id), true)
   }
 
+  async function handleActivate() {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await activateTemplate(vm!.id, undefined)
+      if (!res.ok) setError(res.message)
+    } catch {
+      setError(c('errors.generic'))
+    }
+    setBusy(false)
+  }
+
   return (
     <div className="fixed inset-0 z-40">
       <div data-testid="drawer-backdrop" onClick={onClose} className="fixed inset-0 bg-rail/30" />
@@ -73,6 +87,13 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
 
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
           {vm.description && <div className="mb-5 text-[13.5px] leading-relaxed text-muted-foreground">{vm.description}</div>}
+
+          {vm.external_url && isSafeExternalUrl(vm.external_url) && (
+            <a href={vm.external_url} target="_blank" rel="noopener noreferrer"
+              className="mb-5 inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-brand underline">
+              {vm.external_url} <span aria-hidden="true">↗</span>
+            </a>
+          )}
 
           {vm.kind === 'pdf' && (
             <div className="mb-[22px] flex h-[150px] items-center justify-center rounded-xl border bg-[repeating-linear-gradient(45deg,theme(colors.hoverrow.DEFAULT),theme(colors.hoverrow.DEFAULT)_11px,theme(colors.background)_11px,theme(colors.background)_22px)]">
@@ -101,9 +122,23 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
 
+        {hints.length > 0 && (
+          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
+            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
+            <ul className="flex flex-col gap-1">
+              {hints.map((h) => (
+                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
+                  {h}{' '}
+                  <Link href={`/forms/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
           {vm.status === 'draft' && (
-            <button type="button" disabled={busy} onClick={() => run(() => activateTemplate(vm.id, undefined))}
+            <button type="button" disabled={busy} onClick={handleActivate}
               className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
               {busy ? t('forms.drawer.activating') : t('forms.drawer.activate')}
             </button>
@@ -118,12 +153,10 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
               {t('forms.drawer.download')}
             </button>
           )}
-          {vm.standard_key === null && (
-            <button type="button" disabled={busy} onClick={handleDelete}
-              className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-              {c('actions.delete')}
-            </button>
-          )}
+          <button type="button" disabled={busy} onClick={handleDelete}
+            className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
+            {c('actions.delete')}
+          </button>
         </div>
       </div>
     </div>

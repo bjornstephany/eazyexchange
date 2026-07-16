@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-const updateMeta = vi.fn().mockResolvedValue(undefined)
+const updateMeta = vi.fn().mockResolvedValue({ ok: true })
 vi.mock('@/actions/forms', () => ({
   updateTemplateMeta: (...a: unknown[]) => updateMeta(...a),
-  replaceTemplateFile: vi.fn().mockResolvedValue(undefined),
+  replaceTemplateFile: vi.fn().mockResolvedValue({ ok: true }),
   addField: vi.fn().mockResolvedValue(undefined),
   removeField: vi.fn().mockResolvedValue(undefined),
   getTemplateFileUrl: vi.fn().mockResolvedValue('https://signed.example/x.pdf'),
@@ -17,6 +17,7 @@ const base: any = {
   description: 'Composition du foyer.', type: 'data_entry', kind: 'online',
   status: 'draft', audience: 'all', standard_key: 'accueil', condition_label: null,
   template_file_path: null, deadline: null, created_by: 'u1', created_at: '2026-07-03T00:00:00Z',
+  external_url: null,
   form_fields: [{ id: 'f1', template_id: 't1', label: 'Animaux domestiques', field_type: 'text', options: null, required: true, order: 0 }],
 }
 
@@ -29,7 +30,7 @@ describe('TemplateEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     await screen.findByRole('button', { name: 'Enregistrer' })
     expect(updateMeta).toHaveBeenCalledWith('t1', {
-      name: 'Accueil 2026', description: 'Composition du foyer.', deadline: '2026-10-10', condition_label: null,
+      name: 'Accueil 2026', description: 'Composition du foyer.', deadline: '2026-10-10', condition_label: null, external_url: null,
     })
   })
   it('shows the question builder for online templates', () => {
@@ -46,5 +47,20 @@ describe('TemplateEditor', () => {
     renderWithIntl(<TemplateEditor template={{ ...base, kind: 'doc', type: 'document_upload', audience: 'conditional', condition_label: 'si parents divorcés' }} backHref="/documents" backLabel="Retour aux documents" />)
     expect(screen.getByLabelText('Condition')).toHaveValue('si parents divorcés')
     expect(screen.queryByText(/Questions du formulaire/)).toBeNull()
+  })
+  it('shows the structured save error inline', async () => {
+    updateMeta.mockResolvedValueOnce({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
+    renderWithIntl(<TemplateEditor template={{ ...base, status: 'active' }} backHref="/forms" backLabel="Retour aux formulaires" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(await screen.findByText('Un modèle actif doit garder une échéance.')).toBeInTheDocument()
+  })
+  it('round-trips the external link field', async () => {
+    renderWithIntl(<TemplateEditor template={{ ...base, external_url: 'https://esta.cbp.dhs.gov' }} backHref="/documents" backLabel="Retour aux documents" />)
+    const input = screen.getByLabelText('Lien externe (facultatif)')
+    expect(input).toHaveValue('https://esta.cbp.dhs.gov')
+    fireEvent.change(input, { target: { value: 'https://example.org/demarche' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await screen.findByRole('button', { name: 'Enregistrer' })
+    expect(updateMeta).toHaveBeenCalledWith('t1', expect.objectContaining({ external_url: 'https://example.org/demarche' }))
   })
 })

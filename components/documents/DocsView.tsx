@@ -98,10 +98,8 @@ export function DocsView({
                   className="rounded-lg bg-subtle px-3.5 py-2 text-[12.5px] font-semibold text-navy">
                   {t('documents.editButton')}
                 </a>
-                {tpl.standard_key === null && (
-                  <DeleteTemplateButton templateId={tpl.id}
-                    confirmText={t('documents.deleteConfirm')} />
-                )}
+                <DeleteTemplateButton templateId={tpl.id}
+                  confirmText={t('documents.deleteConfirm')} />
               </div>
             </div>
           </div>

@@ -99,10 +99,8 @@ export function FormsView({
                   className="rounded-lg bg-subtle px-3.5 py-2 text-[12.5px] font-semibold text-navy">
                   {t('forms.editButton')}
                 </a>
-                {tpl.standard_key === null && (
-                  <DeleteTemplateButton templateId={tpl.id}
-                    confirmText={t('forms.deleteConfirm')} />
-                )}
+                <DeleteTemplateButton templateId={tpl.id}
+                  confirmText={t('forms.deleteConfirm')} />
               </div>
             </div>
           </div>

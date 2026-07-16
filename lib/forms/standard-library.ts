@@ -1,6 +1,8 @@
 // Canonical standard-template library, seeded as drafts for every new
-// exchange. The SQL backfill in 20260703000001 is a frozen snapshot of this
-// data for exchanges that existed before Phase 3.
+// exchange. Reworked 2026-07-15 to the real program; the SQL backfill in
+// 20260716102357 is a frozen snapshot of this data for exchanges that existed
+// before. Templates seed WITHOUT files — the PDFs are school-specific, so each
+// school's organizer attaches their own per exchange via the UI.
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type StandardField = { label: string; field_type: 'text' | 'checkbox' }
@@ -11,64 +13,64 @@ export type StandardTemplate = {
   name: string
   description: string
   condition_label: string | null
+  external_url: string | null
   fields: StandardField[]
 }
 
 const t = (label: string): StandardField => ({ label, field_type: 'text' })
-const c = (label: string): StandardField => ({ label, field_type: 'checkbox' })
 
 export const STANDARD_TEMPLATES: StandardTemplate[] = [
   {
-    key: 'sante', kind: 'pdf', audience: 'all', name: 'Formulaire de santé', condition_label: null,
-    description: 'Antécédents médicaux, allergies, traitements en cours et contacts d’urgence.',
+    key: 'medical', kind: 'pdf', audience: 'all', name: 'Autorisation médicale',
+    condition_label: null, external_url: null,
+    description: 'Autorisation de soins à télécharger, faire signer par les parents, puis redéposer signée.',
     fields: [t('Groupe sanguin'), t('Allergies connues'), t('Traitements en cours'),
       t('Régime alimentaire particulier'), t('Vaccins à jour'), t('Médecin traitant'),
       t('Personne à prévenir (1)'), t('Personne à prévenir (2)'), t('Autorisation de soins d’urgence')],
   },
   {
-    key: 'decharge', kind: 'pdf', audience: 'all', name: 'Décharge de responsabilité', condition_label: null,
-    description: 'Autorisation parentale de participation et décharge de responsabilité pour la durée du séjour.',
+    key: 'decharge', kind: 'pdf', audience: 'all', name: 'Décharge de responsabilité / code de conduite',
+    condition_label: null, external_url: null,
+    description: 'Décharge de responsabilité et code de conduite à signer par la famille et l’élève.',
     fields: [t('Autorisation de participation au programme'), t('Décharge de responsabilité'),
       t('Autorisation de déplacement / transport'), t('Assurance responsabilité civile'),
       t('Signature — représentant légal 1'), t('Signature — représentant légal 2')],
   },
   {
-    key: 'photo', kind: 'pdf', audience: 'all', name: 'Consentement photo', condition_label: null,
-    description: 'Droit à l’image de l’élève : photos et vidéos pendant l’échange.',
-    fields: [t('Photos de groupe pendant le séjour'), t('Publication sur les réseaux sociaux'),
-      t('Site & supports de l’établissement'), t('Presse locale / partenaires'),
-      t('Signature du représentant légal')],
+    key: 'absence', kind: 'pdf', audience: 'all', name: 'Demande d’absence',
+    condition_label: null, external_url: null,
+    description: 'Demande d’absence au lycée pour la durée de l’échange, à faire signer puis redéposer.',
+    fields: [],
   },
   {
-    key: 'accueil', kind: 'online', audience: 'all', name: 'Conditions d’accueil', condition_label: null,
-    description: 'Composition du foyer, chambre, alimentation et animaux — rempli en ligne par la famille d’accueil.',
-    fields: [t('Frères / sœurs au domicile'), t('Animaux domestiques'), t('Spécificités alimentaires'),
-      t('Allergies au domicile'), t('Langue(s) parlée(s) en famille'), c('Tabac au domicile'),
-      c('Chambre individuelle'), c('Échange mixte accepté')],
+    key: 'famille', kind: 'pdf', audience: 'all', name: 'Engagement de famille',
+    condition_label: null, external_url: null,
+    description: 'Engagement de la famille d’accueil, à signer puis redéposer.',
+    fields: [],
   },
   {
-    key: 'passeport', kind: 'doc', audience: 'all', name: 'Passeport', condition_label: null,
-    description: 'Copie du passeport en cours de validité (valide 6 mois après le retour).', fields: [],
+    key: 'ast', kind: 'pdf', audience: 'all', name: 'AST — autorisation de sortie du territoire (CERFA 15646)',
+    condition_label: null, external_url: null,
+    description: 'Formulaire CERFA 15646 signé par un titulaire de l’autorité parentale. Téléchargez le modèle, faites-le signer, puis redéposez-le.',
+    fields: [],
   },
   {
-    key: 'ast', kind: 'doc', audience: 'all', name: 'AST — autorisation de sortie du territoire', condition_label: null,
-    description: 'Formulaire CERFA 15646 signé par un titulaire de l’autorité parentale, avec copie de sa pièce d’identité.', fields: [],
+    key: 'passeport', kind: 'doc', audience: 'all', name: 'Passeport de l’élève',
+    condition_label: null, external_url: null,
+    description: 'Copie du passeport de l’élève en cours de validité.',
+    fields: [],
   },
   {
-    key: 'idp1', kind: 'doc', audience: 'all', name: 'Pièce d’identité parent 1', condition_label: null,
-    description: 'Carte d’identité ou passeport du représentant légal signataire de l’AST.', fields: [],
+    key: 'passeport-parent', kind: 'doc', audience: 'all', name: 'Passeport du parent signataire de l’AST',
+    condition_label: null, external_url: null,
+    description: 'Copie du passeport du parent qui a signé l’AST — impérativement le même parent.',
+    fields: [],
   },
   {
-    key: 'idp2', kind: 'doc', audience: 'all', name: 'Pièce d’identité parent 2', condition_label: null,
-    description: 'Carte d’identité ou passeport du second représentant légal, le cas échéant.', fields: [],
-  },
-  {
-    key: 'livret', kind: 'doc', audience: 'conditional', name: 'Livret de famille', condition_label: 'si parents divorcés',
-    description: 'Pages parents + enfant, demandé uniquement en cas de séparation pour justifier l’autorité parentale.', fields: [],
-  },
-  {
-    key: 'medical2', kind: 'doc', audience: 'conditional', name: 'Formulaire médical complémentaire', condition_label: 'si avis médical requis',
-    description: 'Complément demandé lorsque le formulaire de santé signale un traitement ou une allergie sévère.', fields: [],
+    key: 'esta', kind: 'doc', audience: 'all', name: 'ESTA — autorisation de voyage États-Unis',
+    condition_label: null, external_url: 'https://esta.cbp.dhs.gov',
+    description: 'Faites la demande ESTA en ligne, puis téléversez la preuve d’autorisation obtenue.',
+    fields: [],
   },
 ]
 
@@ -93,6 +95,7 @@ export async function seedStandardTemplates(
         audience: std.audience,
         standard_key: std.key,
         condition_label: std.condition_label,
+        external_url: std.external_url,
         deadline: null,
         created_by: opts.userId,
       })

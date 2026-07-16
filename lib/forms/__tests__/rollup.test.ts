@@ -4,7 +4,7 @@ import fr from '@/messages/fr.json'
 import {
   typePill, statusPill, reqPill, formDone, docDone, progressLabel, progressPct,
   docAttentionPill, studentPill, docDrawerRows, formsStats, docsStats,
-  earliestActiveDeadline, initials, type TemplateVM, type AssigneeRow,
+  earliestActiveDeadline, initials, activationHints, type TemplateVM, type AssigneeRow,
 } from '@/lib/forms/rollup'
 
 // Root (unnamespaced) fr translator — the label helpers now build their strings
@@ -19,7 +19,7 @@ const base: Omit<TemplateVM, 'kind' | 'status' | 'assignees'> = {
   id: 't1', audience: 'all', name: 'Passeport', description: null,
   // realistic timestamptz, not date-only (Phase-2 lesson)
   deadline: '2026-10-10T00:00:00+00:00',
-  standard_key: 'passeport', condition_label: null, template_file_path: null, fields: [],
+  standard_key: 'passeport', condition_label: null, template_file_path: null, external_url: null, fields: [],
 }
 const vm = (over: Partial<TemplateVM>): TemplateVM =>
   ({ ...base, kind: 'doc', status: 'active', assignees: [], ...over })
@@ -116,5 +116,29 @@ describe('initials', () => {
   it('two-word and single-word names', () => {
     expect(initials('Manon Girard')).toBe('MG')
     expect(initials('Manon')).toBe('M')
+  })
+})
+
+describe('activationHints', () => {
+  const base = { status: 'draft' as const, kind: 'doc' as const, deadline: '2026-10-10', template_file_path: null, fields: [] as string[] }
+  it('is empty for an active template', () => {
+    expect(activationHints({ ...base, status: 'active', deadline: null })).toEqual([])
+  })
+  it('is empty for a ready draft', () => {
+    expect(activationHints(base)).toEqual([])
+  })
+  it('flags a missing deadline', () => {
+    expect(activationHints({ ...base, deadline: null })).toEqual(['Ajoutez une échéance avant d’activer.'])
+  })
+  it('flags a missing PDF on pdf kind only', () => {
+    expect(activationHints({ ...base, kind: 'pdf' })).toEqual(['Téléversez le PDF avant d’activer.'])
+    expect(activationHints({ ...base, kind: 'doc' })).toEqual([])
+  })
+  it('flags missing questions on online kind and stacks with missing deadline', () => {
+    expect(activationHints({ ...base, kind: 'online', deadline: null })).toEqual([
+      'Ajoutez une échéance avant d’activer.',
+      'Ajoutez au moins une question avant d’activer.',
+    ])
+    expect(activationHints({ ...base, kind: 'online', fields: ['Q1'] })).toEqual([])
   })
 })

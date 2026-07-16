@@ -23,6 +23,7 @@ export function TemplateEditor({
   const [description, setDescription] = useState(template.description ?? '')
   const [deadline, setDeadline] = useState(template.deadline ? template.deadline.slice(0, 10) : '')
   const [conditionLabel, setConditionLabel] = useState(template.condition_label ?? '')
+  const [externalUrl, setExternalUrl] = useState(template.external_url ?? '')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,15 +38,17 @@ export function TemplateEditor({
     setError(null)
     setSaved(false)
     try {
-      await updateTemplateMeta(template.id, {
+      const res = await updateTemplateMeta(template.id, {
         name,
         description: description.trim() || null,
         deadline: deadline || null,
         condition_label: template.audience === 'conditional' ? (conditionLabel.trim() || null) : null,
+        external_url: externalUrl.trim() || null,
       })
-      setSaved(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : c('errors.generic'))
+      if (res.ok) setSaved(true)
+      else setError(res.message)
+    } catch {
+      setError(c('errors.generic'))
     }
     setBusy(false)
   }
@@ -59,10 +62,11 @@ export function TemplateEditor({
       const fd = new FormData()
       fd.set('template_id', template.id)
       fd.set('file', file)
-      await replaceTemplateFile(fd)
-      setFile(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : c('errors.generic'))
+      const res = await replaceTemplateFile(fd)
+      if (res.ok) setFile(null)
+      else setError(res.message)
+    } catch {
+      setError(c('errors.generic'))
     }
     setBusy(false)
   }
@@ -110,6 +114,12 @@ export function TemplateEditor({
                 placeholder={t('forms.editor.conditionPlaceholder')} className={inputCls} />
             </div>
           )}
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ed-link" className="text-[13px] font-semibold text-navy">Lien externe (facultatif)</label>
+          <input id="ed-link" type="url" value={externalUrl} onChange={e => setExternalUrl(e.target.value)}
+            placeholder="https://esta.cbp.dhs.gov" className={inputCls} />
+          <p className="text-[12px] text-muted-foreground">Démarche à faire sur un site officiel — le bouton apparaît sur la page de l’élève.</p>
         </div>
         {error && <p className="text-sm text-danger-text">{error}</p>}
         <div className="flex items-center gap-3">

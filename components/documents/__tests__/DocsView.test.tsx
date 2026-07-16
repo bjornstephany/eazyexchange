@@ -1,14 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
-import { NextIntlClientProvider } from 'next-intl'
-import fr from '@/messages/fr.json'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-const activate = vi.fn().mockResolvedValue(undefined)
+const activate = vi.fn().mockResolvedValue({ ok: true })
 const remind = vi.fn().mockResolvedValue({ reminded: 2, skipped: 1, failed: 0 })
 const del = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/forms', () => ({
-  createDraftTemplate: vi.fn().mockResolvedValue('new-id'),
+  createDraftTemplate: vi.fn().mockResolvedValue({ ok: true, id: 'new-id' }),
   activateTemplate: (...a: unknown[]) => activate(...a),
   deleteTemplate: (...a: unknown[]) => del(...a),
   remindTemplate: (...a: unknown[]) => remind(...a),
@@ -19,7 +17,7 @@ import type { TemplateVM } from '@/lib/forms/rollup'
 const doc = (over: Partial<TemplateVM>): TemplateVM => ({
   id: 'd1', kind: 'doc', status: 'active', audience: 'all', name: 'Passeport',
   description: 'Copie du passeport.', deadline: '2026-10-10T00:00:00+00:00',
-  standard_key: 'passeport', condition_label: null, template_file_path: null, fields: [],
+  standard_key: 'passeport', condition_label: null, template_file_path: null, external_url: null, fields: [],
   assignees: [
     { assignmentId: 'a1', studentId: 's1', studentName: 'Léa Moreau', submissionStatus: 'approved' },
     { assignmentId: 'a2', studentId: 's2', studentName: 'Yanis Benali', submissionStatus: 'submitted' },
@@ -64,14 +62,8 @@ describe('DocsView', () => {
     await screen.findByRole('button', { name: 'Activer' })
     expect(activate).toHaveBeenCalledWith('d2', ['s1'])
   })
-  it('shows Supprimer only for custom documents', () => {
-    const { rerender } = renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
-    expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(
-      <NextIntlClientProvider locale="fr" messages={fr}>
-        <DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />
-      </NextIntlClientProvider>
-    )
+  it('shows Supprimer for standard documents too', () => {
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom document when the confirm is accepted', async () => {
@@ -79,5 +71,27 @@ describe('DocsView', () => {
     renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(del).toHaveBeenCalledWith('d1'))
+  })
+  it('drawer shows the structured activation message inline', async () => {
+    activate.mockResolvedValueOnce({ ok: false, message: 'Ajoutez une échéance avant d’activer.' })
+    const draft = doc({ id: 'd2', status: 'draft', assignees: [], deadline: null })
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
+    expect(await screen.findAllByText('Ajoutez une échéance avant d’activer.')).not.toHaveLength(0)
+  })
+  it('drawer lists the missing-deadline hint for an unready draft doc', () => {
+    const draft = doc({ id: 'd9', status: 'draft', deadline: null, assignees: [] })
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    expect(screen.getByText(/Ajoutez une échéance avant d’activer\./)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Modifier le modèle' })).toHaveAttribute('href', '/documents/d9')
+  })
+  it('drawer shows the external link when present', () => {
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({ external_url: 'https://esta.cbp.dhs.gov' })]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    const link = screen.getByRole('link', { name: /esta\.cbp\.dhs\.gov/ })
+    expect(link).toHaveAttribute('href', 'https://esta.cbp.dhs.gov')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 })

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
-import { reqPill, progressLabel, docDrawerRows, type TemplateVM } from '@/lib/forms/rollup'
+import { reqPill, progressLabel, docDrawerRows, activationHints, type TemplateVM } from '@/lib/forms/rollup'
+import { isSafeExternalUrl } from '@/lib/forms/template-result'
 import { frShortDate } from '@/lib/dashboard/rollup'
 import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
 
@@ -38,6 +39,7 @@ export function DocDrawer({
 
   if (!vm) return null
   const { rows, restCount } = docDrawerRows(vm.assignees, tr)
+  const hints = activationHints(vm)
   const isDraft = vm.status === 'draft'
   const needsPicker = vm.audience === 'conditional'
 
@@ -52,7 +54,17 @@ export function DocDrawer({
 
   function handleActivate() {
     if (needsPicker && !picking) { setPicking(true); return }
-    void run(() => activateTemplate(vm!.id, needsPicker ? chosen : undefined))
+    void (async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        const res = await activateTemplate(vm!.id, needsPicker ? chosen : undefined)
+        if (!res.ok) setError(res.message)
+      } catch {
+        setError(c('errors.generic'))
+      }
+      setBusy(false)
+    })()
   }
 
   async function handleRemind() {
@@ -93,6 +105,13 @@ export function DocDrawer({
 
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
           {vm.description && <div className="mb-5 text-[13.5px] leading-relaxed text-muted-foreground">{vm.description}</div>}
+
+          {vm.external_url && isSafeExternalUrl(vm.external_url) && (
+            <a href={vm.external_url} target="_blank" rel="noopener noreferrer"
+              className="mb-5 inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-brand underline">
+              {vm.external_url} <span aria-hidden="true">↗</span>
+            </a>
+          )}
 
           <div className="mb-[22px] flex flex-wrap gap-2">
             <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.acceptedFormats')}</span>
@@ -160,6 +179,20 @@ export function DocDrawer({
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
 
+        {hints.length > 0 && (
+          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
+            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
+            <ul className="flex flex-col gap-1">
+              {hints.map((h) => (
+                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
+                  {h}{' '}
+                  <Link href={`/documents/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
           {isDraft ? (
             <button type="button" disabled={busy || (picking && chosen.length === 0)} onClick={handleActivate}
@@ -176,12 +209,10 @@ export function DocDrawer({
             className="flex-1 rounded-[9px] border border-frame-dashed bg-card py-[11px] text-center text-[13px] font-semibold text-navy">
             {t('documents.editButton')}
           </Link>
-          {vm.standard_key === null && (
-            <button type="button" disabled={busy} onClick={handleDelete}
-              className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-              {c('actions.delete')}
-            </button>
-          )}
+          <button type="button" disabled={busy} onClick={handleDelete}
+            className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
+            {c('actions.delete')}
+          </button>
         </div>
       </div>
     </div>

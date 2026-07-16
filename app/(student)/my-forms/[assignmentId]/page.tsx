@@ -1,6 +1,7 @@
 import { getAssignmentDetails } from '@/actions/submissions'
 import { DataEntryForm } from '@/components/DataEntryForm'
 import { DocumentUploadForm } from '@/components/DocumentUploadForm'
+import { ExternalLinkCard } from '@/components/ExternalLinkCard'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { SUBMISSION_STATUS_BADGE } from '@/lib/submission-status'
@@ -71,6 +72,10 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           initialAnswers={initialAnswers}
           readOnly={readOnly}
         />
+      )}
+
+      {template.external_url && (
+        <ExternalLinkCard name={template.name} url={template.external_url} />
       )}
 
       {templatePdfUrl && (
