@@ -1,6 +1,3 @@
-// GENERATED FILE — do not hand-edit.
-// Regenerate after every migration: MCP generate_typescript_types → overwrite this file.
-// App code imports from types/db.ts, which narrows these rows.
 export type Json =
   | string
   | number
@@ -554,6 +551,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           exchange_id: string
+          external_url: string | null
           id: string
           kind: string
           name: string
@@ -571,6 +569,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           exchange_id: string
+          external_url?: string | null
           id?: string
           kind?: string
           name: string
@@ -588,6 +587,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           exchange_id?: string
+          external_url?: string | null
           id?: string
           kind?: string
           name?: string
