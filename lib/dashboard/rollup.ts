@@ -23,8 +23,8 @@ export type CellMap = Record<string, { assignmentId: string; status?: string }> 
 export type StudentInfo = { id: string; full_name: string }
 export type DossierRollup = {
   studentId: string; name: string
-  forms: 'complete' | 'pending' | 'missing'
-  docs: 'complete' | 'review' | 'pending' | 'missing'
+  forms: 'complete' | 'pending' | 'missing' | 'none'
+  docs: 'complete' | 'review' | 'pending' | 'missing' | 'none'
   due: string | null   // ISO date of earliest incomplete deadline
   late: boolean
   overall: Pill
@@ -66,6 +66,14 @@ function sameDate(a: Date, b: Date): number {
   return da.getTime() - db.getTime()
 }
 
+// A dossier is complete once everything actually requested is done. A student
+// with no templates at all ('none'/'none') is NOT complete — nothing was sent,
+// there is nothing to be complete about (the Aperçu shows « — » instead).
+export function dossierComplete(r: Pick<DossierRollup, 'forms' | 'docs'>): boolean {
+  if (r.forms === 'none' && r.docs === 'none') return false
+  return (r.forms === 'complete' || r.forms === 'none') && (r.docs === 'complete' || r.docs === 'none')
+}
+
 export function rollupStudent(
   student: StudentInfo, templates: TemplateInfo[], cellMap: CellMap, today: Date = new Date(), t: T,
 ): DossierRollup {
@@ -75,7 +83,7 @@ export function rollupStudent(
   const formsStates = dataTemplates.map(t => assignmentState(cellMap, student.id, t.id))
   const formsStarted = dataTemplates.map(t => assignmentStarted(cellMap, student.id, t.id))
   const forms: DossierRollup['forms'] =
-    dataTemplates.length === 0 ? 'complete'
+    dataTemplates.length === 0 ? 'none'
     : formsStates.every(s => s === 'done' || s === 'awaiting') ? 'complete'
     : formsStarted.every(started => !started) ? 'missing'
     : 'pending'
@@ -83,7 +91,7 @@ export function rollupStudent(
   const docsStates = docTemplates.map(t => assignmentState(cellMap, student.id, t.id))
   const docsStarted = docTemplates.map(t => assignmentStarted(cellMap, student.id, t.id))
   const docs: DossierRollup['docs'] =
-    docTemplates.length === 0 ? 'complete'
+    docTemplates.length === 0 ? 'none'
     : docsStates.some(s => s === 'awaiting') ? 'review'
     : docsStates.every(s => s === 'done') ? 'complete'
     : docsStarted.every(started => !started) ? 'missing'
@@ -100,8 +108,9 @@ export function rollupStudent(
   const late = due !== null && sameDate(today, new Date(due + 'T00:00:00')) > 0
 
   let overall: Pill
-  if (docs === 'review') overall = { kind: 'info', label: t('common.status.toVerify') }
-  else if (forms === 'complete' && docs === 'complete') overall = { kind: 'ok', label: t('organizer.students.overall.complete') }
+  if (forms === 'none' && docs === 'none') overall = { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
+  else if (docs === 'review') overall = { kind: 'info', label: t('common.status.toVerify') }
+  else if (dossierComplete({ forms, docs })) overall = { kind: 'ok', label: t('organizer.students.overall.complete') }
   else if (late) overall = { kind: 'bad', label: t('organizer.students.overall.late') }
   else overall = { kind: 'warn', label: t('organizer.students.overall.incomplete') }
 
@@ -113,6 +122,7 @@ export function formsPill(f: DossierRollup['forms'], t: T): Pill {
     case 'complete': return { kind: 'ok', label: t('common.status.received') }
     case 'pending': return { kind: 'warn', label: t('common.status.inProgress') }
     case 'missing': return { kind: 'bad', label: t('common.status.missing') }
+    case 'none': return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
 
@@ -122,6 +132,7 @@ export function docsPill(d: DossierRollup['docs'], t: T): Pill {
     case 'review': return { kind: 'info', label: t('common.status.toVerify') }
     case 'pending': return { kind: 'warn', label: t('common.status.inProgress') }
     case 'missing': return { kind: 'bad', label: t('common.status.missing') }
+    case 'none': return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
 

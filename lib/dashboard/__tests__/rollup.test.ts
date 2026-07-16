@@ -3,11 +3,11 @@ import { createTranslator } from 'next-intl'
 import fr from '@/messages/fr.json'
 import {
   frShortDate,
-  rollupStudent, formsPill, docsPill,
+  rollupStudent, formsPill, docsPill, dossierComplete,
   timelineFor, nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
   lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
-  type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent,
+  type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent, type DossierRollup,
 } from '@/lib/dashboard/rollup'
 
 // Root (unnamespaced) fr translator — the label helpers now build their strings
@@ -49,9 +49,23 @@ describe('rollupStudent', () => {
     const r = rollupStudent(student, T, cell('draft', ''), new Date('2026-10-11T12:00:00'), t)
     expect(r.late).toBe(true); expect(r.overall).toEqual({ kind: 'bad', label: 'En retard' })
   })
-  it('no templates → complete', () => {
+  it('no templates → none/none with neutral « — » overall', () => {
     const r = rollupStudent(student, [], {}, TODAY, t)
+    expect(r.forms).toBe('none'); expect(r.docs).toBe('none')
+    expect(r.overall).toEqual({ kind: 'neutral', label: '—' })
+    expect(r.due).toBeNull(); expect(r.late).toBe(false)
+  })
+  it('forms-only exchange, all forms approved → docs none, overall Complet', () => {
+    const TF: TemplateInfo[] = [{ id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' }]
+    const r = rollupStudent(student, TF, { 's1:f1': { assignmentId: 'a1', status: 'approved' } }, TODAY, t)
+    expect(r.forms).toBe('complete'); expect(r.docs).toBe('none')
     expect(r.overall).toEqual({ kind: 'ok', label: 'Complet' })
+  })
+  it('docs-only exchange, nothing started → forms none, overall stays incomplete (warn)', () => {
+    const TD: TemplateInfo[] = [{ id: 'd1', type: 'document_upload', name: 'Passeport', deadline: '2026-10-10' }]
+    const r = rollupStudent(student, TD, cell(undefined, ''), TODAY, t)
+    expect(r.forms).toBe('none'); expect(r.docs).toBe('missing')
+    expect(r.overall.kind).toBe('warn')
   })
   it('rejected submission counts as incomplete for due/late, but as started for forms/docs', () => {
     const r = rollupStudent(student, T, cell('rejected', 'rejected'), TODAY, t)
@@ -87,11 +101,31 @@ describe('rollupStudent', () => {
 describe('formsPill / docsPill', () => {
   it.each([
     ['complete', 'ok', 'Reçu'], ['pending', 'warn', 'En cours'], ['missing', 'bad', 'Manquant'],
+    ['none', 'neutral', '—'],
   ])('formsPill %s → %s %s', (s, kind, label) => expect(formsPill(s as any, t)).toEqual({ kind, label }))
   it.each([
     ['complete', 'ok', 'Complet'], ['review', 'info', 'À vérifier'],
     ['pending', 'warn', 'En cours'], ['missing', 'bad', 'Manquant'],
+    ['none', 'neutral', '—'],
   ])('docsPill %s → %s %s', (s, kind, label) => expect(docsPill(s as any, t)).toEqual({ kind, label }))
+})
+
+describe('dossierComplete', () => {
+  const mk = (forms: DossierRollup['forms'], docs: DossierRollup['docs']) => ({ forms, docs })
+  it('true when everything requested is complete', () => {
+    expect(dossierComplete(mk('complete', 'complete'))).toBe(true)
+    expect(dossierComplete(mk('complete', 'none'))).toBe(true)
+    expect(dossierComplete(mk('none', 'complete'))).toBe(true)
+  })
+  it('false when nothing was requested at all', () => {
+    expect(dossierComplete(mk('none', 'none'))).toBe(false)
+  })
+  it('false while anything requested is unfinished', () => {
+    expect(dossierComplete(mk('pending', 'none'))).toBe(false)
+    expect(dossierComplete(mk('complete', 'review'))).toBe(false)
+    expect(dossierComplete(mk('missing', 'missing'))).toBe(false)
+    expect(dossierComplete(mk('none', 'pending'))).toBe(false)
+  })
 })
 
 describe('nextDeadline', () => {
