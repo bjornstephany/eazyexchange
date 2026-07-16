@@ -1,6 +1,6 @@
 // Canonical standard-template library, seeded as drafts for every new
 // exchange. Reworked 2026-07-15 to the real program; the SQL backfill in
-// 20260715000001 is a frozen snapshot of this data for exchanges that existed
+// 20260716102357 is a frozen snapshot of this data for exchanges that existed
 // before. Templates seed WITHOUT files — the PDFs are school-specific, so each
 // school's organizer attaches their own per exchange via the UI.
 import type { SupabaseClient } from '@supabase/supabase-js'
