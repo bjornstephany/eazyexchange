@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Student application PDFs dropped in docs/ — never commit (PII)
 docs/*.pdf
+
+# Real school reference files (PII risk) — never commit
+docs/exampleSchoolFiles/
