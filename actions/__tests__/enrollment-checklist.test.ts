@@ -47,12 +47,17 @@ const adminClient = {
     if (table === 'exchange_enrollments') return { insert: () => Promise.resolve({ error: null }) }
     return { select: () => chain(null) }
   },
-  auth: { admin: {
-    inviteUserByEmail: async () => ({ data: { user: { id: 'stu-1' } }, error: null }),
-    deleteUser: async () => ({ error: null }),
-  } },
+  auth: {
+    admin: {
+      createUser: async () => ({ data: { user: { id: 'stu-1' } }, error: null }),
+      generateLink: async () => ({ data: { properties: { hashed_token: 'hash-1' } }, error: null }),
+      deleteUser: async () => ({ error: null }),
+    },
+    verifyOtp: async () => ({ data: {}, error: null }),
+  },
 }
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => adminClient }))
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => adminClient }))
 
 import { respondToInvitation } from '@/actions/invitations'
 
@@ -119,7 +124,7 @@ describe('enrollment checklist email (respondToInvitation « yes »)', () => {
     activeTemplates = [{ id: 't1', name: 'Passeport', deadline: '2026-10-10' }]
     assignmentRows = [{ template_id: 't1', submissions: null }]
     checklistMock.mockRejectedValueOnce(new Error('smtp down'))
-    await expect(respondToInvitation('inv-1', 'yes', '')).resolves.toBeUndefined()
+    await expect(respondToInvitation('inv-1', 'yes', '')).resolves.toEqual({ ok: true })
     // enrollment was finalized despite the email failure
     expect(applicationUpdates.some(u => u.status === 'enrolled')).toBe(true)
     expect(warnSpy).toHaveBeenCalled()

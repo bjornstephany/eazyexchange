@@ -13,6 +13,13 @@ let scenario: {
   deletedAuthUserId: string | null
   rateLimitAllowed: boolean
   applicationCount: number
+  profileInsertError: any | null   // injected error for users-table inserts
+  createUserAttrs: any | null      // captured attrs of auth.admin.createUser
+  createUserResult: any            // returned by auth.admin.createUser
+  generateLinkAttrs: any | null    // captured attrs of auth.admin.generateLink
+  generateLinkResult: any          // returned by auth.admin.generateLink
+  verifyOtpAttrs: any | null       // captured attrs of auth.verifyOtp
+  verifyOtpResult: any             // returned by auth.verifyOtp
 }
 
 function builder(table: string) {
@@ -28,7 +35,8 @@ function builder(table: string) {
     insert: (row: any) => {
       scenario.inserted = { table, row }
       const error = table === 'exchange_enrollments' ? (scenario.enrollError ?? null)
-        : table === 'applications' ? (scenario.insertError ?? null) : null
+        : table === 'applications' ? (scenario.insertError ?? null)
+        : table === 'users' ? (scenario.profileInsertError ?? null) : null
       return {
         error,
         // startApplication chains .select('id').single() on the insert
@@ -81,10 +89,16 @@ const adminClient = {
     upload: async () => ({ data: { path: 'app-1/photo.png' }, error: null }),
     createSignedUrl: async (path: string) => ({ data: { signedUrl: `https://signed.example/${path}` }, error: null }),
   }) },
-  auth: { admin: {
-    inviteUserByEmail: async () => ({ data: { user: { id: 'new-user' } }, error: null }),
-    deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
-  } },
+  auth: {
+    admin: {
+      createUser: async (attrs: any) => { scenario.createUserAttrs = attrs; return scenario.createUserResult },
+      generateLink: async (attrs: any) => { scenario.generateLinkAttrs = attrs; return scenario.generateLinkResult },
+      deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
+    },
+    // The cookie-aware server client is mocked to this same object, so the
+    // in-action session mint's verifyOtp lands here.
+    verifyOtp: async (attrs: any) => { scenario.verifyOtpAttrs = attrs; return scenario.verifyOtpResult },
+  },
   // Rate-limit check — controlled by scenario.rateLimitAllowed.
   rpc: async () => ({ data: scenario.rateLimitAllowed, error: null }),
 }
@@ -128,7 +142,7 @@ vi.mock('@/lib/email', () => ({
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
-import { respondToInvitation } from '../invitations'
+import { respondToInvitation, resumeInviteSetup } from '../invitations'
 import { sendApplicationResumeEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 
@@ -150,6 +164,13 @@ beforeEach(() => {
     inserted: null, updated: null, updates: [], insertError: null, applicationQueue: [],
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
     rateLimitAllowed: true, applicationCount: 0,
+    profileInsertError: null,
+    createUserAttrs: null,
+    createUserResult: { data: { user: { id: 'new-user' } }, error: null },
+    generateLinkAttrs: null,
+    generateLinkResult: { data: { properties: { hashed_token: 'hash-1' } }, error: null },
+    verifyOtpAttrs: null,
+    verifyOtpResult: { data: { session: {} }, error: null },
   }
 })
 
@@ -337,41 +358,81 @@ describe('respondToInvitation', () => {
       enrolled_user_id: null,
     }
   })
-  it('rejects a response through an expired invite link', async () => {
+  it('returns a structured expired error through an expired invite link', async () => {
     scenario.application.invite_token_expires_at = PAST
-    await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toThrow('expired')
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'expired' })
   })
   it('records a No without creating an account', async () => {
-    await respondToInvitation('inv-1', 'no', '')
+    const res = await respondToInvitation('inv-1', 'no', '')
+    expect(res).toEqual({ ok: true })
     expect(scenario.updated.table).toBe('applications')
     expect(scenario.updated.row.status).toBe('declined')
+    expect(scenario.createUserAttrs).toBeNull()
   })
   it('records a Maybe with a note', async () => {
-    await respondToInvitation('inv-1', 'maybe', 'need to check dates')
+    const res = await respondToInvitation('inv-1', 'maybe', 'need to check dates')
+    expect(res).toEqual({ ok: true })
     expect(scenario.updated.row.status).toBe('maybe')
     expect(scenario.updated.row.invite_response_note).toBe('need to check dates')
   })
-  it('rejects a response for a non-invited application', async () => {
+  it('returns closed for a non-invited application', async () => {
     scenario.application.status = 'submitted'
-    await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toThrow()
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'closed' })
   })
-  it('on Yes creates the account, enrolls, and marks enrolled', async () => {
-    await respondToInvitation('inv-1', 'yes', '')
+  it('on Yes creates a confirmed account with no email, enrolls, finalizes, and mints a session', async () => {
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.createUserAttrs).toMatchObject({ email: 'a@b.co', email_confirm: true })
     expect(scenario.updated.row.status).toBe('enrolled')
     expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
+    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
+    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
   })
-  it('treats a Yes on an already-claimed (enrolling) invite as success, no second account', async () => {
+  it('a Yes on an already-claimed (enrolling) invite mints a session instead of a silent no-op', async () => {
     scenario.application.status = 'enrolling'
-    await expect(respondToInvitation('inv-1', 'yes', '')).resolves.toBeUndefined()
-    expect(scenario.deletedAuthUserId).toBeNull()
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.createUserAttrs).toBeNull()           // no second account
+    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
   })
-  it('on a non-23505 enroll failure, rolls back the profile + auth user, then throws', async () => {
+  it('a Yes on an already-enrolled invite also mints a session (retry after mint failure)', async () => {
+    scenario.application.status = 'enrolled'
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.createUserAttrs).toBeNull()
+  })
+  it('returns the structured retry error when the session mint fails after enrollment', async () => {
+    scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'retry' })
+    // enrollment itself was finalized — the retry lands in the claim-fail branch
+    expect(scenario.updates.some(u => u.row.status === 'enrolled')).toBe(true)
+  })
+  it('a failing verifyOtp also returns the retry error', async () => {
+    scenario.verifyOtpResult = { data: null, error: { message: 'bad hash' } }
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'retry' })
+  })
+  it('returns email_exists and releases the claim when the auth account already exists', async () => {
+    scenario.createUserResult = { data: { user: null }, error: { code: 'email_exists', message: 'exists' } }
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'email_exists' })
+    expect(scenario.updated.row.status).toBe('accepted')  // claim released
+  })
+  it('maps a 23505 profile-insert race to email_exists and rolls back the auth user', async () => {
+    scenario.profileInsertError = { code: '23505', message: 'duplicate key' }
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toMatchObject({ ok: false, error: 'email_exists' })
+    expect(scenario.deletedAuthUserId).toBe('new-user')
+    expect(scenario.updated.row.status).toBe('accepted')
+  })
+  it('on a non-23505 enroll failure, rolls back the profile + auth user, then throws (unexpected)', async () => {
     scenario.enrollError = { code: '500', message: 'boom' }
     await expect(respondToInvitation('inv-1', 'yes', '')).rejects.toBeTruthy()
     expect(scenario.deletedProfileUserId).toBe('new-user')
     expect(scenario.deletedAuthUserId).toBe('new-user')
-    // The application is NOT marked enrolled when enrollment failed — the claim
-    // is released back to 'accepted' so the applicant can retry.
     expect(scenario.updated.row.status).toBe('accepted')
     expect(scenario.updated.row.enrolled_user_id).toBeUndefined()
   })
