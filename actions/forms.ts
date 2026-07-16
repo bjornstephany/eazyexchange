@@ -181,7 +181,13 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
 
 export async function updateTemplateMeta(
   id: string,
-  meta: { name: string; description: string | null; deadline: string | null; condition_label: string | null },
+  meta: {
+    name: string
+    description: string | null
+    deadline: string | null
+    condition_label: string | null
+    external_url: string | null
+  },
 ): Promise<TemplateActionResult> {
   const supabase = await createClient()
   await requireUser()
@@ -191,12 +197,17 @@ export async function updateTemplateMeta(
   const name = meta.name.trim()
   if (!name) return { ok: false, message: 'Le nom ne peut pas être vide.' }
   if (tmpl.status === 'active' && !meta.deadline) return { ok: false, message: 'Un modèle actif doit garder une échéance.' }
+  const externalUrl = meta.external_url?.trim() || null
+  if (externalUrl && (!externalUrl.startsWith('https://') || externalUrl.length > 500)) {
+    return { ok: false, message: 'Le lien externe doit être une URL https:// (500 caractères max).' }
+  }
 
   const { error } = await supabase.from('form_templates').update({
     name,
     description: meta.description?.trim() || null,
     deadline: meta.deadline || null,
     condition_label: tmpl.audience === 'conditional' ? (meta.condition_label?.trim() || null) : null,
+    external_url: externalUrl,
   }).eq('id', id)
   if (error) throw error
   revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
@@ -387,7 +398,7 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
   const [{ data: templates }, { data: enrollments }] = await Promise.all([
     supabase
       .from('form_templates')
-      .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, form_fields(label, "order")')
+      .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, external_url, form_fields(label, "order")')
       .eq('exchange_id', exchangeId)
       .eq('school_id', schoolId)
       .in('kind', kinds)
@@ -430,6 +441,7 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
     name: t.name, description: t.description, deadline: t.deadline,
     standard_key: t.standard_key, condition_label: t.condition_label,
     template_file_path: t.template_file_path,
+    external_url: t.external_url,
     fields: [...(t.form_fields ?? [])].sort((a, b) => a.order - b.order).map((f) => f.label),
     assignees: (byTemplate.get(t.id) ?? []).sort((a, b) => a.studentName.localeCompare(b.studentName)),
   }))

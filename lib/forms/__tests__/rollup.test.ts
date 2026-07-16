@@ -19,7 +19,7 @@ const base: Omit<TemplateVM, 'kind' | 'status' | 'assignees'> = {
   id: 't1', audience: 'all', name: 'Passeport', description: null,
   // realistic timestamptz, not date-only (Phase-2 lesson)
   deadline: '2026-10-10T00:00:00+00:00',
-  standard_key: 'passeport', condition_label: null, template_file_path: null, fields: [],
+  standard_key: 'passeport', condition_label: null, template_file_path: null, external_url: null, fields: [],
 }
 const vm = (over: Partial<TemplateVM>): TemplateVM =>
   ({ ...base, kind: 'doc', status: 'active', assignees: [], ...over })

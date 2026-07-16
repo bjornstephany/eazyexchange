@@ -23,6 +23,7 @@ export function TemplateEditor({
   const [description, setDescription] = useState(template.description ?? '')
   const [deadline, setDeadline] = useState(template.deadline ? template.deadline.slice(0, 10) : '')
   const [conditionLabel, setConditionLabel] = useState(template.condition_label ?? '')
+  const [externalUrl, setExternalUrl] = useState(template.external_url ?? '')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,6 +43,7 @@ export function TemplateEditor({
         description: description.trim() || null,
         deadline: deadline || null,
         condition_label: template.audience === 'conditional' ? (conditionLabel.trim() || null) : null,
+        external_url: externalUrl.trim() || null,
       })
       if (res.ok) setSaved(true)
       else setError(res.message)
@@ -112,6 +114,12 @@ export function TemplateEditor({
                 placeholder={t('forms.editor.conditionPlaceholder')} className={inputCls} />
             </div>
           )}
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ed-link" className="text-[13px] font-semibold text-navy">Lien externe (facultatif)</label>
+          <input id="ed-link" type="url" value={externalUrl} onChange={e => setExternalUrl(e.target.value)}
+            placeholder="https://esta.cbp.dhs.gov" className={inputCls} />
+          <p className="text-[12px] text-muted-foreground">Démarche à faire sur un site officiel — le bouton apparaît sur la page de l’élève.</p>
         </div>
         {error && <p className="text-sm text-danger-text">{error}</p>}
         <div className="flex items-center gap-3">

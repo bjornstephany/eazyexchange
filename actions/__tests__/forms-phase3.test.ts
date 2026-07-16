@@ -147,17 +147,39 @@ describe('createDraftTemplate — structured results', () => {
 
 describe('updateTemplateMeta / replaceTemplateFile — structured results', () => {
   it('updateTemplateMeta returns a structured error when the name is empty', async () => {
-    const res = await updateTemplateMeta('tpl-1', { name: ' ', description: null, deadline: '2026-10-10', condition_label: null })
+    const res = await updateTemplateMeta('tpl-1', { name: ' ', description: null, deadline: '2026-10-10', condition_label: null, external_url: null })
     expect(res).toEqual({ ok: false, message: 'Le nom ne peut pas être vide.' })
   })
   it('updateTemplateMeta refuses removing the deadline of an active template', async () => {
     template.status = 'active'
-    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: null, condition_label: null })
+    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: null, condition_label: null, external_url: null })
     expect(res).toEqual({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
   })
   it('updateTemplateMeta returns ok on success', async () => {
-    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null })
+    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null, external_url: null })
     expect(res).toEqual({ ok: true })
+  })
+  it('updateTemplateMeta rejects a non-https external link', async () => {
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'ESTA', description: null, deadline: '2026-10-10', condition_label: null,
+      external_url: 'http://esta.cbp.dhs.gov',
+    })
+    expect(res).toEqual({ ok: false, message: 'Le lien externe doit être une URL https:// (500 caractères max).' })
+  })
+  it('updateTemplateMeta rejects an overlong external link', async () => {
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'ESTA', description: null, deadline: '2026-10-10', condition_label: null,
+      external_url: 'https://x.example/' + 'a'.repeat(500),
+    })
+    expect(res).toEqual({ ok: false, message: 'Le lien externe doit être une URL https:// (500 caractères max).' })
+  })
+  it('updateTemplateMeta persists a valid external link', async () => {
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'ESTA', description: null, deadline: '2026-10-10', condition_label: null,
+      external_url: '  https://esta.cbp.dhs.gov  ',
+    })
+    expect(res).toEqual({ ok: true })
+    expect(templateUpdate).toHaveBeenCalledWith(expect.objectContaining({ external_url: 'https://esta.cbp.dhs.gov' }))
   })
   it('replaceTemplateFile returns a structured error on a non-pdf template', async () => {
     const f = new FormData()

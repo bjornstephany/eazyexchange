@@ -17,7 +17,7 @@ import type { TemplateVM } from '@/lib/forms/rollup'
 const doc = (over: Partial<TemplateVM>): TemplateVM => ({
   id: 'd1', kind: 'doc', status: 'active', audience: 'all', name: 'Passeport',
   description: 'Copie du passeport.', deadline: '2026-10-10T00:00:00+00:00',
-  standard_key: 'passeport', condition_label: null, template_file_path: null, fields: [],
+  standard_key: 'passeport', condition_label: null, template_file_path: null, external_url: null, fields: [],
   assignees: [
     { assignmentId: 'a1', studentId: 's1', studentName: 'Léa Moreau', submissionStatus: 'approved' },
     { assignmentId: 'a2', studentId: 's2', studentName: 'Yanis Benali', submissionStatus: 'submitted' },

@@ -18,7 +18,7 @@ import type { TemplateVM } from '@/lib/forms/rollup'
 const vm = (over: Partial<TemplateVM>): TemplateVM => ({
   id: 't1', kind: 'pdf', status: 'active', audience: 'all', name: 'Formulaire de santé',
   description: 'Antécédents médicaux.', deadline: '2026-10-10T00:00:00+00:00',
-  standard_key: 'sante', condition_label: null, template_file_path: 's1/t1.pdf',
+  standard_key: 'sante', condition_label: null, template_file_path: 's1/t1.pdf', external_url: null,
   fields: ['Groupe sanguin'], assignees: [
     { assignmentId: 'a1', studentId: 's1', studentName: 'Léa M', submissionStatus: 'approved' },
     { assignmentId: 'a2', studentId: 's2', studentName: 'Hugo P', submissionStatus: null },

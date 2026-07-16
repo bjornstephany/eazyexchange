@@ -31,6 +31,7 @@ export type TemplateVM = {
   standard_key: string | null
   condition_label: string | null
   template_file_path: string | null
+  external_url: string | null
   fields: string[]
   assignees: AssigneeRow[]
 }
