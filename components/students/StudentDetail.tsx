@@ -1,11 +1,15 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { remindStudent } from '@/actions/students'
 import { reminderNote, type StudentVM } from '@/lib/students/directory'
 
 export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: string }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
+  const tr = useTranslations()
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -14,9 +18,9 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
     setBusy(true); setFlash(null); setError(null)
     try {
       const res = await remindStudent(exchangeId, vm.id)
-      setFlash(res.reminded ? 'Relance envoyée.' : 'Déjà relancé récemment — réessayez plus tard.')
+      setFlash(res.reminded ? t('students.detail.reminderSent') : t('students.detail.reminderCooldown'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
@@ -47,14 +51,14 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
             type="button" onClick={handleRemind} disabled={busy || complete}
             className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? 'Envoi…' : 'Relancer'}
+            {busy ? t('students.detail.sending') : t('students.detail.remindButton')}
           </button>
           {vm.applicationId && (
             <Link
               href={`/applications?id=${vm.applicationId}`}
               className="rounded-[9px] border bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-hoverrow"
             >
-              Candidature
+              {t('students.detail.applicationLink')}
             </Link>
           )}
         </div>
@@ -68,9 +72,9 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
       <div className="grid grid-cols-1 gap-[30px] lg:grid-cols-[1fr_1.1fr]">
         {/* identity + parents */}
         <div>
-          <div className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">Identité</div>
+          <div className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('students.detail.identityHeading')}</div>
           {!vm.applicationId && (
-            <p className="mb-2 text-[12.5px] text-tertiary">Candidature introuvable pour cet élève.</p>
+            <p className="mb-2 text-[12.5px] text-tertiary">{t('students.detail.noApplication')}</p>
           )}
           <div className="mb-[22px]">
             {vm.identity.map(f => (
@@ -82,7 +86,7 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
           </div>
           {vm.parents.length > 0 && (
             <>
-              <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">Parents</div>
+              <div className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('students.detail.parentsHeading')}</div>
               <div className="flex flex-col gap-2.5">
                 {vm.parents.map(par => (
                   <div key={par.role} className="flex justify-between gap-3 rounded-[11px] border border-subtle px-[15px] py-[13px]">
@@ -104,14 +108,14 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
         {/* dossier */}
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-2.5">
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">Dossier</div>
+            <div className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('students.detail.fileHeading')}</div>
             {vm.dueLabel && <span className="font-mono text-[11px] font-medium text-tertiary">{vm.dueLabel}</span>}
           </div>
           <div className="mb-1 h-1.5 overflow-hidden rounded-pill bg-background">
             <BarFill kind={vm.overall.kind} pct={vm.pct} />
           </div>
           <div className="mb-[11px] font-mono text-[11px] font-medium text-tertiary">
-            {vm.provided}/{vm.total} pièces fournies
+            {t('students.detail.piecesProvided', { provided: vm.provided, total: vm.total })}
           </div>
           <div className="overflow-hidden rounded-xl border border-subtle">
             {vm.checklist.map(item => {
@@ -135,12 +139,12 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
               )
             })}
             {vm.checklist.length === 0 && (
-              <p className="px-3.5 py-6 text-center text-[12.5px] text-tertiary">Aucune pièce demandée pour l’instant.</p>
+              <p className="px-3.5 py-6 text-center text-[12.5px] text-tertiary">{t('students.detail.emptyChecklist')}</p>
             )}
           </div>
           <div className="mt-3.5 flex items-center gap-[9px] rounded-[11px] bg-hoverrow px-[15px] py-[13px]">
             <span className="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[7px] bg-brand text-[13px] text-white">↻</span>
-            <span className="text-[12.5px] leading-[1.45] text-muted-foreground">{reminderNote(vm)}</span>
+            <span className="text-[12.5px] leading-[1.45] text-muted-foreground">{reminderNote(vm, tr)}</span>
           </div>
         </div>
       </div>

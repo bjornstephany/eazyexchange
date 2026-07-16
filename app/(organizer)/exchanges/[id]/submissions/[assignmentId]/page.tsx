@@ -1,15 +1,9 @@
+import { getTranslations } from 'next-intl/server'
 import { getSubmissionForReview } from '@/actions/submissions'
 import { SubmissionReview } from '@/components/SubmissionReview'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-
-const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
-  approved: { label: 'Approved', variant: 'success' },
-  submitted: { label: 'Submitted', variant: 'info' },
-  rejected: { label: 'Rejected', variant: 'danger' },
-  draft: { label: 'Draft', variant: 'neutral' },
-}
 
 export default async function SubmissionReviewPage({
   params,
@@ -18,33 +12,40 @@ export default async function SubmissionReviewPage({
 }) {
   const { id: exchangeId, assignmentId } = await params
   const { template, student, submission } = await getSubmissionForReview(assignmentId)
+  const t = await getTranslations('organizer')
 
-  const status = submission?.status ?? 'not submitted'
+  const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
+    approved: { label: t('pages.submissionReview.status.approved'), variant: 'success' },
+    submitted: { label: t('pages.submissionReview.status.submitted'), variant: 'info' },
+    rejected: { label: t('pages.submissionReview.status.rejected'), variant: 'danger' },
+    draft: { label: t('pages.submissionReview.status.draft'), variant: 'neutral' },
+  }
+
   const cfg = submission?.status ? statusConfig[submission.status] : null
   const canReview = submission?.status === 'submitted'
 
   return (
     <div>
       <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
-        <Link href={`/exchanges/${exchangeId}`}>← Back to exchange</Link>
+        <Link href={`/exchanges/${exchangeId}`}>{t('pages.submissionReview.backLink')}</Link>
       </Button>
 
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold">{template.name}</h1>
           <p className="text-muted-foreground mt-1">
-            {student?.full_name ?? <span className="italic">Unknown</span>} · {student?.email}
+            {student?.full_name ?? <span className="italic">{t('pages.submissionReview.unknownStudent')}</span>} · {student?.email}
           </p>
         </div>
         {cfg ? (
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         ) : (
-          <Badge variant="neutral">Not submitted</Badge>
+          <Badge variant="neutral">{t('pages.submissionReview.notSubmitted')}</Badge>
         )}
       </div>
 
       {!submission && (
-        <p className="text-muted-foreground">This student has not started this form yet.</p>
+        <p className="text-muted-foreground">{t('pages.submissionReview.notStarted')}</p>
       )}
 
       {submission && template.type === 'data_entry' && (
@@ -55,7 +56,7 @@ export default async function SubmissionReviewPage({
               <div key={field.id}>
                 <p className="text-sm font-medium text-muted-foreground">{field.label}</p>
                 <p className="text-sm text-foreground mt-0.5">
-                  {answer?.value || <span className="text-muted-foreground italic">No answer</span>}
+                  {answer?.value || <span className="text-muted-foreground italic">{t('pages.submissionReview.noAnswer')}</span>}
                 </p>
               </div>
             )
@@ -84,7 +85,7 @@ export default async function SubmissionReviewPage({
                     <p className="text-sm text-muted-foreground mt-1">📄 {upload.file_name}</p>
                   )
                 ) : (
-                  <p className="text-sm text-muted-foreground italic mt-1">Not uploaded</p>
+                  <p className="text-sm text-muted-foreground italic mt-1">{t('pages.submissionReview.notUploaded')}</p>
                 )}
               </div>
             )
@@ -98,7 +99,7 @@ export default async function SubmissionReviewPage({
 
       {submission && !canReview && submission.review_note && (
         <div className="border-t pt-6 mt-6">
-          <p className="text-sm font-medium text-muted-foreground mb-1">Review note</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{t('pages.submissionReview.reviewNoteHeading')}</p>
           <p className="text-sm text-foreground">{submission.review_note}</p>
         </div>
       )}

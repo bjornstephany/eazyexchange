@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }) }))
@@ -9,7 +10,7 @@ vi.mock('@/actions/exchanges', () => ({ setApplicationOpen: (...a: unknown[]) =>
 import { InviteModal } from '@/components/dashboard/InviteModal'
 
 function setup(onOpenChange = vi.fn()) {
-  render(<InviteModal exchangeId="ex1" applySlug="france-canada" open onOpenChange={onOpenChange} />)
+  renderWithIntl(<InviteModal exchangeId="ex1" applySlug="france-canada" open onOpenChange={onOpenChange} />)
   return onOpenChange
 }
 

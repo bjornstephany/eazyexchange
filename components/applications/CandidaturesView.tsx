@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { AppRow } from '@/lib/dashboard/rollup'
-import { applicantStatusPill, frShortDate, p } from '@/lib/dashboard/rollup'
+import { applicantStatusPill, frShortDate } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 import { acceptApplications, rejectApplications } from '@/actions/applications-review'
 import { setApplicationOpen } from '@/actions/exchanges'
@@ -10,12 +11,7 @@ import { StatusPill } from '@/components/dashboard/StatusPill'
 
 type TabKey = 'all' | 'toreview' | 'accepted' | 'rejected'
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'all', label: 'Toutes' },
-  { key: 'toreview', label: 'À examiner' },
-  { key: 'accepted', label: 'Acceptées' },
-  { key: 'rejected', label: 'Refusées' },
-]
+const TAB_KEYS: TabKey[] = ['all', 'toreview', 'accepted', 'rejected']
 
 const ACCEPTED_STATUSES = ['accepted', 'maybe', 'enrolling', 'enrolled']
 const REJECTED_STATUSES = ['rejected', 'declined']
@@ -45,6 +41,7 @@ export function CandidaturesView({
   applySlug: string
 }) {
   const router = useRouter()
+  const tr = useTranslations()
   const [tab, setTab] = useState<TabKey>('all')
   const [open, setOpen] = useState(applicationOpen)
   const [deadline, setDeadline] = useState(applicationDeadline ?? '')
@@ -56,6 +53,15 @@ export function CandidaturesView({
   const [note, setNote] = useState('')
   const [sendEmail, setSendEmail] = useState(true)
   const [bulkResult, setBulkResult] = useState<{ succeeded: number; failed: number } | null>(null)
+
+  function tabLabel(key: TabKey): string {
+    switch (key) {
+      case 'all': return tr('organizer.applications.tabs.all')
+      case 'toreview': return tr('organizer.applications.tabs.toReview')
+      case 'accepted': return tr('organizer.applications.tabs.accepted')
+      case 'rejected': return tr('organizer.applications.tabs.rejected')
+    }
+  }
 
   const filtered = apps.filter(a => matchesTab(a, tab))
 
@@ -136,11 +142,11 @@ export function CandidaturesView({
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-navy">Candidatures</h1>
+      <h1 className="font-display text-2xl font-bold text-navy">{tr('organizer.applications.heading')}</h1>
       <p className="text-sm text-muted-foreground mb-4">
         {apps.length === 0
-          ? 'Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.'
-          : `${apps.length} candidature${p(apps.length)} reçue${p(apps.length)} pour ${exchangeName}.`}
+          ? tr('organizer.applications.emptyState')
+          : tr('organizer.applications.countSummary', { n: apps.length, exchangeName })}
       </p>
 
       <div className="flex flex-wrap items-center gap-4 bg-card border rounded-[11px] px-4 py-2.5 mb-5">
@@ -153,10 +159,10 @@ export function CandidaturesView({
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${open ? 'bg-tint-text' : 'bg-muted-foreground'}`} />
-          {open ? 'Ouvert' : 'Fermé'}
+          {open ? tr('organizer.applications.stateOpen') : tr('organizer.applications.stateClosed')}
         </button>
         <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-          <span id="candidatures-deadline-label">Échéance</span>
+          <span id="candidatures-deadline-label">{tr('organizer.applications.deadlineLabel')}</span>
           <input
             aria-labelledby="candidatures-deadline-label"
             type="date"
@@ -168,7 +174,7 @@ export function CandidaturesView({
         </label>
         <div className="flex items-center gap-2 sm:ml-auto">
           <label htmlFor="candidatures-invite-link" className="text-[12.5px] text-muted-foreground whitespace-nowrap">
-            Lien de candidature
+            {tr('organizer.applications.linkLabel')}
           </label>
           <input
             id="candidatures-invite-link"
@@ -183,25 +189,25 @@ export function CandidaturesView({
             onClick={copyLink}
             className="h-[34px] whitespace-nowrap rounded-[8px] bg-brand px-3.5 text-[12.5px] font-semibold text-white"
           >
-            {copied ? 'Copié ✓' : 'Copier'}
+            {copied ? tr('organizer.applications.copiedCta') : tr('organizer.applications.copyCta')}
           </button>
         </div>
       </div>
 
       <div className="flex gap-1.5 bg-subtle rounded-[11px] p-1 w-fit mb-4">
-        {TABS.map(t => {
-          const count = apps.filter(a => matchesTab(a, t.key)).length
-          const active = tab === t.key
+        {TAB_KEYS.map(key => {
+          const count = apps.filter(a => matchesTab(a, key)).length
+          const active = tab === key
           return (
             <button
-              key={t.key}
+              key={key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(key)}
               className={`rounded-[8px] px-3.5 py-1.5 text-[13px] font-medium flex gap-1.5 items-center ${
                 active ? 'bg-card text-navy shadow-sm font-semibold' : 'text-muted-foreground'
               }`}
             >
-              {t.label}
+              {tabLabel(key)}
               <span className="font-mono text-[11px] text-tertiary">{count}</span>
             </button>
           )
@@ -211,7 +217,7 @@ export function CandidaturesView({
       {selected.length > 0 && (
         <div className="flex items-center gap-2.5 bg-tint border border-tint-border rounded-[11px] px-4 py-2.5 mb-3">
           <span className="text-[13px] font-semibold text-tint-text">
-            {selected.length} sélectionnée{p(selected.length)}
+            {tr('organizer.applications.selectedCount', { n: selected.length })}
           </span>
           {!rejecting ? (
             <>
@@ -221,7 +227,7 @@ export function CandidaturesView({
                 onClick={handleAccept}
                 className="bg-brand text-white rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold disabled:opacity-60"
               >
-                {busy ? 'Envoi…' : 'Accepter & inviter'}
+                {busy ? tr('organizer.applications.sending') : tr('organizer.applications.acceptCta')}
               </button>
               <button
                 type="button"
@@ -229,14 +235,14 @@ export function CandidaturesView({
                 onClick={() => setRejecting(true)}
                 className="bg-danger text-danger-text rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold disabled:opacity-60"
               >
-                {busy ? 'Envoi…' : 'Refuser'}
+                {busy ? tr('organizer.applications.sending') : tr('organizer.applications.rejectCta')}
               </button>
               <button
                 type="button"
                 onClick={resetBulkUi}
                 className="text-muted-foreground rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold"
               >
-                Annuler
+                {tr('common.actions.cancel')}
               </button>
             </>
           ) : (
@@ -244,12 +250,12 @@ export function CandidaturesView({
               <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}
-                placeholder="Note pour l'élève (facultatif)"
+                placeholder={tr('organizer.applications.notePlaceholder')}
                 className="flex-1 min-w-[180px] rounded-[8px] border p-2 text-sm"
               />
               <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground whitespace-nowrap">
                 <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
-                Prévenir par e-mail
+                {tr('organizer.applications.notifyByEmail')}
               </label>
               <button
                 type="button"
@@ -257,7 +263,7 @@ export function CandidaturesView({
                 onClick={handleConfirmReject}
                 className="bg-danger text-danger-text rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold disabled:opacity-60"
               >
-                {busy ? 'Envoi…' : 'Confirmer le refus'}
+                {busy ? tr('organizer.applications.sending') : tr('organizer.applications.confirmRejectCta')}
               </button>
               <button
                 type="button"
@@ -265,7 +271,7 @@ export function CandidaturesView({
                 onClick={() => setRejecting(false)}
                 className="text-muted-foreground rounded-[8px] px-3.5 py-1.5 text-[12.5px] font-semibold"
               >
-                Annuler
+                {tr('common.actions.cancel')}
               </button>
             </div>
           )}
@@ -274,7 +280,7 @@ export function CandidaturesView({
 
       {bulkResult && bulkResult.failed > 0 && (
         <p className="text-sm text-danger-text mb-3">
-          {bulkResult.succeeded} traitée{p(bulkResult.succeeded)} · {bulkResult.failed} en échec
+          {tr('organizer.applications.bulkResult', { s: bulkResult.succeeded, f: bulkResult.failed })}
         </p>
       )}
 
@@ -285,15 +291,15 @@ export function CandidaturesView({
             checked={filtered.length > 0 && filtered.every(a => selected.includes(a.id))}
             onChange={toggleAll}
           />
-          <span>Élève</span>
-          <span>Niveau 26-27</span>
-          <span>Langue mat.</span>
-          <span>Reçue le</span>
-          <span>Statut</span>
+          <span>{tr('organizer.applications.tableHeader.student')}</span>
+          <span>{tr('organizer.applications.tableHeader.level')}</span>
+          <span>{tr('organizer.applications.tableHeader.nativeLanguage')}</span>
+          <span>{tr('organizer.applications.tableHeader.receivedDate')}</span>
+          <span>{tr('organizer.applications.tableHeader.status')}</span>
           <span />
         </div>
         {filtered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">Aucune candidature dans cet onglet.</p>
+          <p className="px-4 py-6 text-sm text-muted-foreground">{tr('organizer.applications.emptyTab')}</p>
         ) : (
           filtered.map(a => (
             <div
@@ -311,7 +317,7 @@ export function CandidaturesView({
               <span className="text-sm text-muted-foreground">{a.data.grade ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{a.data.native_language ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{frShortDate(a.submitted_at)}</span>
-              <StatusPill pill={applicantStatusPill(a.status)} />
+              <StatusPill pill={applicantStatusPill(a.status, tr)} />
               <span className="text-muted-foreground">›</span>
             </div>
           ))

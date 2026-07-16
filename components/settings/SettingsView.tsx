@@ -1,11 +1,14 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
+import type { Locale } from '@/lib/i18n/config'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
 import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
+import { LanguageSelect } from './LanguageSelect'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
@@ -14,24 +17,26 @@ export type SettingsProps = {
   team: { members: TeamMember[]; pending: PendingInvite[] }
   billing: BillingOverview | null
   program: ProgramInfo | null
+  locale: Locale
 }
 
 type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog'
 
 export function SettingsView(props: SettingsProps) {
+  const t = useTranslations('organizer')
   const [section, setSection] = useState<SectionKey>('compte')
   const sections: { key: SectionKey; label: string }[] = [
-    { key: 'compte', label: 'Compte personnel' },
-    { key: 'equipe', label: 'Équipe & rôles' },
-    ...(props.isOwner ? [{ key: 'fact' as const, label: 'Facturation' }] : []),
-    ...(props.isOwner && props.program ? [{ key: 'prog' as const, label: 'Programme' }] : []),
+    { key: 'compte', label: t('settings.nav.compte') },
+    { key: 'equipe', label: t('settings.nav.equipe') },
+    ...(props.isOwner ? [{ key: 'fact' as const, label: t('settings.nav.fact') }] : []),
+    ...(props.isOwner && props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
   ]
 
   return (
     <div className="max-w-[1120px]">
       <div className="mb-5">
-        <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">Réglages</h1>
-        <p className="text-[13px] text-muted-foreground">Votre compte, votre équipe et votre abonnement.</p>
+        <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">{t('settings.heading')}</h1>
+        <p className="text-[13px] text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
       <div className="flex items-start gap-[26px]">
         <div className="flex w-[222px] flex-none flex-col gap-1">
@@ -52,6 +57,7 @@ export function SettingsView(props: SettingsProps) {
           {section === 'compte' && (
             <>
               <ProfileCard profile={props.profile} isOwner={props.isOwner} />
+              <LanguageSelect current={props.locale} />
               <SecurityCard canChangePassword={props.canChangePassword} />
             </>
           )}

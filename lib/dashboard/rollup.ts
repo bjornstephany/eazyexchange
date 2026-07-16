@@ -3,6 +3,15 @@
 
 import { frShortDate } from '@/lib/dates'
 import { applicantName } from '@/lib/application-form'
+// Type-only import: used solely for the translator param type below, so it is
+// erased at compile time and this module stays React-free at runtime. Typing the
+// param as a real next-intl translator preserves the type-safe key gate.
+import type { useTranslations } from 'next-intl'
+
+// Root (unnamespaced) next-intl translator. Label helpers take one and call it
+// with FULL key paths (`common.status.*`, `organizer.dashboard.*`) so unknown
+// keys fail `npx tsc --noEmit`.
+type T = ReturnType<typeof useTranslations<never>>
 
 // Re-export: dashboard components historically import frShortDate from here.
 export { frShortDate }
@@ -58,7 +67,7 @@ function sameDate(a: Date, b: Date): number {
 }
 
 export function rollupStudent(
-  student: StudentInfo, templates: TemplateInfo[], cellMap: CellMap, today: Date = new Date(),
+  student: StudentInfo, templates: TemplateInfo[], cellMap: CellMap, today: Date = new Date(), t: T,
 ): DossierRollup {
   const dataTemplates = templates.filter(t => t.type === 'data_entry')
   const docTemplates = templates.filter(t => t.type === 'document_upload')
@@ -91,28 +100,28 @@ export function rollupStudent(
   const late = due !== null && sameDate(today, new Date(due + 'T00:00:00')) > 0
 
   let overall: Pill
-  if (docs === 'review') overall = { kind: 'info', label: 'À vérifier' }
-  else if (forms === 'complete' && docs === 'complete') overall = { kind: 'ok', label: 'Complet' }
-  else if (late) overall = { kind: 'bad', label: 'En retard' }
-  else overall = { kind: 'warn', label: 'Incomplet' }
+  if (docs === 'review') overall = { kind: 'info', label: t('common.status.toVerify') }
+  else if (forms === 'complete' && docs === 'complete') overall = { kind: 'ok', label: t('organizer.students.overall.complete') }
+  else if (late) overall = { kind: 'bad', label: t('organizer.students.overall.late') }
+  else overall = { kind: 'warn', label: t('organizer.students.overall.incomplete') }
 
   return { studentId: student.id, name: student.full_name, forms, docs, due, late, overall }
 }
 
-export function formsPill(f: DossierRollup['forms']): Pill {
+export function formsPill(f: DossierRollup['forms'], t: T): Pill {
   switch (f) {
-    case 'complete': return { kind: 'ok', label: 'Reçu' }
-    case 'pending': return { kind: 'warn', label: 'En cours' }
-    case 'missing': return { kind: 'bad', label: 'Manquant' }
+    case 'complete': return { kind: 'ok', label: t('common.status.received') }
+    case 'pending': return { kind: 'warn', label: t('common.status.inProgress') }
+    case 'missing': return { kind: 'bad', label: t('common.status.missing') }
   }
 }
 
-export function docsPill(d: DossierRollup['docs']): Pill {
+export function docsPill(d: DossierRollup['docs'], t: T): Pill {
   switch (d) {
-    case 'complete': return { kind: 'ok', label: 'Complet' }
-    case 'review': return { kind: 'info', label: 'À vérifier' }
-    case 'pending': return { kind: 'warn', label: 'En cours' }
-    case 'missing': return { kind: 'bad', label: 'Manquant' }
+    case 'complete': return { kind: 'ok', label: t('organizer.dashboard.pills.complete') }
+    case 'review': return { kind: 'info', label: t('common.status.toVerify') }
+    case 'pending': return { kind: 'warn', label: t('common.status.inProgress') }
+    case 'missing': return { kind: 'bad', label: t('common.status.missing') }
   }
 }
 
@@ -125,31 +134,31 @@ export function nextDeadline(rollups: DossierRollup[]): string | null {
   return earliest
 }
 
-export function timelineFor(app: AppRow): { dot: Pill['kind']; title: string; sub: string }[] {
+export function timelineFor(app: AppRow, t: T): { dot: Pill['kind']; title: string; sub: string }[] {
   const entries: { dot: Pill['kind']; title: string; sub: string }[] = [
-    { dot: 'ok', title: 'Candidature reçue', sub: frShortDate(app.submitted_at) },
+    { dot: 'ok', title: t('organizer.dashboard.timeline.received'), sub: frShortDate(app.submitted_at) },
   ]
 
   const { status } = app
   if (status === 'submitted') {
-    entries.push({ dot: 'neutral', title: 'En attente d’examen', sub: 'À accepter ou refuser' })
+    entries.push({ dot: 'neutral', title: t('organizer.dashboard.timeline.awaitingReview'), sub: t('organizer.dashboard.timeline.awaitingReviewSub') })
     return entries
   }
   if (status === 'rejected') {
-    entries.push({ dot: 'bad', title: 'Candidature refusée', sub: '' })
+    entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.rejected'), sub: '' })
     return entries
   }
   if (ACCEPTED_GROUP_STATUSES.includes(status)) {
-    entries.push({ dot: 'ok', title: 'Candidature acceptée', sub: '' })
-    entries.push({ dot: 'ok', title: 'Invitation envoyée automatiquement', sub: 'Email envoyé dès l’acceptation' })
+    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.accepted'), sub: '' })
+    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.inviteSent'), sub: t('organizer.dashboard.timeline.inviteSentSub') })
     if (status === 'accepted') {
-      entries.push({ dot: 'warn', title: 'En attente de réponse', sub: '' })
+      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.awaitingResponse'), sub: '' })
     } else if (CONFIRMED_STATUSES.includes(status)) {
-      entries.push({ dot: 'ok', title: 'A répondu : Oui', sub: 'Participation confirmée' })
+      entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.respondedYes'), sub: t('organizer.dashboard.timeline.respondedYesSub') })
     } else if (status === 'maybe') {
-      entries.push({ dot: 'warn', title: 'A répondu : Peut-être', sub: '' })
+      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.respondedMaybe'), sub: '' })
     } else if (status === 'declined') {
-      entries.push({ dot: 'bad', title: 'A répondu : Non', sub: '' })
+      entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.respondedNo'), sub: '' })
     }
   }
   return entries
@@ -167,31 +176,31 @@ const CLOSED_STATUSES = ['rejected', 'declined']
 
 // Candidature column: where the person stands in the recruitment funnel.
 // `null` = enrolled student with no application row (directly invited).
-export function candidaturePill(status: string | null): Pill {
+export function candidaturePill(status: string | null, t: T): Pill {
   switch (status) {
     case null:
     case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: 'Confirmé(e)' }
-    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
-    case 'accepted': return { kind: 'warn', label: 'Invité — en attente' }
-    case 'maybe': return { kind: 'warn', label: 'Peut-être' }
-    case 'declined': return { kind: 'bad', label: 'A décliné' }
-    case 'rejected': return { kind: 'bad', label: 'Refusé' }
-    default: return { kind: 'neutral', label: '—' }
+    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.confirmedParen') }
+    case 'submitted': return { kind: 'neutral', label: t('organizer.dashboard.pills.toExamine') }
+    case 'accepted': return { kind: 'warn', label: t('organizer.dashboard.pills.invitedWaiting') }
+    case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.maybe') }
+    case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
+    case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
 
 // Statut column for applicant rows (enrolled rows show rollup.overall instead).
-export function applicantStatusPill(status: string): Pill {
+export function applicantStatusPill(status: string, t: T): Pill {
   switch (status) {
-    case 'submitted': return { kind: 'neutral', label: 'À examiner' }
-    case 'accepted': return { kind: 'warn', label: 'En attente' }
+    case 'submitted': return { kind: 'neutral', label: t('organizer.dashboard.pills.toExamine') }
+    case 'accepted': return { kind: 'warn', label: t('organizer.dashboard.pills.waiting') }
     case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: 'Confirmé' }
-    case 'maybe': return { kind: 'warn', label: 'Hésite' }
-    case 'declined': return { kind: 'bad', label: 'A décliné' }
-    case 'rejected': return { kind: 'bad', label: 'Refusé' }
-    default: return { kind: 'neutral', label: '—' }
+    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.confirmed') }
+    case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.hesitates') }
+    case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
+    case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
 
@@ -204,7 +213,7 @@ function normEmail(e: string): string {
 // merged into that student's row; a confirmed application with no matching
 // student (shouldn't happen — enrollment reuses the application email) falls
 // back to an applicant row with a Confirmé pill, never silently dropped.
-export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], rollups: DossierRollup[]): LifecycleRow[] {
+export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], rollups: DossierRollup[], t: T): LifecycleRow[] {
   const rollupByStudent = new Map(rollups.map(r => [r.studentId, r]))
   const enrolledEmails = new Set(students.map(s => normEmail(s.email)))
 
@@ -214,8 +223,8 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
       kind: 'applicant' as const,
       key: `app:${a.id}`,
       name: applicantName(a.data) || a.email,
-      candidature: candidaturePill(a.status),
-      statut: applicantStatusPill(a.status),
+      candidature: candidaturePill(a.status, t),
+      statut: applicantStatusPill(a.status, t),
       closed: CLOSED_STATUSES.includes(a.status),
       app: a,
     }))
@@ -223,7 +232,7 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
   const enrolledRows: LifecycleRow[] = students.flatMap(s => {
     const rollup = rollupByStudent.get(s.id)
     if (!rollup) return []
-    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name: rollup.name, candidature: candidaturePill(null), rollup }]
+    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name: rollup.name, candidature: candidaturePill(null, t), rollup }]
   })
 
   return [...applicantRows, ...enrolledRows]
@@ -235,15 +244,15 @@ export function closedCount(rows: LifecycleRow[]): number {
 
 // Candidatures counts ALL received applications, including rejected/declined
 // (historical volume) — the hide-closed toggle only affects the table.
-export function lifecycleFunnel(apps: AppRow[], rollups: DossierRollup[]): FunnelStage[] {
+export function lifecycleFunnel(apps: AppRow[], rollups: DossierRollup[], t: T): FunnelStage[] {
   const complete = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
   return [
-    { key: 'all', label: 'Candidatures', count: apps.length },
-    { key: 'toreview', label: 'À examiner', count: apps.filter(a => a.status === 'submitted').length },
-    { key: 'confirmed', label: 'Confirmés', count: rollups.length },
-    { key: 'review', label: 'À vérifier', count: rollups.filter(r => r.overall.kind === 'info').length },
-    { key: 'late', label: 'En retard', count: rollups.filter(r => r.late).length },
-    { key: 'complete', label: 'Complets', count: complete, display: `${complete} / ${rollups.length}` },
+    { key: 'all', label: t('organizer.dashboard.funnel.candidatures'), count: apps.length },
+    { key: 'toreview', label: t('organizer.dashboard.pills.toExamine'), count: apps.filter(a => a.status === 'submitted').length },
+    { key: 'confirmed', label: t('organizer.dashboard.funnel.confirmed'), count: rollups.length },
+    { key: 'review', label: t('common.status.toVerify'), count: rollups.filter(r => r.overall.kind === 'info').length },
+    { key: 'late', label: t('organizer.dashboard.funnel.late'), count: rollups.filter(r => r.late).length },
+    { key: 'complete', label: t('organizer.dashboard.funnel.complete'), count: complete, display: `${complete} / ${rollups.length}` },
   ]
 }
 
@@ -262,61 +271,61 @@ export function lifecycleFilter(rows: LifecycleRow[], key: string | null, showCl
   }
 }
 
-export function lifecycleSubline(apps: AppRow[], rollups: DossierRollup[]): string {
+export function lifecycleSubline(apps: AppRow[], rollups: DossierRollup[], t: T): string {
   const a = apps.filter(x => x.status === 'submitted').length
   const r = rollups.filter(x => x.overall.kind === 'info').length
   const l = rollups.filter(x => x.late).length
-  return `${a} candidature${p(a)} à examiner, ${r} dossier${p(r)} à vérifier, ${l} élève${p(l)} en retard.`
+  return t('organizer.dashboard.subline', { a, r, l })
 }
 
 // « À faire maintenant » cards mixing both worlds, ordered by urgency.
-export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], activeTemplateCount?: number): ActionCard[] {
+export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], activeTemplateCount: number | undefined, t: T): ActionCard[] {
   const cards: ActionCard[] = []
   if (activeTemplateCount === 0) {
     cards.push({
-      title: 'Aucun formulaire actif',
-      desc: 'Préparez les documents et formulaires à demander aux familles.',
-      cta: 'Préparer les formulaires', tone: 'accent', filterKey: 'noforms', href: '/forms',
+      title: t('organizer.dashboard.actionCards.noFormsTitle'),
+      desc: t('organizer.dashboard.actionCards.noFormsDesc'),
+      cta: t('organizer.dashboard.actionCards.noFormsCta'), tone: 'accent', filterKey: 'noforms', href: '/forms',
     })
   }
   const a = apps.filter(x => x.status === 'submitted').length
   if (a > 0) {
     cards.push({
-      title: `${a} candidature${p(a)} à examiner`,
-      desc: 'Nouveaux dossiers en attente de votre décision. L’invitation part automatiquement dès l’acceptation.',
-      cta: 'Examiner', tone: 'accent', filterKey: 'toreview',
+      title: t('organizer.dashboard.actionCards.toReviewTitle', { n: a }),
+      desc: t('organizer.dashboard.actionCards.toReviewDesc'),
+      cta: t('organizer.dashboard.actionCards.toReviewCta'), tone: 'accent', filterKey: 'toreview',
     })
   }
   const r = rollups.filter(x => x.overall.kind === 'info').length
   if (r > 0) {
     cards.push({
-      title: `${r} dossier${p(r)} à vérifier`,
-      desc: 'Formulaires et documents reçus, en attente de validation.',
-      cta: 'Vérifier', tone: 'accent', filterKey: 'review',
+      title: t('organizer.dashboard.actionCards.reviewTitle', { n: r }),
+      desc: t('organizer.dashboard.actionCards.reviewDesc'),
+      cta: t('organizer.dashboard.actionCards.reviewCta'), tone: 'accent', filterKey: 'review',
     })
   }
   const l = rollups.filter(x => x.late).length
   if (l > 0) {
     cards.push({
-      title: `${l} élève${p(l)} en retard`,
-      desc: 'Échéance dépassée — relance renforcée en cours.',
-      cta: 'Relancer', tone: 'bad', filterKey: 'late',
+      title: t('organizer.dashboard.actionCards.lateTitle', { n: l }),
+      desc: t('organizer.dashboard.actionCards.lateDesc'),
+      cta: t('organizer.dashboard.actionCards.lateCta'), tone: 'bad', filterKey: 'late',
     })
   }
   const m = rollups.filter(x => x.docs === 'missing' || x.docs === 'pending').length
   if (m > 0) {
     cards.push({
-      title: `${m} élève${p(m)} : documents manquants`,
-      desc: 'Pièces non reçues avant l’échéance.',
-      cta: 'Voir les élèves', tone: 'warn', filterKey: 'missingdocs',
+      title: t('organizer.dashboard.actionCards.missingDocsTitle', { n: m }),
+      desc: t('organizer.dashboard.actionCards.missingDocsDesc'),
+      cta: t('organizer.dashboard.actionCards.missingDocsCta'), tone: 'warn', filterKey: 'missingdocs',
     })
   }
   const c = apps.filter(x => x.status === 'maybe').length
   if (c > 0) {
     cards.push({
-      title: `${c} élève${p(c)} hésite${c > 1 ? 'nt' : ''} — à relancer`,
-      desc: 'Réponses « Peut-être » à convertir en confirmation.',
-      cta: 'Relancer', tone: 'warn', filterKey: 'maybe',
+      title: t('organizer.dashboard.actionCards.maybeTitle', { n: c }),
+      desc: t('organizer.dashboard.actionCards.maybeDesc'),
+      cta: t('organizer.dashboard.actionCards.maybeCta'), tone: 'warn', filterKey: 'maybe',
     })
   }
   return cards
@@ -324,12 +333,12 @@ export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], a
 
 // Exchange-card progress (Échanges page): dossier progress once anyone is
 // enrolled, candidature progress before that.
-export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[]): { done: number; total: number; label: string } {
+export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[], t: T): { done: number; total: number; label: string } {
   if (rollups.length > 0) {
     const done = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
-    return { done, total: rollups.length, label: `${done} / ${rollups.length} dossiers validés` }
+    return { done, total: rollups.length, label: t('organizer.dashboard.progressDossiers', { done, total: rollups.length }) }
   }
   const total = apps.length
   const done = apps.filter(a => a.status !== 'submitted').length
-  return { done, total, label: `${done} / ${total} candidatures traitées` }
+  return { done, total, label: t('organizer.dashboard.progressCandidatures', { done, total }) }
 }

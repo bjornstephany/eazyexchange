@@ -6,6 +6,9 @@ import { isInGrace, exchangeCap, hasActivePlan, TRIAL_EXCHANGE_CAP } from '@/lib
 import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 import { OrganizerShell, type ExchangeOption } from '@/components/shell/OrganizerShell'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { NextIntlClientProvider } from 'next-intl'
+import { resolveLocale } from '@/lib/i18n/resolve'
+import { loadMessages } from '@/lib/i18n/messages'
 
 export default async function OrganizerLayout({ children }: { children: React.ReactNode }) {
   const user = await getAuthUser()
@@ -45,19 +48,26 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
 
+  const locale = await resolveLocale()
+  const messages = await loadMessages(locale)
+
   return (
-    <OrganizerShell
-      exchanges={exchanges}
-      activeExchangeId={active?.id ?? null}
-      organizerName={profile.full_name}
-      schoolName={school?.name ?? ''}
-      atCap={atCap}
-      isTrial={isTrial}
-      remaining={remaining}
-      orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
-    >
-      {showGrace && <PaymentWarningBanner />}
-      {children}
-    </OrganizerShell>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <div lang={locale}>
+        <OrganizerShell
+          exchanges={exchanges}
+          activeExchangeId={active?.id ?? null}
+          organizerName={profile.full_name}
+          schoolName={school?.name ?? ''}
+          atCap={atCap}
+          isTrial={isTrial}
+          remaining={remaining}
+          orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
+        >
+          {showGrace && <PaymentWarningBanner />}
+          {children}
+        </OrganizerShell>
+      </div>
+    </NextIntlClientProvider>
   )
 }

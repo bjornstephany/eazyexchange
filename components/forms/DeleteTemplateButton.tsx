@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { deleteTemplate } from '@/actions/forms'
 
 // Row-level delete for a custom template. Reuses the drawer's window.confirm
@@ -12,6 +13,8 @@ export function DeleteTemplateButton({
   confirmText: string
 }) {
   const [busy, setBusy] = useState(false)
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
 
   async function handleClick() {
     if (!window.confirm(confirmText)) return
@@ -19,7 +22,7 @@ export function DeleteTemplateButton({
     try {
       await deleteTemplate(templateId)
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      window.alert(err instanceof Error ? err.message : c('errors.generic'))
       setBusy(false)
     }
   }
@@ -27,7 +30,7 @@ export function DeleteTemplateButton({
   return (
     <button type="button" onClick={handleClick} disabled={busy}
       className="rounded-lg border border-frame-dashed bg-card px-3.5 py-2 text-[12.5px] font-semibold text-danger-text hover:bg-hoverrow disabled:opacity-60">
-      {busy ? 'Suppression…' : 'Supprimer'}
+      {busy ? t('forms.deleteButton.deleting') : c('actions.delete')}
     </button>
   )
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 let listSearch = ''
 vi.mock('@/components/shell/ShellUiContext', () => ({
@@ -44,7 +45,7 @@ describe('StudentsView', () => {
   beforeEach(() => { listSearch = ''; remind.mockClear() })
 
   it('renders subline, chips with counts, and selects the first student', () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.getByRole('heading', { name: 'Élèves' })).toBeInTheDocument()
     expect(screen.getByText('2 élèves confirmés · 1 dossier complet')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Tous/ })).toBeInTheDocument()
@@ -53,34 +54,34 @@ describe('StudentsView', () => {
   })
 
   it('chip filter narrows the list; empty filter shows the demo copy', () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     fireEvent.click(screen.getByRole('button', { name: /À vérifier/ }))
     expect(screen.getByText('Aucun élève ne correspond au filtre.')).toBeInTheDocument()
   })
 
   it('search filters accent-insensitively via the shell field', () => {
     listSearch = 'yanis'
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.queryAllByText('Camille Laurent')).toHaveLength(0)
     expect(screen.getAllByText('Yanis Benali').length).toBeGreaterThan(0)
   })
 
   it('clicking a row switches the detail panel', () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     fireEvent.click(screen.getByRole('button', { name: /Camille Laurent/ }))
     expect(screen.getByText('Marc Laurent')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Candidature' })).toHaveAttribute('href', '/applications?id=app1')
   })
 
   it('detail: reviewable checklist rows link to the review page, missing ones do not', () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.getByRole('link', { name: /AST — sortie du territoire/ }))
       .toHaveAttribute('href', '/exchanges/ex1/submissions/a3')
     expect(screen.queryByRole('link', { name: /Passeport/ })).toBeNull()
   })
 
   it('Relancer calls the action and flashes the result; disabled when complete', async () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     fireEvent.click(screen.getByRole('button', { name: 'Relancer' }))
     expect(await screen.findByText('Relance envoyée.')).toBeInTheDocument()
     expect(remind).toHaveBeenCalledWith('ex1', 's2')
@@ -90,13 +91,13 @@ describe('StudentsView', () => {
 
   it('cooldown result shows the skipped message', async () => {
     remind.mockResolvedValueOnce({ reminded: false, skipped: true })
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     fireEvent.click(screen.getByRole('button', { name: 'Relancer' }))
     expect(await screen.findByText('Déjà relancé récemment — réessayez plus tard.')).toBeInTheDocument()
   })
 
   it('no application: Candidature hidden, identity note shown', () => {
-    render(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.queryByRole('link', { name: 'Candidature' })).toBeNull()
     expect(screen.getByText('Candidature introuvable pour cet élève.')).toBeInTheDocument()
   })

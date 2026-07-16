@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 const accept = vi.fn().mockResolvedValue(undefined)
@@ -14,35 +15,35 @@ const app = { id: 'a1', status: 'submitted', submitted_at: '2026-09-12', data: {
 
 describe('StudentDrawer', () => {
   it('renders nothing when subject is null', () => {
-    const { container } = render(<StudentDrawer subject={null} onClose={() => {}} />)
+    const { container } = renderWithIntl(<StudentDrawer subject={null} onClose={() => {}} />)
     expect(container.firstChild).toBeNull()
   })
   it('application subject: timeline + accept action', async () => {
-    render(<StudentDrawer subject={{ kind: 'application', app }} onClose={() => {}} />)
+    renderWithIntl(<StudentDrawer subject={{ kind: 'application', app }} onClose={() => {}} />)
     expect(screen.getByText('Parcours')).toBeInTheDocument()
     expect(screen.getByText('Candidature reçue')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Accepter & inviter' }))
     expect(accept).toHaveBeenCalledWith('a1')
   })
   it('reject requires the inline confirm step', () => {
-    render(<StudentDrawer subject={{ kind: 'application', app }} onClose={() => {}} />)
+    renderWithIntl(<StudentDrawer subject={{ kind: 'application', app }} onClose={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: 'Refuser' }))
     expect(screen.getByRole('button', { name: 'Confirmer le refus' })).toBeInTheDocument()
   })
   it('student subject: checklist without actions', () => {
-    render(<StudentDrawer subject={{ kind: 'student', rollup: { studentId: 's1', name: 'Manon Girard', forms: 'pending', docs: 'missing', due: '2026-10-03', late: true, overall: { kind: 'bad', label: 'En retard' } }, items: [{ label: 'Passeport', group: 'doc', pill: { kind: 'bad', label: 'Manquant' } }] }} onClose={() => {}} />)
+    renderWithIntl(<StudentDrawer subject={{ kind: 'student', rollup: { studentId: 's1', name: 'Manon Girard', forms: 'pending', docs: 'missing', due: '2026-10-03', late: true, overall: { kind: 'bad', label: 'En retard' } }, items: [{ label: 'Passeport', group: 'doc', pill: { kind: 'bad', label: 'Manquant' } }] }} onClose={() => {}} />)
     expect(screen.getByText('Passeport')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Accepter & inviter' })).toBeNull()
   })
   it('closes on backdrop click', () => {
     const onClose = vi.fn()
-    render(<StudentDrawer subject={{ kind: 'application', app }} onClose={onClose} />)
+    renderWithIntl(<StudentDrawer subject={{ kind: 'application', app }} onClose={onClose} />)
     fireEvent.click(screen.getByTestId('drawer-backdrop'))
     expect(onClose).toHaveBeenCalled()
   })
   it('Escape collapses the reject step first, then closes the drawer on a second Escape', () => {
     const onClose = vi.fn()
-    render(<StudentDrawer subject={{ kind: 'application', app }} onClose={onClose} />)
+    renderWithIntl(<StudentDrawer subject={{ kind: 'application', app }} onClose={onClose} />)
     fireEvent.click(screen.getByRole('button', { name: 'Refuser' }))
     expect(screen.getByRole('button', { name: 'Confirmer le refus' })).toBeInTheDocument()
 

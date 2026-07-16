@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 let mockPathname = '/dashboard'
 const push = vi.fn()
@@ -22,7 +23,7 @@ const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archiv
 
 function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
   mockPathname = pathname
-  return render(
+  return renderWithIntl(
     <OrganizerShell
       exchanges={exchanges}
       activeExchangeId="ex1"
@@ -36,7 +37,7 @@ function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
 
 describe('OrganizerShell', () => {
   it('renders the French rail items when an exchange is active', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -47,7 +48,7 @@ describe('OrganizerShell', () => {
   })
 
   it('rail points at the session-scoped top-level routes', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -57,7 +58,7 @@ describe('OrganizerShell', () => {
   })
 
   it('Échanges stays visible with zero exchanges', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -67,7 +68,7 @@ describe('OrganizerShell', () => {
   })
 
   it('hides Candid. but offers creation when no exchanges exist', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -78,7 +79,7 @@ describe('OrganizerShell', () => {
 
   it('+ Nouvel échange redirects to /billing at cap instead of opening the modal', () => {
     push.mockClear()
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral" atCap>
         <p>page</p>
       </OrganizerShell>
@@ -91,7 +92,7 @@ describe('OrganizerShell', () => {
 
   it('+ Nouvel échange opens the modal when under cap', () => {
     push.mockClear()
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -102,7 +103,7 @@ describe('OrganizerShell', () => {
   })
 
   it('shows organizer initials and the session name', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -112,7 +113,7 @@ describe('OrganizerShell', () => {
   })
 
   it('falls back to the first exchange when activeExchangeId matches none (stale data)', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="stale-id" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -122,7 +123,7 @@ describe('OrganizerShell', () => {
   })
 
   it('dismisses the session selector panel on outside click', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
@@ -175,7 +176,7 @@ describe('OrganizerShell', () => {
 
   it('shows an Archivé pill for an archived active exchange', () => {
     mockPathname = '/dashboard'
-    render(
+    renderWithIntl(
       <OrganizerShell
         exchanges={[{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: true }]}
         activeExchangeId="ex1"
@@ -202,7 +203,7 @@ describe('OrganizerShell', () => {
   })
 
   it('shows a Feedback rail button that opens the feedback modal', () => {
-    render(
+    renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>

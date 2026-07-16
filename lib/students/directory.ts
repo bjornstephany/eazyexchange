@@ -1,6 +1,15 @@
 // Pure derivations for the Élèves directory (design: Eazyexchange Eleves.dc.html).
 // Server actions assemble raw rows; everything display-shaped is computed here.
-import { rollupStudent, frShortDate, p, type CellMap, type Pill, type TemplateInfo } from '@/lib/dashboard/rollup'
+import { rollupStudent, frShortDate, type CellMap, type Pill, type TemplateInfo } from '@/lib/dashboard/rollup'
+// Type-only import: used solely for the translator param type below, so it is
+// erased at compile time and this module stays React-free at runtime. Typing the
+// param as a real next-intl translator preserves the type-safe key gate.
+import type { useTranslations } from 'next-intl'
+
+// Root (unnamespaced) next-intl translator. Label helpers take one and call it
+// with FULL key paths (`common.status.*`, `organizer.students.*`) so unknown
+// keys fail `npx tsc --noEmit`.
+type T = ReturnType<typeof useTranslations<never>>
 
 export type StatusKey = 'complet' | 'verif' | 'incomplet' | 'retard'
 
@@ -52,13 +61,19 @@ const KIND_TO_KEY: Record<Pill['kind'], StatusKey> = {
   ok: 'complet', info: 'verif', warn: 'incomplet', bad: 'retard', neutral: 'incomplet',
 }
 
-const CHECK_PILLS: Record<string, Pill> = {
-  approved: { kind: 'ok', label: 'Fourni' },
-  submitted: { kind: 'info', label: 'À vérifier' },
-  draft: { kind: 'warn', label: 'En cours' },
-  rejected: { kind: 'warn', label: 'En cours' },
+function missingPill(t: T): Pill {
+  return { kind: 'bad', label: t('common.status.missing') }
 }
-const MISSING_PILL: Pill = { kind: 'bad', label: 'Manquant' }
+
+function checkPill(status: string | undefined, t: T): Pill {
+  switch (status) {
+    case 'approved': return { kind: 'ok', label: t('common.status.provided') }
+    case 'submitted': return { kind: 'info', label: t('common.status.toVerify') }
+    case 'draft':
+    case 'rejected': return { kind: 'warn', label: t('common.status.inProgress') }
+    default: return missingPill(t)
+  }
+}
 
 export function normalize(t: string): string {
   return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036F]/g, '')
@@ -92,43 +107,46 @@ export function buildStudentVM(input: {
   cellMap: CellMap
   avatarIndex: number
   today?: Date
-}): StudentVM {
+}, t: T): StudentVM {
   const { student, application, templates, cellMap, avatarIndex } = input
   const today = input.today ?? new Date()
   const data = application?.data ?? {}
 
   // Rollup runs on the student's OWN assignments only (conditional pièces are
   // per-student), so restrict the template list to those present in cellMap.
-  const assigned = templates.filter(t => cellMap[`${student.id}:${t.id}`])
+  const assigned = templates.filter(tpl => cellMap[`${student.id}:${tpl.id}`])
   const rollup = rollupStudent(
     { id: student.id, full_name: student.full_name },
-    assigned.map(t => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline ?? '' }) as TemplateInfo),
+    assigned.map(tpl => ({ id: tpl.id, type: tpl.type, name: tpl.name, deadline: tpl.deadline ?? '' }) as TemplateInfo),
     cellMap,
     today,
+    t,
   )
   const statusKey = KIND_TO_KEY[rollup.overall.kind]
 
-  const checklist: ChecklistItem[] = assigned.map(t => {
-    const cell = cellMap[`${student.id}:${t.id}`]!
-    const pill = (cell.status && CHECK_PILLS[cell.status]) || MISSING_PILL
+  const checklist: ChecklistItem[] = assigned.map(tpl => {
+    const cell = cellMap[`${student.id}:${tpl.id}`]!
+    const pill = checkPill(cell.status, t)
     return {
       assignmentId: cell.assignmentId,
-      label: t.name,
-      group: t.kind === 'doc' ? 'Document' : 'Formulaire',
+      label: tpl.name,
+      group: tpl.kind === 'doc' ? 'Document' : 'Formulaire',
       pill,
       reviewable: !!cell.status,
     }
   })
-  const provided = checklist.filter(c => c.pill.label === 'Fourni').length
+  // Counted by pill `kind` (locale-invariant), not `label` (translated text) —
+  // ok=fourni, info=à vérifier, warn/bad=attendu (en cours ou manquant).
+  const provided = checklist.filter(c => c.pill.kind === 'ok').length
   const total = checklist.length
-  const attendues = checklist.filter(c => c.pill.label === 'Manquant' || c.pill.label === 'En cours').length
-  const verif = checklist.filter(c => c.pill.label === 'À vérifier').length
+  const attendues = checklist.filter(c => c.pill.kind === 'warn' || c.pill.kind === 'bad').length
+  const verif = checklist.filter(c => c.pill.kind === 'info').length
 
   const summary =
-    statusKey === 'complet' ? 'Dossier complet'
-    : statusKey === 'verif' ? `${verif} pièce${p(verif)} à vérifier`
-    : statusKey === 'retard' ? `Échéance dépassée — ${attendues} pièce${p(attendues)} attendue${p(attendues)}`
-    : `${attendues} pièce${p(attendues)} attendue${p(attendues)}`
+    statusKey === 'complet' ? t('organizer.students.summary.complete')
+    : statusKey === 'verif' ? t('organizer.students.summary.toVerify', { n: verif })
+    : statusKey === 'retard' ? t('organizer.students.summary.late', { n: attendues })
+    : t('organizer.students.summary.pending', { n: attendues })
 
   const identity = [
     { l: 'Nom', v: dash(data.last_name) },
@@ -166,7 +184,7 @@ export function buildStudentVM(input: {
     provided,
     total,
     pct: total > 0 ? Math.round((provided / total) * 100) : 0,
-    dueLabel: rollup.due ? `Échéance ${frShortDate(rollup.due)}` : null,
+    dueLabel: rollup.due ? t('organizer.students.dueLabel', { date: frShortDate(rollup.due) }) : null,
   }
 }
 
@@ -176,14 +194,14 @@ export function sortStudents(vms: StudentVM[]): StudentVM[] {
   return [...vms].sort((a, b) => RANK[a.statusKey] - RANK[b.statusKey] || a.name.localeCompare(b.name))
 }
 
-export function chipDefs(vms: StudentVM[]): { key: StatusKey | null; label: string; count: number }[] {
+export function chipDefs(vms: StudentVM[], t: T): { key: StatusKey | null; label: string; count: number }[] {
   const count = (k: StatusKey) => vms.filter(v => v.statusKey === k).length
   return [
-    { key: null, label: 'Tous', count: vms.length },
-    { key: 'complet', label: 'Complet', count: count('complet') },
-    { key: 'verif', label: 'À vérifier', count: count('verif') },
-    { key: 'incomplet', label: 'Incomplet', count: count('incomplet') },
-    { key: 'retard', label: 'En retard', count: count('retard') },
+    { key: null, label: t('organizer.students.chips.all'), count: vms.length },
+    { key: 'complet', label: t('organizer.students.chips.complete'), count: count('complet') },
+    { key: 'verif', label: t('common.status.toVerify'), count: count('verif') },
+    { key: 'incomplet', label: t('organizer.students.chips.incomplete'), count: count('incomplet') },
+    { key: 'retard', label: t('organizer.students.chips.late'), count: count('retard') },
   ]
 }
 
@@ -195,15 +213,16 @@ export function filterStudents(vms: StudentVM[], status: StatusKey | null, query
   )
 }
 
-export function listSummary(vms: StudentVM[]): string {
+export function listSummary(vms: StudentVM[], t: T): string {
   const done = vms.filter(v => v.statusKey === 'complet').length
-  return `${vms.length} élève${p(vms.length)} confirmé${p(vms.length)} · ${done} dossier${p(done)} complet${p(done)}`
+  return t('organizer.students.listSummary', { n: vms.length, done })
 }
 
-export function reminderNote(vm: StudentVM): string {
+export function reminderNote(vm: StudentVM, t: T): string {
   if (vm.statusKey === 'complet') {
-    return `Dossier complet — aucune relance prévue pour ${vm.firstName}.`
+    return t('organizer.students.reminderNote.complete', { firstName: vm.firstName })
   }
-  const due = vm.dueLabel ? ` (${vm.dueLabel})` : ''
-  return `Relances automatiques par e-mail jusqu’à réception — ${vm.firstName} et ses parents reçoivent la liste des pièces attendues${due}.`
+  return vm.dueLabel
+    ? t('organizer.students.reminderNote.pendingWithDue', { firstName: vm.firstName, dueLabel: vm.dueLabel })
+    : t('organizer.students.reminderNote.pending', { firstName: vm.firstName })
 }

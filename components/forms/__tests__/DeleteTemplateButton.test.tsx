@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
@@ -13,7 +14,7 @@ describe('DeleteTemplateButton', () => {
 
   it('deletes when the confirm is accepted (revalidation happens in the action)', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
-    render(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
+    renderWithIntl(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(del).toHaveBeenCalledWith('t1'))
     expect(refresh).not.toHaveBeenCalled()
@@ -21,7 +22,7 @@ describe('DeleteTemplateButton', () => {
 
   it('does nothing when the confirm is cancelled', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
-    render(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
+    renderWithIntl(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     expect(del).not.toHaveBeenCalled()
   })
@@ -30,7 +31,7 @@ describe('DeleteTemplateButton', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     del.mockRejectedValueOnce(new Error('Boom'))
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    render(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
+    renderWithIntl(<DeleteTemplateButton templateId="t1" confirmText="Supprimer ?" />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Boom'))
   })

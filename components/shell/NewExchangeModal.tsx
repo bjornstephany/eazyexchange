@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createExchange } from '@/actions/exchanges'
 import {
   Dialog,
@@ -28,6 +29,8 @@ export function NewExchangeModal({
   remaining?: number
   isOwner?: boolean
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const notice = exchangeNoticeMessage({ isTrial, remaining })
   const [error, setError] = useState<string | null>(null)
   const [inviteErrors, setInviteErrors] = useState<{ email: string; message: string }[]>([])
@@ -52,7 +55,7 @@ export function NewExchangeModal({
 
   function addChip() {
     const email = normalizeEmail(emailDraft)
-    if (!isValidEmail(email)) { setEmailError('Adresse e-mail invalide.'); return }
+    if (!isValidEmail(email)) { setEmailError(c('errors.invalidEmail')); return }
     setChips(prev => prev.includes(email) ? prev : [...prev, email]) // dedupe
     setEmailDraft('')
     setEmailError(null)
@@ -87,7 +90,7 @@ export function NewExchangeModal({
       }
       setError(result.message)
     } catch {
-      setError('Une erreur est survenue. Veuillez réessayer.')
+      setError(c('errors.retry'))
     } finally {
       setLoading(false)
     }
@@ -98,10 +101,10 @@ export function NewExchangeModal({
       <DialogContent className="max-w-[560px] rounded-card p-[34px] px-[38px] shadow-modal sm:rounded-card">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl font-bold tracking-tight text-navy">
-            Nouvel échange
+            {t('shell.newExchangeModal.title')}
           </DialogTitle>
           <DialogDescription className="text-[15px] text-muted-foreground">
-            Donnez un nom à votre échange pour commencer.
+            {t('shell.newExchangeModal.description')}
           </DialogDescription>
         </DialogHeader>
         {notice && (
@@ -118,8 +121,8 @@ export function NewExchangeModal({
         )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="name">Nom de l’échange</Label>
-            <Input id="name" name="name" placeholder="Espagne 2026" required className="h-12" />
+            <Label htmlFor="name">{t('shell.newExchangeModal.nameLabel')}</Label>
+            <Input id="name" name="name" placeholder={t('shell.newExchangeModal.namePlaceholder')} required className="h-12" />
           </div>
 
           {isOwner && (
@@ -130,22 +133,22 @@ export function NewExchangeModal({
                   onClick={() => setShowInvite(true)}
                   className="self-start text-[13px] font-semibold text-brand hover:text-brand-hover"
                 >
-                  + Inviter un collaborateur (optionnel)
+                  {t('shell.newExchangeModal.inviteToggle')}
                 </button>
               ) : (
                 <>
-                  <Label htmlFor="invite">Inviter un collaborateur (optionnel)</Label>
+                  <Label htmlFor="invite">{t('shell.newExchangeModal.inviteLabel')}</Label>
                   <div className="flex gap-2.5">
                     <Input
                       id="invite"
                       value={emailDraft}
                       onChange={e => setEmailDraft(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addChip() } }}
-                      placeholder="adresse@etablissement.fr"
+                      placeholder={t('shell.newExchangeModal.invitePlaceholder')}
                       className="h-11"
                     />
                     <Button type="button" variant="secondary" onClick={addChip} className="h-11 flex-none">
-                      Ajouter
+                      {c('actions.add')}
                     </Button>
                   </div>
                   {emailError && <p className="text-sm text-danger-text">{emailError}</p>}
@@ -156,7 +159,7 @@ export function NewExchangeModal({
                           {email}
                           <button
                             type="button"
-                            aria-label={`Retirer ${email}`}
+                            aria-label={t('shell.newExchangeModal.removeInvite', { email })}
                             onClick={() => removeChip(email)}
                             className="text-tertiary hover:text-danger-text"
                           >
@@ -175,7 +178,7 @@ export function NewExchangeModal({
           {error && <p className="text-sm text-danger-text">{error}</p>}
           {inviteErrors.length > 0 && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900">
-              <p className="mb-1 font-semibold">L’échange est créé, mais certaines invitations ont échoué :</p>
+              <p className="mb-1 font-semibold">{t('shell.newExchangeModal.inviteErrorsIntro')}</p>
               <ul className="list-disc pl-5">
                 {inviteErrors.map(ie => (
                   <li key={ie.email}>{ie.email} — {ie.message}</li>
@@ -193,11 +196,11 @@ export function NewExchangeModal({
               }}
               className="text-muted-foreground"
             >
-              {inviteErrors.length > 0 ? 'Continuer' : 'Annuler'}
+              {inviteErrors.length > 0 ? c('actions.continue') : c('actions.cancel')}
             </Button>
             {inviteErrors.length === 0 && (
               <Button type="submit" disabled={loading}>
-                {loading ? 'Création…' : 'Créer l’échange'}
+                {loading ? t('shell.newExchangeModal.submitting') : t('shell.newExchangeModal.submit')}
               </Button>
             )}
           </div>

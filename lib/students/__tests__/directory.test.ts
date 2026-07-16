@@ -1,10 +1,17 @@
 import { describe, it, expect } from 'vitest'
+import { createTranslator } from 'next-intl'
+import fr from '@/messages/fr.json'
 import {
   buildStudentVM, sortStudents, chipDefs, filterStudents, listSummary,
   reminderNote, normalize, AVATAR_BG,
   type DirectoryTemplate, type StudentVM,
 } from '@/lib/students/directory'
 import type { CellMap } from '@/lib/dashboard/rollup'
+
+// Root (unnamespaced) fr translator — the label helpers now build their strings
+// through next-intl, so the assertions below prove the fr catalog renders the
+// exact French design strings byte-for-byte.
+const t = createTranslator({ locale: 'fr', messages: fr })
 
 const templates: DirectoryTemplate[] = [
   { id: 't1', name: 'Formulaire de santé', deadline: '2026-10-10', type: 'data_entry', kind: 'online' },
@@ -25,7 +32,7 @@ const application = {
 const today = new Date('2026-09-20T10:00:00Z')
 
 function vm(cellMap: CellMap, app: typeof application | null = application): StudentVM {
-  return buildStudentVM({ student, application: app, templates, cellMap, avatarIndex: 0, today })
+  return buildStudentVM({ student, application: app, templates, cellMap, avatarIndex: 0, today }, t)
 }
 
 describe('buildStudentVM', () => {
@@ -112,7 +119,7 @@ describe('buildStudentVM', () => {
       student, application, templates,
       cellMap: { 's1:t3': { assignmentId: 'a3' } },
       avatarIndex: 0, today: new Date('2026-10-05T10:00:00Z'),
-    })
+    }, t)
     expect(late.statusKey).toBe('retard')
     expect(late.summary).toBe('Échéance dépassée — 1 pièce attendue')
   })
@@ -136,7 +143,7 @@ describe('list helpers', () => {
   })
 
   it('counts chips including Tous', () => {
-    const chips = chipDefs([mk('a', 'A', 'complet'), mk('b', 'B', 'retard'), mk('c', 'C', 'retard')])
+    const chips = chipDefs([mk('a', 'A', 'complet'), mk('b', 'B', 'retard'), mk('c', 'C', 'retard')], t)
     expect(chips).toEqual([
       { key: null, label: 'Tous', count: 3 },
       { key: 'complet', label: 'Complet', count: 1 },
@@ -154,20 +161,20 @@ describe('list helpers', () => {
   })
 
   it('builds the page subline', () => {
-    expect(listSummary([mk('a', 'A', 'complet'), mk('b', 'B', 'complet'), mk('c', 'C', 'retard')]))
+    expect(listSummary([mk('a', 'A', 'complet'), mk('b', 'B', 'complet'), mk('c', 'C', 'retard')], t))
       .toBe('3 élèves confirmés · 2 dossiers complets')
-    expect(listSummary([mk('a', 'A', 'retard')])).toBe('1 élève confirmé · 0 dossier complet')
+    expect(listSummary([mk('a', 'A', 'retard')], t)).toBe('1 élève confirmé · 0 dossier complet')
   })
 
   it('reminder note: complete vs pending', () => {
     const done = mk('a', 'Camille Laurent', 'complet')
-    expect(reminderNote(done)).toBe('Dossier complet — aucune relance prévue pour Camille.')
+    expect(reminderNote(done, t)).toBe('Dossier complet — aucune relance prévue pour Camille.')
     const pending = { ...mk('b', 'Yanis Benali', 'incomplet'), dueLabel: 'Échéance 10 oct' }
-    expect(reminderNote(pending)).toBe(
+    expect(reminderNote(pending, t)).toBe(
       "Relances automatiques par e-mail jusqu’à réception — Yanis et ses parents reçoivent la liste des pièces attendues (Échéance 10 oct)."
     )
     const noDue = mk('c', 'Léa C', 'incomplet')
-    expect(reminderNote(noDue)).toBe(
+    expect(reminderNote(noDue, t)).toBe(
       "Relances automatiques par e-mail jusqu’à réception — Léa et ses parents reçoivent la liste des pièces attendues."
     )
   })

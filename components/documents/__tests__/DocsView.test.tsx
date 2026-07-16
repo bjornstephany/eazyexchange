@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import fr from '@/messages/fr.json'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 const activate = vi.fn().mockResolvedValue(undefined)
 const remind = vi.fn().mockResolvedValue({ reminded: 2, skipped: 1, failed: 0 })
@@ -28,14 +31,14 @@ const students = [{ id: 's1', full_name: 'Léa Moreau' }, { id: 's2', full_name:
 
 describe('DocsView', () => {
   it('renders attention pill and progress', () => {
-    render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument()
     expect(screen.getByText('1 manquant')).toBeInTheDocument()
     expect(screen.getByText('1 / 3 fourni')).toBeInTheDocument()
     expect(screen.getByText('Obligatoire')).toBeInTheDocument()
   })
   it('drawer shows per-student rows, folded rest and review link', () => {
-    render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
     expect(screen.getByText('Suivi par élève')).toBeInTheDocument()
     expect(screen.getByText('Yanis Benali')).toBeInTheDocument()
@@ -44,7 +47,7 @@ describe('DocsView', () => {
     expect(reviewLink).toHaveAttribute('href', '/exchanges/ex1/submissions/a2')
   })
   it('relance reports the result line', async () => {
-    render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
     fireEvent.click(screen.getByRole('button', { name: 'Relancer les familles' }))
     expect(await screen.findByText(/2 relancés/)).toBeInTheDocument()
@@ -52,7 +55,7 @@ describe('DocsView', () => {
   })
   it('conditional draft requires picking students, then activates with them', async () => {
     const draft = doc({ id: 'd2', status: 'draft', audience: 'conditional', condition_label: 'si parents divorcés', assignees: [], deadline: '2026-10-10T00:00:00+00:00' })
-    render(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
     fireEvent.click(screen.getByRole('button', { name: 'Choisir les élèves & activer' }))
     // picker visible → choose one student and confirm
@@ -62,14 +65,18 @@ describe('DocsView', () => {
     expect(activate).toHaveBeenCalledWith('d2', ['s1'])
   })
   it('shows Supprimer only for custom documents', () => {
-    const { rerender } = render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
+    const { rerender } = renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />
+      </NextIntlClientProvider>
+    )
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom document when the confirm is accepted', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
-    render(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(del).toHaveBeenCalledWith('d1'))
   })

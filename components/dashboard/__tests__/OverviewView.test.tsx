@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import fr from '@/messages/fr.json'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('@/actions/applications-review', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
 vi.mock('@/components/dashboard/InviteModal', () => ({
@@ -25,7 +28,7 @@ const base = {
 
 describe('OverviewView — unified lifecycle table', () => {
   it('renders heading, unified funnel and one row per person (dedupe by email)', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
     expect(screen.getByText('Candidatures')).toBeInTheDocument()
     expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
@@ -38,12 +41,12 @@ describe('OverviewView — unified lifecycle table', () => {
   })
 
   it('Complets tile reads « x / y »', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     expect(screen.getByRole('button', { name: /0 \/ 1\s*Complets/ })).toBeInTheDocument()
   })
 
   it('funnel tile filters the table and shows a dismissible chip', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     fireEvent.click(screen.getByRole('button', { name: /À examiner/ }))
     expect(screen.queryByText('Camille Laurent')).toBeNull()
     expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
@@ -52,7 +55,7 @@ describe('OverviewView — unified lifecycle table', () => {
   })
 
   it('action card click applies its filter', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     fireEvent.click(screen.getByRole('button', { name: 'Examiner' }))
     expect(screen.queryByText('Camille Laurent')).toBeNull()
   })
@@ -63,7 +66,7 @@ describe('OverviewView — unified lifecycle table', () => {
       { id: '3', status: 'rejected', submitted_at: '2026-09-01', data: { first_name: 'Nina', last_name: 'Rey' }, email: 'n@r.fr' },
       { id: '4', status: 'declined', submitted_at: '2026-09-02', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
     ]
-    render(<OverviewView {...base} apps={closedApps} />)
+    renderWithIntl(<OverviewView {...base} apps={closedApps} />)
     expect(screen.queryByText('Nina Rey')).toBeNull()
     const toggle = screen.getByRole('button', { name: 'Afficher les refusés et déclinés (2)' })
     fireEvent.click(toggle)
@@ -74,7 +77,7 @@ describe('OverviewView — unified lifecycle table', () => {
   })
 
   it('row click opens the right drawer per row kind', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     fireEvent.click(screen.getByText('Léa Moreau'))
     expect(screen.getByText('Parcours')).toBeInTheDocument() // application timeline
     fireEvent.click(screen.getByTestId('drawer-backdrop'))
@@ -83,49 +86,53 @@ describe('OverviewView — unified lifecycle table', () => {
   })
 
   it('right rail has action cards but no reminder note and no phase stepper', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     expect(screen.getByText('À faire maintenant')).toBeInTheDocument()
     expect(screen.queryByText(/Relance automatique demain 8h/)).toBeNull()
     expect(screen.queryByText(/Phase/)).toBeNull()
   })
 
   it('shows the no-active-forms card linking to /forms when there are no active templates', () => {
-    render(<OverviewView {...base} />)
+    renderWithIntl(<OverviewView {...base} />)
     expect(screen.getByText('Aucun formulaire actif')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Préparer les formulaires' })).toHaveAttribute('href', '/forms')
   })
 
   it('shows the empty-state CTA only when applications never opened AND nobody exists', () => {
-    render(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
+    renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
     expect(screen.getByRole('heading', { name: /Commencez votre échange/ })).toBeInTheDocument()
     expect(screen.queryByText("Vue d'ensemble")).toBeNull()
   })
 
   it('shows the normal overview once applications are open, even with nobody yet', () => {
-    render(<OverviewView {...base} apps={[]} students={[]} rollups={[]} />)
+    renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} />)
     expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Commencez votre échange/ })).toBeNull()
   })
 
   it('directly-invited students suppress the empty state even if applications never opened', () => {
-    render(<OverviewView {...base} apps={[]} applicationOpen={false} applicationDeadline={null} />)
+    renderWithIntl(<OverviewView {...base} apps={[]} applicationOpen={false} applicationDeadline={null} />)
     expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 
   it('CTA opens the invite modal', () => {
-    render(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
+    renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
     fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
     expect(screen.getByText('invite-modal')).toBeInTheDocument()
   })
 
   it('keeps the invite modal mounted when opening applications flips neverOpened', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithIntl(
       <OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />
     )
     fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
     expect(screen.getByText('invite-modal')).toBeInTheDocument()
-    rerender(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen applicationDeadline="2026-09-01" />)
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen applicationDeadline="2026-09-01" />
+      </NextIntlClientProvider>
+    )
     expect(screen.getByText('invite-modal')).toBeInTheDocument()
   })
 })
