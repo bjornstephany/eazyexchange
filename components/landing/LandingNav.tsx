@@ -65,18 +65,18 @@ export function LandingNav({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#EEF1F7] bg-white/[.86] backdrop-blur-[12px]">
-      <div className="mx-auto flex h-[70px] max-w-[1180px] items-center justify-between px-6 sm:px-10">
-        <Link href="/" className="flex items-center gap-2.5">
+    <header>
+      <div className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-between gap-4 px-6 py-5">
+        <Link href="/" className="flex items-center gap-[11px]">
           <Logo />
-          <span className="font-display text-[18px] font-bold text-[#10203F]">Eazyexchange</span>
+          <span className="font-display text-[19px] font-bold tracking-[-.02em] text-[#10203F]">Eazyexchange</span>
         </Link>
-        <nav className="flex items-center gap-4 sm:gap-7">
+        <nav className="flex items-center gap-4 sm:gap-[22px]">
           <a
-            href="#features"
+            href="#produit"
             className="hidden text-[14px] font-medium text-[#42506E] hover:text-[#10203F] sm:inline"
           >
-            {nav.features}
+            {nav.product}
           </a>
           <Link
             href="/login"
@@ -127,9 +127,9 @@ export function LandingNav({
           </div>
           <Link
             href="/signup"
-            className="rounded-lg bg-[#10203F] px-[18px] py-2.5 text-[14px] font-semibold text-white transition hover:brightness-110"
+            className="rounded-[9px] bg-[#2456E6] px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#1D48C7]"
           >
-            {nav.demo}
+            {nav.cta}
           </Link>
         </nav>
       </div>
