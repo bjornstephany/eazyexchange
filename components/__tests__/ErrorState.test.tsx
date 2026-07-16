@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { ErrorState } from '@/components/ErrorState'
 import OrganizerError from '@/app/(organizer)/error'
 import StudentError from '@/app/(student)/error'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const home = { href: '/dashboard', label: 'Tableau de bord' }
 
@@ -27,7 +28,7 @@ describe('ErrorState', () => {
   })
 
   it('organizer boundary wires home to the dashboard', () => {
-    render(<OrganizerError error={new Error('boom')} reset={vi.fn()} />)
+    renderWithIntl(<OrganizerError error={new Error('boom')} reset={vi.fn()} />)
     expect(screen.getByRole('link', { name: 'Tableau de bord' }).getAttribute('href')).toBe('/dashboard')
   })
 

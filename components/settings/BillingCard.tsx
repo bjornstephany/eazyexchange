@@ -1,16 +1,18 @@
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import type { BillingOverview } from '@/actions/settings'
 
 export function BillingCard({ billing }: { billing: BillingOverview }) {
+  const t = useTranslations('organizer')
   return (
     <div className="rounded-2xl border bg-card px-7 py-[26px]">
       <div className="mb-[18px] flex items-center justify-between gap-4">
-        <div className="font-display text-[15px] font-bold tracking-[-.01em] text-foreground">Facturation</div>
+        <div className="font-display text-[15px] font-bold tracking-[-.01em] text-foreground">{t('settings.billing.heading')}</div>
         <Link
           href="/billing"
           className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover"
         >
-          Voir les forfaits
+          {t('settings.billing.viewPlansCta')}
         </Link>
       </div>
       <div className="rounded-xl border border-subtle px-5 py-[18px]">
@@ -27,7 +29,7 @@ export function BillingCard({ billing }: { billing: BillingOverview }) {
       </div>
       <div className="mt-4 flex items-center justify-between gap-4">
         <div>
-          <div className="text-[13.5px] font-semibold text-foreground">Moyen de paiement</div>
+          <div className="text-[13.5px] font-semibold text-foreground">{t('settings.billing.paymentMethodLabel')}</div>
           <div className="mt-0.5 text-[12.5px] text-tertiary">{billing.payment.note}</div>
         </div>
         <Link

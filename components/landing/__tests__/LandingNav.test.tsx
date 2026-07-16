@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { LandingNav } from '@/components/landing/LandingNav'
 import { landingContent } from '@/lib/landing/content'
 
+// Menu items render in LOCALES order: en, fr, es, it, de.
 function setup() {
   const setLanguage = vi.fn()
   const user = userEvent.setup()
@@ -16,7 +17,7 @@ describe('LandingNav language menu — focus management', () => {
   it('moves focus to the first menuitem when the menu opens', async () => {
     const { user, trigger } = setup()
     await user.click(trigger)
-    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
   })
 
   it('closes on Escape and restores focus to the trigger', async () => {
@@ -61,25 +62,31 @@ describe('LandingNav language menu — keyboard cycling', () => {
   it('traps Tab inside the menu, wrapping in both directions', async () => {
     const { user, trigger } = setup()
     await user.click(trigger)
-    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
-    await user.tab()
+    // Opens on the first item (English); Tab walks the five items in order.
     expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
     await user.tab()
+    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('menuitem', { name: 'Español' })).toHaveFocus()
+    // Shift+Tab from the first item wraps to the last (Deutsch).
+    await user.tab({ shift: true })
     expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
     await user.tab({ shift: true })
     expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
     await user.tab({ shift: true })
-    expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: 'Deutsch' })).toHaveFocus()
   })
 
   it('moves focus between menuitems with ArrowDown and ArrowUp (wrapping)', async () => {
     const { user, trigger } = setup()
     await user.click(trigger)
-    await user.keyboard('{ArrowDown}')
     expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
     await user.keyboard('{ArrowDown}')
     expect(screen.getByRole('menuitem', { name: 'Français' })).toHaveFocus()
+    // ArrowUp from the first item wraps to the last (Deutsch).
     await user.keyboard('{ArrowUp}')
     expect(screen.getByRole('menuitem', { name: 'English' })).toHaveFocus()
+    await user.keyboard('{ArrowUp}')
+    expect(screen.getByRole('menuitem', { name: 'Deutsch' })).toHaveFocus()
   })
 })

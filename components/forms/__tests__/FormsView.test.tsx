@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
 const createDraft = vi.fn().mockResolvedValue({ ok: true, id: 'new-id' })
@@ -26,7 +27,7 @@ const vm = (over: Partial<TemplateVM>): TemplateVM => ({
 })
 
 function renderWith(ui: React.ReactElement) {
-  return render(ui)
+  return renderWithIntl(ui)
 }
 
 describe('FormsView', () => {

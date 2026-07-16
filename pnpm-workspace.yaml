@@ -1,4 +1,6 @@
 allowBuilds:
   # sharp = next 15's image optimizer; its install step fetches prebuilt binaries.
+  '@parcel/watcher': true
+  '@swc/core': true
   sharp: true
   unrs-resolver: true

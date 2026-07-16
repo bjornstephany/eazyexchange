@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useShellUi } from '@/components/shell/ShellUiContext'
 
 export type ExchangeCardData = {
@@ -47,25 +48,27 @@ export function ExchangesView({
   atCap: boolean
 }) {
   const { openNewExchange } = useShellUi()
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-[26px] font-bold tracking-tight">Échanges</h1>
+        <h1 className="font-display text-[26px] font-bold tracking-tight">{t('exchanges.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          Suivez tous vos programmes d&apos;échange — passés, en cours et à venir.
+          {t('exchanges.subtitle')}
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
         <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-          Vos échanges
+          {t('exchanges.listLabel')}
         </span>
 
         <div className="flex flex-col gap-3">
           {exchangesData.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6">
-              Aucun échange pour l&apos;instant — créez le premier.
+              {t('exchanges.emptyState')}
             </p>
           ) : (
             exchangesData.map((exchange) => <ExchangeCard key={exchange.id} exchange={exchange} />)
@@ -75,11 +78,11 @@ export function ExchangesView({
         <div className="flex justify-start pt-1">
           {atCap ? (
             <Link href="/billing" className={CREATE_BTN}>
-              + Nouvel échange
+              {c('actions.newExchange')}
             </Link>
           ) : (
             <button type="button" onClick={openNewExchange} className={CREATE_BTN}>
-              + Nouvel échange
+              {c('actions.newExchange')}
             </button>
           )}
         </div>

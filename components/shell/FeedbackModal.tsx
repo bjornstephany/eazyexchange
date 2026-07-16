@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { submitFeedback } from '@/actions/feedback'
 import {
@@ -20,6 +21,8 @@ export function FeedbackModal({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
   const [type, setType] = useState<FeedbackType>('suggestion')
   const [message, setMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +63,7 @@ export function FeedbackModal({
       }
       setError(result.error)
     } catch {
-      setError('Une erreur est survenue. Veuillez réessayer.')
+      setError(c('errors.retry'))
     } finally {
       setLoading(false)
     }
@@ -84,7 +87,7 @@ export function FeedbackModal({
       <DialogContent className="max-w-[520px] rounded-card p-[34px] px-[38px] shadow-modal sm:rounded-card">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl font-bold tracking-tight text-navy">
-            Une suggestion ? Un problème ?
+            {t('shell.feedbackModal.title')}
           </DialogTitle>
         </DialogHeader>
         {sent ? (
@@ -93,18 +96,18 @@ export function FeedbackModal({
             onClick={() => onOpenChange(false)}
             className="rounded-lg border border-border bg-muted px-3.5 py-6 text-center text-sm text-foreground"
           >
-            Merci ! Votre message a bien été envoyé.
+            {t('shell.feedbackModal.thanks')}
           </button>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
             <div className="flex gap-2.5">
-              {pill('suggestion', 'Suggestion')}
-              {pill('bug', 'Bug ou problème')}
+              {pill('suggestion', t('shell.feedbackModal.typeSuggestion'))}
+              {pill('bug', t('shell.feedbackModal.typeBug'))}
             </div>
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Décrivez votre idée ou le problème rencontré…"
+              placeholder={t('shell.feedbackModal.placeholder')}
               maxLength={2000}
               required
               className="min-h-[130px]"
@@ -117,10 +120,10 @@ export function FeedbackModal({
                 onClick={() => onOpenChange(false)}
                 className="text-muted-foreground"
               >
-                Annuler
+                {c('actions.cancel')}
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Envoi…' : 'Envoyer'}
+                {loading ? t('shell.feedbackModal.submitting') : t('shell.feedbackModal.submit')}
               </Button>
             </div>
           </form>

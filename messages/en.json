@@ -1,0 +1,563 @@
+{
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "newExchange": "+ New exchange",
+      "add": "Add",
+      "continue": "Continue"
+    },
+    "states": {
+      "saved": "✓ Changes saved",
+      "loading": "Loading…",
+      "loadingLabel": "Loading"
+    },
+    "errors": {
+      "generic": "Something went wrong.",
+      "invalidEmail": "Invalid email address.",
+      "retry": "Something went wrong. Please try again."
+    },
+    "status": {
+      "received": "Received",
+      "provided": "Provided",
+      "toVerify": "To review",
+      "inProgress": "In progress",
+      "missing": "Missing"
+    }
+  },
+  "organizer": {
+    "settings": {
+      "heading": "Settings",
+      "subtitle": "Your account, your team and your subscription.",
+      "language": {
+        "label": "Interface language",
+        "hint": "Applies to your account across all your devices."
+      },
+      "nav": {
+        "compte": "Personal account",
+        "equipe": "Team & roles",
+        "fact": "Billing",
+        "prog": "Program"
+      },
+      "profile": {
+        "fullNameLabel": "Full name",
+        "emailLabel": "Email address",
+        "emailHint": "Contact support to change your address.",
+        "schoolNameLabel": "School",
+        "schoolNameHint": "Only the owner can change the school name."
+      },
+      "security": {
+        "heading": "Security",
+        "passwordLabel": "Password",
+        "googleNotice": "Signed in via Google — password management doesn't apply to your account.",
+        "updated": "✓ Password updated",
+        "changeButton": "Change password",
+        "currentPasswordLabel": "Current password",
+        "newPasswordLabel": "New password",
+        "confirmPasswordLabel": "Confirm",
+        "submitButton": "Update password"
+      },
+      "team": {
+        "heading": "Team & roles",
+        "description": "Invite colleagues to manage your exchanges. Only the owner can access billing.",
+        "invitePlaceholder": "address@school.edu",
+        "inviteButton": "Invite",
+        "inviteSuccess": "Invitation sent.",
+        "youBadge": "YOU",
+        "ownerBadge": "Owner",
+        "adminBadge": "Admin",
+        "removeButton": "Remove",
+        "pendingBadge": "Invitation sent",
+        "revokeButton": "Revoke",
+        "ownerRoleDesc": "Manage everything, including the team and billing.",
+        "adminRoleDesc": "Manage students, applications, forms and documents.",
+        "removeDialog": {
+          "title": "Remove this collaborator?",
+          "description": "{name} will lose access to all of your school's exchanges.",
+          "confirm": "Confirm removal",
+          "confirming": "Removing…"
+        }
+      },
+      "billing": {
+        "heading": "Billing",
+        "viewPlansCta": "View plans",
+        "paymentMethodLabel": "Payment method"
+      },
+      "program": {
+        "heading": "Program",
+        "archivedBadge": "Archived",
+        "archiveHeading": "Archive the program",
+        "archiveDescription": "The program becomes read-only. Files remain viewable, but no further changes are possible.",
+        "restoreButton": "Restore",
+        "archiveButton": "Archive the program…",
+        "stats": {
+          "enrolled": "{count, plural, one {# confirmed student} other {# confirmed students}}",
+          "applications": "{count, plural, one {# application} other {# applications}}",
+          "deadline": "file deadline {date}"
+        },
+        "modal": {
+          "title": "Archive this program?",
+          "body": "“{name}” will become read-only: students, applications and documents will remain viewable, but no further changes will be possible. You can restore it at any time.",
+          "confirm": "Archive the program"
+        }
+      },
+      "errors": {
+        "nameEmpty": "Name cannot be empty.",
+        "schoolNameEmpty": "School name cannot be empty.",
+        "passwordUpdateFailed": "The password could not be updated. Please try again.",
+        "passwordMismatch": "Passwords do not match."
+      }
+    },
+    "billing": {
+      "per": "/ year",
+      "usage": "{used} / {cap} {cap, plural, one {exchange} other {exchanges}} used",
+      "usageUnlimited": "{used} {used, plural, one {active exchange} other {active exchanges}} · unlimited exchanges",
+      "plans": {
+        "starter": { "label": "Starter", "price": "€199", "desc": "For an independent organizer." },
+        "growth": { "label": "Growth", "price": "€499", "desc": "For growing associations." },
+        "scale": { "label": "Scale", "price": "€799", "desc": "For large exchange networks." }
+      },
+      "trial": {
+        "label": "Free trial",
+        "price": "€0",
+        "desc": "Your first exchange is on us — no payment required."
+      },
+      "payment": {
+        "noneNote": "No payment method on file.",
+        "addCta": "Add a card",
+        "editCta": "Edit",
+        "card": "{brand} •••• {last4} — expires {exp}"
+      }
+    },
+    "shell": {
+      "nav": {
+        "dashboard": "Overview",
+        "exchanges": "Exchanges",
+        "applications": "Apps.",
+        "forms": "Forms",
+        "documents": "Docs",
+        "students": "Students",
+        "feedback": "Feedback"
+      },
+      "accountMenu": {
+        "trigger": "Account",
+        "settings": "Settings",
+        "signOut": "Sign out"
+      },
+      "archivedBadge": "Archived",
+      "studentSearch": {
+        "placeholder": "Search for a student…"
+      },
+      "newExchangeModal": {
+        "title": "New exchange",
+        "description": "Give your exchange a name to get started.",
+        "nameLabel": "Exchange name",
+        "namePlaceholder": "Spain 2026",
+        "inviteToggle": "+ Invite a collaborator (optional)",
+        "inviteLabel": "Invite a collaborator (optional)",
+        "invitePlaceholder": "address@school.edu",
+        "removeInvite": "Remove {email}",
+        "inviteErrorsIntro": "The exchange was created, but some invitations failed:",
+        "submit": "Create the exchange",
+        "submitting": "Creating…"
+      },
+      "feedbackModal": {
+        "title": "A suggestion? A problem?",
+        "thanks": "Thanks! Your message has been sent.",
+        "typeSuggestion": "Suggestion",
+        "typeBug": "Bug or problem",
+        "placeholder": "Describe your idea or the problem you ran into…",
+        "submit": "Send",
+        "submitting": "Sending…"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "emptyHeading": "No exchange yet",
+      "emptyBody": "Create your first exchange to invite students, assign forms and track submissions all in one place.",
+      "inviteModal": {
+        "title": "Invite your students",
+        "description": "Choose a deadline. Applications will open right away.",
+        "deadlineLabel": "Application deadline",
+        "openSubmitting": "Opening…",
+        "openSubmit": "Open applications",
+        "openedTitle": "Applications open ✓",
+        "openedDescription": "Share this link with the students you want to invite to apply.",
+        "linkLabel": "Application link",
+        "copied": "Copied ✓",
+        "copy": "Copy",
+        "closeWarning": "You won't see this link again — copy it before closing.",
+        "closeAnyway": "Close anyway",
+        "close": "Close"
+      },
+      "filterLabelMaybe": "Undecided",
+      "filterLabelMissingDocs": "Missing docs",
+      "startTitle": "Start your exchange",
+      "startBody": "Start your exchange by inviting your students to apply.",
+      "inviteCta": "Invite your students to apply",
+      "overviewTitle": "Overview",
+      "progressLabel": "Exchange progress",
+      "filterBadge": "Filter: {label} ✕",
+      "tableHeaderStudent": "Student",
+      "tableHeaderApplication": "Application",
+      "tableHeaderForms": "Forms",
+      "tableHeaderDocs": "Documents",
+      "tableHeaderStatus": "Status",
+      "noRowsMatch": "No student matches this filter.",
+      "hideClosed": "Hide rejected and declined",
+      "showClosed": "Show rejected and declined ({n})",
+      "actionsHeading": "To do now",
+      "upToDate": "All caught up ✓",
+      "nextDeadlineSuffix": " — next deadline on {date}.",
+      "sending": "Sending…",
+      "timelineHeading": "Timeline",
+      "acceptCta": "Accept & invite",
+      "rejectCta": "Reject",
+      "notePlaceholder": "Note for the student (optional)",
+      "notifyByEmail": "Notify by email",
+      "confirmRejectCta": "Confirm rejection",
+      "formsAndDocsHeading": "Forms & documents",
+      "dueSuffix": " · due {date}",
+      "autoReminderHint": "Automatic reminders sent daily as the deadline approaches.",
+      "pills": {
+        "complete": "Complete",
+        "confirmedParen": "Confirmed",
+        "toExamine": "To review",
+        "invitedWaiting": "Invited — awaiting reply",
+        "maybe": "Maybe",
+        "declined": "Declined",
+        "rejected": "Rejected",
+        "dash": "—",
+        "waiting": "Awaiting",
+        "confirmed": "Confirmed",
+        "hesitates": "Undecided"
+      },
+      "timeline": {
+        "received": "Application received",
+        "awaitingReview": "Awaiting review",
+        "awaitingReviewSub": "To accept or reject",
+        "rejected": "Application rejected",
+        "accepted": "Application accepted",
+        "inviteSent": "Invitation sent automatically",
+        "inviteSentSub": "Email sent upon acceptance",
+        "awaitingResponse": "Awaiting response",
+        "respondedYes": "Replied: Yes",
+        "respondedYesSub": "Participation confirmed",
+        "respondedMaybe": "Replied: Maybe",
+        "respondedNo": "Replied: No"
+      },
+      "funnel": {
+        "candidatures": "Applications",
+        "confirmed": "Confirmed",
+        "late": "Late",
+        "complete": "Complete"
+      },
+      "actionCards": {
+        "noFormsTitle": "No active form",
+        "noFormsDesc": "Prepare the documents and forms to request from families.",
+        "noFormsCta": "Prepare forms",
+        "toReviewTitle": "{n, plural, one {# application to review} other {# applications to review}}",
+        "toReviewDesc": "New applications awaiting your decision. The invitation is sent automatically upon acceptance.",
+        "toReviewCta": "Review",
+        "reviewTitle": "{n, plural, one {# file to review} other {# files to review}}",
+        "reviewDesc": "Forms and documents received, awaiting validation.",
+        "reviewCta": "Verify",
+        "lateTitle": "{n, plural, one {# student late} other {# students late}}",
+        "lateDesc": "Deadline passed — enhanced reminders under way.",
+        "lateCta": "Send reminder",
+        "missingDocsTitle": "{n, plural, one {# student: missing documents} other {# students: missing documents}}",
+        "missingDocsDesc": "Documents not received before the deadline.",
+        "missingDocsCta": "View students",
+        "maybeTitle": "{n, plural, one {# student undecided — to follow up} other {# students undecided — to follow up}}",
+        "maybeDesc": "« Maybe » replies to convert into confirmation.",
+        "maybeCta": "Send reminder"
+      },
+      "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late.",
+      "progressDossiers": "{done} / {total} files validated",
+      "progressCandidatures": "{done} / {total} applications processed"
+    },
+    "applications": {
+      "backLink": "‹ Back to applications",
+      "printCta": "⎙ Print application",
+      "subtitle": "Application · {exchangeName} · {year}",
+      "heading": "Applications",
+      "emptyState": "No applications received yet — share the application link with your students.",
+      "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
+      "stateOpen": "Open",
+      "stateClosed": "Closed",
+      "deadlineLabel": "Deadline",
+      "linkLabel": "Application link",
+      "copyCta": "Copy",
+      "copiedCta": "Copied ✓",
+      "tabs": {
+        "all": "All",
+        "toReview": "To review",
+        "accepted": "Accepted",
+        "rejected": "Rejected"
+      },
+      "selectedCount": "{n, plural, one {# selected} other {# selected}}",
+      "acceptCta": "Accept & invite",
+      "rejectCta": "Reject",
+      "sending": "Sending…",
+      "notePlaceholder": "Note for the student (optional)",
+      "notifyByEmail": "Notify by email",
+      "confirmRejectCta": "Confirm rejection",
+      "bulkResult": "{s, plural, one {# processed} other {# processed}} · {f} failed",
+      "tableHeader": {
+        "student": "Student",
+        "level": "Grade 26-27",
+        "nativeLanguage": "Native lang.",
+        "receivedDate": "Received on",
+        "status": "Status"
+      },
+      "emptyTab": "No applications in this tab.",
+      "review": {
+        "statusAccepted": "Accepted — awaiting response",
+        "statusEnrolled": "Enrolled (said Yes)",
+        "statusDeclined": "Declined the invitation",
+        "statusMaybe": "Responded Maybe",
+        "responseLabel": "Response:",
+        "noteLabel": "Note:",
+        "currentlyRejected": "Currently rejected. You can still accept.",
+        "accept": "Accept",
+        "notePlaceholder": "Optional note to the applicant",
+        "sendRejectionEmail": "Send a rejection email to the applicant"
+      }
+    },
+    "exchanges": {
+      "title": "Exchanges",
+      "subtitle": "Track all your exchange programs — past, ongoing and upcoming.",
+      "listLabel": "Your exchanges",
+      "emptyState": "No exchange yet — create the first one.",
+      "reminders": {
+        "heading": "Automatic reminders",
+        "description": "Reminder emails are sent to students whose file is incomplete. Manual follow-up remains available even if reminders are disabled.",
+        "enabledToggle": "Enabled",
+        "disabledToggle": "Disabled",
+        "readOnlyNotice": "Archived program — read-only.",
+        "cadences": {
+          "douce": {
+            "label": "Gentle",
+            "description": "one reminder per week, no acceleration"
+          },
+          "normale": {
+            "label": "Normal",
+            "description": "weekly, then daily during the final week"
+          },
+          "insistante": {
+            "label": "Insistent",
+            "description": "every 3 days, then daily during the final 2 weeks"
+          }
+        }
+      }
+    },
+    "forms": {
+      "title": "Forms",
+      "subtitle": "The documents and forms families complete to finalize their child's file. Use the standard templates or add your own.",
+      "yourFormsCount": "Your forms · {count}",
+      "addFormLabel": "Add a form",
+      "close": "Close",
+      "activeFormsCount": "{count, plural, one {Active form} other {Active forms}}",
+      "studentsConcerned": "Students concerned",
+      "requestedInLabel": "Requested in",
+      "requestedInValue": "Phase 2",
+      "responsesReceivedLabel": "Responses received",
+      "autoSendBanner": "Active forms are sent to families automatically when Phase 2 opens, with reminders until received.",
+      "standardBadge": "STANDARD",
+      "customBadge": "CUSTOM",
+      "previewButton": "Preview",
+      "editButton": "Edit",
+      "deleteConfirm": "Delete this template? Responses already submitted by students will be permanently deleted.",
+      "addPanel": {
+        "onlineTile": {
+          "title": "Create an online form",
+          "description": "Compose your own questions — filled out directly in the app.",
+          "button": "Compose the questions"
+        },
+        "pdfTile": {
+          "title": "Import a PDF",
+          "description": "Upload a document that families print, sign and send back.",
+          "button": "Upload a PDF"
+        },
+        "nameLabel": "Form name",
+        "namePlaceholderPdf": "Parental authorization",
+        "namePlaceholderOnline": "Family questionnaire",
+        "deadlineLabel": "Deadline (optional)",
+        "fileLabel": "PDF to be signed",
+        "back": "Back",
+        "createDraft": "Create the draft",
+        "creating": "Creating…"
+      },
+      "deleteButton": {
+        "deleting": "Deleting…"
+      },
+      "drawer": {
+        "pdfPreviewLabel": "PDF template · document preview",
+        "fieldsHeadingPdf": "Fields to fill in",
+        "fieldsHeadingOnline": "Form questions",
+        "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
+        "activate": "Activate",
+        "activating": "Activating…",
+        "editTemplate": "Edit template",
+        "download": "Download"
+      },
+      "editor": {
+        "nameLabel": "Name",
+        "descriptionLabel": "Description",
+        "deadlineLabel": "Deadline",
+        "conditionLabel": "Condition",
+        "conditionPlaceholder": "if parents are divorced",
+        "saving": "Saving…",
+        "saved": "Saved ✓",
+        "replacePdfHeading": "Replace the PDF",
+        "downloadCurrentPdf": "Download the current PDF",
+        "newPdfLabel": "New PDF",
+        "replace": "Replace"
+      },
+      "pills": {
+        "onlineForm": "Online form",
+        "pdfToSign": "PDF · to sign",
+        "active": "Active",
+        "draft": "Draft",
+        "mandatory": "Mandatory",
+        "dependsOnSituation": "depends on situation",
+        "complete": "Complete",
+        "toRedo": "To redo",
+        "missingCount": "{count, plural, one {# missing} other {# missing}}",
+        "toVerifyCount": "{count} to review"
+      },
+      "progress": {
+        "notRequestedDoc": "Not requested yet",
+        "notSentForm": "Not sent yet",
+        "provided": "{done} / {total} provided",
+        "received": "{done} / {total} received"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "The supporting documents families upload to complete the file. Use the standard list or request your own.",
+      "requestedCount": "Documents requested",
+      "studentsConcerned": "Students concerned",
+      "toReviewCount": "Documents to review",
+      "receivedLabel": "Documents received",
+      "bannerText": "Every uploaded document is queued for review. Families are reminded automatically for missing documents.",
+      "bannerTextWithDeadline": "Every uploaded document is queued for review. Families are reminded automatically for missing documents until the deadline on {date}.",
+      "requestedHeading": "Requested documents · {count}",
+      "addDocLabel": "Request a document",
+      "close": "Close",
+      "standardBadge": "STANDARD",
+      "customBadge": "CUSTOM",
+      "detailButton": "Details",
+      "editButton": "Edit",
+      "deleteConfirm": "Delete this document? Files already sent by families will be permanently deleted.",
+      "addPanel": {
+        "mandatoryTile": {
+          "title": "Mandatory for everyone",
+          "description": "Requested from every confirmed student — counts toward file completeness."
+        },
+        "conditionalTile": {
+          "title": "Depending on the situation",
+          "description": "Requested only from the students concerned — you choose who, without penalizing other files."
+        },
+        "addButton": "Add the document",
+        "nameLabel": "Document name",
+        "namePlaceholder": "European health insurance card",
+        "deadlineLabel": "Deadline (optional)",
+        "conditionLabel": "Condition (optional)",
+        "conditionPlaceholder": "if parents are divorced",
+        "back": "Back",
+        "createDraft": "Create the draft",
+        "creating": "Creating…"
+      },
+      "drawer": {
+        "acceptedFormats": "PDF · JPG · PNG",
+        "maxSize": "10 MB max",
+        "deadlineChip": "Deadline {date}",
+        "trackingHeading": "Student tracking",
+        "draftEmptyConditional": "This document hasn't been requested yet. Choose the students concerned then activate it to send the requests.",
+        "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
+        "noEnrolledStudents": "No enrolled students yet.",
+        "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
+        "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
+        "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",
+        "failedCount": " · {count} failed",
+        "activate": "Activate",
+        "activating": "Activating…",
+        "chooseAndActivate": "Choose students & activate",
+        "sending": "Sending…",
+        "remindFamilies": "Remind families"
+      }
+    },
+    "students": {
+      "title": "Students",
+      "emptyFilter": "No student matches the filter.",
+      "selectPrompt": "Select a student.",
+      "detail": {
+        "identityHeading": "Identity",
+        "noApplication": "No application found for this student.",
+        "parentsHeading": "Parents",
+        "fileHeading": "File",
+        "piecesProvided": "{provided}/{total} documents provided",
+        "emptyChecklist": "No documents requested yet.",
+        "applicationLink": "Application",
+        "remindButton": "Remind",
+        "sending": "Sending…",
+        "reminderSent": "Reminder sent.",
+        "reminderCooldown": "Already reminded recently — try again later."
+      },
+      "overall": {
+        "complete": "Complete",
+        "late": "Late",
+        "incomplete": "Incomplete"
+      },
+      "chips": {
+        "all": "All",
+        "complete": "Complete",
+        "incomplete": "Incomplete",
+        "late": "Late"
+      },
+      "summary": {
+        "complete": "File complete",
+        "toVerify": "{n, plural, one {# document to review} other {# documents to review}}",
+        "late": "Deadline passed — {n, plural, one {# document expected} other {# documents expected}}",
+        "pending": "{n, plural, one {# document expected} other {# documents expected}}"
+      },
+      "dueLabel": "Deadline {date}",
+      "listSummary": "{n, plural, one {# confirmed student} other {# confirmed students}} · {done, plural, one {# complete file} other {# complete files}}",
+      "reminderNote": {
+        "complete": "File complete — no reminder scheduled for {firstName}.",
+        "pending": "Automatic email reminders until received — {firstName} and their parents receive the list of expected documents.",
+        "pendingWithDue": "Automatic email reminders until received — {firstName} and their parents receive the list of expected documents ({dueLabel})."
+      }
+    },
+    "pages": {
+      "documentDetail": {
+        "backLabel": "Back to documents"
+      },
+      "formDetail": {
+        "backLabel": "Back to forms"
+      },
+      "students": {
+        "emptyHeading": "No confirmed students for this session yet.",
+        "emptyBodyPrefix": "Students appear here once their application is accepted and their account is created.",
+        "emptyBodyLink": "View applications"
+      },
+      "submissionReview": {
+        "backLink": "← Back to exchange",
+        "unknownStudent": "Unknown",
+        "notSubmitted": "Not submitted",
+        "notStarted": "This student has not started this form yet.",
+        "noAnswer": "No answer",
+        "notUploaded": "Not uploaded",
+        "reviewNoteHeading": "Review note",
+        "status": {
+          "approved": "Approved",
+          "submitted": "Submitted",
+          "rejected": "Rejected",
+          "draft": "Draft"
+        }
+      }
+    }
+  }
+}

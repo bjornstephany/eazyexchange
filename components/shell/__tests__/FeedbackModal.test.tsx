@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const submitFeedback = vi.fn()
 vi.mock('@/actions/feedback', () => ({ submitFeedback: (...args: unknown[]) => submitFeedback(...args) }))
@@ -13,7 +14,7 @@ describe('FeedbackModal', () => {
   })
 
   it('renders both type pills and the textarea', () => {
-    render(<FeedbackModal open onOpenChange={() => {}} />)
+    renderWithIntl(<FeedbackModal open onOpenChange={() => {}} />)
     expect(screen.getByRole('button', { name: 'Suggestion' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Bug ou problème' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Décrivez votre idée ou le problème rencontré…')).toBeInTheDocument()
@@ -26,7 +27,7 @@ describe('FeedbackModal', () => {
     submitFeedback.mockResolvedValueOnce({ ok: true })
     const onOpenChange = vi.fn()
     const user = userEvent.setup()
-    render(<FeedbackModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<FeedbackModal open onOpenChange={onOpenChange} />)
 
     await user.type(screen.getByPlaceholderText('Décrivez votre idée ou le problème rencontré…'), 'Une idée')
     await user.click(screen.getByRole('button', { name: 'Envoyer' }))
@@ -39,7 +40,7 @@ describe('FeedbackModal', () => {
     submitFeedback.mockResolvedValueOnce({ ok: false, error: 'Votre message doit faire entre 1 et 2000 caractères.' })
     const onOpenChange = vi.fn()
     const user = userEvent.setup()
-    render(<FeedbackModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<FeedbackModal open onOpenChange={onOpenChange} />)
 
     await user.type(screen.getByPlaceholderText('Décrivez votre idée ou le problème rencontré…'), 'x')
     await user.click(screen.getByRole('button', { name: 'Envoyer' }))
@@ -52,7 +53,7 @@ describe('FeedbackModal', () => {
     let resolve!: (v: { ok: true }) => void
     submitFeedback.mockReturnValueOnce(new Promise((r) => { resolve = r }))
     const user = userEvent.setup()
-    render(<FeedbackModal open onOpenChange={() => {}} />)
+    renderWithIntl(<FeedbackModal open onOpenChange={() => {}} />)
 
     await user.type(screen.getByPlaceholderText('Décrivez votre idée ou le problème rencontré…'), 'idea')
     await user.click(screen.getByRole('button', { name: 'Envoyer' }))

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from './TemplateIcon'
 import { typePill, statusPill, activationHints, type TemplateVM } from '@/lib/forms/rollup'
@@ -10,6 +11,9 @@ import { activateTemplate, deleteTemplate, getTemplateFileUrl } from '@/actions/
 export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
+  const tr = useTranslations()
 
   useEffect(() => { setBusy(false); setError(null) }, [vm?.id])
   useEffect(() => {
@@ -30,7 +34,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
       if (closeAfter) onClose()
       else setBusy(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
       setBusy(false)
     }
   }
@@ -41,12 +45,12 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
       const url = await getTemplateFileUrl(vm!.id)
       window.open(url, '_blank', 'noopener')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
   }
 
   function handleDelete() {
-    if (!window.confirm('Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées.')) return
+    if (!window.confirm(t('forms.deleteConfirm'))) return
     void run(() => deleteTemplate(vm!.id), true)
   }
 
@@ -57,7 +61,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
       const res = await activateTemplate(vm!.id, undefined)
       if (!res.ok) setError(res.message)
     } catch {
-      setError('Une erreur est survenue.')
+      setError(c('errors.generic'))
     }
     setBusy(false)
   }
@@ -72,12 +76,12 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
             <div>
               <div className="font-display text-lg font-semibold text-navy">{vm.name}</div>
               <div className="mt-[5px] flex items-center gap-[7px]">
-                <StatusPill pill={typePill(vm.kind)} />
-                <StatusPill pill={statusPill(vm.status)} />
+                <StatusPill pill={typePill(vm.kind, tr)} />
+                <StatusPill pill={statusPill(vm.status, tr)} />
               </div>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="h-8 w-8 rounded-lg border bg-card text-base text-muted-foreground">✕</button>
+          <button type="button" onClick={onClose} aria-label={t('forms.close')} className="h-8 w-8 rounded-lg border bg-card text-base text-muted-foreground">✕</button>
         </div>
 
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
@@ -85,12 +89,12 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
 
           {vm.kind === 'pdf' && (
             <div className="mb-[22px] flex h-[150px] items-center justify-center rounded-xl border bg-[repeating-linear-gradient(45deg,theme(colors.hoverrow.DEFAULT),theme(colors.hoverrow.DEFAULT)_11px,theme(colors.background)_11px,theme(colors.background)_22px)]">
-              <span className="rounded-lg border bg-card px-3 py-1.5 font-mono text-[11px] font-medium text-placeholder">modèle PDF · aperçu du document</span>
+              <span className="rounded-lg border bg-card px-3 py-1.5 font-mono text-[11px] font-medium text-placeholder">{t('forms.drawer.pdfPreviewLabel')}</span>
             </div>
           )}
 
           <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-            {vm.kind === 'pdf' ? 'Champs à renseigner' : 'Questions du formulaire'}
+            {vm.kind === 'pdf' ? t('forms.drawer.fieldsHeadingPdf') : t('forms.drawer.fieldsHeadingOnline')}
           </div>
           {vm.fields.length > 0 ? (
             <div className="flex flex-col overflow-hidden rounded-xl border">
@@ -103,7 +107,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-frame bg-hoverrow p-[18px] text-[13px] leading-normal text-muted-foreground">
-              Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.
+              {t('forms.drawer.emptyFields')}
             </div>
           )}
 
@@ -128,22 +132,22 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
           {vm.status === 'draft' && (
             <button type="button" disabled={busy} onClick={handleActivate}
               className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? 'Activation…' : 'Activer'}
+              {busy ? t('forms.drawer.activating') : t('forms.drawer.activate')}
             </button>
           )}
           <Link href={`/forms/${vm.id}`}
             className={`flex-1 rounded-[9px] py-[11px] text-center text-[13px] font-semibold ${vm.status === 'draft' ? 'border border-frame-dashed bg-card text-navy' : 'bg-brand text-white hover:bg-brand-hover'}`}>
-            Modifier le modèle
+            {t('forms.drawer.editTemplate')}
           </Link>
           {vm.kind === 'pdf' && vm.template_file_path && (
             <button type="button" onClick={handleDownload}
               className="flex-1 rounded-[9px] border border-frame-dashed bg-card py-[11px] text-[13px] font-semibold text-navy">
-              Télécharger
+              {t('forms.drawer.download')}
             </button>
           )}
           <button type="button" disabled={busy} onClick={handleDelete}
             className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-            Supprimer
+            {c('actions.delete')}
           </button>
         </div>
       </div>

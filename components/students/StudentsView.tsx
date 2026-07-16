@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useShellUi } from '@/components/shell/ShellUiContext'
 import {
   chipDefs, filterStudents, listSummary,
@@ -8,11 +9,13 @@ import {
 import { StudentDetail } from './StudentDetail'
 
 export function StudentsView({ exchangeId, students }: { exchangeId: string; students: StudentVM[] }) {
+  const t = useTranslations('organizer')
+  const tr = useTranslations()
   const { listSearch } = useShellUi()
   const [statusFilter, setStatusFilter] = useState<StatusKey | null>(null)
   const [selId, setSelId] = useState<string | null>(null)
 
-  const chips = chipDefs(students)
+  const chips = chipDefs(students, tr)
   const visible = filterStudents(students, statusFilter, listSearch)
   const selected = visible.find(v => v.id === selId) ?? visible[0] ?? null
 
@@ -22,8 +25,8 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
         {/* list column */}
         <div className="w-[340px] flex-none">
           <div className="mb-[13px]">
-            <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">Élèves</h1>
-            <p className="text-[13px] text-muted-foreground">{listSummary(students)}</p>
+            <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">{t('students.title')}</h1>
+            <p className="text-[13px] text-muted-foreground">{listSummary(students, tr)}</p>
           </div>
           <div className="mb-[13px] flex flex-wrap gap-1.5">
             {chips.map(c => {
@@ -75,7 +78,7 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
             })}
             {visible.length === 0 && (
               <p className="px-2.5 py-10 text-center text-[13px] text-tertiary">
-                Aucun élève ne correspond au filtre.
+                {t('students.emptyFilter')}
               </p>
             )}
           </div>
@@ -85,7 +88,7 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
         <div className="min-w-0 flex-1 rounded-2xl border bg-card px-[30px] py-7">
           {selected && <StudentDetail key={selected.id} vm={selected} exchangeId={exchangeId} />}
           {!selected && (
-            <p className="py-10 text-center text-[13px] text-tertiary">Sélectionnez un élève.</p>
+            <p className="py-10 text-center text-[13px] text-tertiary">{t('students.selectPrompt')}</p>
           )}
         </div>
       </div>

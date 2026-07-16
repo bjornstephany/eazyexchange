@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 const updateMeta = vi.fn().mockResolvedValue({ ok: true })
 vi.mock('@/actions/forms', () => ({
@@ -21,7 +22,7 @@ const base: any = {
 
 describe('TemplateEditor', () => {
   it('renders metadata and saves changes', async () => {
-    render(<TemplateEditor template={base} backHref="/forms" backLabel="Retour aux formulaires" />)
+    renderWithIntl(<TemplateEditor template={base} backHref="/forms" backLabel="Retour aux formulaires" />)
     expect(screen.getByText('Retour aux formulaires')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Accueil 2026' } })
     fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-10-10' } })
@@ -32,23 +33,23 @@ describe('TemplateEditor', () => {
     })
   })
   it('shows the question builder for online templates', () => {
-    render(<TemplateEditor template={base} backHref="/forms" backLabel="Retour aux formulaires" />)
+    renderWithIntl(<TemplateEditor template={base} backHref="/forms" backLabel="Retour aux formulaires" />)
     expect(screen.getByText(/Questions du formulaire/)).toBeInTheDocument()
     expect(screen.getByText('Animaux domestiques')).toBeInTheDocument()
   })
   it('shows the PDF replace control for pdf templates', () => {
-    render(<TemplateEditor template={{ ...base, kind: 'pdf', type: 'document_upload', template_file_path: 's1/t1.pdf' }} backHref="/forms" backLabel="Retour aux formulaires" />)
+    renderWithIntl(<TemplateEditor template={{ ...base, kind: 'pdf', type: 'document_upload', template_file_path: 's1/t1.pdf' }} backHref="/forms" backLabel="Retour aux formulaires" />)
     expect(screen.getByText(/Remplacer le PDF/)).toBeInTheDocument()
     expect(screen.getByText(/Champs à renseigner/)).toBeInTheDocument()
   })
   it('shows the condition field only for conditional docs', () => {
-    render(<TemplateEditor template={{ ...base, kind: 'doc', type: 'document_upload', audience: 'conditional', condition_label: 'si parents divorcés' }} backHref="/documents" backLabel="Retour aux documents" />)
+    renderWithIntl(<TemplateEditor template={{ ...base, kind: 'doc', type: 'document_upload', audience: 'conditional', condition_label: 'si parents divorcés' }} backHref="/documents" backLabel="Retour aux documents" />)
     expect(screen.getByLabelText('Condition')).toHaveValue('si parents divorcés')
     expect(screen.queryByText(/Questions du formulaire/)).toBeNull()
   })
   it('shows the structured save error inline', async () => {
     updateMeta.mockResolvedValueOnce({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
-    render(<TemplateEditor template={{ ...base, status: 'active' }} backHref="/forms" backLabel="Retour aux formulaires" />)
+    renderWithIntl(<TemplateEditor template={{ ...base, status: 'active' }} backHref="/forms" backLabel="Retour aux formulaires" />)
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     expect(await screen.findByText('Un modèle actif doit garder une échéance.')).toBeInTheDocument()
   })

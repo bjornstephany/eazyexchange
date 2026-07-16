@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import DashboardLoading from '@/app/(organizer)/dashboard/loading'
 import ExchangesLoading from '@/app/(organizer)/exchanges/loading'
 import ApplicationsLoading from '@/app/(organizer)/applications/loading'
@@ -21,7 +22,7 @@ const skeletons = [
 
 describe('rail tab skeletons', () => {
   it.each(skeletons)('%s renders an accessible shimmer, not the splash', (_name, Loading) => {
-    const { container, unmount } = render(<Loading />)
+    const { container, unmount } = renderWithIntl(<Loading />)
     expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Chargement')
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
     expect(screen.queryByText(/CHARGEMENT DE VOTRE ESPACE/)).toBeNull()

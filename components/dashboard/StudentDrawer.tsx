@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { AppRow, DossierRollup, Pill } from '@/lib/dashboard/rollup'
 import { timelineFor, frShortDate, applicantStatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
@@ -29,6 +30,9 @@ function initials(name: string): string {
 }
 
 export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | null; onClose: () => void }) {
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
+  const tr = useTranslations()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState(false)
@@ -65,7 +69,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
   const drawerSubject = subject
 
   const name = drawerSubject.kind === 'application' ? applicantName(drawerSubject.app.data) || drawerSubject.app.email : drawerSubject.rollup.name
-  const statusPill = drawerSubject.kind === 'application' ? applicantStatusPill(drawerSubject.app.status) : drawerSubject.rollup.overall
+  const statusPill = drawerSubject.kind === 'application' ? applicantStatusPill(drawerSubject.app.status, tr) : drawerSubject.rollup.overall
 
   async function handleAccept() {
     if (drawerSubject.kind !== 'application') return
@@ -75,7 +79,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
       await acceptApplication(drawerSubject.app.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
       setBusy(false)
     }
   }
@@ -88,7 +92,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
       await rejectApplication(drawerSubject.app.id, note, sendEmail)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
       setBusy(false)
     }
   }
@@ -115,10 +119,10 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
         {subject.kind === 'application' && (
           <>
             <div className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary mt-6 mb-3">
-              Parcours
+              {t('dashboard.timelineHeading')}
             </div>
             <div>
-              {timelineFor(subject.app).map((entry, i, arr) => (
+              {timelineFor(subject.app, tr).map((entry, i, arr) => (
                 <div key={i} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <span className={`h-[10px] w-[10px] rounded-full mt-1 ${DOT_CLASSES[entry.dot]}`} />
@@ -144,7 +148,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                       onClick={handleAccept}
                       className="flex-1 rounded-[9px] bg-brand text-white py-[11px] text-[13px] font-semibold hover:bg-brand-hover disabled:opacity-60"
                     >
-                      {busy ? 'Envoi…' : 'Accepter & inviter'}
+                      {busy ? t('dashboard.sending') : t('dashboard.acceptCta')}
                     </button>
                     <button
                       type="button"
@@ -152,7 +156,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                       onClick={() => setRejecting(true)}
                       className="flex-1 rounded-[9px] border border-frame-dashed bg-card text-navy py-[11px] text-[13px] font-semibold disabled:opacity-60"
                     >
-                      {busy ? 'Envoi…' : 'Refuser'}
+                      {busy ? t('dashboard.sending') : t('dashboard.rejectCta')}
                     </button>
                   </>
                 ) : (
@@ -160,7 +164,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                     <textarea
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="Note pour l'élève (facultatif)"
+                      placeholder={t('dashboard.notePlaceholder')}
                       className="w-full h-[60px] rounded-[9px] border p-2 text-sm"
                     />
                     <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
@@ -169,7 +173,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                         checked={sendEmail}
                         onChange={(e) => setSendEmail(e.target.checked)}
                       />
-                      Prévenir par e-mail
+                      {t('dashboard.notifyByEmail')}
                     </label>
                     <button
                       type="button"
@@ -177,7 +181,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
                       onClick={handleConfirmReject}
                       className="rounded-[9px] bg-danger text-danger-text py-[11px] text-[13px] font-semibold disabled:opacity-60"
                     >
-                      {busy ? 'Envoi…' : 'Confirmer le refus'}
+                      {busy ? t('dashboard.sending') : t('dashboard.confirmRejectCta')}
                     </button>
                   </div>
                 )}
@@ -189,7 +193,8 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
         {subject.kind === 'student' && (
           <>
             <div className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary mt-6 mb-3">
-              Formulaires &amp; documents{subject.rollup.due ? ` · échéance ${frShortDate(subject.rollup.due)}` : ''}
+              {t('dashboard.formsAndDocsHeading')}
+              {subject.rollup.due ? t('dashboard.dueSuffix', { date: frShortDate(subject.rollup.due) }) : ''}
             </div>
             <div>
               {subject.items.map((item, i) => (
@@ -201,7 +206,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
             </div>
             <div className="flex gap-2 items-start mt-4 text-[12.5px] text-muted-foreground">
               <span className="text-brand">&#8635;</span>
-              <span>Relances automatiques quotidiennes en période d&apos;échéance.</span>
+              <span>{t('dashboard.autoReminderHint')}</span>
             </div>
           </>
         )}

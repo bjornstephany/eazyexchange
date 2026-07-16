@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import fr from '@/messages/fr.json'
 
 const push = vi.fn()
 const refresh = vi.fn()
@@ -31,7 +34,7 @@ describe('NewExchangeModal', () => {
   })
 
   it('renders a single name field and no partner/year inputs', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} />)
     expect(screen.getByLabelText('Nom de l’échange')).toBeInTheDocument()
     expect(screen.queryByLabelText('Année')).toBeNull()
     expect(screen.queryByLabelText('Établissement partenaire')).toBeNull()
@@ -39,26 +42,26 @@ describe('NewExchangeModal', () => {
   })
 
   it('shows the trial notice for trial users', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} isTrial remaining={1} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} isTrial remaining={1} />)
     expect(screen.getByRole('note')).toHaveTextContent(/période d’essai/)
     expect(screen.getByRole('note')).toHaveTextContent(/un seul échange/)
   })
 
   it('shows a remaining-count notice for a paid finite plan', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={2} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={2} />)
     expect(screen.getByRole('note')).toHaveTextContent(/2 échanges à créer/)
     expect(screen.getByRole('note')).toHaveTextContent(/consommera un/)
   })
 
   it('shows no notice for an unlimited (Scale) plan', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={Infinity} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} isTrial={false} remaining={Infinity} />)
     expect(screen.queryByRole('note')).toBeNull()
   })
 
   it('shows an invalid-input error inline and keeps the dialog open with the submit button re-enabled', async () => {
     createExchange.mockResolvedValueOnce({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillName()
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
@@ -71,7 +74,7 @@ describe('NewExchangeModal', () => {
   it('redirects to /billing when the plan cap is hit', async () => {
     createExchange.mockResolvedValueOnce({ ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE })
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillName()
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
@@ -85,7 +88,7 @@ describe('NewExchangeModal', () => {
   it('shows a clean generic message when the action throws unexpectedly', async () => {
     createExchange.mockRejectedValueOnce(new Error('redacted in prod anyway'))
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillName()
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
@@ -97,7 +100,7 @@ describe('NewExchangeModal', () => {
   it('closes the dialog and navigates to the dashboard on successful submit', async () => {
     createExchange.mockResolvedValueOnce({ ok: true })
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={onOpenChange} />)
 
     const user = await fillName()
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
@@ -110,7 +113,7 @@ describe('NewExchangeModal', () => {
   it('clears a stale error when the dialog is closed and reopened', async () => {
     createExchange.mockResolvedValueOnce({ ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE })
     const onOpenChange = vi.fn()
-    const { rerender } = render(
+    const { rerender } = renderWithIntl(
       <NewExchangeModal open onOpenChange={onOpenChange} />
     )
 
@@ -118,20 +121,28 @@ describe('NewExchangeModal', () => {
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
     expect(await screen.findByText(EXCHANGE_INVALID_MESSAGE)).toBeInTheDocument()
 
-    rerender(<NewExchangeModal open={false} onOpenChange={onOpenChange} />)
-    rerender(<NewExchangeModal open onOpenChange={onOpenChange} />)
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <NewExchangeModal open={false} onOpenChange={onOpenChange} />
+      </NextIntlClientProvider>
+    )
+    rerender(
+      <NextIntlClientProvider locale="fr" messages={fr}>
+        <NewExchangeModal open onOpenChange={onOpenChange} />
+      </NextIntlClientProvider>
+    )
 
     expect(screen.queryByText(EXCHANGE_INVALID_MESSAGE)).toBeNull()
   })
 
   it('hides the collaborator section for non-owners', () => {
-    render(<NewExchangeModal open onOpenChange={() => {}} isOwner={false} />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} isOwner={false} />)
     expect(screen.queryByText(/Inviter un collaborateur/)).toBeNull()
   })
 
   it('lets an owner add and dedupe collaborator chips and submits them', async () => {
     createExchange.mockResolvedValueOnce({ ok: true })
-    render(<NewExchangeModal open onOpenChange={() => {}} isOwner />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={() => {}} isOwner />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Nom de l’échange'), 'Espagne 2026')
     await user.click(screen.getByRole('button', { name: /Inviter un collaborateur/ }))
@@ -147,7 +158,7 @@ describe('NewExchangeModal', () => {
   it('shows inviteErrors inline while still closing on ok', async () => {
     createExchange.mockResolvedValueOnce({ ok: true, inviteErrors: [{ email: 'bad', message: 'Adresse e-mail invalide.' }] })
     const onOpenChange = vi.fn()
-    render(<NewExchangeModal open onOpenChange={onOpenChange} isOwner />)
+    renderWithIntl(<NewExchangeModal open onOpenChange={onOpenChange} isOwner />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Nom de l’échange'), 'Espagne 2026')
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))

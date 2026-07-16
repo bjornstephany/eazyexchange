@@ -1,10 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
 import { reqPill, progressLabel, docDrawerRows, activationHints, type TemplateVM } from '@/lib/forms/rollup'
-import { frShortDate, p } from '@/lib/dashboard/rollup'
+import { frShortDate } from '@/lib/dashboard/rollup'
 import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
 
 // Right detail drawer (460px) for a pièce justificative, per handoff.
@@ -21,6 +22,9 @@ export function DocDrawer({
   const [picking, setPicking] = useState(false)
   const [chosen, setChosen] = useState<string[]>([])
   const [remindResult, setRemindResult] = useState<{ reminded: number; skipped: number; failed: number } | null>(null)
+  const t = useTranslations('organizer')
+  const c = useTranslations('common')
+  const tr = useTranslations()
 
   useEffect(() => {
     setBusy(false); setError(null); setPicking(false); setChosen([]); setRemindResult(null)
@@ -33,7 +37,7 @@ export function DocDrawer({
   }, [vm, onClose])
 
   if (!vm) return null
-  const { rows, restCount } = docDrawerRows(vm.assignees)
+  const { rows, restCount } = docDrawerRows(vm.assignees, tr)
   const hints = activationHints(vm)
   const isDraft = vm.status === 'draft'
   const needsPicker = vm.audience === 'conditional'
@@ -42,7 +46,7 @@ export function DocDrawer({
     setBusy(true)
     setError(null)
     try { await fn() } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
@@ -56,7 +60,7 @@ export function DocDrawer({
         const res = await activateTemplate(vm!.id, needsPicker ? chosen : undefined)
         if (!res.ok) setError(res.message)
       } catch {
-        setError('Une erreur est survenue.')
+        setError(c('errors.generic'))
       }
       setBusy(false)
     })()
@@ -70,13 +74,13 @@ export function DocDrawer({
       const res = await remindTemplate(vm!.id)
       setRemindResult(res)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
   }
 
   function handleDelete() {
-    if (!window.confirm('Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés.')) return
+    if (!window.confirm(t('documents.deleteConfirm'))) return
     void run(async () => { await deleteTemplate(vm!.id); onClose() })
   }
 
@@ -90,30 +94,30 @@ export function DocDrawer({
             <div>
               <div className="font-display text-lg font-semibold text-navy">{vm.name}</div>
               <div className="mt-[5px] flex items-center gap-[7px]">
-                <StatusPill pill={reqPill(vm)} />
-                <span className="text-xs font-medium text-tertiary">{progressLabel(vm)}</span>
+                <StatusPill pill={reqPill(vm, tr)} />
+                <span className="text-xs font-medium text-tertiary">{progressLabel(vm, tr)}</span>
               </div>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="h-8 w-8 rounded-lg border bg-card text-base text-muted-foreground">✕</button>
+          <button type="button" onClick={onClose} aria-label={t('documents.close')} className="h-8 w-8 rounded-lg border bg-card text-base text-muted-foreground">✕</button>
         </div>
 
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
           {vm.description && <div className="mb-5 text-[13.5px] leading-relaxed text-muted-foreground">{vm.description}</div>}
 
           <div className="mb-[22px] flex flex-wrap gap-2">
-            <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">PDF · JPG · PNG</span>
-            <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">10 Mo max</span>
+            <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.acceptedFormats')}</span>
+            <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.maxSize')}</span>
             {vm.deadline && (
-              <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">Échéance {frShortDate(vm.deadline)}</span>
+              <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.deadlineChip', { date: frShortDate(vm.deadline) })}</span>
             )}
           </div>
 
-          <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">Suivi par élève</div>
+          <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('documents.drawer.trackingHeading')}</div>
 
           {isDraft && !picking && (
             <div className="rounded-xl border border-dashed border-frame bg-hoverrow p-[18px] text-[13px] leading-normal text-muted-foreground">
-              Cette pièce n’a pas encore été demandée. {needsPicker ? 'Choisissez les élèves concernés puis activez-la pour lancer les demandes.' : 'Activez-la pour lancer les demandes.'}
+              {needsPicker ? t('documents.drawer.draftEmptyConditional') : t('documents.drawer.draftEmptyAll')}
             </div>
           )}
 
@@ -127,7 +131,7 @@ export function DocDrawer({
                 </label>
               ))}
               {enrolledStudents.length === 0 && (
-                <div className="px-3.5 py-[11px] text-[13px] text-muted-foreground">Aucun élève inscrit pour l’instant.</div>
+                <div className="px-3.5 py-[11px] text-[13px] text-muted-foreground">{t('documents.drawer.noEnrolledStudents')}</div>
               )}
             </div>
           )}
@@ -151,7 +155,7 @@ export function DocDrawer({
               ))}
               {restCount > 0 && (
                 <div className="bg-hoverrow-soft px-3.5 py-[11px] text-xs font-medium text-tertiary">
-                  + {restCount} élève{p(restCount)} — pièce fournie et validée
+                  {t('documents.drawer.restCount', { count: restCount })}
                 </div>
               )}
             </div>
@@ -159,9 +163,9 @@ export function DocDrawer({
 
           {remindResult && (
             <p className={`mt-4 text-sm ${remindResult.failed > 0 ? 'text-danger-text' : 'text-success-text'}`}>
-              {remindResult.reminded} relancé{p(remindResult.reminded)}
-              {remindResult.skipped > 0 ? ` · ${remindResult.skipped} déjà relancé${p(remindResult.skipped)} récemment` : ''}
-              {remindResult.failed > 0 ? ` · ${remindResult.failed} en échec` : ''}
+              {t('documents.drawer.remindedCount', { count: remindResult.reminded })}
+              {remindResult.skipped > 0 ? t('documents.drawer.skippedRecently', { count: remindResult.skipped }) : ''}
+              {remindResult.failed > 0 ? t('documents.drawer.failedCount', { count: remindResult.failed }) : ''}
             </p>
           )}
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
@@ -185,21 +189,21 @@ export function DocDrawer({
           {isDraft ? (
             <button type="button" disabled={busy || (picking && chosen.length === 0)} onClick={handleActivate}
               className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? 'Activation…' : picking ? 'Activer' : needsPicker ? 'Choisir les élèves & activer' : 'Activer'}
+              {busy ? t('documents.drawer.activating') : picking ? t('documents.drawer.activate') : needsPicker ? t('documents.drawer.chooseAndActivate') : t('documents.drawer.activate')}
             </button>
           ) : (
             <button type="button" disabled={busy} onClick={handleRemind}
               className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? 'Envoi…' : 'Relancer les familles'}
+              {busy ? t('documents.drawer.sending') : t('documents.drawer.remindFamilies')}
             </button>
           )}
           <Link href={`/documents/${vm.id}`}
             className="flex-1 rounded-[9px] border border-frame-dashed bg-card py-[11px] text-center text-[13px] font-semibold text-navy">
-            Modifier
+            {t('documents.editButton')}
           </Link>
           <button type="button" disabled={busy} onClick={handleDelete}
             className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-            Supprimer
+            {c('actions.delete')}
           </button>
         </div>
       </div>

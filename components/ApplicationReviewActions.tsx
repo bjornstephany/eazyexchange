@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { acceptApplication, rejectApplication } from '@/actions/applications-review'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,6 +15,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
   const [sendEmail, setSendEmail] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const t = useTranslations()
 
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(null)
@@ -23,36 +25,38 @@ export function ApplicationReviewActions({ applicationId, status, response, note
 
   if (status === 'accepted' || status === 'declined' || status === 'maybe' || status === 'enrolled') {
     const labels: Record<string, string> = {
-      accepted: 'Accepted — awaiting response', enrolled: 'Enrolled (said Yes)',
-      declined: 'Declined the invitation', maybe: 'Responded Maybe',
+      accepted: t('organizer.applications.review.statusAccepted'),
+      enrolled: t('organizer.applications.review.statusEnrolled'),
+      declined: t('organizer.applications.review.statusDeclined'),
+      maybe: t('organizer.applications.review.statusMaybe'),
     }
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium">{labels[status]}</p>
-        {response && <p className="text-sm text-muted-foreground">Response: <strong>{response}</strong></p>}
-        {note && <p className="text-sm text-muted-foreground">Note: {note}</p>}
+        {response && <p className="text-sm text-muted-foreground">{t('organizer.applications.review.responseLabel')} <strong>{response}</strong></p>}
+        {note && <p className="text-sm text-muted-foreground">{t('organizer.applications.review.noteLabel')} {note}</p>}
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
-      {status === 'rejected' && <p className="text-sm text-red-600">Currently rejected. You can still accept.</p>}
+      {status === 'rejected' && <p className="text-sm text-red-600">{t('organizer.applications.review.currentlyRejected')}</p>}
       {!rejecting ? (
         <div className="flex gap-3">
-          <Button disabled={busy} onClick={() => run(() => acceptApplication(applicationId))}>Accept</Button>
-          <Button variant="outline" disabled={busy} onClick={() => setRejecting(true)}>Reject</Button>
+          <Button disabled={busy} onClick={() => run(() => acceptApplication(applicationId))}>{t('organizer.applications.review.accept')}</Button>
+          <Button variant="outline" disabled={busy} onClick={() => setRejecting(true)}>{t('organizer.applications.rejectCta')}</Button>
         </div>
       ) : (
         <div className="space-y-2">
-          <Textarea placeholder="Optional note to the applicant" value={rejectNote} onChange={e => setRejectNote(e.target.value)} />
+          <Textarea placeholder={t('organizer.applications.review.notePlaceholder')} value={rejectNote} onChange={e => setRejectNote(e.target.value)} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
-            Send a rejection email to the applicant
+            {t('organizer.applications.review.sendRejectionEmail')}
           </label>
           <div className="flex gap-3">
-            <Button variant="destructive" disabled={busy} onClick={() => run(() => rejectApplication(applicationId, rejectNote, sendEmail))}>Confirm reject</Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setRejecting(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={busy} onClick={() => run(() => rejectApplication(applicationId, rejectNote, sendEmail))}>{t('organizer.applications.confirmRejectCta')}</Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setRejecting(false)}>{t('common.actions.cancel')}</Button>
           </div>
         </div>
       )}

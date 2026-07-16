@@ -1,8 +1,11 @@
+'use client'
+import { useTranslations } from 'next-intl'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function StudentsLoading() {
+  const c = useTranslations('common')
   return (
-    <div role="status" aria-label="Chargement" className="max-w-[1180px]">
+    <div role="status" aria-label={c('states.loadingLabel')} className="max-w-[1180px]">
       <Skeleton className="mb-2 h-8 w-56" />
       <Skeleton className="mb-6 h-4 w-80 max-w-full" />
       <div className="flex flex-col gap-2">

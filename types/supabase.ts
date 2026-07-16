@@ -783,6 +783,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          locale: string
           org_role: string
           role: string
           school_id: string
@@ -792,6 +793,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          locale?: string
           org_role?: string
           role: string
           school_id: string
@@ -801,6 +803,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          locale?: string
           org_role?: string
           role?: string
           school_id?: string

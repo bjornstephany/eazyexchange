@@ -1,9 +1,16 @@
 import { describe, it, expect } from 'vitest'
+import { createTranslator } from 'next-intl'
+import fr from '@/messages/fr.json'
 import {
   typePill, statusPill, reqPill, formDone, docDone, progressLabel, progressPct,
   docAttentionPill, studentPill, docDrawerRows, formsStats, docsStats,
   earliestActiveDeadline, initials, activationHints, type TemplateVM, type AssigneeRow,
 } from '@/lib/forms/rollup'
+
+// Root (unnamespaced) fr translator — the label helpers now build their strings
+// through next-intl, so the assertions below prove the fr catalog renders the
+// exact French design strings byte-for-byte.
+const t = createTranslator({ locale: 'fr', messages: fr })
 
 const a = (id: string, s: AssigneeRow['submissionStatus']): AssigneeRow =>
   ({ assignmentId: `as-${id}`, studentId: id, studentName: `Élève ${id}`, submissionStatus: s })
@@ -19,17 +26,17 @@ const vm = (over: Partial<TemplateVM>): TemplateVM =>
 
 describe('pills', () => {
   it('type pills', () => {
-    expect(typePill('pdf')).toEqual({ kind: 'neutral', label: 'PDF · à signer' })
-    expect(typePill('online')).toEqual({ kind: 'info', label: 'Formulaire en ligne' })
+    expect(typePill('pdf', t)).toEqual({ kind: 'neutral', label: 'PDF · à signer' })
+    expect(typePill('online', t)).toEqual({ kind: 'info', label: 'Formulaire en ligne' })
   })
   it('status pills', () => {
-    expect(statusPill('active')).toEqual({ kind: 'ok', label: 'Actif' })
-    expect(statusPill('draft')).toEqual({ kind: 'warn', label: 'Brouillon' })
+    expect(statusPill('active', t)).toEqual({ kind: 'ok', label: 'Actif' })
+    expect(statusPill('draft', t)).toEqual({ kind: 'warn', label: 'Brouillon' })
   })
   it('req pills', () => {
-    expect(reqPill({ audience: 'all', condition_label: null })).toEqual({ kind: 'info', label: 'Obligatoire' })
-    expect(reqPill({ audience: 'conditional', condition_label: 'si parents divorcés' })).toEqual({ kind: 'neutral', label: 'si parents divorcés' })
-    expect(reqPill({ audience: 'conditional', condition_label: null })).toEqual({ kind: 'neutral', label: 'selon situation' })
+    expect(reqPill({ audience: 'all', condition_label: null }, t)).toEqual({ kind: 'info', label: 'Obligatoire' })
+    expect(reqPill({ audience: 'conditional', condition_label: 'si parents divorcés' }, t)).toEqual({ kind: 'neutral', label: 'si parents divorcés' })
+    expect(reqPill({ audience: 'conditional', condition_label: null }, t)).toEqual({ kind: 'neutral', label: 'selon situation' })
   })
 })
 
@@ -40,11 +47,11 @@ describe('progress', () => {
     expect(docDone(assignees)).toBe(1)
   })
   it('labels per kind and draft state', () => {
-    expect(progressLabel(vm({ kind: 'online', assignees }))).toBe('2 / 5 reçus')
-    expect(progressLabel(vm({ kind: 'doc', assignees }))).toBe('1 / 5 fourni')
-    expect(progressLabel(vm({ kind: 'doc', assignees: [a('1', 'approved'), a('2', 'approved')] }))).toBe('2 / 2 fournis')
-    expect(progressLabel(vm({ kind: 'online', status: 'draft', assignees: [] }))).toBe('Pas encore envoyé')
-    expect(progressLabel(vm({ kind: 'doc', status: 'draft', assignees: [] }))).toBe('Pas encore demandé')
+    expect(progressLabel(vm({ kind: 'online', assignees }), t)).toBe('2 / 5 reçus')
+    expect(progressLabel(vm({ kind: 'doc', assignees }), t)).toBe('1 / 5 fourni')
+    expect(progressLabel(vm({ kind: 'doc', assignees: [a('1', 'approved'), a('2', 'approved')] }), t)).toBe('2 / 2 fournis')
+    expect(progressLabel(vm({ kind: 'online', status: 'draft', assignees: [] }), t)).toBe('Pas encore envoyé')
+    expect(progressLabel(vm({ kind: 'doc', status: 'draft', assignees: [] }), t)).toBe('Pas encore demandé')
   })
   it('pct rounds and survives zero totals', () => {
     expect(progressPct(vm({ kind: 'doc', assignees }))).toBe(20)
@@ -54,14 +61,14 @@ describe('progress', () => {
 
 describe('doc attention pill', () => {
   it('priority: brouillon > manquants > à vérifier > complet', () => {
-    expect(docAttentionPill(vm({ status: 'draft' }))).toEqual({ kind: 'warn', label: 'Brouillon' })
-    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'rejected'), a('3', 'approved')] })))
+    expect(docAttentionPill(vm({ status: 'draft' }), t)).toEqual({ kind: 'warn', label: 'Brouillon' })
+    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'rejected'), a('3', 'approved')] }), t))
       .toEqual({ kind: 'bad', label: '2 manquants' })
-    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'approved')] })))
+    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'approved')] }), t))
       .toEqual({ kind: 'bad', label: '1 manquant' })
-    expect(docAttentionPill(vm({ assignees: [a('1', 'submitted'), a('2', 'approved')] })))
+    expect(docAttentionPill(vm({ assignees: [a('1', 'submitted'), a('2', 'approved')] }), t))
       .toEqual({ kind: 'info', label: '1 à vérifier' })
-    expect(docAttentionPill(vm({ assignees: [a('1', 'approved')] })))
+    expect(docAttentionPill(vm({ assignees: [a('1', 'approved')] }), t))
       .toEqual({ kind: 'ok', label: 'Complet' })
   })
 })
@@ -70,7 +77,7 @@ describe('drawer rows', () => {
   it('folds approved into restCount, pills the others, flags review rows', () => {
     const { rows, restCount } = docDrawerRows([
       a('1', 'approved'), a('2', 'submitted'), a('3', 'draft'), a('4', null), a('5', 'rejected'),
-    ])
+    ], t)
     expect(restCount).toBe(1)
     expect(rows.map(r => r.pill.label)).toEqual(['À vérifier', 'En cours', 'Manquant', 'À refaire'])
     expect(rows[0].review).toBe(true)
@@ -78,9 +85,9 @@ describe('drawer rows', () => {
     expect(rows[0].initials).toBe('É2')
   })
   it('studentPill returns null for approved', () => {
-    expect(studentPill('approved')).toBeNull()
-    expect(studentPill(null)).toEqual({ kind: 'bad', label: 'Manquant' })
-    expect(studentPill('rejected')).toEqual({ kind: 'bad', label: 'À refaire' })
+    expect(studentPill('approved', t)).toBeNull()
+    expect(studentPill(null, t)).toEqual({ kind: 'bad', label: 'Manquant' })
+    expect(studentPill('rejected', t)).toEqual({ kind: 'bad', label: 'À refaire' })
   })
 })
 
