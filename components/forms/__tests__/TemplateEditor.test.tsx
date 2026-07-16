@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-const updateMeta = vi.fn().mockResolvedValue(undefined)
+const updateMeta = vi.fn().mockResolvedValue({ ok: true })
 vi.mock('@/actions/forms', () => ({
   updateTemplateMeta: (...a: unknown[]) => updateMeta(...a),
-  replaceTemplateFile: vi.fn().mockResolvedValue(undefined),
+  replaceTemplateFile: vi.fn().mockResolvedValue({ ok: true }),
   addField: vi.fn().mockResolvedValue(undefined),
   removeField: vi.fn().mockResolvedValue(undefined),
   getTemplateFileUrl: vi.fn().mockResolvedValue('https://signed.example/x.pdf'),
@@ -45,5 +45,11 @@ describe('TemplateEditor', () => {
     render(<TemplateEditor template={{ ...base, kind: 'doc', type: 'document_upload', audience: 'conditional', condition_label: 'si parents divorcés' }} backHref="/documents" backLabel="Retour aux documents" />)
     expect(screen.getByLabelText('Condition')).toHaveValue('si parents divorcés')
     expect(screen.queryByText(/Questions du formulaire/)).toBeNull()
+  })
+  it('shows the structured save error inline', async () => {
+    updateMeta.mockResolvedValueOnce({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
+    render(<TemplateEditor template={{ ...base, status: 'active' }} backHref="/forms" backLabel="Retour aux formulaires" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(await screen.findByText('Un modèle actif doit garder une échéance.')).toBeInTheDocument()
   })
 })

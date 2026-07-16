@@ -49,6 +49,18 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
     void run(() => deleteTemplate(vm!.id), true)
   }
 
+  async function handleActivate() {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await activateTemplate(vm!.id, undefined)
+      if (!res.ok) setError(res.message)
+    } catch {
+      setError('Une erreur est survenue.')
+    }
+    setBusy(false)
+  }
+
   return (
     <div className="fixed inset-0 z-40">
       <div data-testid="drawer-backdrop" onClick={onClose} className="fixed inset-0 bg-rail/30" />
@@ -99,7 +111,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
 
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
           {vm.status === 'draft' && (
-            <button type="button" disabled={busy} onClick={() => run(() => activateTemplate(vm.id, undefined))}
+            <button type="button" disabled={busy} onClick={handleActivate}
               className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
               {busy ? 'Activation…' : 'Activer'}
             </button>

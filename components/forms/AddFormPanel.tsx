@@ -32,10 +32,15 @@ export function AddFormPanel({
       fd.set('name', name)
       if (deadline) fd.set('deadline', deadline)
       if (mode === 'pdf' && file) fd.set('file', file)
-      const id = await createDraftTemplate(fd)
-      onCreated(id)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      const res = await createDraftTemplate(fd)
+      if (!res.ok) {
+        setError(res.message)
+        setBusy(false)
+        return
+      }
+      onCreated(res.id)
+    } catch {
+      setError('Une erreur est survenue.')
       setBusy(false)
     }
   }

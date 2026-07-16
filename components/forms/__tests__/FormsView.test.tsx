@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
-const createDraft = vi.fn().mockResolvedValue('new-id')
-const activate = vi.fn().mockResolvedValue(undefined)
+const createDraft = vi.fn().mockResolvedValue({ ok: true, id: 'new-id' })
+const activate = vi.fn().mockResolvedValue({ ok: true })
 const del = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/forms', () => ({
   createDraftTemplate: (...a: unknown[]) => createDraft(...a),
@@ -73,5 +73,13 @@ describe('FormsView', () => {
     renderWith(<FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(del).toHaveBeenCalledWith('t1'))
+  })
+  it('drawer shows the structured activation message inline', async () => {
+    activate.mockResolvedValueOnce({ ok: false, message: 'Ajoutez une échéance avant d’activer.' })
+    const draft = vm({ id: 'd1', status: 'draft', kind: 'online', fields: ['Q1'], assignees: [], template_file_path: null, deadline: null })
+    renderWith(<FormsView exchangeId="ex1" templates={[draft]} studentCount={0} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Aperçu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
+    expect(await screen.findAllByText('Ajoutez une échéance avant d’activer.')).not.toHaveLength(0)
   })
 })

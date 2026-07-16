@@ -33,15 +33,16 @@ export function TemplateEditor({
     setError(null)
     setSaved(false)
     try {
-      await updateTemplateMeta(template.id, {
+      const res = await updateTemplateMeta(template.id, {
         name,
         description: description.trim() || null,
         deadline: deadline || null,
         condition_label: template.audience === 'conditional' ? (conditionLabel.trim() || null) : null,
       })
-      setSaved(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      if (res.ok) setSaved(true)
+      else setError(res.message)
+    } catch {
+      setError('Une erreur est survenue.')
     }
     setBusy(false)
   }
@@ -55,10 +56,11 @@ export function TemplateEditor({
       const fd = new FormData()
       fd.set('template_id', template.id)
       fd.set('file', file)
-      await replaceTemplateFile(fd)
-      setFile(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      const res = await replaceTemplateFile(fd)
+      if (res.ok) setFile(null)
+      else setError(res.message)
+    } catch {
+      setError('Une erreur est survenue.')
     }
     setBusy(false)
   }

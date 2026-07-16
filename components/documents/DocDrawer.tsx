@@ -48,7 +48,17 @@ export function DocDrawer({
 
   function handleActivate() {
     if (needsPicker && !picking) { setPicking(true); return }
-    void run(() => activateTemplate(vm!.id, needsPicker ? chosen : undefined))
+    void (async () => {
+      setBusy(true)
+      setError(null)
+      try {
+        const res = await activateTemplate(vm!.id, needsPicker ? chosen : undefined)
+        if (!res.ok) setError(res.message)
+      } catch {
+        setError('Une erreur est survenue.')
+      }
+      setBusy(false)
+    })()
   }
 
   async function handleRemind() {

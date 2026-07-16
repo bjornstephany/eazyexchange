@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-const activate = vi.fn().mockResolvedValue(undefined)
+const activate = vi.fn().mockResolvedValue({ ok: true })
 const remind = vi.fn().mockResolvedValue({ reminded: 2, skipped: 1, failed: 0 })
 const del = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/forms', () => ({
-  createDraftTemplate: vi.fn().mockResolvedValue('new-id'),
+  createDraftTemplate: vi.fn().mockResolvedValue({ ok: true, id: 'new-id' }),
   activateTemplate: (...a: unknown[]) => activate(...a),
   deleteTemplate: (...a: unknown[]) => del(...a),
   remindTemplate: (...a: unknown[]) => remind(...a),
@@ -72,5 +72,13 @@ describe('DocsView', () => {
     render(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }))
     await waitFor(() => expect(del).toHaveBeenCalledWith('d1'))
+  })
+  it('drawer shows the structured activation message inline', async () => {
+    activate.mockResolvedValueOnce({ ok: false, message: 'Ajoutez une échéance avant d’activer.' })
+    const draft = doc({ id: 'd2', status: 'draft', assignees: [], deadline: null })
+    render(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
+    expect(await screen.findAllByText('Ajoutez une échéance avant d’activer.')).not.toHaveLength(0)
   })
 })

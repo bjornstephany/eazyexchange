@@ -33,10 +33,15 @@ export function AddDocPanel({
       fd.set('audience', mode)
       if (deadline) fd.set('deadline', deadline)
       if (mode === 'conditional' && condition) fd.set('condition_label', condition)
-      const id = await createDraftTemplate(fd)
-      onCreated(id)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+      const res = await createDraftTemplate(fd)
+      if (!res.ok) {
+        setError(res.message)
+        setBusy(false)
+        return
+      }
+      onCreated(res.id)
+    } catch {
+      setError('Une erreur est survenue.')
       setBusy(false)
     }
   }
