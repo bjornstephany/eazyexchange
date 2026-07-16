@@ -273,7 +273,6 @@ export async function deleteTemplate(id: string): Promise<void> {
   await requireUser()
   const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
-  if (tmpl.standard_key) throw new Error('Les modèles standard ne peuvent pas être supprimés.')
 
   // Families' uploaded documents live in the `documents` bucket and aren't
   // touched by the DB cascade on the template row — clean them up too, best

@@ -197,12 +197,10 @@ export function DocDrawer({
             className="flex-1 rounded-[9px] border border-frame-dashed bg-card py-[11px] text-center text-[13px] font-semibold text-navy">
             Modifier
           </Link>
-          {vm.standard_key === null && (
-            <button type="button" disabled={busy} onClick={handleDelete}
-              className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-              Supprimer
-            </button>
-          )}
+          <button type="button" disabled={busy} onClick={handleDelete}
+            className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
+            Supprimer
+          </button>
         </div>
       </div>
     </div>

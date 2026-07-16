@@ -95,10 +95,8 @@ export function DocsView({
                   className="rounded-lg bg-subtle px-3.5 py-2 text-[12.5px] font-semibold text-navy">
                   Modifier
                 </a>
-                {t.standard_key === null && (
-                  <DeleteTemplateButton templateId={t.id}
-                    confirmText="Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés." />
-                )}
+                <DeleteTemplateButton templateId={t.id}
+                  confirmText="Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés." />
               </div>
             </div>
           </div>

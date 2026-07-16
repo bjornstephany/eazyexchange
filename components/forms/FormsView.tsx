@@ -97,10 +97,8 @@ export function FormsView({
                   className="rounded-lg bg-subtle px-3.5 py-2 text-[12.5px] font-semibold text-navy">
                   Modifier
                 </a>
-                {t.standard_key === null && (
-                  <DeleteTemplateButton templateId={t.id}
-                    confirmText="Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées." />
-                )}
+                <DeleteTemplateButton templateId={t.id}
+                  confirmText="Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées." />
               </div>
             </div>
           </div>

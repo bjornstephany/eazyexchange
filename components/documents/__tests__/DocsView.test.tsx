@@ -61,10 +61,8 @@ describe('DocsView', () => {
     await screen.findByRole('button', { name: 'Activer' })
     expect(activate).toHaveBeenCalledWith('d2', ['s1'])
   })
-  it('shows Supprimer only for custom documents', () => {
-    const { rerender } = render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
-    expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(<DocsView exchangeId="ex1" templates={[doc({ standard_key: null })]} studentCount={3} enrolledStudents={students} />)
+  it('shows Supprimer for standard documents too', () => {
+    render(<DocsView exchangeId="ex1" templates={[doc({})]} studentCount={3} enrolledStudents={students} />)
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom document when the confirm is accepted', async () => {

@@ -169,10 +169,10 @@ describe('updateTemplateMeta / replaceTemplateFile — structured results', () =
 })
 
 describe('deleteTemplate', () => {
-  it('refuses standard templates', async () => {
+  it('deletes standard templates too (guard removed)', async () => {
     template.standard_key = 'passeport'
-    await expect(deleteTemplate('tpl-1')).rejects.toThrow(/standard/i)
-    expect(templateDelete).not.toHaveBeenCalled()
+    await deleteTemplate('tpl-1')
+    expect(templateDelete).toHaveBeenCalled()
   })
   it('deletes a custom template', async () => {
     template.standard_key = null

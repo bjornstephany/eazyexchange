@@ -141,12 +141,10 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
               Télécharger
             </button>
           )}
-          {vm.standard_key === null && (
-            <button type="button" disabled={busy} onClick={handleDelete}
-              className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
-              Supprimer
-            </button>
-          )}
+          <button type="button" disabled={busy} onClick={handleDelete}
+            className="rounded-[9px] bg-danger px-[15px] py-[11px] text-[13px] font-semibold text-danger-text disabled:opacity-60">
+            Supprimer
+          </button>
         </div>
       </div>
     </div>

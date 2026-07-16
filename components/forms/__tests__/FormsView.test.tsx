@@ -62,10 +62,8 @@ describe('FormsView', () => {
     await screen.findByRole('button', { name: 'Activer' })
     expect(activate).toHaveBeenCalledWith('d1', undefined)
   })
-  it('shows Supprimer only for custom templates', () => {
-    const { rerender } = renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />)
-    expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull()
-    rerender(<FormsView exchangeId="ex1" templates={[vm({ standard_key: null })]} studentCount={2} />)
+  it('shows Supprimer for standard templates too', () => {
+    renderWith(<FormsView exchangeId="ex1" templates={[vm({})]} studentCount={2} />)
     expect(screen.getByRole('button', { name: 'Supprimer' })).toBeInTheDocument()
   })
   it('deletes a custom template when the confirm is accepted', async () => {
