@@ -12,4 +12,10 @@ describe('ExternalLinkCard', () => {
     // Raw URL printed alongside so families can verify where the button goes.
     expect(screen.getByText('https://esta.cbp.dhs.gov')).toBeInTheDocument()
   })
+
+  it('renders nothing for a non-https URL (stored-XSS defense-in-depth)', () => {
+    const { container } = render(<ExternalLinkCard name="ESTA" url="javascript:alert(1)" />)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
+  })
 })

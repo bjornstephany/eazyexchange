@@ -1,7 +1,10 @@
+import { isSafeExternalUrl } from '@/lib/forms/template-result'
+
 // Prominent external-step button for templates carrying a lien externe (e.g.
 // the ESTA application). The raw URL is printed alongside the button so
 // families can verify where it leads before clicking.
 export function ExternalLinkCard({ name, url }: { name: string; url: string }) {
+  if (!isSafeExternalUrl(url)) return null
   return (
     <div className="mb-6 rounded-[12px] border bg-card p-4">
       <a

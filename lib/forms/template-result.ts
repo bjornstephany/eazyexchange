@@ -9,5 +9,8 @@ export const MSG_DEADLINE_REQUIRED = 'Ajoutez une échéance avant d’activer.'
 export const MSG_PDF_REQUIRED = 'Téléversez le PDF avant d’activer.'
 export const MSG_QUESTIONS_REQUIRED = 'Ajoutez au moins une question avant d’activer.'
 
+// Render-side mirror of the server action's https:// rule — PostgREST writes can bypass the action, so never render a non-https external_url as a link.
+export const isSafeExternalUrl = (url: string): boolean => url.startsWith('https://')
+
 export type TemplateActionResult = { ok: true } | { ok: false; message: string }
 export type CreateTemplateResult = { ok: true; id: string } | { ok: false; message: string }

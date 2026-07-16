@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
 import { reqPill, progressLabel, docDrawerRows, activationHints, type TemplateVM } from '@/lib/forms/rollup'
+import { isSafeExternalUrl } from '@/lib/forms/template-result'
 import { frShortDate } from '@/lib/dashboard/rollup'
 import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
 
@@ -105,7 +106,7 @@ export function DocDrawer({
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
           {vm.description && <div className="mb-5 text-[13.5px] leading-relaxed text-muted-foreground">{vm.description}</div>}
 
-          {vm.external_url && (
+          {vm.external_url && isSafeExternalUrl(vm.external_url) && (
             <a href={vm.external_url} target="_blank" rel="noopener noreferrer"
               className="mb-5 inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-brand underline">
               {vm.external_url} <span aria-hidden="true">↗</span>
