@@ -87,6 +87,13 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
         <div className="flex-1 overflow-auto px-[26px] py-[22px]">
           {vm.description && <div className="mb-5 text-[13.5px] leading-relaxed text-muted-foreground">{vm.description}</div>}
 
+          {vm.external_url && (
+            <a href={vm.external_url} target="_blank" rel="noopener noreferrer"
+              className="mb-5 inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-brand underline">
+              {vm.external_url} <span aria-hidden="true">↗</span>
+            </a>
+          )}
+
           {vm.kind === 'pdf' && (
             <div className="mb-[22px] flex h-[150px] items-center justify-center rounded-xl border bg-[repeating-linear-gradient(45deg,theme(colors.hoverrow.DEFAULT),theme(colors.hoverrow.DEFAULT)_11px,theme(colors.background)_11px,theme(colors.background)_22px)]">
               <span className="rounded-lg border bg-card px-3 py-1.5 font-mono text-[11px] font-medium text-placeholder">{t('forms.drawer.pdfPreviewLabel')}</span>

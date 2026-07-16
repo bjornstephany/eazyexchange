@@ -87,4 +87,11 @@ describe('DocsView', () => {
     expect(screen.getByText(/Ajoutez une échéance avant d’activer\./)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Modifier le modèle' })).toHaveAttribute('href', '/documents/d9')
   })
+  it('drawer shows the external link when present', () => {
+    renderWithIntl(<DocsView exchangeId="ex1" templates={[doc({ external_url: 'https://esta.cbp.dhs.gov' })]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    const link = screen.getByRole('link', { name: /esta\.cbp\.dhs\.gov/ })
+    expect(link).toHaveAttribute('href', 'https://esta.cbp.dhs.gov')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
 })
