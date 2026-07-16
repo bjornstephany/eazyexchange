@@ -14,20 +14,12 @@ export function Hero({ hero }: { hero: LandingContent['hero'] }) {
         <p className="mb-[30px] max-w-[600px] text-[length:clamp(16px,1.6vw,19px)] leading-[1.55] text-[#5B6B8C]">
           {hero.sub}
         </p>
-        <div className="flex flex-wrap items-center gap-6">
-          <Link
-            href="/signup"
-            className="inline-flex items-center rounded-[11px] bg-[#2456E6] px-7 py-4 text-[16.5px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(36,86,230,.55)] transition hover:bg-[#1D48C7]"
-          >
-            {hero.ctaPrimary}
-          </Link>
-          <a
-            href="#demarrer"
-            className="text-[15px] font-medium text-[#42506E] underline underline-offset-[3px] hover:text-[#10203F]"
-          >
-            {hero.ctaSecondary}
-          </a>
-        </div>
+        <Link
+          href="/signup"
+          className="inline-flex items-center rounded-[11px] bg-[#2456E6] px-7 py-4 text-[16.5px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(36,86,230,.55)] transition hover:bg-[#1D48C7]"
+        >
+          {hero.ctaPrimary}
+        </Link>
         <p className="mt-4 font-mono text-[12px] font-medium text-[#8A97B2]">{hero.note}</p>
       </div>
     </section>

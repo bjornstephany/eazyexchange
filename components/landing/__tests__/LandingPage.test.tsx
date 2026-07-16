@@ -45,9 +45,9 @@ describe('LandingPage', () => {
 
   it('primary CTAs link to /signup and the login links to /login', () => {
     render(<LandingPage />)
-    // Hero + "Prêt à essayer" card + closing band, plus the nav's short CTA.
+    // Hero + closing band, plus the nav's short CTA.
     const ctas = screen.getAllByRole('link', { name: /Démarrer mon échange gratuit/i })
-    expect(ctas.length).toBeGreaterThanOrEqual(3)
+    expect(ctas.length).toBeGreaterThanOrEqual(2)
     ctas.forEach((l) => expect(l.getAttribute('href')).toBe('/signup'))
     expect(screen.getByRole('link', { name: /Démarrer gratuitement/i }).getAttribute('href')).toBe('/signup')
     const logins = screen.getAllByRole('link', { name: /Se connecter/i })

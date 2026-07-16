@@ -40,7 +40,6 @@ export interface LandingContent {
     title: string
     sub: string
     ctaPrimary: string
-    ctaSecondary: string
     note: string
   }
   sweep: {
@@ -100,12 +99,6 @@ export interface LandingContent {
     totalLabel: string
     totalValue: string
   }
-  paths: {
-    title: string
-    intro: string
-    trial: { badge: string; title: string; body: string; cta: string }
-    expert: { badge: string; title: string; body: string; cta: string }
-  }
   closing: { title: string; cta: string; note: string }
   footer: { product: string; login: string; copyright: string }
 }
@@ -119,7 +112,6 @@ const fr: LandingContent = {
     title: 'Arrêtez de courir après les documents de vos élèves',
     sub: 'Candidatures, formulaires et relances au même endroit. Votre premier échange est gratuit, sans installation.',
     ctaPrimary: 'Démarrer mon échange gratuit',
-    ctaSecondary: 'Parler à un expert produit',
     note: 'Sans carte bancaire · vos élèves invités en 5 minutes',
   },
   sweep: {
@@ -317,22 +309,6 @@ const fr: LandingContent = {
     totalLabel: 'Votre premier échange sur Eazyexchange',
     totalValue: '0 €',
   },
-  paths: {
-    title: 'Deux façons de commencer',
-    intro: 'Selon que vous êtes prêt à essayer, ou que vous avez encore des questions.',
-    trial: {
-      badge: 'Prêt à essayer',
-      title: 'Lancez votre échange maintenant',
-      body: 'Créez votre échange, invitez vos élèves ce soir. Aucune carte bancaire, rien à installer.',
-      cta: 'Démarrer mon échange gratuit',
-    },
-    expert: {
-      badge: 'Encore des questions',
-      title: 'Parlez-en d’abord à quelqu’un',
-      body: '30 minutes avec un expert produit, une démo construite sur votre prochain échange.',
-      cta: 'Parler à un expert produit',
-    },
-  },
   closing: {
     title: 'Votre prochain échange, sans la paperasse.',
     cta: 'Démarrer mon échange gratuit',
@@ -348,7 +324,6 @@ const en: LandingContent = {
     title: 'Stop chasing your students’ documents',
     sub: 'Applications, forms and reminders in one place. Your first exchange is free, nothing to install.',
     ctaPrimary: 'Start my free exchange',
-    ctaSecondary: 'Talk to a product expert',
     note: 'No credit card · your students invited in 5 minutes',
   },
   sweep: {
@@ -546,22 +521,6 @@ const en: LandingContent = {
     totalLabel: 'Your first exchange on Eazyexchange',
     totalValue: '€0',
   },
-  paths: {
-    title: 'Two ways to start',
-    intro: 'Depending on whether you’re ready to try, or still have questions.',
-    trial: {
-      badge: 'Ready to try',
-      title: 'Launch your exchange now',
-      body: 'Create your exchange, invite your students tonight. No credit card, nothing to install.',
-      cta: 'Start my free exchange',
-    },
-    expert: {
-      badge: 'Still have questions',
-      title: 'Talk it through first',
-      body: '30 minutes with a product expert, a demo built on your next exchange.',
-      cta: 'Talk to a product expert',
-    },
-  },
   closing: {
     title: 'Your next exchange, without the paperwork.',
     cta: 'Start my free exchange',
@@ -577,7 +536,6 @@ const es: LandingContent = {
     title: 'Deja de perseguir los documentos de tus estudiantes',
     sub: 'Candidaturas, formularios y recordatorios en un mismo lugar. Tu primer intercambio es gratis, sin instalación.',
     ctaPrimary: 'Empezar mi intercambio gratis',
-    ctaSecondary: 'Hablar con un experto de producto',
     note: 'Sin tarjeta de crédito · tus estudiantes invitados en 5 minutos',
   },
   sweep: {
@@ -775,22 +733,6 @@ const es: LandingContent = {
     totalLabel: 'Tu primer intercambio en Eazyexchange',
     totalValue: '0 €',
   },
-  paths: {
-    title: 'Dos formas de empezar',
-    intro: 'Según estés listo para probar, o todavía tengas preguntas.',
-    trial: {
-      badge: 'Listo para probar',
-      title: 'Lanza tu intercambio ahora',
-      body: 'Crea tu intercambio, invita a tus estudiantes esta noche. Sin tarjeta de crédito, nada que instalar.',
-      cta: 'Empezar mi intercambio gratis',
-    },
-    expert: {
-      badge: 'Todavía con preguntas',
-      title: 'Háblalo primero con alguien',
-      body: '30 minutos con un experto de producto, una demo construida sobre tu próximo intercambio.',
-      cta: 'Hablar con un experto de producto',
-    },
-  },
   closing: {
     title: 'Tu próximo intercambio, sin papeleo.',
     cta: 'Empezar mi intercambio gratis',
@@ -806,7 +748,6 @@ const it: LandingContent = {
     title: 'Smetti di rincorrere i documenti dei tuoi studenti',
     sub: 'Candidature, moduli e solleciti nello stesso posto. Il tuo primo scambio è gratuito, senza installazione.',
     ctaPrimary: 'Inizia il mio scambio gratuito',
-    ctaSecondary: 'Parla con un esperto di prodotto',
     note: 'Senza carta di credito · i tuoi studenti invitati in 5 minuti',
   },
   sweep: {
@@ -1004,22 +945,6 @@ const it: LandingContent = {
     totalLabel: 'Il tuo primo scambio su Eazyexchange',
     totalValue: '0 €',
   },
-  paths: {
-    title: 'Due modi per cominciare',
-    intro: 'A seconda che tu sia pronto a provare, o abbia ancora domande.',
-    trial: {
-      badge: 'Pronto a provare',
-      title: 'Lancia il tuo scambio adesso',
-      body: 'Crea il tuo scambio, invita i tuoi studenti stasera. Nessuna carta di credito, niente da installare.',
-      cta: 'Inizia il mio scambio gratuito',
-    },
-    expert: {
-      badge: 'Ancora domande',
-      title: 'Parlane prima con qualcuno',
-      body: '30 minuti con un esperto di prodotto, una demo costruita sul tuo prossimo scambio.',
-      cta: 'Parla con un esperto di prodotto',
-    },
-  },
   closing: {
     title: 'Il tuo prossimo scambio, senza scartoffie.',
     cta: 'Inizia il mio scambio gratuito',
@@ -1035,7 +960,6 @@ const de: LandingContent = {
     title: 'Hören Sie auf, den Dokumenten Ihrer Schüler hinterherzulaufen',
     sub: 'Bewerbungen, Formulare und Erinnerungen an einem Ort. Ihr erster Austausch ist gratis, ohne Installation.',
     ctaPrimary: 'Meinen kostenlosen Austausch starten',
-    ctaSecondary: 'Mit einem Produktexperten sprechen',
     note: 'Keine Kreditkarte · Ihre Schüler in 5 Minuten eingeladen',
   },
   sweep: {
@@ -1232,22 +1156,6 @@ const de: LandingContent = {
     ],
     totalLabel: 'Ihr erster Austausch auf Eazyexchange',
     totalValue: '0 €',
-  },
-  paths: {
-    title: 'Zwei Wege zu starten',
-    intro: 'Je nachdem, ob Sie bereit sind auszuprobieren oder noch Fragen haben.',
-    trial: {
-      badge: 'Bereit zum Ausprobieren',
-      title: 'Starten Sie Ihren Austausch jetzt',
-      body: 'Erstellen Sie Ihren Austausch, laden Sie Ihre Schüler noch heute Abend ein. Keine Kreditkarte, nichts zu installieren.',
-      cta: 'Meinen kostenlosen Austausch starten',
-    },
-    expert: {
-      badge: 'Noch Fragen',
-      title: 'Sprechen Sie zuerst mit jemandem',
-      body: '30 Minuten mit einem Produktexperten, eine Demo auf Basis Ihres nächsten Austauschs.',
-      cta: 'Mit einem Produktexperten sprechen',
-    },
   },
   closing: {
     title: 'Ihr nächster Austausch, ohne Papierkram.',

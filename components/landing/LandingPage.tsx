@@ -10,7 +10,6 @@ import { InboxSweep } from './InboxSweep'
 import { ProductSlice } from './ProductSlice'
 import { BenefitBlocks } from './BenefitBlocks'
 import { TimeSavings } from './TimeSavings'
-import { DualPath } from './DualPath'
 import { CtaBand } from './CtaBand'
 import { LandingFooter } from './LandingFooter'
 
@@ -41,7 +40,6 @@ export function LandingPage() {
         <ProductSlice slice={t.slice} />
         <BenefitBlocks benefits={t.benefits} />
         <TimeSavings savings={t.savings} />
-        <DualPath paths={t.paths} />
         <CtaBand closing={t.closing} />
       </main>
       <LandingFooter footer={t.footer} />
