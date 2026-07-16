@@ -6,9 +6,11 @@ import { DEFAULT_LOCALE, matchLocale, type Locale } from '@/lib/i18n/config'
 import { readLocaleCookie, writeLocaleCookie } from '@/lib/i18n/cookie'
 import { LandingNav } from './LandingNav'
 import { Hero } from './Hero'
-import { Features } from './Features'
-import { HowItWorks } from './HowItWorks'
-import { Testimonial } from './Testimonial'
+import { InboxSweep } from './InboxSweep'
+import { ProductSlice } from './ProductSlice'
+import { BenefitBlocks } from './BenefitBlocks'
+import { TimeSavings } from './TimeSavings'
+import { DualPath } from './DualPath'
 import { CtaBand } from './CtaBand'
 import { LandingFooter } from './LandingFooter'
 
@@ -31,16 +33,18 @@ export function LandingPage() {
   const t = landingContent[lang]
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#10203F]">
+    <div className="landing-root min-h-screen bg-[#FBFCFE] font-sans text-[#10203F]">
       <LandingNav nav={t.nav} lang={lang} setLanguage={setLanguage} />
       <main>
         <Hero hero={t.hero} />
-        <Features features={t.features} />
-        <HowItWorks how={t.how} />
-        <Testimonial testimonial={t.testimonial} />
-        <CtaBand cta={t.cta} />
+        <InboxSweep sweep={t.sweep} />
+        <ProductSlice slice={t.slice} />
+        <BenefitBlocks benefits={t.benefits} />
+        <TimeSavings savings={t.savings} />
+        <DualPath paths={t.paths} />
+        <CtaBand closing={t.closing} />
       </main>
-      <LandingFooter footerTag={t.footerTag} />
+      <LandingFooter footer={t.footer} />
     </div>
   )
 }

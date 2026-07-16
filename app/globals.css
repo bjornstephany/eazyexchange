@@ -9,90 +9,46 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Landing: "Cleared for departure" boarding-manifest signature motion */
+/* Landing (design handoff 2026-07): inbox-sweep signature motion      */
 /* ------------------------------------------------------------------ */
+/* Used via motion-safe:animate-[ezDrift…] / [ezPulse…], so
+   prefers-reduced-motion: reduce disables everything. */
 
-/* Default (also the prefers-reduced-motion) state = final "cleared" board:
-   pending pills hidden, cleared pills stamped in, ready bar shown. */
-.manifest-pending {
-  opacity: 0;
+@keyframes ezDrift {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  55% {
+    transform: translateX(30px);
+    opacity: 0.3;
+  }
 }
-.manifest-cleared {
-  opacity: 1;
-  transform: none;
-}
-.manifest-ready {
-  opacity: 1;
-}
-.manifest-blip {
-  opacity: 1;
+
+@keyframes ezPulse {
+  0%,
+  45%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(0);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .manifest-pending {
-    animation: manifest-pending-out 0.7s ease-in both;
-  }
-  .manifest-cleared {
-    animation: manifest-stamp-in 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.4) both;
-  }
-  .manifest-ready {
-    animation: manifest-ready-in 0.6s ease-out both;
-  }
-  .manifest-blip {
-    animation: manifest-blip 1.4s steps(1, end) infinite;
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-@keyframes manifest-pending-out {
-  0% {
-    opacity: 1;
-  }
-  45% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes manifest-stamp-in {
-  0% {
-    opacity: 0;
-    transform: scale(1.35) rotate(-3deg);
-  }
-  55% {
-    opacity: 1;
-    transform: scale(0.94) rotate(-2deg);
-  }
-  72% {
-    transform: scale(1.03) rotate(-2deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(-2deg);
-  }
-}
-
-@keyframes manifest-ready-in {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes manifest-blip {
-  0%,
-  60% {
-    opacity: 1;
-  }
-  61%,
-  100% {
-    opacity: 0.25;
-  }
+.landing-root a:focus-visible,
+.landing-root button:focus-visible {
+  outline: 2px solid #2456e6;
+  outline-offset: 2px;
 }
 
 @keyframes drwIn {

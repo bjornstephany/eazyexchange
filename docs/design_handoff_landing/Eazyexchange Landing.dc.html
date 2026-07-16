@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="description" content="Eazyexchange — candidatures, formulaires et relances automatiques pour les organisateurs d'échanges scolaires. Premier échange gratuit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FBFCFE;color:#10203F;font-family:'IBM Plex Sans',system-ui,sans-serif}
+  a{color:#2456E6}a:hover{color:#1D48C7}
+  a:focus-visible,button:focus-visible{outline:2px solid #2456E6;outline-offset:2px;border-radius:4px}
+  @keyframes ezDrift{0%,100%{transform:translateX(0);opacity:1}55%{transform:translateX(30px);opacity:.3}}
+  @keyframes ezPulse{0%,45%,100%{opacity:.55;transform:translateY(0)}62%{opacity:1;transform:translateY(-2px)}}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<!-- ===================== NAV ===================== -->
+<div style="max-width:1160px;margin:0 auto;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <a href="#" style="display:flex;align-items:center;gap:11px;text-decoration:none">
+    <span style="position:relative;display:block;width:30px;height:22px">
+      <span style="position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:#10203F"></span>
+      <span style="position:absolute;right:0;bottom:0;width:18px;height:18px;border-radius:50%;background:#2456E6;mix-blend-mode:multiply"></span>
+    </span>
+    <span style="font:700 19px 'Schibsted Grotesk';letter-spacing:-.02em;color:#10203F">Eazyexchange</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+    <a href="#produit" style="font:500 14px 'IBM Plex Sans';color:#42506E;text-decoration:none" style-hover="color:#10203F">Produit</a>
+    <a href="Eazyexchange%20Dashboard.dc.html" style="font:500 14px 'IBM Plex Sans';color:#42506E;text-decoration:none" style-hover="color:#10203F">Se connecter</a>
+    <a href="#demarrer" style="display:inline-flex;align-items:center;background:#2456E6;color:#fff;border-radius:9px;padding:10px 16px;font:600 13.5px 'IBM Plex Sans';text-decoration:none" style-hover="background:#1D48C7;color:#fff">Démarrer gratuitement</a>
+  </div>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<div style="max-width:1160px;margin:0 auto;padding:54px 24px 0">
+  <div style="max-width:760px">
+    <div style="font:600 12px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2456E6;margin-bottom:18px">Pour les organisateurs d'échanges scolaires</div>
+    <h1 style="font:800 clamp(36px,5.2vw,60px)/1.04 'Schibsted Grotesk';letter-spacing:-.028em;margin:0 0 18px;text-wrap:balance">Arrêtez de courir après les documents de vos élèves</h1>
+    <p style="font:400 clamp(16px,1.6vw,19px)/1.55 'IBM Plex Sans';color:#5B6B8C;margin:0 0 30px;max-width:600px;text-wrap:pretty">Candidatures, formulaires et relances au même endroit. Votre premier échange est gratuit, sans installation.</p>
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <a href="#demarrer" style="display:inline-flex;align-items:center;background:#2456E6;color:#fff;border-radius:11px;padding:16px 28px;font:600 16.5px 'IBM Plex Sans';text-decoration:none;box-shadow:0 14px 30px -14px rgba(36,86,230,.55)" style-hover="background:#1D48C7;color:#fff">Démarrer mon échange gratuit</a>
+      <sc-if value="{{ showSecondaryCta }}" hint-placeholder-val="{{ true }}">
+        <a href="#demarrer" style="font:500 15px 'IBM Plex Sans';color:#42506E;text-decoration:underline;text-underline-offset:3px" style-hover="color:#10203F">Parler à un expert produit</a>
+      </sc-if>
+    </div>
+    <div style="font:500 12px 'IBM Plex Mono';color:#8A97B2;margin-top:16px">Sans carte bancaire · vos élèves invités en 5 minutes</div>
+  </div>
+</div>
+
+<!-- ===================== SWEEP (signature) ===================== -->
+<sc-if value="{{ showSweep }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1160px;margin:0 auto;padding:48px 24px 26px;display:flex;align-items:center;gap:26px;flex-wrap:wrap">
+  <div style="flex:1.2;min-width:280px;display:flex;flex-direction:column;gap:9px">
+    <div style="font:600 10.5px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#9AA6C0;margin-bottom:2px">Ce que vous recevez aujourd'hui</div>
+    <div style="background:#fff;border:1px solid #E4E9F2;border-radius:12px;overflow:hidden;box-shadow:0 14px 30px -22px rgba(16,32,63,.35)">
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #EEF1F7;background:#FBFCFE">
+        <span style="font:600 12px 'IBM Plex Sans';color:#42506E">Boîte de réception</span>
+        <span style="display:inline-flex;padding:1px 7px;border-radius:999px;font:600 10px 'IBM Plex Mono';background:#FBE7E4;color:#C0392B">47</span>
+      </div>
+      <div style="display:flex;gap:11px;align-items:center;padding:10px 14px;border-bottom:1px solid #F4F6FB;animation:ezDrift 7s ease-in-out 0s infinite">
+        <span style="flex:none;width:28px;height:28px;border-radius:50%;background:#FBF0D9;color:#9A6A0B;display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Sans'">SM</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+          <span style="display:flex;justify-content:space-between;gap:8px"><span style="font:700 12.5px 'IBM Plex Sans';color:#10203F">Sophie Martin</span><span style="font:400 11px 'IBM Plex Sans';color:#9AA6C0;flex:none">07:12</span></span>
+          <span style="font:600 12px 'IBM Plex Sans';color:#10203F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">RE: RE: RE: scan du passeport ?</span>
+          <span style="font:400 11.5px 'IBM Plex Sans';color:#8A97B2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">désolée, je ne retrouve plus votre mail, vous pouvez me redire…</span>
+        </span>
+      </div>
+      <div style="display:flex;gap:11px;align-items:center;padding:10px 14px;border-bottom:1px solid #F4F6FB;animation:ezDrift 7s ease-in-out 1.1s infinite">
+        <span style="flex:none;width:28px;height:28px;border-radius:50%;background:#E6ECFD;color:#1D48C7;display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Sans'">RD</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="display:flex;justify-content:space-between;gap:8px"><span style="font:700 12.5px 'IBM Plex Sans';color:#10203F">Rachid Dubois</span><span style="font:400 11px 'IBM Plex Sans';color:#9AA6C0;flex:none">hier</span></span>
+          <span style="font:600 12px 'IBM Plex Sans';color:#10203F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tr: Tr: autorisation chloé</span>
+          <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 8px;border:1px solid #E4E9F2;border-radius:999px;font:500 10.5px 'IBM Plex Mono';color:#5B6B8C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="flex:none;width:7px;height:9px;border:1.3px solid #9AA6C0;border-radius:1.5px"></span>autorisation_parentale_v3_FINAL(2).pdf</span>
+        </span>
+      </div>
+      <div style="display:flex;gap:11px;align-items:center;padding:10px 14px;animation:ezDrift 7s ease-in-out 2.2s infinite">
+        <span style="flex:none;width:28px;height:28px;border-radius:50%;background:#E4F5EA;color:#0F7A3D;display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Sans'">Moi</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+          <span style="display:flex;justify-content:space-between;gap:8px"><span style="font:700 12.5px 'IBM Plex Sans';color:#10203F">Moi, à 14 parents</span><span style="font:400 11px 'IBM Plex Sans';color:#9AA6C0;flex:none">lun.</span></span>
+          <span style="font:600 12px 'IBM Plex Sans';color:#10203F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Relance assurance — 4e tentative</span>
+          <span style="font:400 11.5px 'IBM Plex Sans';color:#8A97B2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">bonsoir, sans retour de votre part avant vendredi…</span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;gap:14px">
+    <span style="position:relative;display:block;width:34px;height:25px">
+      <span style="position:absolute;left:0;top:0;width:21px;height:21px;border-radius:50%;background:#10203F"></span>
+      <span style="position:absolute;right:0;bottom:0;width:21px;height:21px;border-radius:50%;background:#2456E6;mix-blend-mode:multiply"></span>
+    </span>
+    <span style="font:600 20px 'Schibsted Grotesk';color:#C4CCDC">→</span>
+  </div>
+  <div style="flex:1;min-width:250px;display:flex;flex-direction:column;gap:9px">
+    <div style="font:600 10.5px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#9AA6C0;margin-bottom:2px">Ce que vous voyez dans Eazyexchange</div>
+    <div style="display:flex;align-items:center;gap:10px;animation:ezPulse 7s ease-in-out .4s infinite"><span style="font:500 13px 'IBM Plex Sans';color:#42506E;width:150px">Passeport</span><span style="display:inline-flex;padding:3px 11px;border-radius:999px;font:600 12px 'IBM Plex Sans';color:#0F7A3D;background:#E4F5EA">Complet</span></div>
+    <div style="display:flex;align-items:center;gap:10px;animation:ezPulse 7s ease-in-out 1.3s infinite"><span style="font:500 13px 'IBM Plex Sans';color:#42506E;width:150px">Autorisation parentale</span><span style="display:inline-flex;padding:3px 11px;border-radius:999px;font:600 12px 'IBM Plex Sans';color:#0F7A3D;background:#E4F5EA">Complet</span></div>
+    <div style="display:flex;align-items:center;gap:10px;animation:ezPulse 7s ease-in-out 2.2s infinite"><span style="font:500 13px 'IBM Plex Sans';color:#42506E;width:150px">Assurance</span><span style="display:inline-flex;padding:3px 11px;border-radius:999px;font:600 12px 'IBM Plex Sans';color:#1D48C7;background:#E6ECFD">Relance envoyée</span></div>
+    <div style="display:flex;align-items:center;gap:10px;animation:ezPulse 7s ease-in-out 3.1s infinite"><span style="font:500 13px 'IBM Plex Sans';color:#42506E;width:150px">Fiche santé</span><span style="display:inline-flex;padding:3px 11px;border-radius:999px;font:600 12px 'IBM Plex Sans';color:#0F7A3D;background:#E4F5EA">Complet</span></div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== LIVE PRODUCT SLICE ===================== -->
+<div style="background:linear-gradient(#FBFCFE,#EEF1F7 120px);padding:10px 0 26px">
+<div style="max-width:1160px;margin:0 auto;padding:0 24px">
+  <div style="background:#fff;border:1px solid #E4E9F2;border-radius:16px;box-shadow:0 40px 80px -50px rgba(16,32,63,.4);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 22px;border-bottom:1px solid #E4E9F2;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font:600 16px 'Schibsted Grotesk';color:#10203F">Berlin ↔ Lyon 2026</span>
+        <span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;font:600 11px 'IBM Plex Mono';background:#E6ECFD;color:#1D48C7">Phase 2 · Dossiers</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:20px;padding:20px 22px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:2.1;min-width:320px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <sc-for list="{{ funnel }}" as="f" hint-placeholder-count="5">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }}" style-hover="border-color:#2456E6">
+              <span style="font:700 20px/1 'Schibsted Grotesk';color:{{ f.countColor }}">{{ f.count }}</span>
+              <span style="font:500 11px 'IBM Plex Sans';color:#5B6B8C">{{ f.label }}</span>
+            </button>
+          </sc-for>
+          <span style="flex:none;width:20px;height:20px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono'">3</span>
+        </div>
+        <div style="overflow-x:auto">
+          <div style="min-width:600px;border:1px solid #EEF1F7;border-radius:12px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.4fr 1fr;gap:12px;padding:11px 18px;border-bottom:1px solid #EEF1F7;background:#FBFCFE">
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.07em;text-transform:uppercase;color:#9AA6C0">Élève</span>
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.07em;text-transform:uppercase;color:#9AA6C0">Candidature</span>
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.07em;text-transform:uppercase;color:#9AA6C0">Formulaires</span>
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.07em;text-transform:uppercase;color:#9AA6C0">Documents</span>
+              <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.07em;text-transform:uppercase;color:#9AA6C0">Statut</span>
+            </div>
+            <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1.4fr 1fr;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid #F4F6FB" style-hover="background:#FAFBFE">
+                <span style="font:600 13px 'IBM Plex Sans';color:#10203F">{{ row.name }}</span>
+                <span><span style="{{ row.c1.style }}">{{ row.c1.label }}</span></span>
+                <span><span style="{{ row.c2.style }}">{{ row.c2.label }}</span></span>
+                <span style="display:inline-flex;align-items:center;gap:7px"><span style="{{ row.c3.style }}">{{ row.c3.label }}</span>
+                  <sc-if value="{{ row.flag }}" hint-placeholder-val="{{ false }}"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono'">2</span></sc-if>
+                </span>
+                <span><span style="{{ row.c4.style }}">{{ row.c4.label }}</span></span>
+              </div>
+            </sc-for>
+            <div style="padding:11px 18px;font:500 12px 'IBM Plex Mono';color:#9AA6C0;background:#FBFCFE">{{ moreLabel }}</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:250px;display:flex;flex-direction:column;gap:14px">
+        <div style="border:1px solid #EEF1F7;border-radius:12px;padding:15px 17px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#8A97B2">Ce matin, automatiquement</span>
+            <span style="flex:none;width:18px;height:18px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono'">1</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:9px;align-items:baseline"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">06:00</span><span style="font:400 12.5px/1.4 'IBM Plex Sans';color:#42506E">Relance envoyée · Emma M. · passeport</span></div>
+            <div style="display:flex;gap:9px;align-items:baseline"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">06:00</span><span style="font:400 12.5px/1.4 'IBM Plex Sans';color:#42506E">Relance envoyée · Yanis M. · assurance</span></div>
+            <div style="display:flex;gap:9px;align-items:baseline"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">07:40</span><span style="font:400 12.5px/1.4 'IBM Plex Sans';color:#0F7A3D">Document reçu · Chloé D. · autorisation</span></div>
+          </div>
+        </div>
+        <div style="border:1px solid #E4E9F2;border-left:3px solid #2456E6;border-radius:12px;padding:15px 17px;background:#fff">
+          <div style="font:600 14px 'Schibsted Grotesk';color:#10203F;margin-bottom:4px">À faire maintenant</div>
+          <div style="font:400 12.5px/1.45 'IBM Plex Sans';color:#5B6B8C">Vérifier la candidature de Yanis Meziane. C'est tout.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ showAnnotations }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;gap:14px 30px;flex-wrap:wrap;padding:18px 6px 0">
+    <div style="display:flex;gap:9px;align-items:flex-start;flex:1;min-width:230px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono'">1</span><span style="font:400 13px/1.5 'IBM Plex Sans';color:#5B6B8C">Ces relances sont parties à 6 h. Personne n'a écrit un seul mail.</span></div>
+    <div style="display:flex;gap:9px;align-items:flex-start;flex:1;min-width:230px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono'">2</span><span style="font:400 13px/1.5 'IBM Plex Sans';color:#5B6B8C">Un document manquant a déjà sa prochaine relance programmée.</span></div>
+    <div style="display:flex;gap:9px;align-items:flex-start;flex:1;min-width:230px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:#2456E6;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono'">3</span><span style="font:400 13px/1.5 'IBM Plex Sans';color:#5B6B8C">Cliquez un chiffre pour voir qui bloque — essayez, c'est le vrai produit.</span></div>
+  </div>
+  </sc-if>
+</div>
+</div>
+
+<!-- ===================== BENEFITS ===================== -->
+<div id="produit" style="background:#EEF1F7;padding:70px 0 20px">
+<div style="max-width:1160px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:64px">
+
+  <div style="display:flex;gap:44px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:290px">
+      <div style="font:600 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2456E6;margin-bottom:12px">01 · Invitations</div>
+      <h2 style="font:700 clamp(26px,3vw,34px)/1.12 'Schibsted Grotesk';letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance">Les élèves remplissent leur dossier eux-mêmes</h2>
+      <p style="font:400 15.5px/1.6 'IBM Plex Sans';color:#5B6B8C;margin:0;max-width:460px;text-wrap:pretty">Vous invitez par e-mail. Chaque élève reçoit son espace avec la liste exacte de ce qu'on attend de lui : formulaires, signatures, pièces à téléverser. Vous regardez les dossiers se compléter.</p>
+    </div>
+    <div style="flex:1.15;min-width:300px;background:#fff;border:1px solid #E4E9F2;border-radius:14px;padding:20px 22px;box-shadow:0 24px 50px -34px rgba(16,32,63,.35)">
+      <div style="font:600 10px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#8A97B2;margin-bottom:12px">Inviter des élèves</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+        <div style="flex:1;min-width:170px;display:flex;align-items:center;gap:7px;height:38px;padding:0 12px;background:#F5F7FC;border:1px solid #E4E9F2;border-radius:9px;overflow:hidden">
+          <span style="display:inline-flex;padding:2px 8px;border-radius:999px;font:500 11px 'IBM Plex Mono';background:#E6ECFD;color:#1D48C7;white-space:nowrap">emma.martin@…</span>
+          <span style="font:500 11px 'IBM Plex Mono';color:#9AA6C0;white-space:nowrap">+ 23 autres</span>
+        </div>
+        <button style="height:38px;padding:0 15px;background:#10203F;color:#fff;border:none;border-radius:9px;font:600 13px 'IBM Plex Sans';cursor:pointer">Envoyer les invitations</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px"><span style="font:600 13px 'IBM Plex Sans';color:#10203F;width:118px;flex:none">Lucas Bernard</span><span style="flex:1;height:6px;background:#EEF1F7;border-radius:999px;overflow:hidden"><span style="display:block;height:100%;width:100%;background:#0F7A3D;border-radius:999px"></span></span><span style="font:500 11px 'IBM Plex Mono';color:#0F7A3D;width:38px;text-align:right">100%</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font:600 13px 'IBM Plex Sans';color:#10203F;width:118px;flex:none">Emma Martin</span><span style="flex:1;height:6px;background:#EEF1F7;border-radius:999px;overflow:hidden"><span style="display:block;height:100%;width:80%;background:#2456E6;border-radius:999px"></span></span><span style="font:500 11px 'IBM Plex Mono';color:#5B6B8C;width:38px;text-align:right">80%</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="font:600 13px 'IBM Plex Sans';color:#10203F;width:118px;flex:none">Chloé Dubois</span><span style="flex:1;height:6px;background:#EEF1F7;border-radius:999px;overflow:hidden"><span style="display:block;height:100%;width:45%;background:#2456E6;border-radius:999px"></span></span><span style="font:500 11px 'IBM Plex Mono';color:#5B6B8C;width:38px;text-align:right">45%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:44px;align-items:center;flex-wrap:wrap;flex-direction:row-reverse">
+    <div style="flex:1;min-width:290px">
+      <div style="font:600 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2456E6;margin-bottom:12px">02 · Relances</div>
+      <h2 style="font:700 clamp(26px,3vw,34px)/1.12 'Schibsted Grotesk';letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance">Les relances partent sans vous</h2>
+      <p style="font:400 15.5px/1.6 'IBM Plex Sans';color:#5B6B8C;margin:0;max-width:460px;text-wrap:pretty">Un document manque ? Eazyexchange relance l'élève et ses parents au bon rythme, jusqu'à réception. Vous n'écrivez plus jamais « RE: RE: scan du passeport ? ».</p>
+    </div>
+    <div style="flex:1.15;min-width:300px;background:#fff;border:1px solid #E4E9F2;border-radius:14px;padding:20px 22px;box-shadow:0 24px 50px -34px rgba(16,32,63,.35)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+        <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#8A97B2">Relances automatiques</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font:600 11px 'IBM Plex Mono';color:#2456E6"><span style="width:30px;height:17px;border-radius:999px;background:#2456E6;position:relative;display:inline-block"><span style="position:absolute;right:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff"></span></span>Activées</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 13px;background:#FBFCFE;border:1px solid #EEF1F7;border-radius:10px"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">lun 06:00</span><span style="flex:1;font:400 12.5px 'IBM Plex Sans';color:#42506E">Passeport · Emma Martin</span><span style="display:inline-flex;padding:3px 10px;border-radius:999px;font:600 11.5px 'IBM Plex Sans';color:#1D48C7;background:#E6ECFD">Relance envoyée</span></div>
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 13px;background:#FBFCFE;border:1px solid #EEF1F7;border-radius:10px"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">lun 06:00</span><span style="flex:1;font:400 12.5px 'IBM Plex Sans';color:#42506E">Assurance · Yanis Meziane</span><span style="display:inline-flex;padding:3px 10px;border-radius:999px;font:600 11.5px 'IBM Plex Sans';color:#1D48C7;background:#E6ECFD">Relance envoyée</span></div>
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 13px;background:#FBFCFE;border:1px solid #EEF1F7;border-radius:10px"><span style="font:500 10.5px 'IBM Plex Mono';color:#9AA6C0;flex:none">lun 09:14</span><span style="flex:1;font:400 12.5px 'IBM Plex Sans';color:#42506E">Autorisation · Chloé Dubois</span><span style="display:inline-flex;padding:3px 10px;border-radius:999px;font:600 11.5px 'IBM Plex Sans';color:#0F7A3D;background:#E4F5EA">Document reçu</span></div>
+      </div>
+      <div style="font:500 11px 'IBM Plex Mono';color:#9AA6C0;margin-top:13px">prochaine relance dans 3 jours · stop automatique à réception</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:44px;align-items:center;flex-wrap:wrap;padding-bottom:50px">
+    <div style="flex:1;min-width:290px">
+      <div style="font:600 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#2456E6;margin-bottom:12px">03 · Suivi</div>
+      <h2 style="font:700 clamp(26px,3vw,34px)/1.12 'Schibsted Grotesk';letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance">Vous savez qui bloque, en un coup d'œil</h2>
+      <p style="font:400 15.5px/1.6 'IBM Plex Sans';color:#5B6B8C;margin:0;max-width:460px;text-wrap:pretty">Chaque élève, chaque pièce, chaque paiement sur un seul écran, phase par phase. Fini le tableur partagé et les fils de mails pour savoir où en est un dossier.</p>
+    </div>
+    <div style="flex:1.15;min-width:300px;background:#fff;border:1px solid #E4E9F2;border-radius:14px;padding:20px 22px;box-shadow:0 24px 50px -34px rgba(16,32,63,.35)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#8A97B2">Phase 2 · Dossiers &amp; documents</span>
+        <span style="font:500 12px 'IBM Plex Sans';color:#5B6B8C">18 / 24 complets · <span style="color:#C0392B;font-weight:600">2 bloqués</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:96px repeat(4,1fr);gap:8px 6px;align-items:center">
+        <span></span>
+        <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.05em;text-transform:uppercase;color:#9AA6C0;text-align:center">Dossier</span>
+        <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.05em;text-transform:uppercase;color:#9AA6C0;text-align:center">Formul.</span>
+        <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.05em;text-transform:uppercase;color:#9AA6C0;text-align:center">Docs</span>
+        <span style="font:600 9px 'IBM Plex Mono';letter-spacing:.05em;text-transform:uppercase;color:#9AA6C0;text-align:center">Paiement</span>
+        <span style="font:600 12.5px 'IBM Plex Sans';color:#10203F">Lucas B.</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="font:600 12.5px 'IBM Plex Sans';color:#10203F">Emma M.</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#FBE7E4;border:1.5px solid #C0392B;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#C0392B">!</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="font:600 12.5px 'IBM Plex Sans';color:#10203F">Chloé D.</span>
+        <span style="height:22px;border-radius:6px;background:#E4F5EA;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#0F7A3D">✓</span>
+        <span style="height:22px;border-radius:6px;background:#FBF0D9;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#9A6A0B">2/3</span>
+        <span style="height:22px;border-radius:6px;background:#FBF0D9;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#9A6A0B">…</span>
+        <span style="height:22px;border-radius:6px;background:#EEF1F7;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#9AA6C0">—</span>
+        <span style="font:600 12.5px 'IBM Plex Sans';color:#10203F">Yanis M.</span>
+        <span style="height:22px;border-radius:6px;background:#E6ECFD;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#1D48C7">à vérif.</span>
+        <span style="height:22px;border-radius:6px;background:#FBF0D9;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#9A6A0B">…</span>
+        <span style="height:22px;border-radius:6px;background:#FBE7E4;border:1.5px solid #C0392B;display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono';color:#C0392B">!</span>
+        <span style="height:22px;border-radius:6px;background:#EEF1F7;display:flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono';color:#9AA6C0">—</span>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">
+        <span style="display:inline-flex;align-items:center;gap:5px;font:500 10.5px 'IBM Plex Mono';color:#8A97B2"><span style="width:10px;height:10px;border-radius:3px;background:#E4F5EA;border:1px solid #0F7A3D"></span>complet</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font:500 10.5px 'IBM Plex Mono';color:#8A97B2"><span style="width:10px;height:10px;border-radius:3px;background:#FBF0D9;border:1px solid #9A6A0B"></span>en attente</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font:500 10.5px 'IBM Plex Mono';color:#8A97B2"><span style="width:10px;height:10px;border-radius:3px;background:#FBE7E4;border:1px solid #C0392B"></span>bloqué</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== OBJECTION / LE CALCUL ===================== -->
+<div style="background:#0E1B38;padding:72px 0">
+<div style="max-width:1160px;margin:0 auto;padding:0 24px;display:flex;gap:52px;align-items:center;flex-wrap:wrap">
+  <div style="flex:1.1;min-width:290px">
+    <div style="font:600 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#7FA0F0;margin-bottom:14px">Le calcul</div>
+    <h2 style="font:700 clamp(26px,3.2vw,38px)/1.12 'Schibsted Grotesk';letter-spacing:-.02em;margin:0 0 16px;color:#fff;text-wrap:balance">Récupérez 30 heures par échange</h2>
+    <p style="font:400 15.5px/1.65 'IBM Plex Sans';color:#C3CEE6;margin:0 0 12px;max-width:480px;text-wrap:pretty">Nos utilisateurs déclarent plus de 30 heures passées, par échange, à relancer les élèves et récupérer formulaires, signatures et documents. Eazyexchange fait ce travail à leur place.</p>
+    <p style="font:400 15.5px/1.65 'IBM Plex Sans';color:#C3CEE6;margin:0;max-width:480px;text-wrap:pretty">Le premier échange est gratuit : vous mesurez les heures gagnées avant de dépenser un euro.</p>
+  </div>
+  <div style="flex:1;min-width:300px;background:#10203F;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:26px 28px">
+    <div style="font:600 10px 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#7FA0F0;margin-bottom:18px">Ce que ces heures valent</div>
+    <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.14)"><span style="font:400 13.5px 'IBM Plex Sans';color:#C3CEE6">Relances, tri des pièces, saisie manuelle</span><span style="font:600 13px 'IBM Plex Mono';color:#fff;white-space:nowrap">≈ 30 h</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.14)"><span style="font:400 13.5px 'IBM Plex Sans';color:#C3CEE6">30 h de coordination, valorisées</span><span style="font:600 13px 'IBM Plex Mono';color:#fff;white-space:nowrap">≈ 300 €</span></div>
+    <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.14)"><span style="font:400 13.5px 'IBM Plex Sans';color:#C3CEE6">Temps gagné avec Eazyexchange</span><span style="font:600 13px 'IBM Plex Mono';color:#7EE3A4;white-space:nowrap">≈ 30 h / échange</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:16px 0 2px"><span style="font:600 14.5px 'IBM Plex Sans';color:#fff">Votre premier échange sur Eazyexchange</span><span style="font:700 26px 'Schibsted Grotesk';color:#7FA0F0;white-space:nowrap">0 €</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== DUAL PATH ===================== -->
+<div id="demarrer" style="max-width:1160px;margin:0 auto;padding:72px 24px 76px">
+  <h2 style="font:700 clamp(26px,3vw,34px)/1.12 'Schibsted Grotesk';letter-spacing:-.02em;margin:0 0 8px;text-wrap:balance">Deux façons de commencer</h2>
+  <p style="font:400 15.5px/1.6 'IBM Plex Sans';color:#5B6B8C;margin:0 0 30px">Selon que vous êtes prêt à essayer, ou que vous avez encore des questions.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap">
+    <div style="flex:1.2;min-width:290px;background:#fff;border:2px solid #2456E6;border-radius:16px;padding:28px 30px;display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+      <span style="display:inline-flex;padding:4px 11px;border-radius:999px;font:600 11px 'IBM Plex Mono';background:#E6ECFD;color:#1D48C7">Prêt à essayer</span>
+      <div style="font:700 22px 'Schibsted Grotesk';letter-spacing:-.015em">Lancez votre échange maintenant</div>
+      <div style="font:400 14.5px/1.55 'IBM Plex Sans';color:#5B6B8C">Créez votre échange, invitez vos élèves ce soir. Aucune carte bancaire, rien à installer.</div>
+      <a href="#" style="display:inline-flex;align-items:center;background:#2456E6;color:#fff;border-radius:11px;padding:14px 24px;font:600 15.5px 'IBM Plex Sans';text-decoration:none;margin-top:6px" style-hover="background:#1D48C7;color:#fff">Démarrer mon échange gratuit</a>
+    </div>
+    <div style="flex:1;min-width:270px;background:#FBFCFE;border:1px solid #E4E9F2;border-radius:16px;padding:28px 30px;display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+      <span style="display:inline-flex;padding:4px 11px;border-radius:999px;font:600 11px 'IBM Plex Mono';background:#EEF1F7;color:#5B6B8C">Encore des questions</span>
+      <div style="font:700 22px 'Schibsted Grotesk';letter-spacing:-.015em">Parlez-en d'abord à quelqu'un</div>
+      <div style="font:400 14.5px/1.55 'IBM Plex Sans';color:#5B6B8C">30 minutes avec un expert produit, une démo construite sur votre prochain échange.</div>
+      <a href="#" style="display:inline-flex;align-items:center;background:#fff;color:#10203F;border:1px solid #D6DCEA;border-radius:11px;padding:13px 22px;font:600 14.5px 'IBM Plex Sans';text-decoration:none;margin-top:6px" style-hover="border-color:#8A97B2;color:#10203F">Parler à un expert produit</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CLOSING + FOOTER ===================== -->
+<div style="background:#0E1B38">
+  <div style="max-width:1160px;margin:0 auto;padding:76px 24px 30px;text-align:center">
+    <h2 style="font:800 clamp(30px,4vw,46px)/1.08 'Schibsted Grotesk';letter-spacing:-.025em;color:#fff;margin:0 0 24px;text-wrap:balance">Votre prochain échange, sans la paperasse.</h2>
+    <a href="#demarrer" style="display:inline-flex;align-items:center;background:#2456E6;color:#fff;border-radius:11px;padding:16px 28px;font:600 16.5px 'IBM Plex Sans';text-decoration:none" style-hover="background:#3B6EF6;color:#fff">Démarrer mon échange gratuit</a>
+    <div style="font:500 12px 'IBM Plex Mono';color:#7FA0F0;margin-top:16px">Premier échange gratuit · sans carte bancaire</div>
+  </div>
+  <div style="max-width:1160px;margin:0 auto;padding:26px 24px 34px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:10px">
+      <span style="position:relative;display:block;width:26px;height:19px">
+        <span style="position:absolute;left:0;top:0;width:15px;height:15px;border-radius:50%;background:#fff"></span>
+        <span style="position:absolute;right:0;bottom:0;width:15px;height:15px;border-radius:50%;background:#4D79F0"></span>
+      </span>
+      <span style="font:700 16px 'Schibsted Grotesk';letter-spacing:-.02em;color:#fff">Eazyexchange</span>
+    </span>
+    <span style="display:flex;gap:22px;flex-wrap:wrap">
+      <a href="#produit" style="font:500 13px 'IBM Plex Sans';color:#8595B8;text-decoration:none" style-hover="color:#fff">Produit</a>
+      <a href="Eazyexchange%20Dashboard.dc.html" style="font:500 13px 'IBM Plex Sans';color:#8595B8;text-decoration:none" style-hover="color:#fff">Se connecter</a>
+    </span>
+    <span style="font:400 12px 'IBM Plex Mono';color:#5B6B8C">© 2026 Eazyexchange</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showSweep&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showSecondaryCta&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Produit&quot;}}">
+class Component extends DCLogic {
+  state = { filter: 'all' };
+  renderVals() {
+    const P = this.props, acc = '#2456E6', f = this.state.filter;
+    const pill = (label, k) => {
+      const m = { ok:['#0F7A3D','#E4F5EA'], warn:['#9A6A0B','#FBF0D9'], info:['#1D48C7','#E6ECFD'], bad:['#C0392B','#FBE7E4'], mut:['#5B6B8C','#EEF1F7'] }[k];
+      return { label, style: `display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font:600 11.5px 'IBM Plex Sans';color:${m[0]};background:${m[1]};white-space:nowrap` };
+    };
+    const data = [
+      { name:'Emma Martin',   stage:'missing',  c1:pill('Complet','ok'),      c2:pill('Complet','ok'),      c3:pill('Passeport manquant','bad'), c4:pill('Incomplet','bad'), flag:true },
+      { name:'Lucas Bernard', stage:'complete', c1:pill('Complet','ok'),      c2:pill('Complet','ok'),      c3:pill('Complet','ok'),             c4:pill('Complet','ok') },
+      { name:'Chloé Dubois',  stage:'pending',  c1:pill('Complet','ok'),      c2:pill('2 / 3','warn'),      c3:pill('En attente','warn'),        c4:pill('En attente','warn') },
+      { name:'Yanis Meziane', stage:'review',   c1:pill('À vérifier','info'), c2:pill('En attente','warn'), c3:pill('En attente','warn'),        c4:pill('À vérifier','info') },
+      { name:'Léa Fontaine',  stage:'pending',  c1:pill('Complet','ok'),      c2:pill('Complet','ok'),      c3:pill('En attente','warn'),        c4:pill('En attente','warn') },
+      { name:'Nora Haddad',   stage:'complete', c1:pill('Complet','ok'),      c2:pill('Complet','ok'),      c3:pill('Complet','ok'),             c4:pill('Complet','ok') },
+    ];
+    const chips = [ ['all','Élèves',24], ['complete','Dossiers complets',13], ['pending','En attente',6], ['review','À vérifier',3], ['missing','Document manquant',2] ];
+    const rows = f === 'all' ? data : data.filter(r => r.stage === f);
+    const total = chips.find(c => c[0] === f)[2];
+    const more = total - rows.length;
+    return {
+      showAnnotations: P.showAnnotations ?? true,
+      showSweep: P.showSweep ?? true,
+      showSecondaryCta: P.showSecondaryCta ?? true,
+      funnel: chips.map(([k, label, count]) => ({
+        label, count,
+        onClick: () => this.setState({ filter: k }),
+        style: `display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:${f===k?'9px 15px 8px':'10px 16px 9px'};border-radius:11px;background:#fff;cursor:pointer;text-align:left;border:${f===k?`2px solid ${acc}`:'1px solid #E4E9F2'};font-family:inherit`,
+        countColor: f === k ? acc : '#10203F',
+      })),
+      rows,
+      moreLabel: more > 0 ? `… + ${more} ${more > 1 ? 'autres élèves' : 'autre élève'}` : 'Tous les élèves sont affichés',
+    };
+  }
+}
+</script>
+</body>
+</html>

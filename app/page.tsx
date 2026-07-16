@@ -6,7 +6,7 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://eazyexchange.com'
 
 const title = "Eazyexchange — Gérez les dossiers d'échanges scolaires"
 const description =
-  'Eazyexchange centralise les candidatures, les formulaires et les documents de vos lycéens — pour que chaque dossier soit complet, à temps, sans relances sans fin.'
+  'Eazyexchange — candidatures, formulaires et relances automatiques pour les organisateurs d’échanges scolaires. Premier échange gratuit.'
 
 export const metadata: Metadata = {
   title,

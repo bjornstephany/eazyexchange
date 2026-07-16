@@ -43,16 +43,22 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Stop chasing')
   })
 
-  it('primary CTAs link to /signup and the login link to /login', () => {
+  it('primary CTAs link to /signup and the login links to /login', () => {
     render(<LandingPage />)
-    const ctas = screen.getAllByRole('link', { name: /Démarrer gratuitement/i })
-    expect(ctas.length).toBeGreaterThanOrEqual(2)
+    // Hero + "Prêt à essayer" card + closing band, plus the nav's short CTA.
+    const ctas = screen.getAllByRole('link', { name: /Démarrer mon échange gratuit/i })
+    expect(ctas.length).toBeGreaterThanOrEqual(3)
     ctas.forEach((l) => expect(l.getAttribute('href')).toBe('/signup'))
-    expect(screen.getByRole('link', { name: /Connexion/i }).getAttribute('href')).toBe('/login')
+    expect(screen.getByRole('link', { name: /Démarrer gratuitement/i }).getAttribute('href')).toBe('/signup')
+    const logins = screen.getAllByRole('link', { name: /Se connecter/i })
+    expect(logins.length).toBeGreaterThanOrEqual(2)
+    logins.forEach((l) => expect(l.getAttribute('href')).toBe('/login'))
   })
 
-  it('the features nav link targets the #features anchor', () => {
+  it('the product links (nav + footer) target the #produit anchor', () => {
     render(<LandingPage />)
-    expect(screen.getByRole('link', { name: /Fonctionnalités/i }).getAttribute('href')).toBe('#features')
+    const links = screen.getAllByRole('link', { name: /^Produit$/i })
+    expect(links.length).toBeGreaterThanOrEqual(2)
+    links.forEach((l) => expect(l.getAttribute('href')).toBe('#produit'))
   })
 })
