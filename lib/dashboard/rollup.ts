@@ -256,7 +256,7 @@ export function closedCount(rows: LifecycleRow[]): number {
 // Candidatures counts ALL received applications, including rejected/declined
 // (historical volume) — the hide-closed toggle only affects the table.
 export function lifecycleFunnel(apps: AppRow[], rollups: DossierRollup[], t: T): FunnelStage[] {
-  const complete = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
+  const complete = rollups.filter(r => dossierComplete(r)).length
   return [
     { key: 'all', label: t('organizer.dashboard.funnel.candidatures'), count: apps.length },
     { key: 'toreview', label: t('organizer.dashboard.pills.toExamine'), count: apps.filter(a => a.status === 'submitted').length },
@@ -277,7 +277,7 @@ export function lifecycleFilter(rows: LifecycleRow[], key: string | null, showCl
     case 'review': return visible.filter(r => r.kind === 'enrolled' && r.rollup.overall.kind === 'info')
     case 'late': return visible.filter(r => r.kind === 'enrolled' && r.rollup.late)
     case 'missingdocs': return visible.filter(r => r.kind === 'enrolled' && (r.rollup.docs === 'missing' || r.rollup.docs === 'pending'))
-    case 'complete': return visible.filter(r => r.kind === 'enrolled' && r.rollup.forms === 'complete' && r.rollup.docs === 'complete')
+    case 'complete': return visible.filter(r => r.kind === 'enrolled' && dossierComplete(r.rollup))
     default: return visible
   }
 }
@@ -346,7 +346,7 @@ export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], a
 // enrolled, candidature progress before that.
 export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[], t: T): { done: number; total: number; label: string } {
   if (rollups.length > 0) {
-    const done = rollups.filter(r => r.forms === 'complete' && r.docs === 'complete').length
+    const done = rollups.filter(r => dossierComplete(r)).length
     return { done, total: rollups.length, label: t('organizer.dashboard.progressDossiers', { done, total: rollups.length }) }
   }
   const total = apps.length

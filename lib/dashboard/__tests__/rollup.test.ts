@@ -271,6 +271,18 @@ describe('lifecycleFunnel', () => {
     expect(lifecycleFunnel([], [], t).map(s => s.label))
       .toEqual(['Candidatures', 'À examiner', 'Confirmés', 'À vérifier', 'En retard', 'Complets'])
   })
+  it('students with nothing assigned never count as complete', () => {
+    const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
+    const f = Object.fromEntries(lifecycleFunnel([], [empty], t).map(s => [s.key, s.count]))
+    expect(f.complete).toBe(0)
+    const complets = lifecycleFunnel([], [empty], t).find(s => s.key === 'complete')!
+    expect(complets.display).toBe('0 / 1')
+  })
+  it('a forms-only dossier with all forms approved still counts as complete', () => {
+    const TF: TemplateInfo[] = [{ id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' }]
+    const r = rollupStudent(student, TF, { 's1:f1': { assignmentId: 'a1', status: 'approved' } }, TODAY, t)
+    expect(lifecycleFunnel([], [r], t).find(s => s.key === 'complete')!.count).toBe(1)
+  })
 })
 
 describe('lifecycleFilter', () => {
@@ -296,6 +308,11 @@ describe('lifecycleFilter', () => {
     expect(lifecycleFilter(rows, 'late', false).map(r => r.name)).toEqual(['Zoé Blanc'])
     expect(lifecycleFilter(rows, 'missingdocs', false).map(r => r.name)).toEqual(['Zoé Blanc'])
     expect(lifecycleFilter(rows, 'complete', false).map(r => r.name)).toEqual(['Camille Laurent'])
+  })
+  it('"complete" excludes students with nothing assigned', () => {
+    const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
+    const rowsEmpty = buildLifecycleRows([], [{ id: 's9', full_name: 'Vide', email: 'v@x.fr' }], [empty], t)
+    expect(lifecycleFilter(rowsEmpty, 'complete', false)).toEqual([])
   })
 })
 
@@ -338,5 +355,9 @@ describe('exchangeProgress', () => {
   it('candidature progress before any enrollment', () => {
     expect(exchangeProgress([app('submitted'), app('accepted')], [], t))
       .toEqual({ done: 1, total: 2, label: '1 / 2 candidatures traitées' })
+  })
+  it('empty dossiers count in the total but never as done', () => {
+    const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
+    expect(exchangeProgress([], [empty], t)).toEqual({ done: 0, total: 1, label: '0 / 1 dossiers validés' })
   })
 })
