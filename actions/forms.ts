@@ -7,6 +7,8 @@ import type { FieldType, FormTemplate, FormField, DocumentSlot } from '@/types/d
 import type { TemplateVM, AssigneeRow, TemplateKind } from '@/lib/forms/rollup'
 import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
+import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(): Promise<string> {
@@ -89,22 +91,28 @@ async function getOwnedTemplate(supabase: SupabaseClient, templateId: string) {
 
 const PDF_MAX_BYTES = 10 * 1024 * 1024
 
-function requireValidPdf(file: File): void {
-  if (file.type !== 'application/pdf') throw new Error('Le fichier doit être un PDF.')
-  if (file.size > PDF_MAX_BYTES) throw new Error('Le PDF dépasse 10 Mo.')
+// Expected validation outcome — returned, never thrown (prod redacts throws).
+function pdfProblem(file: File): string | null {
+  if (file.type !== 'application/pdf') return 'Le fichier doit être un PDF.'
+  if (file.size > PDF_MAX_BYTES) return 'Le PDF dépasse 10 Mo.'
+  return null
 }
 
-async function uploadTemplatePdf(supabase: SupabaseClient, schoolId: string, templateId: string, file: File): Promise<string> {
-  requireValidPdf(file)
+async function uploadTemplatePdf(
+  supabase: SupabaseClient, schoolId: string, templateId: string, file: File,
+): Promise<{ ok: true; path: string } | { ok: false; message: string }> {
+  const problem = pdfProblem(file)
+  if (problem) return { ok: false, message: problem }
   const path = `${schoolId}/${templateId}.pdf`
   const { error } = await supabase.storage
     .from('form-templates')
     .upload(path, file, { upsert: true, contentType: 'application/pdf' })
-  if (error) throw new Error('Le téléversement du PDF a échoué. Réessayez.')
-  return path
+  // Bucket-side size/MIME rejections are expected outcomes, not crashes.
+  if (error) return { ok: false, message: 'Le téléversement du PDF a échoué. Réessayez.' }
+  return { ok: true, path }
 }
 
-export async function createDraftTemplate(formData: FormData): Promise<string> {
+export async function createDraftTemplate(formData: FormData): Promise<CreateTemplateResult> {
   const supabase = await createClient()
   const user = await requireUser()
   const schoolId = await assertOrganizer()
@@ -118,12 +126,13 @@ export async function createDraftTemplate(formData: FormData): Promise<string> {
   const conditionLabel = ((formData.get('condition_label') as string) ?? '').trim() || null
   const file = formData.get('file') as File | null
 
-  if (!['online', 'pdf', 'doc'].includes(kind)) throw new Error('Type de modèle invalide.')
-  if (!name) throw new Error('Donnez un nom au modèle.')
-  if (audience === 'conditional' && kind !== 'doc') throw new Error('Seules les pièces peuvent être conditionnelles.')
+  if (!['online', 'pdf', 'doc'].includes(kind)) return { ok: false, message: 'Type de modèle invalide.' }
+  if (!name) return { ok: false, message: 'Donnez un nom au modèle.' }
+  if (audience === 'conditional' && kind !== 'doc') return { ok: false, message: 'Seules les pièces peuvent être conditionnelles.' }
   if (kind === 'pdf') {
-    if (!file || file.size === 0) throw new Error('Téléversez le PDF à faire signer.')
-    requireValidPdf(file)
+    if (!file || file.size === 0) return { ok: false, message: 'Téléversez le PDF à faire signer.' }
+    const problem = pdfProblem(file)
+    if (problem) return { ok: false, message: problem }
   }
 
   const { data, error } = await supabase.from('form_templates').insert({
@@ -150,9 +159,14 @@ export async function createDraftTemplate(formData: FormData): Promise<string> {
       if (slotError) throw slotError
     }
     if (kind === 'pdf' && file) {
-      const path = await uploadTemplatePdf(supabase, schoolId, templateId, file)
+      const uploaded = await uploadTemplatePdf(supabase, schoolId, templateId, file)
+      if (!uploaded.ok) {
+        // Don't leave a half-configured draft behind.
+        await supabase.from('form_templates').delete().eq('id', templateId)
+        return { ok: false, message: uploaded.message }
+      }
       const { error: pathError } = await supabase
-        .from('form_templates').update({ template_file_path: path }).eq('id', templateId)
+        .from('form_templates').update({ template_file_path: uploaded.path }).eq('id', templateId)
       if (pathError) throw pathError
     }
   } catch (err) {
@@ -162,21 +176,21 @@ export async function createDraftTemplate(formData: FormData): Promise<string> {
   }
 
   revalidatePath(kind === 'doc' ? '/documents' : '/forms', 'layout')
-  return templateId
+  return { ok: true, id: templateId }
 }
 
 export async function updateTemplateMeta(
   id: string,
   meta: { name: string; description: string | null; deadline: string | null; condition_label: string | null },
-): Promise<void> {
+): Promise<TemplateActionResult> {
   const supabase = await createClient()
   await requireUser()
   const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
 
   const name = meta.name.trim()
-  if (!name) throw new Error('Le nom ne peut pas être vide.')
-  if (tmpl.status === 'active' && !meta.deadline) throw new Error('Un modèle actif doit garder une échéance.')
+  if (!name) return { ok: false, message: 'Le nom ne peut pas être vide.' }
+  if (tmpl.status === 'active' && !meta.deadline) return { ok: false, message: 'Un modèle actif doit garder une échéance.' }
 
   const { error } = await supabase.from('form_templates').update({
     name,
@@ -190,38 +204,41 @@ export async function updateTemplateMeta(
   // complete once the template is active.
   revalidatePath('/dashboard')
   revalidatePath('/exchanges')
+  return { ok: true }
 }
 
-export async function replaceTemplateFile(formData: FormData): Promise<void> {
+export async function replaceTemplateFile(formData: FormData): Promise<TemplateActionResult> {
   const supabase = await createClient()
   await requireUser()
   const id = formData.get('template_id') as string
   const file = formData.get('file') as File | null
   const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
-  if (tmpl.kind !== 'pdf') throw new Error('Ce modèle n’a pas de PDF.')
-  if (!file || file.size === 0) throw new Error('Choisissez un fichier PDF.')
+  if (tmpl.kind !== 'pdf') return { ok: false, message: 'Ce modèle n’a pas de PDF.' }
+  if (!file || file.size === 0) return { ok: false, message: 'Choisissez un fichier PDF.' }
 
-  const path = await uploadTemplatePdf(supabase, tmpl.school_id, id, file)
-  const { error } = await supabase.from('form_templates').update({ template_file_path: path }).eq('id', id)
+  const uploaded = await uploadTemplatePdf(supabase, tmpl.school_id, id, file)
+  if (!uploaded.ok) return { ok: false, message: uploaded.message }
+  const { error } = await supabase.from('form_templates').update({ template_file_path: uploaded.path }).eq('id', id)
   if (error) throw error
   revalidatePath('/forms', 'layout')
+  return { ok: true }
 }
 
-export async function activateTemplate(id: string, studentIds?: string[]): Promise<void> {
+export async function activateTemplate(id: string, studentIds?: string[]): Promise<TemplateActionResult> {
   const supabase = await createClient()
   await requireUser()
   const tmpl = await getOwnedTemplate(supabase, id)
   await assertExchangeWritable(supabase, tmpl.exchange_id)
-  if (tmpl.status === 'active') return
+  if (tmpl.status === 'active') return { ok: true }
 
-  if (!tmpl.deadline) throw new Error('Ajoutez une échéance avant d’activer.')
-  if (tmpl.kind === 'pdf' && !tmpl.template_file_path) throw new Error('Téléversez le PDF avant d’activer.')
-  if (tmpl.kind === 'online' && (tmpl.form_fields ?? []).length === 0) throw new Error('Ajoutez au moins une question avant d’activer.')
+  if (!tmpl.deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
+  if (tmpl.kind === 'pdf' && !tmpl.template_file_path) return { ok: false, message: MSG_PDF_REQUIRED }
+  if (tmpl.kind === 'online' && (tmpl.form_fields ?? []).length === 0) return { ok: false, message: MSG_QUESTIONS_REQUIRED }
 
   let chosen: string[] = []
   if (tmpl.audience === 'conditional') {
-    if (!studentIds || studentIds.length === 0) throw new Error('Choisissez au moins un élève concerné.')
+    if (!studentIds || studentIds.length === 0) return { ok: false, message: 'Choisissez au moins un élève concerné.' }
     // Only enrolled students of our school may be targeted.
     const { data: enrollments } = await supabase
       .from('exchange_enrollments').select('user_id').eq('exchange_id', tmpl.exchange_id)
@@ -231,7 +248,7 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
       .in('id', studentIds).eq('school_id', tmpl.school_id).eq('role', 'student')
     const validIds = new Set((validUsers ?? []).map((u) => u.id))
     chosen = studentIds.filter(sid => enrolledIds.has(sid) && validIds.has(sid))
-    if (chosen.length !== studentIds.length) throw new Error('Sélection invalide : élève non inscrit à cet échange.')
+    if (chosen.length !== studentIds.length) return { ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' }
   }
 
   const { error } = await supabase.from('form_templates').update({ status: 'active' }).eq('id', id)
@@ -248,6 +265,7 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
   // Newly active → now appears in the dashboard grid and exchange % complete.
   revalidatePath('/dashboard')
   revalidatePath('/exchanges')
+  return { ok: true }
 }
 
 export async function deleteTemplate(id: string): Promise<void> {

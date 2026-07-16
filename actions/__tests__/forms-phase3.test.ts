@@ -17,6 +17,9 @@ const templateUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({
 const assignmentInsert = vi.fn().mockResolvedValue({ error: null })
 const assignmentUpdate = vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ error: null }) })
 const templateDelete = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+const templateInsert = vi.fn().mockReturnValue({
+  select: () => ({ single: async () => ({ data: { id: 'new-tpl' }, error: null }) }),
+})
 
 const from = vi.fn((table: string) => {
   if (table === 'users') {
@@ -32,9 +35,13 @@ const from = vi.fn((table: string) => {
   if (table === 'form_templates') {
     return {
       select: () => ({ eq: () => ({ single: async () => ({ data: template }), maybeSingle: async () => ({ data: template }) }) }),
+      insert: templateInsert,
       update: templateUpdate,
       delete: templateDelete,
     }
+  }
+  if (table === 'document_slots') {
+    return { insert: async () => ({ error: null }) }
   }
   if (table === 'assignments') {
     return {
@@ -60,7 +67,8 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
+import { activateTemplate, deleteTemplate, remindTemplate, createDraftTemplate, updateTemplateMeta, replaceTemplateFile } from '@/actions/forms'
+import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -76,43 +84,87 @@ beforeEach(() => {
 })
 
 describe('activateTemplate', () => {
-  it('rejects a draft without deadline', async () => {
+  it('returns a structured error for a draft without deadline', async () => {
     template.deadline = null
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/échéance/i)
+    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_DEADLINE_REQUIRED })
     expect(templateUpdate).not.toHaveBeenCalled()
   })
-  it('rejects a pdf without file', async () => {
+  it('returns a structured error for a pdf without file', async () => {
     template.kind = 'pdf'
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/PDF/)
+    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_PDF_REQUIRED })
   })
-  it('rejects an online form without questions', async () => {
+  it('returns a structured error for an online form without questions', async () => {
     template.kind = 'online'
     template.form_fields = []
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/question/i)
+    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_QUESTIONS_REQUIRED })
   })
-  it('rejects a conditional doc without chosen students', async () => {
+  it('returns a structured error for a conditional doc without chosen students', async () => {
     template.audience = 'conditional'
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/élève/i)
+    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: 'Choisissez au moins un élève concerné.' })
   })
   it('activates an « all » doc and inserts no assignments itself (trigger does it)', async () => {
-    await activateTemplate('tpl-1')
+    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: true })
     expect(templateUpdate).toHaveBeenCalledWith({ status: 'active' })
     expect(assignmentInsert).not.toHaveBeenCalled()
   })
   it('activates a conditional doc inserting assignments for enrolled choices', async () => {
     template.audience = 'conditional'
     enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }, { id: 'stu-2', full_name: 'Hugo' }]
-    await activateTemplate('tpl-1', ['stu-1'])
+    await expect(activateTemplate('tpl-1', ['stu-1'])).resolves.toEqual({ ok: true })
     expect(assignmentInsert).toHaveBeenCalledWith([{ template_id: 'tpl-1', student_id: 'stu-1' }])
   })
-  it('rejects conditional choices that are not enrolled students', async () => {
+  it('returns a structured error for conditional choices that are not enrolled students', async () => {
     template.audience = 'conditional'
     enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }]
-    await expect(activateTemplate('tpl-1', ['stu-1', 'ghost'])).rejects.toThrow()
+    await expect(activateTemplate('tpl-1', ['stu-1', 'ghost'])).resolves.toEqual({ ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' })
   })
   it('non-organizer is rejected', async () => {
     role = 'student'
     await expect(activateTemplate('tpl-1')).rejects.toThrow(/Unauthorized/)
+  })
+})
+
+describe('createDraftTemplate — structured results', () => {
+  function fd(entries: Record<string, string>) {
+    const f = new FormData()
+    for (const [k, v] of Object.entries(entries)) f.set(k, v)
+    return f
+  }
+  it('returns a structured error when the name is empty', async () => {
+    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'doc', name: '  ' }))
+    expect(res).toEqual({ ok: false, message: 'Donnez un nom au modèle.' })
+    expect(templateInsert).not.toHaveBeenCalled()
+  })
+  it('returns a structured error for a pdf kind without file', async () => {
+    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'pdf', name: 'Autorisation' }))
+    expect(res).toEqual({ ok: false, message: 'Téléversez le PDF à faire signer.' })
+  })
+  it('returns the new id on success', async () => {
+    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'doc', name: 'Passeport' }))
+    expect(res).toEqual({ ok: true, id: 'new-tpl' })
+  })
+})
+
+describe('updateTemplateMeta / replaceTemplateFile — structured results', () => {
+  it('updateTemplateMeta returns a structured error when the name is empty', async () => {
+    const res = await updateTemplateMeta('tpl-1', { name: ' ', description: null, deadline: '2026-10-10', condition_label: null })
+    expect(res).toEqual({ ok: false, message: 'Le nom ne peut pas être vide.' })
+  })
+  it('updateTemplateMeta refuses removing the deadline of an active template', async () => {
+    template.status = 'active'
+    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: null, condition_label: null })
+    expect(res).toEqual({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
+  })
+  it('updateTemplateMeta returns ok on success', async () => {
+    const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null })
+    expect(res).toEqual({ ok: true })
+  })
+  it('replaceTemplateFile returns a structured error on a non-pdf template', async () => {
+    const f = new FormData()
+    f.set('template_id', 'tpl-1')
+    f.set('file', new File(['x'], 'x.pdf', { type: 'application/pdf' }))
+    const res = await replaceTemplateFile(f)  // template.kind is 'doc' in beforeEach
+    expect(res).toEqual({ ok: false, message: 'Ce modèle n’a pas de PDF.' })
   })
 })
 
