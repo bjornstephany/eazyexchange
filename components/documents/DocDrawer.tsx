@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
-import { reqPill, progressLabel, docDrawerRows, type TemplateVM } from '@/lib/forms/rollup'
+import { reqPill, progressLabel, docDrawerRows, activationHints, type TemplateVM } from '@/lib/forms/rollup'
 import { frShortDate, p } from '@/lib/dashboard/rollup'
 import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
 
@@ -34,6 +34,7 @@ export function DocDrawer({
 
   if (!vm) return null
   const { rows, restCount } = docDrawerRows(vm.assignees)
+  const hints = activationHints(vm)
   const isDraft = vm.status === 'draft'
   const needsPicker = vm.audience === 'conditional'
 
@@ -165,6 +166,20 @@ export function DocDrawer({
           )}
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
+
+        {hints.length > 0 && (
+          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
+            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
+            <ul className="flex flex-col gap-1">
+              {hints.map((h) => (
+                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
+                  {h}{' '}
+                  <Link href={`/documents/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
           {isDraft ? (

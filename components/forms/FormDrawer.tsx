@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from './TemplateIcon'
-import { typePill, statusPill, type TemplateVM } from '@/lib/forms/rollup'
+import { typePill, statusPill, activationHints, type TemplateVM } from '@/lib/forms/rollup'
 import { activateTemplate, deleteTemplate, getTemplateFileUrl } from '@/actions/forms'
 
 // Right preview drawer (460px) for a form template, per handoff.
@@ -20,6 +20,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   }, [vm, onClose])
 
   if (!vm) return null
+  const hints = activationHints(vm)
 
   async function run(fn: () => Promise<unknown>, closeAfter = false) {
     setBusy(true)
@@ -108,6 +109,20 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
 
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
+
+        {hints.length > 0 && (
+          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
+            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
+            <ul className="flex flex-col gap-1">
+              {hints.map((h) => (
+                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
+                  {h}{' '}
+                  <Link href={`/forms/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
           {vm.status === 'draft' && (

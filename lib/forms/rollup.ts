@@ -2,6 +2,7 @@
 // Supabase. Pill vocabulary and counting rules come from the Phase-3 spec:
 // forms « reçus » = submitted|approved; docs « fournis » = approved only.
 import { p, type Pill } from '@/lib/dashboard/rollup'
+import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 
 export type TemplateKind = 'online' | 'pdf' | 'doc'
 export type AssigneeRow = {
@@ -23,6 +24,19 @@ export type TemplateVM = {
   template_file_path: string | null
   fields: string[]
   assignees: AssigneeRow[]
+}
+
+// What still blocks activation of a draft — same wording as the action's
+// structured messages, so the pre-click hint and the post-click error match.
+export function activationHints(
+  t: Pick<TemplateVM, 'status' | 'kind' | 'deadline' | 'template_file_path' | 'fields'>,
+): string[] {
+  if (t.status !== 'draft') return []
+  const hints: string[] = []
+  if (!t.deadline) hints.push(MSG_DEADLINE_REQUIRED)
+  if (t.kind === 'pdf' && !t.template_file_path) hints.push(MSG_PDF_REQUIRED)
+  if (t.kind === 'online' && t.fields.length === 0) hints.push(MSG_QUESTIONS_REQUIRED)
+  return hints
 }
 
 export function typePill(kind: TemplateKind): Pill {

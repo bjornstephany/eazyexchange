@@ -81,4 +81,11 @@ describe('DocsView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Activer' }))
     expect(await screen.findAllByText('Ajoutez une échéance avant d’activer.')).not.toHaveLength(0)
   })
+  it('drawer lists the missing-deadline hint for an unready draft doc', () => {
+    const draft = doc({ id: 'd9', status: 'draft', deadline: null, assignees: [] })
+    render(<DocsView exchangeId="ex1" templates={[draft]} studentCount={3} enrolledStudents={students} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Détail' }))
+    expect(screen.getByText(/Ajoutez une échéance avant d’activer\./)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Modifier le modèle' })).toHaveAttribute('href', '/documents/d9')
+  })
 })
