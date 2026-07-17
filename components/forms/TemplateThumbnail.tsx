@@ -82,10 +82,13 @@ async function renderFirstPage(url: string): Promise<string> {
     return canvas.toDataURL('image/png')
   } finally {
     // In the installed pdfjs-dist major, `destroy()` lives on the loading
-    // task (getDocument(...)), not on the resolved PDFDocumentProxy — so the
-    // real API has no destroy() to call here. Guarded for forward/backward
-    // compat with majors that do expose it on the resolved document.
-    const maybeDestroy = (doc as { destroy?: () => unknown }).destroy
-    if (typeof maybeDestroy === 'function') void maybeDestroy.call(doc)
+    // task, not the resolved PDFDocumentProxy — but the proxy DOES expose
+    // `cleanup()`, which frees the document's main- and worker-thread
+    // resources (safe here: rendering has completed). Do NOT destroy the
+    // loading task instead — that would tear down the shared worker cached
+    // in GlobalWorkerOptions.workerPort and break subsequent thumbnails.
+    // Guarded so majors/mocks without cleanup() degrade to a no-op.
+    const maybeCleanup = (doc as { cleanup?: () => unknown }).cleanup
+    if (typeof maybeCleanup === 'function') void maybeCleanup.call(doc)
   }
 }

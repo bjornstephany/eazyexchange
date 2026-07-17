@@ -12,7 +12,7 @@ vi.mock('@/actions/forms', () => ({
 // (jsdom has no Worker).
 const renderPage = vi.fn(() => ({ promise: Promise.resolve() }))
 const page = { getViewport: vi.fn(() => ({ width: 210, height: 297 })), render: renderPage }
-const doc = { getPage: vi.fn(async () => page), destroy: vi.fn() }
+const doc = { getPage: vi.fn(async () => page), cleanup: vi.fn() }
 const getDocument = vi.fn((..._args: unknown[]) => ({ promise: Promise.resolve(doc) }))
 vi.mock('pdfjs-dist', () => ({
   GlobalWorkerOptions: { workerPort: {}, workerSrc: 'stub' },
