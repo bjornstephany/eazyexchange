@@ -12,7 +12,6 @@ import {
   type CreateExchangeResult,
 } from '@/lib/billing/exchange-limit'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
-import { seedStandardTemplates } from '@/lib/forms/standard-library'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
@@ -92,12 +91,6 @@ export async function createExchange(formData: FormData): Promise<CreateExchange
     .select('id')
     .single()
   if (error) throw error
-
-  await seedStandardTemplates(supabase, {
-    exchangeId: createdExchange.id,
-    schoolId: profile.school_id,
-    userId: user.id,
-  })
 
   // Optional collaborator invites from the modal — owner-only, best-effort:
   // a failed invite never fails the creation, it is returned for inline display.

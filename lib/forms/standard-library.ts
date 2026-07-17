@@ -1,8 +1,8 @@
-// Canonical standard-template library, seeded as drafts for every new
-// exchange. Reworked 2026-07-15 to the real program; the SQL backfill in
-// 20260716102357 is a frozen snapshot of this data for exchanges that existed
-// before. Templates seed WITHOUT files — the PDFs are school-specific, so each
-// school's organizer attaches their own per exchange via the UI.
+// Canonical standard-template library. Since the forms-page redesign
+// (2026-07-16) nothing is auto-seeded: organizers add entries from the
+// library drawer (actions/forms.ts → addStandardTemplate). Templates are
+// added WITHOUT files — the PDFs are school-specific, so each school's
+// organizer attaches their own per exchange via the UI.
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type StandardField = { label: string; field_type: 'text' | 'checkbox' }
@@ -122,16 +122,4 @@ export async function insertStandardTemplate(
     if (fieldError) throw fieldError
   }
   return { id: templateId }
-}
-
-// Insert the whole library as drafts for a fresh exchange. Caller must be an
-// organizer of `schoolId` (RLS enforces it). Drafts have no deadline and no
-// assignments (the gated triggers skip them).
-export async function seedStandardTemplates(
-  supabase: SupabaseClient,
-  opts: { exchangeId: string; schoolId: string; userId: string },
-): Promise<void> {
-  for (const std of STANDARD_TEMPLATES) {
-    await insertStandardTemplate(supabase, std, opts)
-  }
 }

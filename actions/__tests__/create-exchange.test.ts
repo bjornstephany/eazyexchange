@@ -42,12 +42,6 @@ function makeClient() {
           },
         }
       }
-      if (table === 'form_templates') {
-        return { insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'tpl-1' }, error: null }) }) }) }
-      }
-      if (table === 'document_slots' || table === 'form_fields') {
-        return { insert: async () => ({ error: null }) }
-      }
       throw new Error('unexpected table ' + table)
     },
   }
@@ -93,7 +87,7 @@ describe('createExchange own-school fetch', () => {
       name: 'France–Canada', year: new Date().getFullYear(),
       school_a_id: 's-own', school_b_id: null,
     })
-    expect(calls.fromTables).toContain('form_templates')
+    expect(calls.fromTables).not.toContain('form_templates')
   })
 
   it('surfaces a read error instead of silently proceeding', async () => {
