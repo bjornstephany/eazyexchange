@@ -122,6 +122,12 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('invite-modal')).toBeInTheDocument()
   })
 
+  it('empty state offers both CTAs: invite (primary) and prepare forms & documents (link to /forms)', () => {
+    renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
+    expect(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Préparer les formulaires & documents' })).toHaveAttribute('href', '/forms')
+  })
+
   it('keeps the invite modal mounted when opening applications flips neverOpened', () => {
     const { rerender } = renderWithIntl(
       <OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />

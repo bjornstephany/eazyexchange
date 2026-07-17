@@ -120,13 +120,21 @@ export function OverviewView(props: OverviewProps) {
           <p className="mt-2 max-w-[420px] text-[15px] text-muted-foreground">
             {t('dashboard.startBody')}
           </p>
-          <button
-            type="button"
-            onClick={() => setInviteOpen(true)}
-            className="mt-6 flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
-          >
-            <span className="text-base leading-none">+</span> {t('dashboard.inviteCta')}
-          </button>
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              className="flex h-[42px] items-center gap-1.5 rounded-[9px] bg-brand px-5 text-[14px] font-semibold text-white hover:bg-brand-hover"
+            >
+              <span className="text-base leading-none">+</span> {t('dashboard.inviteCta')}
+            </button>
+            <Link
+              href="/forms"
+              className="flex h-[42px] items-center rounded-[9px] border border-frame-dashed bg-card px-5 text-[14px] font-semibold text-navy hover:bg-hint"
+            >
+              {t('dashboard.prepareFormsCta')}
+            </Link>
+          </div>
         </div>
       ) : (
         <div>
