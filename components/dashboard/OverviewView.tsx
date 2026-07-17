@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent, LifecycleRow } from '@/lib/dashboard/rollup'
+import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent } from '@/lib/dashboard/rollup'
 import {
   buildLifecycleRows,
   lifecycleFunnel,
@@ -56,6 +57,7 @@ export function OverviewView(props: OverviewProps) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const tr = useTranslations()
+  const router = useRouter()
   const [filter, setFilter] = useState<string | null>(null)
   const [showClosed, setShowClosed] = useState(false)
   const [selected, setSelected] = useState<DrawerSubject | null>(null)
@@ -67,11 +69,7 @@ export function OverviewView(props: OverviewProps) {
       const status = cellMap[`${rollup.studentId}:${tmpl.id}`]?.status
       return { label: tmpl.name, group, pill: checklistItemPill(group, status, c) }
     })
-    return { kind: 'student', rollup, items }
-  }
-
-  function rowSubject(row: LifecycleRow): DrawerSubject {
-    return row.kind === 'applicant' ? { kind: 'application', app: row.app } : studentSubject(row.rollup)
+    return { rollup, items }
   }
 
   const rows = buildLifecycleRows(apps, students, rollups, tr)
@@ -201,7 +199,11 @@ export function OverviewView(props: OverviewProps) {
             {filteredRows.map((row) => (
               <div
                 key={row.key}
-                onClick={() => setSelected(rowSubject(row))}
+                onClick={() =>
+                  row.kind === 'applicant'
+                    ? router.push(`/applications?id=${row.app.id}`)
+                    : setSelected(studentSubject(row.rollup))
+                }
                 className={`grid ${GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
               >
                 <span className="font-medium text-navy">{row.name}</span>

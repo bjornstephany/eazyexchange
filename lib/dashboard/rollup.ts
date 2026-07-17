@@ -38,7 +38,6 @@ export function p(n: number): string {
 }
 
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
-const ACCEPTED_GROUP_STATUSES = ['accepted', 'maybe', 'declined', 'enrolling', 'enrolled']
 
 // The funnel's Accepted group: everyone the organizer accepted who hasn't
 // declined or been rejected.
@@ -147,36 +146,6 @@ export function nextDeadline(rollups: DossierRollup[]): string | null {
     if (earliest === null || r.due < earliest) earliest = r.due
   }
   return earliest
-}
-
-export function timelineFor(app: AppRow, t: T): { dot: Pill['kind']; title: string; sub: string }[] {
-  const entries: { dot: Pill['kind']; title: string; sub: string }[] = [
-    { dot: 'ok', title: t('organizer.dashboard.timeline.received'), sub: frShortDate(app.submitted_at) },
-  ]
-
-  const { status } = app
-  if (status === 'submitted') {
-    entries.push({ dot: 'neutral', title: t('organizer.dashboard.timeline.awaitingReview'), sub: t('organizer.dashboard.timeline.awaitingReviewSub') })
-    return entries
-  }
-  if (status === 'rejected') {
-    entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.rejected'), sub: '' })
-    return entries
-  }
-  if (ACCEPTED_GROUP_STATUSES.includes(status)) {
-    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.accepted'), sub: '' })
-    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.inviteSent'), sub: t('organizer.dashboard.timeline.inviteSentSub') })
-    if (status === 'accepted') {
-      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.awaitingResponse'), sub: '' })
-    } else if (CONFIRMED_STATUSES.includes(status)) {
-      entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.respondedYes'), sub: t('organizer.dashboard.timeline.respondedYesSub') })
-    } else if (status === 'maybe') {
-      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.respondedMaybe'), sub: '' })
-    } else if (status === 'declined') {
-      entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.respondedNo'), sub: '' })
-    }
-  }
-  return entries
 }
 
 // ---- Unified lifecycle view (single dashboard, no phases) ----

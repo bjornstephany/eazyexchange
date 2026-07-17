@@ -4,7 +4,7 @@ import fr from '@/messages/fr.json'
 import {
   frShortDate,
   rollupStudent, formsPill, docsPill, dossierComplete,
-  timelineFor, nextDeadline, p,
+  nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
   lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
   type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent, type DossierRollup,
@@ -156,33 +156,6 @@ describe('copy builders', () => {
   })
   it('p pluralizes only above 1', () => {
     expect(p(0)).toBe(''); expect(p(1)).toBe(''); expect(p(2)).toBe('s')
-  })
-})
-
-describe('timelineFor', () => {
-  it('submitted app', () => {
-    expect(timelineFor(app('submitted'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'En attente d’examen'])
-  })
-  it('rejected app', () => {
-    expect(timelineFor(app('rejected'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'Candidature refusée'])
-  })
-  it('accepted app (awaiting response)', () => {
-    expect(timelineFor(app('accepted'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'Candidature acceptée', 'Invitation envoyée automatiquement', 'En attente de réponse'])
-  })
-  it('maybe app', () => {
-    expect(timelineFor(app('maybe'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'Candidature acceptée', 'Invitation envoyée automatiquement', 'A répondu : Peut-être'])
-  })
-  it('declined app', () => {
-    expect(timelineFor(app('declined'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'Candidature acceptée', 'Invitation envoyée automatiquement', 'A répondu : Non'])
-  })
-  it('confirmed app has the full happy path', () => {
-    expect(timelineFor(app('enrolled'), t).map(e => e.title))
-      .toEqual(['Candidature reçue', 'Candidature acceptée', 'Invitation envoyée automatiquement', 'A répondu : Oui'])
   })
 })
 

@@ -4,7 +4,8 @@ import { NextIntlClientProvider } from 'next-intl'
 import fr from '@/messages/fr.json'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
-vi.mock('@/actions/applications-review', () => ({ acceptApplication: vi.fn(), rejectApplication: vi.fn() }))
+const push = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
 vi.mock('@/components/dashboard/InviteModal', () => ({
   InviteModal: ({ open }: { open: boolean }) => (open ? <div>invite-modal</div> : null),
 }))
@@ -76,13 +77,19 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.queryByText('Nina Rey')).toBeNull()
   })
 
-  it('row click opens the right drawer per row kind', () => {
+  it('applicant row click navigates to the application page', () => {
+    push.mockClear()
     renderWithIntl(<OverviewView {...base} />)
     fireEvent.click(screen.getByText('Léa Moreau'))
-    expect(screen.getByText('Parcours')).toBeInTheDocument() // application timeline
-    fireEvent.click(screen.getByTestId('drawer-backdrop'))
+    expect(push).toHaveBeenCalledWith('/applications?id=1')
+  })
+
+  it('enrolled row click opens the checklist drawer — with no application branch', () => {
+    renderWithIntl(<OverviewView {...base} />)
     fireEvent.click(screen.getByText('Camille Laurent'))
-    expect(screen.getByText(/Formulaires & documents/)).toBeInTheDocument() // student checklist
+    expect(screen.getByText(/Formulaires & documents/)).toBeInTheDocument()
+    expect(screen.queryByText('Parcours')).toBeNull() // no timeline heading
+    expect(screen.queryByRole('button', { name: 'Accepter & inviter' })).toBeNull()
   })
 
   it('right rail has action cards but no reminder note and no phase stepper', () => {
