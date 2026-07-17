@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { APPLICATION_SECTIONS, missingRequiredApplication, parentGroupFields, type AppField } from '@/lib/application-form'
+import { APPLICATION_SECTIONS, missingRequiredApplication, overLimitApplicationFields, parentGroupFields, type AppField } from '@/lib/application-form'
 import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/apply'
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
 import { Logo } from '@/components/brand/Logo'
@@ -20,8 +20,8 @@ interface Props {
 }
 
 const T = {
-  en: { intro: 'Fill out the form below — your answers are saved automatically as you go.', noneHint: 'Every field is required — if a question doesn’t apply to you, answer "none".', saved: 'SAVED ✓', saving: 'SAVING…', badge: 'Application', submit: 'Submit my application', resend: 'Resend link', reassure: 'Progress saved automatically. We emailed you a link in case you switch devices.', submitting: 'Sending…', missing: 'Please complete all required fields.', unexpected: 'An unexpected error occurred.', done: 'Thank you! Your application has been submitted.', remind: "We've emailed you a link to continue your application anytime.", yes: 'Yes', no: 'No', parentHelper: 'Fill in at least one parent completely.' },
-  fr: { intro: 'Remplis le formulaire ci-dessous — tes réponses sont enregistrées automatiquement au fur et à mesure.', noneHint: 'Tous les champs sont obligatoires — si une question ne te concerne pas, indique « aucun ».', saved: 'ENREGISTRÉ ✓', saving: 'ENREGISTREMENT…', badge: 'Candidature', submit: 'Envoyer ma candidature', resend: 'Renvoyer le lien', reassure: 'Progression enregistrée automatiquement. Nous t’avons envoyé un lien par e-mail au cas où tu changes d’appareil.', submitting: 'Envoi…', missing: 'Veuillez remplir tous les champs obligatoires.', unexpected: 'Une erreur est survenue.', done: 'Merci ! Ta candidature a été envoyée.', remind: 'Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.', yes: 'Oui', no: 'Non', parentHelper: 'Remplissez au moins un parent en entier.' },
+  en: { intro: 'Fill out the form below — your answers are saved automatically as you go.', noneHint: 'Every field is required — if a question doesn’t apply to you, answer "none".', saved: 'SAVED ✓', saving: 'SAVING…', badge: 'Application', submit: 'Submit my application', resend: 'Resend link', reassure: 'Progress saved automatically. We emailed you a link in case you switch devices.', submitting: 'Sending…', missing: 'Please complete all required fields.', tooLong: 'Some answers exceed the character limit.', unexpected: 'An unexpected error occurred.', done: 'Thank you! Your application has been submitted.', remind: "We've emailed you a link to continue your application anytime.", yes: 'Yes', no: 'No', parentHelper: 'Fill in at least one parent completely.' },
+  fr: { intro: 'Remplis le formulaire ci-dessous — tes réponses sont enregistrées automatiquement au fur et à mesure.', noneHint: 'Tous les champs sont obligatoires — si une question ne te concerne pas, indique « aucun ».', saved: 'ENREGISTRÉ ✓', saving: 'ENREGISTREMENT…', badge: 'Candidature', submit: 'Envoyer ma candidature', resend: 'Renvoyer le lien', reassure: 'Progression enregistrée automatiquement. Nous t’avons envoyé un lien par e-mail au cas où tu changes d’appareil.', submitting: 'Envoi…', missing: 'Veuillez remplir tous les champs obligatoires.', tooLong: 'Certaines réponses dépassent la limite de caractères.', unexpected: 'Une erreur est survenue.', done: 'Merci ! Ta candidature a été envoyée.', remind: 'Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.', yes: 'Oui', no: 'Non', parentHelper: 'Remplissez au moins un parent en entier.' },
 }
 
 const PARENT_FIELD_IDS = [...parentGroupFields('father'), ...parentGroupFields('mother')].map(f => f.id)
@@ -68,14 +68,26 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
 
   async function onSubmit() {
     const miss = missingRequiredApplication(data, { hasPhoto })
-    setMissing(miss)
-    if (miss.length) {
-      setError(t.missing)
-      document.getElementById(`field-${miss[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    const over = overLimitApplicationFields(data)
+    const flagged = [...miss, ...over]
+    setMissing(flagged)
+    if (flagged.length) {
+      setError(miss.length ? t.missing : t.tooLong)
+      document.getElementById(`field-${flagged[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
       return
     }
     setSubmitting(true); setError(null)
-    try { await submitApplication(token, data); clearResumeToken(slug); setDone(true) }
+    try {
+      const res = await submitApplication(token, data)
+      if (!res.ok) {
+        setMissing(res.overLimit)
+        setError(t.tooLong)
+        document.getElementById(`field-${res.overLimit[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+        setSubmitting(false)
+        return
+      }
+      clearResumeToken(slug); setDone(true)
+    }
     catch (err: unknown) { setError(err instanceof Error ? err.message : t.unexpected); setSubmitting(false) }
   }
 
@@ -85,7 +97,17 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
     const invalid = missing.includes(f.id)
     const inputBorder = invalid ? 'border-[#C0392B]' : 'border-[#C4CDE0]'
     if (f.type === 'textarea') {
-      return <Textarea id={f.id} value={data[f.id] ?? ''} aria-invalid={invalid || undefined} onChange={e => set(f.id, e.target.value)} className={`rounded-[10px] ${inputBorder}`} />
+      const len = (data[f.id] ?? '').length
+      return (
+        <>
+          <Textarea id={f.id} value={data[f.id] ?? ''} maxLength={f.maxLength} aria-invalid={invalid || undefined} onChange={e => set(f.id, e.target.value)} className={`rounded-[10px] ${inputBorder}`} />
+          {f.maxLength != null && (
+            <span className={`self-end font-mono text-[11px] ${len > f.maxLength ? 'font-semibold text-[#C0392B]' : 'text-[#8A97B2]'}`}>
+              {len}/{f.maxLength}
+            </span>
+          )}
+        </>
+      )
     }
     if (f.type === 'yesno') {
       return (

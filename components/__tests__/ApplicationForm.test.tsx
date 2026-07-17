@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('@/actions/apply', () => ({
-  saveApplicationDraft: vi.fn(async () => {}),
-  submitApplication: vi.fn(async () => {}),
+  saveApplicationDraft: vi.fn(async () => ({ ok: true as const })),
+  submitApplication: vi.fn(async () => ({ ok: true as const })),
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
   sendApplicationResumeLink: vi.fn(async () => {}),
 }))
@@ -82,5 +82,27 @@ describe('ApplicationForm', () => {
     expect(screen.queryByText(/adresse où sera accueilli le correspondant/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Séparé' }))
     expect(screen.getByText(/adresse où sera accueilli le correspondant/i)).toBeInTheDocument()
+  })
+
+  it('shows a live character counter on limited profile textareas', () => {
+    renderForm({ initialData: { lived_abroad: 'abc' } })
+    expect(screen.getByText('3/150')).toBeInTheDocument()
+  })
+
+  it('blocks submit client-side when an answer exceeds its limit', async () => {
+    const user = userEvent.setup()
+    renderForm({ initialData: { lived_abroad: 'x'.repeat(151) } })
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/dépassent la limite/i)).toBeInTheDocument()
+    expect(submitApplication).not.toHaveBeenCalled()
+  })
+
+  it('surfaces a server-side over-limit rejection without marking the form done', async () => {
+    const user = userEvent.setup()
+    vi.mocked(submitApplication).mockResolvedValueOnce({ ok: false, overLimit: ['sports'] })
+    renderForm()
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/dépassent la limite/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ta candidature a été envoyée/i)).not.toBeInTheDocument()
   })
 })
