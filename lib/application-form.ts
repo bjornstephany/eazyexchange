@@ -7,6 +7,7 @@ export interface AppField {
   required?: boolean
   group?: 'father' | 'mother'
   options?: { value: string; label: { en: string; fr: string } }[]
+  maxLength?: number
 }
 
 export interface AppSection {
@@ -88,20 +89,20 @@ export const APPLICATION_SECTIONS: AppSection[] = [
     id: 'profile',
     title: L('Student profile', "Profil de l'élève"),
     fields: [
-      { id: 'lived_abroad', type: 'textarea', label: L('If you have ever lived abroad, describe where and when', "Si vous avez déjà vécu à l'étranger, décrivez où et quand"), required: true },
-      { id: 'countries_with_parents', type: 'textarea', label: L('Which countries have you visited with your parents?', 'Quels pays avez-vous visités avec vos parents ?'), required: true },
-      { id: 'countries_without_parents', type: 'textarea', label: L('Which countries have you visited without your parents, and for how long?', 'Quels pays avez-vous visités sans vos parents, et combien de temps ?'), required: true },
-      { id: 'sports', type: 'textarea', label: L('Sports you do and hours per week', 'Sports pratiqués et heures par semaine'), required: true },
-      { id: 'activities', type: 'textarea', label: L('After-school activities, clubs, or hobbies and hours per week', 'Activités, clubs ou loisirs et heures par semaine'), required: true },
-      { id: 'instruments', type: 'textarea', label: L('Do you play any instrument or sing?', "Jouez-vous d'un instrument ou chantez-vous ?"), required: true },
-      { id: 'family_activities', type: 'textarea', label: L('Weekend/holiday family activities', 'Activités familiales le week-end / pendant les vacances'), required: true },
-      { id: 'spare_time', type: 'textarea', label: L('What do you like to do most in your spare time?', 'Que préférez-vous faire pendant votre temps libre ?'), required: true },
-      { id: 'adjectives', type: 'textarea', label: L('Three adjectives a close friend would use to describe you', "Trois adjectifs qu'un ami proche utiliserait pour vous décrire"), required: true },
-      { id: 'recharge', type: 'textarea', label: L('How do you recharge — around people or solo? Explain', 'Comment vous ressourcez-vous — entouré ou seul ? Expliquez'), required: true },
-      { id: 'todo_list', type: 'textarea', label: L('Three items on your life "to-do" list', 'Trois choses sur votre liste de choses à faire dans la vie'), required: true },
-      { id: 'ideal_partner', type: 'textarea', label: L('What would your ideal exchange partner be like?', 'Comment serait votre correspondant idéal ?'), required: true },
-      { id: 'share_when_hosting', type: 'textarea', label: L('What would you like to share with your partner when hosting?', "Que souhaiteriez-vous partager avec votre correspondant en l'accueillant ?"), required: true },
-      { id: 'anything_else', type: 'textarea', label: L('Anything else you would like to add?', 'Souhaitez-vous ajouter autre chose ?'), required: true },
+      { id: 'lived_abroad', type: 'textarea', label: L('If you have ever lived abroad, describe where and when', "Si vous avez déjà vécu à l'étranger, décrivez où et quand"), required: true, maxLength: 150 },
+      { id: 'countries_with_parents', type: 'textarea', label: L('Which countries have you visited with your parents?', 'Quels pays avez-vous visités avec vos parents ?'), required: true, maxLength: 150 },
+      { id: 'countries_without_parents', type: 'textarea', label: L('Which countries have you visited without your parents, and for how long?', 'Quels pays avez-vous visités sans vos parents, et combien de temps ?'), required: true, maxLength: 150 },
+      { id: 'sports', type: 'textarea', label: L('Sports you do and hours per week', 'Sports pratiqués et heures par semaine'), required: true, maxLength: 150 },
+      { id: 'activities', type: 'textarea', label: L('After-school activities, clubs, or hobbies and hours per week', 'Activités, clubs ou loisirs et heures par semaine'), required: true, maxLength: 150 },
+      { id: 'instruments', type: 'textarea', label: L('Do you play any instrument or sing?', "Jouez-vous d'un instrument ou chantez-vous ?"), required: true, maxLength: 150 },
+      { id: 'family_activities', type: 'textarea', label: L('Weekend/holiday family activities', 'Activités familiales le week-end / pendant les vacances'), required: true, maxLength: 150 },
+      { id: 'spare_time', type: 'textarea', label: L('What do you like to do most in your spare time?', 'Que préférez-vous faire pendant votre temps libre ?'), required: true, maxLength: 150 },
+      { id: 'adjectives', type: 'textarea', label: L('Three adjectives a close friend would use to describe you', "Trois adjectifs qu'un ami proche utiliserait pour vous décrire"), required: true, maxLength: 150 },
+      { id: 'recharge', type: 'textarea', label: L('How do you recharge — around people or solo? Explain', 'Comment vous ressourcez-vous — entouré ou seul ? Expliquez'), required: true, maxLength: 150 },
+      { id: 'todo_list', type: 'textarea', label: L('Three items on your life "to-do" list', 'Trois choses sur votre liste de choses à faire dans la vie'), required: true, maxLength: 150 },
+      { id: 'ideal_partner', type: 'textarea', label: L('What would your ideal exchange partner be like?', 'Comment serait votre correspondant idéal ?'), required: true, maxLength: 150 },
+      { id: 'share_when_hosting', type: 'textarea', label: L('What would you like to share with your partner when hosting?', "Que souhaiteriez-vous partager avec votre correspondant en l'accueillant ?"), required: true, maxLength: 150 },
+      { id: 'anything_else', type: 'textarea', label: L('Anything else you would like to add?', 'Souhaitez-vous ajouter autre chose ?'), required: true, maxLength: 150 },
     ],
   },
 ]
@@ -152,6 +153,15 @@ export function missingRequiredApplication(
   if (opts?.hasPhoto === false) missing.push('photo')
 
   return missing
+}
+
+// Ids of fields whose answer exceeds their per-field maxLength. Pure server-side
+// backstop of the client-side maxLength attribute; String() coercion mirrors
+// hasOverlongAnswer (client payloads aren't runtime-typed).
+export function overLimitApplicationFields(data: Record<string, string>): string[] {
+  return allApplicationFields()
+    .filter(f => f.maxLength != null && String(data[f.id] ?? '').length > f.maxLength)
+    .map(f => f.id)
 }
 
 // An applicant's display name from their submitted application data. Empty when

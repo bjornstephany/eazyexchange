@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   APPLICATION_SECTIONS, allApplicationFields,
-  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields,
+  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields,
 } from '../application-form'
 
 describe('application catalog', () => {
@@ -106,5 +106,32 @@ describe('missingRequiredApplication', () => {
     expect(missingRequiredApplication(completeData(), { hasPhoto: false })).toEqual(['photo'])
     expect(missingRequiredApplication(completeData(), { hasPhoto: true })).toEqual([])
     expect(missingRequiredApplication(completeData())).toEqual([])
+  })
+})
+
+describe('overLimitApplicationFields', () => {
+  it('returns ids of answers longer than their maxLength', () => {
+    expect(overLimitApplicationFields({ lived_abroad: 'x'.repeat(151), sports: 'x'.repeat(150) }))
+      .toEqual(['lived_abroad'])
+  })
+  it('accepts values at exactly the limit, empty, and missing values', () => {
+    expect(overLimitApplicationFields({ lived_abroad: 'x'.repeat(150) })).toEqual([])
+    expect(overLimitApplicationFields({})).toEqual([])
+  })
+  it('ignores fields without a maxLength (addresses, allergy fields stay unlimited)', () => {
+    expect(overLimitApplicationFields({
+      father_address: 'x'.repeat(9000),
+      food_requirements: 'x'.repeat(9000),
+      other_allergies: 'x'.repeat(9000),
+    })).toEqual([])
+  })
+  it('caps exactly the 14 profile textareas at 150', () => {
+    const limited = allApplicationFields().filter(f => f.maxLength != null)
+    expect(limited.map(f => f.id)).toEqual([
+      'lived_abroad', 'countries_with_parents', 'countries_without_parents', 'sports',
+      'activities', 'instruments', 'family_activities', 'spare_time', 'adjectives',
+      'recharge', 'todo_list', 'ideal_partner', 'share_when_hosting', 'anything_else',
+    ])
+    expect(limited.every(f => f.maxLength === 150)).toBe(true)
   })
 })
