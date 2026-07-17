@@ -303,11 +303,21 @@ describe('getApplicationDraft', () => {
     expect(res.expired).toBe(true)
     expect(res.data).toBeUndefined()
   })
-  it('returns a submitted marker (no PII) once the application is no longer a draft', async () => {
-    scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'en', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: null }
+  it('returns the answers read-only once the application is submitted (recap)', async () => {
+    scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'fr', photo_path: 'app-1/photo.jpg', exchange_id: 'ex-1', resume_token_expires_at: null, submitted_at: '2026-07-01T10:00:00Z' }
     const res = await getApplicationDraft('tok') as any
     expect(res.submitted).toBe(true)
+    expect(res.data).toEqual({ first_name: 'A' })
+    expect(res.language).toBe('fr')
+    expect(res.photoUrl).toContain('app-1/photo.jpg')
+    expect(res.submittedAt).toBe('2026-07-01T10:00:00Z')
+  })
+  it('still hides PII behind an expired link even when submitted', async () => {
+    scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'fr', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: PAST }
+    const res = await getApplicationDraft('tok') as any
+    expect(res.expired).toBe(true)
     expect(res.data).toBeUndefined()
+    expect(res.photoUrl).toBeUndefined()
   })
 })
 

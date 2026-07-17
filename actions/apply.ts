@@ -162,7 +162,7 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug)')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name, apply_slug)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
@@ -171,19 +171,24 @@ export async function getApplicationDraft(token: string) {
   if (tokenExpired(app.resume_token_expires_at)) {
     return { expired: true as const, submitted: false as const, exchangeName }
   }
-  // Once submitted (or further along) the application is final — the resume link
-  // can no longer reopen it. Return a marker only, never the PII, so the page
-  // shows an "already submitted" notice instead of the form.
-  if (app.status !== 'draft') {
-    return { expired: false as const, submitted: true as const, exchangeName }
-  }
-  // Signed URL so a returning draft shows its already-uploaded photo (the
-  // application-photos bucket is private; 1 h outlives any editing session).
+  // Signed URL for the applicant photo (the application-photos bucket is
+  // private; 1 h outlives any editing or reading session). Serves both a
+  // returning draft and the read-only recap below.
   let photoUrl: string | null = null
   if (app.photo_path) {
     const { data: signed } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
       .createSignedUrl(app.photo_path, 3600)
     photoUrl = signed?.signedUrl ?? null
+  }
+  // Once submitted (or further along) the application is final — the resume
+  // link can no longer reopen it, but (while the token lives) it shows a
+  // read-only recap of what was sent.
+  if (app.status !== 'draft') {
+    return {
+      expired: false as const, submitted: true as const, exchangeName,
+      data: app.data ?? {}, language: app.language, photoUrl,
+      submittedAt: app.submitted_at,
+    }
   }
   return {
     expired: false as const, submitted: false as const,
