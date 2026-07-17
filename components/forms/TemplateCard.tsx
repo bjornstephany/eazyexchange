@@ -17,7 +17,7 @@ export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => voi
   const mode = previewMode(vm)
 
   return (
-    <button type="button" onClick={onOpen}
+    <button type="button" onClick={onOpen} aria-label={vm.name}
       className="group overflow-hidden rounded-xl border bg-card text-left transition-shadow hover:shadow-modal">
       <div className={`relative mx-3 mt-3 aspect-[210/260] overflow-hidden rounded-[3px] p-2.5 ${
         mode === 'pdf-missing'
@@ -37,7 +37,7 @@ export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => voi
         {mode === 'online-paper' && <PaperFields fields={vm.fields} />}
         {mode === 'doc-placeholder' && (
           <div className="flex h-full flex-col items-center justify-center gap-1.5">
-            <div className="flex h-[60px] w-[46px] flex-none flex-col items-center justify-center gap-1 rounded bg-rail">
+            <div aria-hidden="true" className="flex h-[60px] w-[46px] flex-none flex-col items-center justify-center gap-1 rounded bg-rail">
               <div className="h-4 w-4 rounded-full border-2 border-white/60" />
               <div className="h-[3px] w-6 rounded-sm bg-white/60" />
             </div>
