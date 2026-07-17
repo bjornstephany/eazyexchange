@@ -74,6 +74,56 @@ export const STANDARD_TEMPLATES: StandardTemplate[] = [
   },
 ]
 
+// Insert ONE library entry as a draft template (+ document slot / fields).
+// The partial unique index form_templates_standard_key_unique makes a repeat
+// add an expected outcome — surfaced as { duplicate: true }, never thrown.
+export async function insertStandardTemplate(
+  supabase: SupabaseClient,
+  std: StandardTemplate,
+  opts: { exchangeId: string; schoolId: string; userId: string },
+): Promise<{ id: string } | { duplicate: true }> {
+  const { data, error } = await supabase
+    .from('form_templates')
+    .insert({
+      exchange_id: opts.exchangeId,
+      school_id: opts.schoolId,
+      name: std.name,
+      description: std.description,
+      type: std.kind === 'online' ? 'data_entry' : 'document_upload',
+      kind: std.kind,
+      status: 'draft',
+      audience: std.audience,
+      standard_key: std.key,
+      condition_label: std.condition_label,
+      external_url: std.external_url,
+      deadline: null,
+      created_by: opts.userId,
+    })
+    .select('id')
+    .single()
+  if (error) {
+    if (error.code === '23505') return { duplicate: true }
+    throw error
+  }
+  const templateId = data.id as string
+
+  if (std.kind !== 'online') {
+    const { error: slotError } = await supabase
+      .from('document_slots')
+      .insert({ template_id: templateId, label: std.name, description: null, required: true, order: 0 })
+    if (slotError) throw slotError
+  }
+  if (std.fields.length > 0) {
+    const { error: fieldError } = await supabase
+      .from('form_fields')
+      .insert(std.fields.map((f, i) => ({
+        template_id: templateId, label: f.label, field_type: f.field_type, required: true, order: i,
+      })))
+    if (fieldError) throw fieldError
+  }
+  return { id: templateId }
+}
+
 // Insert the whole library as drafts for a fresh exchange. Caller must be an
 // organizer of `schoolId` (RLS enforces it). Drafts have no deadline and no
 // assignments (the gated triggers skip them).
@@ -82,41 +132,6 @@ export async function seedStandardTemplates(
   opts: { exchangeId: string; schoolId: string; userId: string },
 ): Promise<void> {
   for (const std of STANDARD_TEMPLATES) {
-    const { data, error } = await supabase
-      .from('form_templates')
-      .insert({
-        exchange_id: opts.exchangeId,
-        school_id: opts.schoolId,
-        name: std.name,
-        description: std.description,
-        type: std.kind === 'online' ? 'data_entry' : 'document_upload',
-        kind: std.kind,
-        status: 'draft',
-        audience: std.audience,
-        standard_key: std.key,
-        condition_label: std.condition_label,
-        external_url: std.external_url,
-        deadline: null,
-        created_by: opts.userId,
-      })
-      .select('id')
-      .single()
-    if (error) throw error
-    const templateId = data.id as string
-
-    if (std.kind !== 'online') {
-      const { error: slotError } = await supabase
-        .from('document_slots')
-        .insert({ template_id: templateId, label: std.name, description: null, required: true, order: 0 })
-      if (slotError) throw slotError
-    }
-    if (std.fields.length > 0) {
-      const { error: fieldError } = await supabase
-        .from('form_fields')
-        .insert(std.fields.map((f, i) => ({
-          template_id: templateId, label: f.label, field_type: f.field_type, required: true, order: i,
-        })))
-      if (fieldError) throw fieldError
-    }
+    await insertStandardTemplate(supabase, std, opts)
   }
 }
