@@ -434,6 +434,10 @@
         "received": "{done} / {total} ricevuti"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF da allegare",
+      "docPlaceholder": "Copia da caricare"
+    },
     "documents": {
       "title": "Documenti",
       "subtitle": "I documenti giustificativi che le famiglie caricano per completare il fascicolo. Usa l’elenco standard oppure richiedi i tuoi.",

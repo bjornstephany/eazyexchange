@@ -434,6 +434,10 @@
         "received": "{done} / {total} received"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF to attach",
+      "docPlaceholder": "Copy to upload"
+    },
     "documents": {
       "title": "Documents",
       "subtitle": "The supporting documents families upload to complete the file. Use the standard list or request your own.",

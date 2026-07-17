@@ -434,6 +434,10 @@
         "received": "{done} / {total} erhalten"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF anzuhängen",
+      "docPlaceholder": "Kopie einzureichen"
+    },
     "documents": {
       "title": "Dokumente",
       "subtitle": "Die Nachweise, die Familien hochladen, um das Dossier zu vervollständigen. Verwenden Sie die Standardliste oder fordern Sie eigene an.",

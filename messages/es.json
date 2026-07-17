@@ -434,6 +434,10 @@
         "received": "{done} / {total} recibidos"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF por adjuntar",
+      "docPlaceholder": "Copia por subir"
+    },
     "documents": {
       "title": "Documentos",
       "subtitle": "Los justificantes que las familias suben para completar el expediente. Utilice la lista estándar o solicite los suyos propios.",

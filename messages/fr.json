@@ -434,6 +434,10 @@
         "received": "{done} / {total} reçus"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF à joindre",
+      "docPlaceholder": "Copie à déposer"
+    },
     "documents": {
       "title": "Documents",
       "subtitle": "Les pièces justificatives que les familles téléversent pour compléter le dossier. Utilisez la liste standard ou demandez les vôtres.",
