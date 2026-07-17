@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const MESSAGE_MAX = 2000
 export const STACK_MAX = 8000
+export const ROUTE_PATH_MAX = 500
 
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
 // 4+ digits: long enough to be an id/timestamp, short enough that HTTP status
@@ -38,8 +39,8 @@ const CONTROL_FLOW_DIGEST_RE = /^NEXT_(REDIRECT|NOT_FOUND|HTTP_ERROR_FALLBACK)/
 export type ServerErrorContext = { routePath: string; method: string }
 
 // Record an unexpected server error in the error_reports bug list (service
-// role only — clients have no path to the table, see migration
-// 20260716150000). Same contract as logAudit: await it, but it NEVER throws —
+// role only — clients have no path to the table, see the error_reports
+// migration). Same contract as logAudit: await it, but it NEVER throws —
 // a bug-logging hiccup must not worsen the user's error experience. PII rule:
 // the console fallback logs error codes only, never message contents.
 export async function reportServerError(err: unknown, ctx: ServerErrorContext): Promise<void> {
@@ -53,11 +54,13 @@ export async function reportServerError(err: unknown, ctx: ServerErrorContext): 
     const message = truncate(redactEmails(rawMessage), MESSAGE_MAX)
     const stack = rawStack ? truncate(redactEmails(rawStack), STACK_MAX) : null
 
+    const routePath = truncate(ctx.routePath, ROUTE_PATH_MAX)
+
     const admin = createAdminClient()
     const { error } = await admin.rpc('record_error_report', {
-      p_fingerprint: errorFingerprint(normalizeMessage(message), ctx.routePath),
+      p_fingerprint: errorFingerprint(normalizeMessage(message), routePath),
       p_message: message,
-      p_route_path: ctx.routePath,
+      p_route_path: routePath,
       p_method: ctx.method,
       p_stack: stack ?? undefined,
       p_digest: digest ?? undefined,

@@ -31,6 +31,12 @@ describe('onRequestError', () => {
     expect(reportMock).toHaveBeenCalledWith(expect.anything(), { routePath: '/exchanges/123/edit', method: 'POST' })
   })
 
+  it('strips the query string from the request-path fallback (can carry secrets like token_hash)', async () => {
+    const confirmRequest = { path: '/auth/confirm?token_hash=abc123', method: 'GET', headers: {} } as Req
+    await onRequestError(new Error('boom'), confirmRequest, { ...context, routePath: '' } as Ctx)
+    expect(reportMock).toHaveBeenCalledWith(expect.anything(), { routePath: '/auth/confirm', method: 'GET' })
+  })
+
   it('does nothing outside the Node runtime (edge middleware errors)', async () => {
     vi.stubEnv('NEXT_RUNTIME', 'edge')
     await onRequestError(new Error('boom'), request, context)

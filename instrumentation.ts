@@ -9,8 +9,12 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
   try {
     const { reportServerError } = await import('@/lib/error-reporting')
+    // request.path is the raw URL and can carry a query string with secrets
+    // (e.g. /auth/confirm?token_hash=...); strip it before it's persisted or
+    // fingerprinted. A secret embedded in a path *segment* rather than the
+    // query string, under an empty routePath, is a known accepted residual risk.
     await reportServerError(err, {
-      routePath: context.routePath || request.path,
+      routePath: context.routePath || request.path.split('?')[0],
       method: request.method,
     })
   } catch {
