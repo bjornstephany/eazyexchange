@@ -9,6 +9,7 @@ import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
 import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
+import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(): Promise<string> {
@@ -177,6 +178,25 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
 
   revalidatePath(kind === 'doc' ? '/documents' : '/forms', 'layout')
   return { ok: true, id: templateId }
+}
+
+// Add one standard-library template to an exchange as a draft. The library
+// drawer's « Ajouter » button. Duplicate adds (unique index on
+// (exchange_id, standard_key)) are an expected outcome → structured message.
+export async function addStandardTemplate(exchangeId: string, standardKey: string): Promise<CreateTemplateResult> {
+  const supabase = await createClient()
+  const user = await requireUser()
+  const schoolId = await assertOrganizer()
+  await assertExchangeWritable(supabase, exchangeId)
+
+  const std = STANDARD_TEMPLATES.find((s) => s.key === standardKey)
+  if (!std) return { ok: false, message: 'Modèle standard inconnu.' }
+
+  const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id })
+  if ('duplicate' in res) return { ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' }
+
+  revalidatePath(std.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  return { ok: true, id: res.id }
 }
 
 export async function updateTemplateMeta(

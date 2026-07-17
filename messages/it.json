@@ -354,32 +354,11 @@
     },
     "forms": {
       "title": "Moduli",
-      "subtitle": "I documenti e i moduli che le famiglie compilano per convalidare il fascicolo del proprio figlio. Usa i modelli standard oppure aggiungi i tuoi.",
       "yourFormsCount": "I tuoi moduli · {count}",
       "addFormLabel": "Aggiungi un modulo",
       "close": "Chiudi",
-      "activeFormsCount": "{count, plural, one {Modulo attivo} other {Moduli attivi}}",
-      "studentsConcerned": "Studenti interessati",
-      "requestedInLabel": "Richiesti in",
-      "requestedInValue": "Fase 2",
-      "responsesReceivedLabel": "Risposte ricevute",
-      "autoSendBanner": "I moduli attivi vengono inviati automaticamente alle famiglie all’apertura della Fase 2, con solleciti fino alla ricezione.",
-      "standardBadge": "STANDARD",
-      "customBadge": "PERSONALIZZATO",
-      "previewButton": "Anteprima",
-      "editButton": "Modifica",
       "deleteConfirm": "Eliminare questo modello? Le risposte già inviate dagli studenti verranno eliminate definitivamente.",
       "addPanel": {
-        "onlineTile": {
-          "title": "Crea un modulo online",
-          "description": "Componi le tue domande — compilate direttamente nell’applicazione.",
-          "button": "Componi le domande"
-        },
-        "pdfTile": {
-          "title": "Importa un PDF",
-          "description": "Carica un documento che le famiglie stampano, firmano e rispediscono.",
-          "button": "Carica un PDF"
-        },
         "nameLabel": "Nome del modulo",
         "namePlaceholderPdf": "Autorizzazione dei genitori",
         "namePlaceholderOnline": "Questionario famiglia",
@@ -388,9 +367,6 @@
         "back": "Indietro",
         "createDraft": "Crea la bozza",
         "creating": "Creazione…"
-      },
-      "deleteButton": {
-        "deleting": "Eliminazione…"
       },
       "drawer": {
         "pdfPreviewLabel": "modello PDF · anteprima del documento",
@@ -434,33 +410,24 @@
         "received": "{done} / {total} ricevuti"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF da allegare",
+      "docPlaceholder": "Copia da caricare"
+    },
     "documents": {
       "title": "Documenti",
-      "subtitle": "I documenti giustificativi che le famiglie caricano per completare il fascicolo. Usa l’elenco standard oppure richiedi i tuoi.",
-      "requestedCount": "Documenti richiesti",
-      "studentsConcerned": "Studenti interessati",
-      "toReviewCount": "Documenti da verificare",
-      "receivedLabel": "Documenti ricevuti",
-      "bannerText": "Ogni documento caricato viene messo in coda di verifica. Le famiglie vengono sollecitate automaticamente per i documenti mancanti.",
-      "bannerTextWithDeadline": "Ogni documento caricato viene messo in coda di verifica. Le famiglie vengono sollecitate automaticamente per i documenti mancanti fino alla scadenza del {date}.",
       "requestedHeading": "Documenti richiesti · {count}",
       "addDocLabel": "Richiedi un documento",
       "close": "Chiudi",
-      "standardBadge": "STANDARD",
-      "customBadge": "PERSONALIZZATO",
-      "detailButton": "Dettagli",
       "editButton": "Modifica",
       "deleteConfirm": "Eliminare questo documento? I file già inviati dalle famiglie verranno eliminati definitivamente.",
       "addPanel": {
         "mandatoryTile": {
-          "title": "Obbligatorio per tutti",
-          "description": "Richiesto a ogni studente confermato — conta ai fini della completezza del fascicolo."
+          "title": "Obbligatorio per tutti"
         },
         "conditionalTile": {
-          "title": "In base alla situazione",
-          "description": "Richiesto solo agli studenti interessati — scegli tu chi, senza penalizzare gli altri fascicoli."
+          "title": "In base alla situazione"
         },
-        "addButton": "Aggiungi il documento",
         "nameLabel": "Nome del documento",
         "namePlaceholder": "Tessera europea di assicurazione malattia",
         "deadlineLabel": "Scadenza (facoltativo)",
@@ -488,6 +455,16 @@
         "sending": "Invio…",
         "remindFamilies": "Sollecita le famiglie"
       }
+    },
+    "library": {
+      "heading": "Biblioteca",
+      "searchPlaceholder": "Cerca…",
+      "alreadyAdded": "Già aggiunto ✓",
+      "adding": "Aggiunta…",
+      "customHeading": "Oppure",
+      "uploadPdfTile": "Carica un PDF",
+      "createOnlineTile": "Crea un modulo online",
+      "requestDocTile": "Richiedi un documento"
     },
     "students": {
       "title": "Studenti",

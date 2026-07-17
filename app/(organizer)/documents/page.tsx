@@ -11,9 +11,8 @@ export default async function DocumentsPage() {
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
   if (!active) return <EmptyDashboard />
 
-  const { templates, studentCount, enrolledStudents } = await getTemplatesPage(active.id, 'docs')
+  const { templates, enrolledStudents } = await getTemplatesPage(active.id, 'docs')
   return (
-    <DocsView exchangeId={active.id} templates={templates}
-      studentCount={studentCount} enrolledStudents={enrolledStudents} />
+    <DocsView exchangeId={active.id} templates={templates} enrolledStudents={enrolledStudents} />
   )
 }

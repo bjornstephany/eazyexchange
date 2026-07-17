@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { STANDARD_TEMPLATES, seedStandardTemplates } from '@/lib/forms/standard-library'
+import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
 
 describe('STANDARD_TEMPLATES', () => {
   it('defines the 8 real-program items with unique keys', () => {
@@ -35,35 +35,47 @@ describe('STANDARD_TEMPLATES', () => {
   })
 })
 
-describe('seedStandardTemplates', () => {
-  it('inserts 8 drafts, one slot each, fields for medical+decharge, external_url on esta', async () => {
+describe('insertStandardTemplate', () => {
+  function harness() {
     const templateInserts: any[] = []
     const slotInserts: any[] = []
     const fieldInserts: any[] = []
-    let nextId = 0
     const supabase = {
       from: vi.fn((table: string) => {
         if (table === 'form_templates') {
           return { insert: (row: any) => ({ select: () => ({ single: async () => {
-            templateInserts.push(row); return { data: { id: `t${nextId++}` }, error: null }
+            templateInserts.push(row); return { data: { id: 't1' }, error: null }
           } }) }) }
         }
         if (table === 'document_slots') {
           return { insert: async (rows: any) => { slotInserts.push(...[].concat(rows)); return { error: null } } }
         }
-        // form_fields
         return { insert: async (rows: any) => { fieldInserts.push(...[].concat(rows)); return { error: null } } }
       }),
     }
-    await seedStandardTemplates(supabase as any, { exchangeId: 'ex1', schoolId: 's1', userId: 'u1' })
-    expect(templateInserts).toHaveLength(8)
-    expect(templateInserts.every(r =>
-      r.status === 'draft' && r.exchange_id === 'ex1' && r.school_id === 's1'
-      && r.created_by === 'u1' && r.deadline === null && r.type === 'document_upload'
-    )).toBe(true)
-    expect(templateInserts.find(r => r.standard_key === 'esta')?.external_url).toBe('https://esta.cbp.dhs.gov')
-    expect(templateInserts.filter(r => r.external_url === null)).toHaveLength(7)
-    expect(slotInserts).toHaveLength(8) // every pdf/doc template gets its slot
-    expect(fieldInserts).toHaveLength(9 + 6) // medical + decharge checklists
+    return { supabase, templateInserts, slotInserts, fieldInserts }
+  }
+
+  it('inserts a draft with slot and fields for medical', async () => {
+    const { supabase, templateInserts, slotInserts, fieldInserts } = harness()
+    const std = STANDARD_TEMPLATES.find(t => t.key === 'medical')!
+    const res = await insertStandardTemplate(supabase as any, std, { exchangeId: 'ex1', schoolId: 's1', userId: 'u1' })
+    expect(res).toEqual({ id: 't1' })
+    expect(templateInserts[0]).toMatchObject({
+      exchange_id: 'ex1', school_id: 's1', standard_key: 'medical', status: 'draft', deadline: null,
+    })
+    expect(slotInserts).toHaveLength(1)
+    expect(fieldInserts).toHaveLength(9)
+  })
+
+  it('maps a 23505 insert error to { duplicate: true }', async () => {
+    const supabase = {
+      from: () => ({ insert: () => ({ select: () => ({ single: async () => ({
+        data: null, error: { code: '23505', message: 'duplicate' },
+      }) }) }) }),
+    }
+    const std = STANDARD_TEMPLATES.find(t => t.key === 'passeport')!
+    const res = await insertStandardTemplate(supabase as any, std, { exchangeId: 'ex1', schoolId: 's1', userId: 'u1' })
+    expect(res).toEqual({ duplicate: true })
   })
 })

@@ -354,32 +354,11 @@
     },
     "forms": {
       "title": "Formularios",
-      "subtitle": "Los documentos y formularios que las familias completan para validar el expediente de su hijo/a. Utilice las plantillas estándar o añada las suyas propias.",
       "yourFormsCount": "Sus formularios · {count}",
       "addFormLabel": "Añadir un formulario",
       "close": "Cerrar",
-      "activeFormsCount": "{count, plural, one {Formulario activo} other {Formularios activos}}",
-      "studentsConcerned": "Alumnos afectados",
-      "requestedInLabel": "Solicitados en",
-      "requestedInValue": "Fase 2",
-      "responsesReceivedLabel": "Respuestas recibidas",
-      "autoSendBanner": "Los formularios activos se envían automáticamente a las familias al abrirse la Fase 2, con recordatorios hasta su recepción.",
-      "standardBadge": "ESTÁNDAR",
-      "customBadge": "PERSONALIZADO",
-      "previewButton": "Vista previa",
-      "editButton": "Modificar",
       "deleteConfirm": "¿Eliminar esta plantilla? Las respuestas ya enviadas por los alumnos se eliminarán definitivamente.",
       "addPanel": {
-        "onlineTile": {
-          "title": "Crear un formulario en línea",
-          "description": "Componga sus propias preguntas — cumplimentadas directamente en la aplicación.",
-          "button": "Componer las preguntas"
-        },
-        "pdfTile": {
-          "title": "Importar un PDF",
-          "description": "Suba un documento que las familias imprimen, firman y devuelven.",
-          "button": "Subir un PDF"
-        },
         "nameLabel": "Nombre del formulario",
         "namePlaceholderPdf": "Autorización parental",
         "namePlaceholderOnline": "Cuestionario familiar",
@@ -388,9 +367,6 @@
         "back": "Volver",
         "createDraft": "Crear el borrador",
         "creating": "Creando…"
-      },
-      "deleteButton": {
-        "deleting": "Eliminando…"
       },
       "drawer": {
         "pdfPreviewLabel": "plantilla PDF · vista previa del documento",
@@ -434,33 +410,24 @@
         "received": "{done} / {total} recibidos"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF por adjuntar",
+      "docPlaceholder": "Copia por subir"
+    },
     "documents": {
       "title": "Documentos",
-      "subtitle": "Los justificantes que las familias suben para completar el expediente. Utilice la lista estándar o solicite los suyos propios.",
-      "requestedCount": "Documentos solicitados",
-      "studentsConcerned": "Alumnos afectados",
-      "toReviewCount": "Documentos por verificar",
-      "receivedLabel": "Documentos recibidos",
-      "bannerText": "Cada documento subido se pone en cola de verificación. Se recuerda automáticamente a las familias los documentos faltantes.",
-      "bannerTextWithDeadline": "Cada documento subido se pone en cola de verificación. Se recuerda automáticamente a las familias los documentos faltantes hasta la fecha límite del {date}.",
       "requestedHeading": "Documentos solicitados · {count}",
       "addDocLabel": "Solicitar un documento",
       "close": "Cerrar",
-      "standardBadge": "ESTÁNDAR",
-      "customBadge": "PERSONALIZADO",
-      "detailButton": "Detalle",
       "editButton": "Modificar",
       "deleteConfirm": "¿Eliminar este documento? Los archivos ya enviados por las familias se eliminarán definitivamente.",
       "addPanel": {
         "mandatoryTile": {
-          "title": "Obligatorio para todos",
-          "description": "Solicitado a cada alumno confirmado — cuenta para la integridad del expediente."
+          "title": "Obligatorio para todos"
         },
         "conditionalTile": {
-          "title": "Según la situación",
-          "description": "Solicitado únicamente a los alumnos afectados — usted elige a quién, sin penalizar los demás expedientes."
+          "title": "Según la situación"
         },
-        "addButton": "Añadir el documento",
         "nameLabel": "Nombre del documento",
         "namePlaceholder": "Tarjeta sanitaria europea",
         "deadlineLabel": "Fecha límite (opcional)",
@@ -488,6 +455,16 @@
         "sending": "Enviando…",
         "remindFamilies": "Recordar a las familias"
       }
+    },
+    "library": {
+      "heading": "Biblioteca",
+      "searchPlaceholder": "Buscar…",
+      "alreadyAdded": "Ya añadido ✓",
+      "adding": "Añadiendo…",
+      "customHeading": "O",
+      "uploadPdfTile": "Subir un PDF",
+      "createOnlineTile": "Crear un formulario en línea",
+      "requestDocTile": "Solicitar un documento"
     },
     "students": {
       "title": "Alumnos",

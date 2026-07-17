@@ -90,22 +90,6 @@ export function progressLabel(tpl: TemplateVM, t: T): string {
   return t('organizer.forms.progress.received', { done: formDone(tpl.assignees), total })
 }
 
-export function progressPct(t: TemplateVM): number {
-  const total = t.assignees.length
-  if (t.status === 'draft' || total === 0) return 0
-  const done = t.kind === 'doc' ? docDone(t.assignees) : formDone(t.assignees)
-  return Math.round((done / total) * 100)
-}
-
-export function docAttentionPill(tpl: TemplateVM, t: T): Pill {
-  if (tpl.status === 'draft') return { kind: 'warn', label: t('organizer.forms.pills.draft') }
-  const review = tpl.assignees.filter(x => x.submissionStatus === 'submitted').length
-  const missing = tpl.assignees.length - docDone(tpl.assignees) - review
-  if (missing > 0) return { kind: 'bad', label: t('organizer.forms.pills.missingCount', { count: missing }) }
-  if (review > 0) return { kind: 'info', label: t('organizer.forms.pills.toVerifyCount', { count: review }) }
-  return { kind: 'ok', label: t('organizer.forms.pills.complete') }
-}
-
 // null = fourni et validé (folded into the rest row)
 export function studentPill(status: AssigneeRow['submissionStatus'], t: T): Pill | null {
   switch (status) {
@@ -138,30 +122,3 @@ export function docDrawerRows(assignees: AssigneeRow[], t: T): {
   return { rows, restCount }
 }
 
-export function formsStats(vms: TemplateVM[]): { activeCount: number; done: number; total: number } {
-  const active = vms.filter(v => v.status === 'active')
-  return {
-    activeCount: active.length,
-    done: active.reduce((n, v) => n + formDone(v.assignees), 0),
-    total: active.reduce((n, v) => n + v.assignees.length, 0),
-  }
-}
-
-export function docsStats(vms: TemplateVM[]): { docCount: number; reviewCount: number; done: number; total: number } {
-  const active = vms.filter(v => v.status === 'active')
-  return {
-    docCount: vms.length,
-    reviewCount: active.reduce((n, v) => n + v.assignees.filter(x => x.submissionStatus === 'submitted').length, 0),
-    done: active.reduce((n, v) => n + docDone(v.assignees), 0),
-    total: active.reduce((n, v) => n + v.assignees.length, 0),
-  }
-}
-
-export function earliestActiveDeadline(vms: TemplateVM[]): string | null {
-  let earliest: string | null = null
-  for (const v of vms) {
-    if (v.status !== 'active' || v.deadline === null) continue
-    if (earliest === null || v.deadline < earliest) earliest = v.deadline
-  }
-  return earliest
-}

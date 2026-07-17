@@ -354,32 +354,11 @@
     },
     "forms": {
       "title": "Formulaires",
-      "subtitle": "Les documents et formulaires que les familles complètent pour valider le dossier de leur enfant. Utilisez les modèles standard ou ajoutez les vôtres.",
       "yourFormsCount": "Vos formulaires · {count}",
       "addFormLabel": "Ajouter un formulaire",
       "close": "Fermer",
-      "activeFormsCount": "{count, plural, one {Formulaire actif} other {Formulaires actifs}}",
-      "studentsConcerned": "Élèves concernés",
-      "requestedInLabel": "Demandés en",
-      "requestedInValue": "Phase 2",
-      "responsesReceivedLabel": "Réponses reçues",
-      "autoSendBanner": "Les formulaires actifs sont envoyés automatiquement aux familles à l’ouverture de la Phase 2, avec relance jusqu’à réception.",
-      "standardBadge": "STANDARD",
-      "customBadge": "PERSONNALISÉ",
-      "previewButton": "Aperçu",
-      "editButton": "Modifier",
       "deleteConfirm": "Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées.",
       "addPanel": {
-        "onlineTile": {
-          "title": "Créer un formulaire en ligne",
-          "description": "Composez vos propres questions — remplies directement dans l’application.",
-          "button": "Composer les questions"
-        },
-        "pdfTile": {
-          "title": "Importer un PDF",
-          "description": "Téléversez un document que les familles impriment, signent et renvoient.",
-          "button": "Téléverser un PDF"
-        },
         "nameLabel": "Nom du formulaire",
         "namePlaceholderPdf": "Autorisation parentale",
         "namePlaceholderOnline": "Questionnaire famille",
@@ -388,9 +367,6 @@
         "back": "Retour",
         "createDraft": "Créer le brouillon",
         "creating": "Création…"
-      },
-      "deleteButton": {
-        "deleting": "Suppression…"
       },
       "drawer": {
         "pdfPreviewLabel": "modèle PDF · aperçu du document",
@@ -434,33 +410,24 @@
         "received": "{done} / {total} reçus"
       }
     },
+    "templateCard": {
+      "pdfMissing": "PDF à joindre",
+      "docPlaceholder": "Copie à déposer"
+    },
     "documents": {
       "title": "Documents",
-      "subtitle": "Les pièces justificatives que les familles téléversent pour compléter le dossier. Utilisez la liste standard ou demandez les vôtres.",
-      "requestedCount": "Documents demandés",
-      "studentsConcerned": "Élèves concernés",
-      "toReviewCount": "Pièces à vérifier",
-      "receivedLabel": "Pièces reçues",
-      "bannerText": "Chaque pièce téléversée est mise en file de vérification. Les familles sont relancées automatiquement pour les pièces manquantes.",
-      "bannerTextWithDeadline": "Chaque pièce téléversée est mise en file de vérification. Les familles sont relancées automatiquement pour les pièces manquantes jusqu’à l’échéance du {date}.",
       "requestedHeading": "Pièces demandées · {count}",
       "addDocLabel": "Demander un document",
       "close": "Fermer",
-      "standardBadge": "STANDARD",
-      "customBadge": "PERSONNALISÉ",
-      "detailButton": "Détail",
       "editButton": "Modifier",
       "deleteConfirm": "Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés.",
       "addPanel": {
         "mandatoryTile": {
-          "title": "Obligatoire pour tous",
-          "description": "Demandé à chaque élève confirmé — compte dans la complétude du dossier."
+          "title": "Obligatoire pour tous"
         },
         "conditionalTile": {
-          "title": "Selon la situation",
-          "description": "Demandé uniquement aux élèves concernés — vous choisissez qui, sans pénaliser les autres dossiers."
+          "title": "Selon la situation"
         },
-        "addButton": "Ajouter la pièce",
         "nameLabel": "Nom de la pièce",
         "namePlaceholder": "Carte européenne d’assurance maladie",
         "deadlineLabel": "Échéance (facultatif)",
@@ -488,6 +455,16 @@
         "sending": "Envoi…",
         "remindFamilies": "Relancer les familles"
       }
+    },
+    "library": {
+      "heading": "Bibliothèque",
+      "searchPlaceholder": "Rechercher…",
+      "alreadyAdded": "Déjà ajouté ✓",
+      "adding": "Ajout…",
+      "customHeading": "Ou",
+      "uploadPdfTile": "Téléverser un PDF",
+      "createOnlineTile": "Créer un formulaire en ligne",
+      "requestDocTile": "Demander un document"
     },
     "students": {
       "title": "Élèves",
