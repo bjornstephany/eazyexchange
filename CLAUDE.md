@@ -139,6 +139,17 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 
 A Supabase Edge Function (`send-reminders`) runs daily at 08:00 via cron. Pacing is per exchange: organizers pick a preset on the exchange detail page — `douce` (weekly, never accelerates), `normale` (weekly, then daily during the final week and while overdue — the default) or `insistante` (every 3 days, then daily during the final 2 weeks and while overdue) — or turn automatic reminders off entirely (`exchanges.reminders_enabled`). Interval math lives in `supabase/functions/send-reminders/pacing.ts` (pure, vitest-tested). Pacing is tracked per assignment via `assignments.last_reminded_at`; manual « Relancer » ignores these settings. Rejection notifications are sent immediately when an organizer rejects a submission. Deploying edge-function changes is manual: `supabase functions deploy send-reminders`.
 
+## Server Error Reporting
+
+Unexpected server errors (server actions, RSC renders, route handlers) are
+recorded to the `error_reports` table by `instrumentation.ts` →
+`lib/error-reporting.ts` (Next `onRequestError`; dedup by fingerprint of
+normalized message + route, `open`/`resolved` status, occurrence counter).
+Service-role only — no client access, no admin UI: triage in the Supabase
+dashboard, flip `status` to `resolved` by hand; a recurrence reopens the row.
+The reporter never throws; expected outcomes (structured returns) never land
+here. Spec: `docs/superpowers/specs/2026-07-16-error-reporting-design.md`.
+
 ## Project Plan
 
 See `plan.md` for the full build sequence and data model.
