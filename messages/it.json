@@ -493,6 +493,16 @@
         "remindFamilies": "Sollecita le famiglie"
       }
     },
+    "library": {
+      "heading": "Biblioteca",
+      "searchPlaceholder": "Cerca…",
+      "alreadyAdded": "Già aggiunto ✓",
+      "adding": "Aggiunta…",
+      "customHeading": "Oppure",
+      "uploadPdfTile": "Carica un PDF",
+      "createOnlineTile": "Crea un modulo online",
+      "requestDocTile": "Richiedi un documento"
+    },
     "students": {
       "title": "Studenti",
       "emptyFilter": "Nessuno studente corrisponde al filtro.",

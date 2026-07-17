@@ -493,6 +493,16 @@
         "remindFamilies": "Recordar a las familias"
       }
     },
+    "library": {
+      "heading": "Biblioteca",
+      "searchPlaceholder": "Buscar…",
+      "alreadyAdded": "Ya añadido ✓",
+      "adding": "Añadiendo…",
+      "customHeading": "O",
+      "uploadPdfTile": "Subir un PDF",
+      "createOnlineTile": "Crear un formulario en línea",
+      "requestDocTile": "Solicitar un documento"
+    },
     "students": {
       "title": "Alumnos",
       "emptyFilter": "Ningún alumno coincide con el filtro.",
