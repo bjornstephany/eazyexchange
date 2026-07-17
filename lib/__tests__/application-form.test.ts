@@ -23,6 +23,16 @@ describe('application catalog', () => {
       expect.arrayContaining(['last_name', 'first_name', 'email', 'date_of_birth']),
     )
   })
+  it('offers gender and pronouns as radio choices', () => {
+    const byId = Object.fromEntries(allApplicationFields().map(f => [f.id, f]))
+    expect(byId.sex.type).toBe('radio')
+    expect(byId.sex.options!.map(o => o.value)).toEqual(['male', 'female', 'other'])
+    expect(byId.sex.label.fr).toBe('Genre')
+    expect(byId.pronouns.type).toBe('radio')
+    expect(byId.pronouns.options!.map(o => o.value)).toEqual(['he_him', 'she_her'])
+    expect(byId.gender_other.type).toBe('text')
+    expect(byId.gender_other.required).toBeFalsy()
+  })
 })
 
 function completeData(overrides: Record<string, string> = {}): Record<string, string> {
@@ -53,7 +63,7 @@ describe('required catalog', () => {
   })
   it('leaves parent fields and the conditional separation address out of the flat required list', () => {
     const required = requiredApplicationFieldIds()
-    for (const id of [...FATHER_IDS, ...MOTHER_IDS, 'separation_housing_address']) {
+    for (const id of [...FATHER_IDS, ...MOTHER_IDS, 'separation_housing_address', 'gender_other']) {
       expect(required).not.toContain(id)
     }
   })
@@ -106,5 +116,13 @@ describe('missingRequiredApplication', () => {
     expect(missingRequiredApplication(completeData(), { hasPhoto: false })).toEqual(['photo'])
     expect(missingRequiredApplication(completeData(), { hasPhoto: true })).toEqual([])
     expect(missingRequiredApplication(completeData())).toEqual([])
+  })
+  it('requires gender_other only when gender is "other"', () => {
+    expect(missingRequiredApplication(completeData({ sex: 'other', gender_other: '' }), { hasPhoto: true }))
+      .toContain('gender_other')
+    expect(missingRequiredApplication(completeData({ sex: 'other', gender_other: 'male → female' }), { hasPhoto: true }))
+      .not.toContain('gender_other')
+    expect(missingRequiredApplication(completeData({ sex: 'female', gender_other: '' }), { hasPhoto: true }))
+      .not.toContain('gender_other')
   })
 })
