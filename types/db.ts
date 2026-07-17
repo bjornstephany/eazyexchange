@@ -82,6 +82,11 @@ export type AuditLog = Omit<Tables<'audit_log'>, 'metadata'> & {
   metadata: Record<string, string | number | boolean | null>
 }
 
+export type ErrorReportStatus = 'open' | 'resolved'
+export type ErrorReport = Override<Tables<'error_reports'>, {
+  status: ErrorReportStatus
+}>
+
 // The generated Database types every table's Row with raw column types
 // (closed-union columns come back as `string`). Before this file existed,
 // hand-written table defs used the app's narrow alias as the Row itself, so
@@ -100,7 +105,7 @@ export type Database = Omit<Generated, 'public'> & {
       Generated['public']['Tables'],
       | 'schools' | 'users' | 'form_templates' | 'form_fields'
       | 'submissions' | 'applications' | 'feedback'
-      | 'email_send_log' | 'audit_log'
+      | 'email_send_log' | 'audit_log' | 'error_reports'
     > & {
       schools: OverrideRow<'schools', School>
       users: OverrideRow<'users', UserProfile>
@@ -111,6 +116,7 @@ export type Database = Omit<Generated, 'public'> & {
       feedback: OverrideRow<'feedback', Feedback>
       email_send_log: OverrideRow<'email_send_log', EmailSendLog>
       audit_log: OverrideRow<'audit_log', AuditLog>
+      error_reports: OverrideRow<'error_reports', ErrorReport>
     }
   }
 }
