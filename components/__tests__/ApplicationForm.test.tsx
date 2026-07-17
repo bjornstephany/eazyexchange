@@ -83,4 +83,14 @@ describe('ApplicationForm', () => {
     await user.click(screen.getByRole('radio', { name: 'Séparé' }))
     expect(screen.getByText(/adresse où sera accueilli le correspondant/i)).toBeInTheDocument()
   })
+
+  it('hides the gender specify field until "Autre" is selected', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    expect(screen.queryByText(/^précisez/i)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'Autre' }))
+    expect(screen.getByText(/^précisez/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'Fille' }))
+    expect(screen.queryByText(/^précisez/i)).not.toBeInTheDocument()
+  })
 })
