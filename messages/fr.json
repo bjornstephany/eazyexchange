@@ -92,7 +92,7 @@
         "restoreButton": "Restaurer",
         "archiveButton": "Archiver le programme…",
         "stats": {
-          "enrolled": "{count, plural, one {# élève confirmé} other {# élèves confirmés}}",
+          "enrolled": "{count, plural, one {# élève accepté} other {# élèves acceptés}}",
           "applications": "{count, plural, one {# candidature} other {# candidatures}}",
           "deadline": "échéance dossiers {date}"
         },
@@ -269,7 +269,7 @@
         "missingDocsDesc": "Pièces non reçues avant l’échéance.",
         "missingDocsCta": "Voir les élèves",
         "maybeTitle": "{n, plural, one {# élève hésite — à relancer} other {# élèves hésitent — à relancer}}",
-        "maybeDesc": "Réponses « Peut-être » à convertir en confirmation.",
+        "maybeDesc": "Réponses « Peut-être » à relancer.",
         "maybeCta": "Relancer"
       },
       "subline": "{a, plural, one {# candidature} other {# candidatures}} à examiner, {r, plural, one {# dossier} other {# dossiers}} à vérifier, {l, plural, one {# élève} other {# élèves}} en retard.",
@@ -500,7 +500,7 @@
         "pending": "{n, plural, one {# pièce attendue} other {# pièces attendues}}"
       },
       "dueLabel": "Échéance {date}",
-      "listSummary": "{n, plural, one {# élève confirmé} other {# élèves confirmés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
+      "listSummary": "{n, plural, one {# élève accepté} other {# élèves acceptés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
       "reminderNote": {
         "complete": "Dossier complet — aucune relance prévue pour {firstName}.",
         "pending": "Relances automatiques par e-mail jusqu’à réception — {firstName} et ses parents reçoivent la liste des pièces attendues.",
@@ -515,7 +515,7 @@
         "backLabel": "Retour aux formulaires"
       },
       "students": {
-        "emptyHeading": "Aucun élève confirmé pour cette session.",
+        "emptyHeading": "Aucun élève accepté pour cette session.",
         "emptyBodyPrefix": "Les élèves apparaissent ici une fois leur candidature acceptée et leur compte créé.",
         "emptyBodyLink": "Voir les candidatures"
       },

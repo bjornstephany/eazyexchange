@@ -92,7 +92,7 @@
         "restoreButton": "Wiederherstellen",
         "archiveButton": "Programm archivieren…",
         "stats": {
-          "enrolled": "{count, plural, one {# bestätigter Schüler} other {# bestätigte Schüler}}",
+          "enrolled": "{count, plural, one {# angenommener Schüler} other {# angenommene Schüler}}",
           "applications": "{count, plural, one {# Bewerbung} other {# Bewerbungen}}",
           "deadline": "Frist für Dossiers {date}"
         },
@@ -269,7 +269,7 @@
         "missingDocsDesc": "Unterlagen vor der Frist nicht eingegangen.",
         "missingDocsCta": "Schüler anzeigen",
         "maybeTitle": "{n, plural, one {# Schüler unentschlossen — zu erinnern} other {# Schüler unentschlossen — zu erinnern}}",
-        "maybeDesc": "„Vielleicht“-Antworten in Bestätigungen umwandeln.",
+        "maybeDesc": "„Vielleicht“-Antworten zum Nachfassen bei den Familien.",
         "maybeCta": "Erinnern"
       },
       "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand.",
@@ -500,7 +500,7 @@
         "pending": "{n, plural, one {# erwartete Unterlage} other {# erwartete Unterlagen}}"
       },
       "dueLabel": "Frist {date}",
-      "listSummary": "{n, plural, one {# bestätigter Schüler} other {# bestätigte Schüler}} · {done, plural, one {# vollständiges Dossier} other {# vollständige Dossiers}}",
+      "listSummary": "{n, plural, one {# angenommener Schüler} other {# angenommene Schüler}} · {done, plural, one {# vollständiges Dossier} other {# vollständige Dossiers}}",
       "reminderNote": {
         "complete": "Dossier vollständig — keine Erinnerung für {firstName} geplant.",
         "pending": "Automatische E-Mail-Erinnerungen bis zum Eingang — {firstName} und die Eltern erhalten die Liste der erwarteten Unterlagen.",
@@ -515,7 +515,7 @@
         "backLabel": "Zurück zu den Formularen"
       },
       "students": {
-        "emptyHeading": "Noch keine bestätigten Schüler für diese Session.",
+        "emptyHeading": "Noch keine angenommenen Schüler für diese Session.",
         "emptyBodyPrefix": "Schüler erscheinen hier, sobald ihre Bewerbung angenommen und ihr Konto erstellt wurde.",
         "emptyBodyLink": "Bewerbungen ansehen"
       },

@@ -92,7 +92,7 @@
         "restoreButton": "Restaurar",
         "archiveButton": "Archivar el programa…",
         "stats": {
-          "enrolled": "{count, plural, one {# alumno confirmado} other {# alumnos confirmados}}",
+          "enrolled": "{count, plural, one {# alumno aceptado} other {# alumnos aceptados}}",
           "applications": "{count, plural, one {# candidatura} other {# candidaturas}}",
           "deadline": "plazo de expedientes {date}"
         },
@@ -269,7 +269,7 @@
         "missingDocsDesc": "Documentos no recibidos antes de la fecha límite.",
         "missingDocsCta": "Ver los alumnos",
         "maybeTitle": "{n, plural, one {# alumno indeciso — a recordar} other {# alumnos indecisos — a recordar}}",
-        "maybeDesc": "Respuestas «Quizás» a convertir en confirmación.",
+        "maybeDesc": "Respuestas «Quizás» para hacer seguimiento con las familias.",
         "maybeCta": "Enviar recordatorio"
       },
       "subline": "{a, plural, one {# candidatura} other {# candidaturas}} por examinar, {r, plural, one {# expediente} other {# expedientes}} por verificar, {l, plural, one {# alumno} other {# alumnos}} con retraso.",
@@ -500,7 +500,7 @@
         "pending": "{n, plural, one {# documento esperado} other {# documentos esperados}}"
       },
       "dueLabel": "Fecha límite {date}",
-      "listSummary": "{n, plural, one {# alumno confirmado} other {# alumnos confirmados}} · {done, plural, one {# expediente completo} other {# expedientes completos}}",
+      "listSummary": "{n, plural, one {# alumno aceptado} other {# alumnos aceptados}} · {done, plural, one {# expediente completo} other {# expedientes completos}}",
       "reminderNote": {
         "complete": "Expediente completo — ningún recordatorio previsto para {firstName}.",
         "pending": "Recordatorios automáticos por correo electrónico hasta su recepción — {firstName} y sus padres reciben la lista de documentos esperados.",
@@ -515,7 +515,7 @@
         "backLabel": "Volver a formularios"
       },
       "students": {
-        "emptyHeading": "Ningún alumno confirmado para esta sesión.",
+        "emptyHeading": "Ningún alumno aceptado para esta sesión.",
         "emptyBodyPrefix": "Los alumnos aparecen aquí una vez aceptada su candidatura y creada su cuenta.",
         "emptyBodyLink": "Ver las candidaturas"
       },

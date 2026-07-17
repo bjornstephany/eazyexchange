@@ -92,7 +92,7 @@
         "restoreButton": "Ripristina",
         "archiveButton": "Archivia il programma…",
         "stats": {
-          "enrolled": "{count, plural, one {# studente confermato} other {# studenti confermati}}",
+          "enrolled": "{count, plural, one {# studente accettato} other {# studenti accettati}}",
           "applications": "{count, plural, one {# candidatura} other {# candidature}}",
           "deadline": "scadenza fascicoli {date}"
         },
@@ -269,7 +269,7 @@
         "missingDocsDesc": "Documenti non ricevuti entro la scadenza.",
         "missingDocsCta": "Vedi gli studenti",
         "maybeTitle": "{n, plural, one {# studente indeciso — da sollecitare} other {# studenti indecisi — da sollecitare}}",
-        "maybeDesc": "Risposte « Forse » da convertire in conferma.",
+        "maybeDesc": "Risposte « Forse » da ricontattare.",
         "maybeCta": "Sollecita"
       },
       "subline": "{a, plural, one {# candidatura} other {# candidature}} da esaminare, {r, plural, one {# fascicolo} other {# fascicoli}} da verificare, {l, plural, one {# studente} other {# studenti}} in ritardo.",
@@ -500,7 +500,7 @@
         "pending": "{n, plural, one {# documento atteso} other {# documenti attesi}}"
       },
       "dueLabel": "Scadenza {date}",
-      "listSummary": "{n, plural, one {# studente confermato} other {# studenti confermati}} · {done, plural, one {# fascicolo completo} other {# fascicoli completi}}",
+      "listSummary": "{n, plural, one {# studente accettato} other {# studenti accettati}} · {done, plural, one {# fascicolo completo} other {# fascicoli completi}}",
       "reminderNote": {
         "complete": "Fascicolo completo — nessun sollecito previsto per {firstName}.",
         "pending": "Solleciti automatici via e-mail fino alla ricezione — {firstName} e i suoi genitori ricevono l’elenco dei documenti attesi.",
@@ -515,7 +515,7 @@
         "backLabel": "Torna ai moduli"
       },
       "students": {
-        "emptyHeading": "Nessuno studente confermato per questa sessione.",
+        "emptyHeading": "Nessuno studente accettato per questa sessione.",
         "emptyBodyPrefix": "Gli studenti compaiono qui una volta accettata la loro candidatura e creato il loro account.",
         "emptyBodyLink": "Vedi le candidature"
       },

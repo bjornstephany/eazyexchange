@@ -162,8 +162,8 @@ describe('list helpers', () => {
 
   it('builds the page subline', () => {
     expect(listSummary([mk('a', 'A', 'complet'), mk('b', 'B', 'complet'), mk('c', 'C', 'retard')], t))
-      .toBe('3 élèves confirmés · 2 dossiers complets')
-    expect(listSummary([mk('a', 'A', 'retard')], t)).toBe('1 élève confirmé · 0 dossier complet')
+      .toBe('3 élèves acceptés · 2 dossiers complets')
+    expect(listSummary([mk('a', 'A', 'retard')], t)).toBe('1 élève accepté · 0 dossier complet')
   })
 
   it('reminder note: complete vs pending', () => {

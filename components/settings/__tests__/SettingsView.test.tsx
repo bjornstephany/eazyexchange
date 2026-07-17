@@ -162,7 +162,7 @@ describe('SettingsView — owner sections', () => {
     const { archiveExchange } = await import('@/actions/settings')
     render(<SettingsView {...owner} />)
     fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
-    expect(screen.getByText('10 élèves confirmés · 12 candidatures · échéance dossiers 10 oct')).toBeInTheDocument()
+    expect(screen.getByText('10 élèves acceptés · 12 candidatures · échéance dossiers 10 oct')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme…' }))
     expect(screen.getByText('Archiver ce programme ?')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme' }))
