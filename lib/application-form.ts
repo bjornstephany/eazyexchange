@@ -169,3 +169,12 @@ export function overLimitApplicationFields(data: Record<string, string>): string
 export function applicantName(data: Record<string, string> | null | undefined): string {
   return `${data?.first_name ?? ''} ${data?.last_name ?? ''}`.trim()
 }
+
+// Avatar fallback initials: first letter of first + last name; first letter of
+// the email when both name parts are empty (legacy rows without a photo).
+export function applicantInitials(data: Record<string, string> | null | undefined, email: string): string {
+  const first = (data?.first_name ?? '').trim()
+  const last = (data?.last_name ?? '').trim()
+  const initials = `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
+  return initials || email.charAt(0).toUpperCase()
+}

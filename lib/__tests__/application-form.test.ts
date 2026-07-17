@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   APPLICATION_SECTIONS, allApplicationFields,
-  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields,
+  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields, applicantInitials,
 } from '../application-form'
 
 describe('application catalog', () => {
@@ -133,5 +133,18 @@ describe('overLimitApplicationFields', () => {
       'recharge', 'todo_list', 'ideal_partner', 'share_when_hosting', 'anything_else',
     ])
     expect(limited.every(f => f.maxLength === 150)).toBe(true)
+  })
+})
+
+describe('applicantInitials', () => {
+  it('uses the first letters of first + last name, uppercased', () => {
+    expect(applicantInitials({ first_name: 'zoé', last_name: 'martin' }, 'z@x.co')).toBe('ZM')
+  })
+  it('uses a single initial when only one name part exists', () => {
+    expect(applicantInitials({ first_name: 'Zoé' }, 'z@x.co')).toBe('Z')
+  })
+  it('falls back to the first letter of the email when both names are empty', () => {
+    expect(applicantInitials({}, 'zoe@example.com')).toBe('Z')
+    expect(applicantInitials(null, 'zoe@example.com')).toBe('Z')
   })
 })
