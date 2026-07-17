@@ -294,6 +294,16 @@ describe('saveApplicationDraft', () => {
     scenario.application.resume_token_expires_at = PAST
     await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('expired')
   })
+  it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
+    const res = await saveApplicationDraft('tok', { lived_abroad: 'x'.repeat(151) })
+    expect(res).toEqual({ ok: false, overLimit: ['lived_abroad'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('returns ok:true after a successful draft save', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1' }
+    const res = await saveApplicationDraft('tok', { first_name: 'A' })
+    expect(res).toEqual({ ok: true })
+  })
 })
 
 describe('getApplicationDraft', () => {
@@ -349,6 +359,16 @@ describe('submitApplication', () => {
     await submitApplication('tok', completeAppData())
     expect(scenario.updated.table).toBe('applications')
     expect(scenario.updated.row.status).toBe('submitted')
+  })
+  it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
+    const res = await submitApplication('tok', { ...completeAppData(), sports: 'x'.repeat(151) })
+    expect(res).toEqual({ ok: false, overLimit: ['sports'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('returns ok:true on a successful submission', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    const res = await submitApplication('tok', completeAppData())
+    expect(res).toEqual({ ok: true })
   })
 })
 
