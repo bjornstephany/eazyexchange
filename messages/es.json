@@ -222,15 +222,14 @@
       "autoReminderHint": "Recordatorios automáticos diarios durante el periodo de vencimiento.",
       "pills": {
         "complete": "Completo",
-        "confirmedParen": "Confirmado(a)",
+        "accepted": "Aceptado(a)",
         "toExamine": "Por examinar",
-        "invitedWaiting": "Invitado — a la espera",
+        "acceptedAwaiting": "Aceptado(a) — a la espera",
         "maybe": "Quizás",
         "declined": "Ha declinado",
         "rejected": "Rechazado",
         "dash": "—",
         "waiting": "En espera",
-        "confirmed": "Confirmado",
         "hesitates": "Indeciso"
       },
       "timeline": {
@@ -249,7 +248,7 @@
       },
       "funnel": {
         "candidatures": "Candidaturas",
-        "confirmed": "Confirmados",
+        "accepted": "Aceptados",
         "late": "Con retraso",
         "complete": "Completos"
       },

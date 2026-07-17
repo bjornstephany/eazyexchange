@@ -222,15 +222,14 @@
       "autoReminderHint": "Automatische tägliche Erinnerungen während der Fristperiode.",
       "pills": {
         "complete": "Vollständig",
-        "confirmedParen": "Bestätigt",
+        "accepted": "Angenommen",
         "toExamine": "Zu prüfen",
-        "invitedWaiting": "Eingeladen — wartet auf Antwort",
+        "acceptedAwaiting": "Angenommen — wartet auf Antwort",
         "maybe": "Vielleicht",
         "declined": "Hat abgelehnt",
         "rejected": "Abgelehnt",
         "dash": "—",
         "waiting": "Wartet",
-        "confirmed": "Bestätigt",
         "hesitates": "Unentschlossen"
       },
       "timeline": {
@@ -249,7 +248,7 @@
       },
       "funnel": {
         "candidatures": "Bewerbungen",
-        "confirmed": "Bestätigt",
+        "accepted": "Angenommen",
         "late": "Verspätet",
         "complete": "Vollständig"
       },

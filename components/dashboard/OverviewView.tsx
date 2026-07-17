@@ -83,7 +83,7 @@ export function OverviewView(props: OverviewProps) {
   // never opened — hence the rows.length guard.
   const neverOpened = !applicationOpen && applicationDeadline == null && rows.length === 0
 
-  const funnel = lifecycleFunnel(apps, rollups, tr)
+  const funnel = lifecycleFunnel(apps, rows, rollups, tr)
   const activeStage = filter ? funnel.find((s) => s.key === filter) : undefined
   // Labels for filter keys that only exist on action cards, not as funnel tiles.
   function actionOnlyFilterLabel(key: string): string | undefined {

@@ -222,15 +222,14 @@
       "autoReminderHint": "Automatic reminders sent daily as the deadline approaches.",
       "pills": {
         "complete": "Complete",
-        "confirmedParen": "Confirmed",
+        "accepted": "Accepted",
         "toExamine": "To review",
-        "invitedWaiting": "Invited — awaiting reply",
+        "acceptedAwaiting": "Accepted — awaiting reply",
         "maybe": "Maybe",
         "declined": "Declined",
         "rejected": "Rejected",
         "dash": "—",
         "waiting": "Awaiting",
-        "confirmed": "Confirmed",
         "hesitates": "Undecided"
       },
       "timeline": {
@@ -249,7 +248,7 @@
       },
       "funnel": {
         "candidatures": "Applications",
-        "confirmed": "Confirmed",
+        "accepted": "Accepted",
         "late": "Late",
         "complete": "Complete"
       },

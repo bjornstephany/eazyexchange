@@ -34,7 +34,7 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
     // enrolled app c@l.fr merged into the student row: exactly one Camille row
     expect(screen.getAllByText('Camille Laurent')).toHaveLength(1)
-    expect(screen.getByText('Confirmé(e)')).toBeInTheDocument()
+    expect(screen.getByText('Accepté(e)')).toBeInTheDocument()
     // enrolled row shows rollup pills, applicant row shows dashes
     expect(screen.getByText('En cours')).toBeInTheDocument()   // formsPill(pending)
     expect(screen.getByText('Manquant')).toBeInTheDocument()   // docsPill(missing)

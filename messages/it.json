@@ -222,15 +222,14 @@
       "autoReminderHint": "Solleciti automatici quotidiani in prossimità della scadenza.",
       "pills": {
         "complete": "Completo",
-        "confirmedParen": "Confermato/a",
+        "accepted": "Accettato/a",
         "toExamine": "Da esaminare",
-        "invitedWaiting": "Invitato — in attesa",
+        "acceptedAwaiting": "Accettato/a — in attesa",
         "maybe": "Forse",
         "declined": "Ha rinunciato",
         "rejected": "Rifiutato",
         "dash": "—",
         "waiting": "In attesa",
-        "confirmed": "Confermato",
         "hesitates": "Indeciso"
       },
       "timeline": {
@@ -249,7 +248,7 @@
       },
       "funnel": {
         "candidatures": "Candidature",
-        "confirmed": "Confermati",
+        "accepted": "Accettati",
         "late": "In ritardo",
         "complete": "Completi"
       },
