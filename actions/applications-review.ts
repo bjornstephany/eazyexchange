@@ -18,6 +18,18 @@ const INVITE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 // ---- Organizer actions (authenticated, RLS-enforced) ----
 
+// Row shape shipped to the Candidatures view / dashboard rollups. photoUrl is
+// present only when the caller asked for photos; photo_path itself never
+// leaves the server — only the signed URL does.
+export type ApplicationListRow = {
+  id: string
+  status: string
+  submitted_at: string | null
+  data: Record<string, string>
+  email: string
+  photoUrl?: string | null
+}
+
 async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>, applicationId: string) {
   const { profile } = await requireOrganizer()
   const { data: app } = await supabase
@@ -27,7 +39,10 @@ async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>
   return app
 }
 
-export async function listApplications(exchangeId: string) {
+export async function listApplications(
+  exchangeId: string,
+  opts?: { withPhotos?: boolean },
+): Promise<ApplicationListRow[]> {
   const supabase = await createClient()
   const { profile } = await requireOrganizer()
   // Belt-and-suspenders with RLS (which already scopes rows to the caller's
@@ -42,16 +57,47 @@ export async function listApplications(exchangeId: string) {
   if (!exchange || (exchange.school_a_id !== profile.school_id && exchange.school_b_id !== profile.school_id)) {
     throw new Error('Unauthorized')
   }
+
+  if (!opts?.withPhotos) {
+    const { data, error } = await supabase
+      .from('applications')
+      // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
+      // Avoids shipping the private resume_token / invite_token to the browser.
+      .select('id, status, submitted_at, data, email')
+      .eq('exchange_id', exchangeId)
+      .neq('status', 'draft')
+      .order('submitted_at', { ascending: false })
+    if (error) throw error
+    return (data ?? []) as unknown as ApplicationListRow[]
+  }
+
   const { data, error } = await supabase
     .from('applications')
-    // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
-    // Avoids shipping the private resume_token / invite_token to the browser.
-    .select('id, status, submitted_at, data, email')
+    .select('id, status, submitted_at, data, email, photo_path')
     .eq('exchange_id', exchangeId)
     .neq('status', 'draft')
     .order('submitted_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  const rows = (data ?? []) as unknown as (ApplicationListRow & { photo_path: string | null })[]
+
+  // Organizer authorization verified above; the application-photos bucket is
+  // private with no per-user storage policy, so sign with the admin client —
+  // one batched call for the whole list (same pattern as getApplicationForReview).
+  const paths = rows.map(r => r.photo_path).filter((p): p is string => p !== null)
+  const urlByPath = new Map<string, string>()
+  if (paths.length > 0) {
+    const admin = createAdminClient()
+    const { data: signed } = await admin.storage
+      .from(APPLICATION_PHOTO_BUCKET)
+      .createSignedUrls(paths, 3600)
+    for (const s of signed ?? []) {
+      if (s.path && s.signedUrl) urlByPath.set(s.path, s.signedUrl)
+    }
+  }
+  return rows.map(r => ({
+    id: r.id, status: r.status, submitted_at: r.submitted_at, data: r.data, email: r.email,
+    photoUrl: r.photo_path ? urlByPath.get(r.photo_path) ?? null : null,
+  }))
 }
 
 export async function getApplicationForReview(applicationId: string) {
