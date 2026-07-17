@@ -318,6 +318,48 @@ export type Database = {
           },
         ]
       }
+      error_reports: {
+        Row: {
+          digest: string | null
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          message: string
+          method: string
+          occurrences: number
+          route_path: string
+          stack: string | null
+          status: string
+        }
+        Insert: {
+          digest?: string | null
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message: string
+          method: string
+          occurrences?: number
+          route_path: string
+          stack?: string | null
+          status?: string
+        }
+        Update: {
+          digest?: string | null
+          fingerprint?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message?: string
+          method?: string
+          occurrences?: number
+          route_path?: string
+          stack?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       exchange_enrollments: {
         Row: {
           created_at: string
@@ -850,6 +892,17 @@ export type Database = {
           resume_token_expires_at: string
           status: string
         }[]
+      }
+      record_error_report: {
+        Args: {
+          p_digest?: string
+          p_fingerprint: string
+          p_message: string
+          p_method: string
+          p_route_path: string
+          p_stack?: string
+        }
+        Returns: undefined
       }
       school_paired_with_mine: {
         Args: { p_school_id: string }
