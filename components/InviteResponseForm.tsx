@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { respondToInvitation } from '@/actions/invitations'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -8,16 +9,25 @@ import { EXCHANGE_TERMS_RESPOND } from '@/lib/exchange-terms'
 export function InviteResponseForm({ token, firstName, exchangeName }: { token: string; firstName: string; exchangeName: string }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
-  const [result, setResult] = useState<'yes' | 'no' | 'maybe' | null>(null)
+  const [result, setResult] = useState<'no' | 'maybe' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   async function respond(response: 'yes' | 'no' | 'maybe') {
     setBusy(true); setError(null)
-    try { await respondToInvitation(token, response, response === 'maybe' ? note : ''); setResult(response) }
-    catch (e) { setError(e instanceof Error ? e.message : 'Une erreur est survenue.'); setBusy(false) }
+    try {
+      const res = await respondToInvitation(token, response, response === 'maybe' ? note : '')
+      if (!res.ok) { setError(res.message); setBusy(false); return }
+      // Yes → the action just minted the session; land on account setup.
+      // Stay busy through the navigation so the buttons can't double-fire.
+      if (response === 'yes') { router.push('/accept-invite'); return }
+      setResult(response)
+    } catch {
+      // Unexpected failure only — prod redacts thrown messages, so never show them.
+      setError('Une erreur est survenue. Réessaie.'); setBusy(false)
+    }
   }
 
-  if (result === 'yes') return <p className="text-[15px] leading-relaxed text-[#0F7A3D]">Parfait ! Regarde ta boîte mail pour le lien d’activation de ton compte.</p>
   if (result === 'no') return <p className="text-[15px] leading-relaxed text-[#10203F]">Merci de nous avoir prévenus. Nous te souhaitons le meilleur.</p>
   if (result === 'maybe') return <p className="text-[15px] leading-relaxed text-[#10203F]">Merci — nous avons noté ta réponse, l’organisateur reviendra vers toi.</p>
 
