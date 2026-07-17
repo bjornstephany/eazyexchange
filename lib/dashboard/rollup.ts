@@ -243,7 +243,17 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
   const enrolledRows: LifecycleRow[] = students.flatMap(s => {
     const rollup = rollupByStudent.get(s.id)
     if (!rollup) return []
-    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name: rollup.name, candidature: candidaturePill(null, t), rollup }]
+    // A student who replied yes but hasn't finished account setup has an empty
+    // profile full_name. Reuse the merge's email match to borrow the applicant
+    // name from their confirmed application, else show the email. The row's
+    // rollup copy carries the resolved name so the drawer header shows it too.
+    let name = rollup.name.trim()
+    if (!name) {
+      const match = apps.find(a => CONFIRMED_STATUSES.includes(a.status) && normEmail(a.email) === normEmail(s.email))
+      name = (match ? applicantName(match.data) : '') || s.email
+    }
+    const resolved = name === rollup.name ? rollup : { ...rollup, name }
+    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name, candidature: candidaturePill(null, t), rollup: resolved }]
   })
 
   return [...applicantRows, ...enrolledRows]

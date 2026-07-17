@@ -245,6 +245,33 @@ describe('buildLifecycleRows', () => {
     expect(rows.map(r => r.kind === 'applicant' && r.closed)).toEqual([true, true, false])
     expect(rows[0].name).toBe('r@x.fr')
   })
+  it('enrolled row with empty full_name falls back to the matching application name (row AND rollup copy)', () => {
+    const blankStudents: EnrolledStudent[] = [{ id: 's1', full_name: '', email: 'c@l.fr' }]
+    const blankRollup = rollupStudent({ id: 's1', full_name: '' }, T, cell('approved', 'approved'), TODAY, t)
+    const apps = [app('enrolled', { id: 'a1', email: ' C@L.FR ', data: { first_name: 'Camille', last_name: 'Laurent' } })]
+    const rows = buildLifecycleRows(apps, blankStudents, [blankRollup], t)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].name).toBe('Camille Laurent')
+    // the drawer reads rollup.name — the copy carried by the row must be resolved too
+    expect(rows[0].kind === 'enrolled' && rows[0].rollup.name).toBe('Camille Laurent')
+  })
+  it('enrolled row with empty full_name and no matching application falls back to email', () => {
+    const blankStudents: EnrolledStudent[] = [{ id: 's1', full_name: '', email: 'c@l.fr' }]
+    const blankRollup = rollupStudent({ id: 's1', full_name: '' }, T, cell('approved', 'approved'), TODAY, t)
+    const rows = buildLifecycleRows([], blankStudents, [blankRollup], t)
+    expect(rows[0].name).toBe('c@l.fr')
+  })
+  it('matching application without name data falls back to email', () => {
+    const blankStudents: EnrolledStudent[] = [{ id: 's1', full_name: '', email: 'c@l.fr' }]
+    const blankRollup = rollupStudent({ id: 's1', full_name: '' }, T, cell('approved', 'approved'), TODAY, t)
+    const apps = [app('enrolling', { id: 'a1', email: 'c@l.fr', data: {} })]
+    expect(buildLifecycleRows(apps, blankStudents, [blankRollup], t)[0].name).toBe('c@l.fr')
+  })
+  it('whitespace-only full_name is treated as empty', () => {
+    const blankStudents: EnrolledStudent[] = [{ id: 's1', full_name: '  ', email: 'c@l.fr' }]
+    const blankRollup = rollupStudent({ id: 's1', full_name: '  ' }, T, cell('approved', 'approved'), TODAY, t)
+    expect(buildLifecycleRows([], blankStudents, [blankRollup], t)[0].name).toBe('c@l.fr')
+  })
 })
 
 describe('closedCount', () => {
