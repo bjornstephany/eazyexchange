@@ -20,6 +20,7 @@ let scenario: {
   generateLinkResult: any          // returned by auth.admin.generateLink
   verifyOtpAttrs: any | null       // captured attrs of auth.verifyOtp
   verifyOtpResult: any             // returned by auth.verifyOtp
+  userProfile: any | null          // routes rowFor('users') for getInvitation's maybeSingle lookup
 }
 
 function builder(table: string) {
@@ -79,7 +80,7 @@ function builder(table: string) {
 function rowFor(table: string) {
   if (table === 'exchanges') return scenario.exchange
   if (table === 'applications') return scenario.application
-  if (table === 'users') return [{ email: 'org@school.test' }]
+  if (table === 'users') return scenario.userProfile ?? [{ email: 'org@school.test' }]
   return null
 }
 
@@ -142,7 +143,7 @@ vi.mock('@/lib/email', () => ({
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
-import { respondToInvitation, resumeInviteSetup } from '../invitations'
+import { respondToInvitation, resumeInviteSetup, getInvitation } from '../invitations'
 import { sendApplicationResumeEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 
@@ -171,6 +172,7 @@ beforeEach(() => {
     generateLinkResult: { data: { properties: { hashed_token: 'hash-1' } }, error: null },
     verifyOtpAttrs: null,
     verifyOtpResult: { data: { session: {} }, error: null },
+    userProfile: null,
   }
 })
 
@@ -446,6 +448,72 @@ describe('respondToInvitation', () => {
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
     await respondToInvitation('inv-1', 'maybe', '')
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
+  })
+})
+
+describe('resumeInviteSetup', () => {
+  beforeEach(() => {
+    scenario.application = {
+      id: 'app-1', status: 'enrolled', email: 'a@b.co',
+      invite_token: 'inv-1', invite_token_expires_at: null, enrolled_user_id: 'stu-1',
+    }
+  })
+  it('mints a session for an enrolled invite', async () => {
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
+    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
+  })
+  it('also works mid-enrollment (status enrolling)', async () => {
+    scenario.application.status = 'enrolling'
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toEqual({ ok: true })
+  })
+  it('returns expired for an expired token', async () => {
+    scenario.application.invite_token_expires_at = PAST
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toMatchObject({ ok: false, error: 'expired' })
+    expect(scenario.generateLinkAttrs).toBeNull()
+  })
+  it('returns closed when the invitation was never accepted', async () => {
+    scenario.application.status = 'accepted'
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toMatchObject({ ok: false, error: 'closed' })
+  })
+  it('returns not_found for an unknown token', async () => {
+    scenario.application = null
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toMatchObject({ ok: false, error: 'not_found' })
+  })
+  it('returns retry when the magiclink cannot be generated', async () => {
+    scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
+    const res = await resumeInviteSetup('inv-1')
+    expect(res).toMatchObject({ ok: false, error: 'retry' })
+  })
+})
+
+describe('getInvitation setup state', () => {
+  it('reports setupComplete: null for a not-yet-answered invite', async () => {
+    scenario.application = { status: 'accepted', data: { first_name: 'A' }, invite_token_expires_at: null, enrolled_user_id: null, exchanges: { name: 'X' } }
+    const res = await getInvitation('inv-1')
+    expect(res?.setupComplete).toBeNull()
+  })
+  it('reports setupComplete: false for an enrolled invite whose profile has no name yet', async () => {
+    scenario.application = { status: 'enrolled', data: {}, invite_token_expires_at: null, enrolled_user_id: 'stu-1', exchanges: { name: 'X' } }
+    scenario.userProfile = { full_name: '' }
+    const res = await getInvitation('inv-1')
+    expect(res?.setupComplete).toBe(false)
+  })
+  it('reports setupComplete: false while enrolling with no user row yet', async () => {
+    scenario.application = { status: 'enrolling', data: {}, invite_token_expires_at: null, enrolled_user_id: null, exchanges: { name: 'X' } }
+    const res = await getInvitation('inv-1')
+    expect(res?.setupComplete).toBe(false)
+  })
+  it('reports setupComplete: true once the profile has a full name', async () => {
+    scenario.application = { status: 'enrolled', data: {}, invite_token_expires_at: null, enrolled_user_id: 'stu-1', exchanges: { name: 'X' } }
+    scenario.userProfile = { full_name: 'Léa Martin' }
+    const res = await getInvitation('inv-1')
+    expect(res?.setupComplete).toBe(true)
   })
 })
 
