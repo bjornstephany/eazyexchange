@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { createTranslator } from 'next-intl'
 import fr from '@/messages/fr.json'
 import {
-  typePill, statusPill, reqPill, formDone, docDone, progressLabel, progressPct,
-  docAttentionPill, studentPill, docDrawerRows, formsStats, docsStats,
-  earliestActiveDeadline, initials, activationHints, type TemplateVM, type AssigneeRow,
+  typePill, statusPill, reqPill, formDone, docDone, progressLabel,
+  studentPill, docDrawerRows,
+  initials, activationHints, type TemplateVM, type AssigneeRow,
 } from '@/lib/forms/rollup'
 
 // Root (unnamespaced) fr translator — the label helpers now build their strings
@@ -53,24 +53,6 @@ describe('progress', () => {
     expect(progressLabel(vm({ kind: 'online', status: 'draft', assignees: [] }), t)).toBe('Pas encore envoyé')
     expect(progressLabel(vm({ kind: 'doc', status: 'draft', assignees: [] }), t)).toBe('Pas encore demandé')
   })
-  it('pct rounds and survives zero totals', () => {
-    expect(progressPct(vm({ kind: 'doc', assignees }))).toBe(20)
-    expect(progressPct(vm({ kind: 'doc', assignees: [] }))).toBe(0)
-  })
-})
-
-describe('doc attention pill', () => {
-  it('priority: brouillon > manquants > à vérifier > complet', () => {
-    expect(docAttentionPill(vm({ status: 'draft' }), t)).toEqual({ kind: 'warn', label: 'Brouillon' })
-    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'rejected'), a('3', 'approved')] }), t))
-      .toEqual({ kind: 'bad', label: '2 manquants' })
-    expect(docAttentionPill(vm({ assignees: [a('1', null), a('2', 'approved')] }), t))
-      .toEqual({ kind: 'bad', label: '1 manquant' })
-    expect(docAttentionPill(vm({ assignees: [a('1', 'submitted'), a('2', 'approved')] }), t))
-      .toEqual({ kind: 'info', label: '1 à vérifier' })
-    expect(docAttentionPill(vm({ assignees: [a('1', 'approved')] }), t))
-      .toEqual({ kind: 'ok', label: 'Complet' })
-  })
 })
 
 describe('drawer rows', () => {
@@ -88,27 +70,6 @@ describe('drawer rows', () => {
     expect(studentPill('approved', t)).toBeNull()
     expect(studentPill(null, t)).toEqual({ kind: 'bad', label: 'Manquant' })
     expect(studentPill('rejected', t)).toEqual({ kind: 'bad', label: 'À refaire' })
-  })
-})
-
-describe('stats', () => {
-  const forms = [
-    vm({ kind: 'online', assignees: [a('1', 'approved'), a('2', null)] }),
-    vm({ kind: 'pdf', status: 'draft', assignees: [] }),
-  ]
-  const docs = [
-    vm({ kind: 'doc', assignees: [a('1', 'approved'), a('2', 'submitted')] }),
-    vm({ kind: 'doc', status: 'draft', deadline: null, assignees: [] }),
-  ]
-  it('formsStats over active only', () => {
-    expect(formsStats(forms)).toEqual({ activeCount: 1, done: 1, total: 2 })
-  })
-  it('docsStats: docCount all, sums over active', () => {
-    expect(docsStats(docs)).toEqual({ docCount: 2, reviewCount: 1, done: 1, total: 2 })
-  })
-  it('earliestActiveDeadline ignores drafts and nulls', () => {
-    expect(earliestActiveDeadline(docs)).toBe('2026-10-10T00:00:00+00:00')
-    expect(earliestActiveDeadline([vm({ status: 'draft' })])).toBeNull()
   })
 })
 

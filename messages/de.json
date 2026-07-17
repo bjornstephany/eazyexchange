@@ -354,32 +354,11 @@
     },
     "forms": {
       "title": "Formulare",
-      "subtitle": "Die Dokumente und Formulare, die Familien ausfüllen, um das Dossier ihres Kindes zu vervollständigen. Verwenden Sie die Standardvorlagen oder fügen Sie eigene hinzu.",
       "yourFormsCount": "Ihre Formulare · {count}",
       "addFormLabel": "Formular hinzufügen",
       "close": "Schließen",
-      "activeFormsCount": "{count, plural, one {Aktives Formular} other {Aktive Formulare}}",
-      "studentsConcerned": "Betroffene Schüler",
-      "requestedInLabel": "Angefordert in",
-      "requestedInValue": "Phase 2",
-      "responsesReceivedLabel": "Erhaltene Antworten",
-      "autoSendBanner": "Aktive Formulare werden bei Öffnung der Phase 2 automatisch an die Familien gesendet, mit Erinnerungen bis zum Eingang.",
-      "standardBadge": "STANDARD",
-      "customBadge": "INDIVIDUELL",
-      "previewButton": "Vorschau",
-      "editButton": "Bearbeiten",
       "deleteConfirm": "Diese Vorlage löschen? Bereits von Schülern eingereichte Antworten werden endgültig gelöscht.",
       "addPanel": {
-        "onlineTile": {
-          "title": "Online-Formular erstellen",
-          "description": "Erstellen Sie Ihre eigenen Fragen — direkt in der App ausgefüllt.",
-          "button": "Fragen erstellen"
-        },
-        "pdfTile": {
-          "title": "PDF importieren",
-          "description": "Laden Sie ein Dokument hoch, das die Familien ausdrucken, unterschreiben und zurücksenden.",
-          "button": "PDF hochladen"
-        },
         "nameLabel": "Name des Formulars",
         "namePlaceholderPdf": "Elterliche Genehmigung",
         "namePlaceholderOnline": "Familienfragebogen",
@@ -388,9 +367,6 @@
         "back": "Zurück",
         "createDraft": "Entwurf erstellen",
         "creating": "Wird erstellt…"
-      },
-      "deleteButton": {
-        "deleting": "Wird gelöscht…"
       },
       "drawer": {
         "pdfPreviewLabel": "PDF-Vorlage · Dokumentvorschau",
@@ -440,31 +416,18 @@
     },
     "documents": {
       "title": "Dokumente",
-      "subtitle": "Die Nachweise, die Familien hochladen, um das Dossier zu vervollständigen. Verwenden Sie die Standardliste oder fordern Sie eigene an.",
-      "requestedCount": "Angeforderte Dokumente",
-      "studentsConcerned": "Betroffene Schüler",
-      "toReviewCount": "Zu prüfende Unterlagen",
-      "receivedLabel": "Erhaltene Unterlagen",
-      "bannerText": "Jede hochgeladene Unterlage wird zur Prüfung eingereiht. Familien werden bei fehlenden Unterlagen automatisch erinnert.",
-      "bannerTextWithDeadline": "Jede hochgeladene Unterlage wird zur Prüfung eingereiht. Familien werden bei fehlenden Unterlagen bis zur Frist am {date} automatisch erinnert.",
       "requestedHeading": "Angeforderte Unterlagen · {count}",
       "addDocLabel": "Dokument anfordern",
       "close": "Schließen",
-      "standardBadge": "STANDARD",
-      "customBadge": "INDIVIDUELL",
-      "detailButton": "Details",
       "editButton": "Bearbeiten",
       "deleteConfirm": "Diese Unterlage löschen? Bereits von Familien gesendete Dateien werden endgültig gelöscht.",
       "addPanel": {
         "mandatoryTile": {
-          "title": "Obligatorisch für alle",
-          "description": "Von jedem bestätigten Schüler angefordert — zählt zur Vollständigkeit des Dossiers."
+          "title": "Obligatorisch für alle"
         },
         "conditionalTile": {
-          "title": "Je nach Situation",
-          "description": "Nur von den betroffenen Schülern angefordert — Sie wählen wer, ohne andere Dossiers zu benachteiligen."
+          "title": "Je nach Situation"
         },
-        "addButton": "Unterlage hinzufügen",
         "nameLabel": "Name der Unterlage",
         "namePlaceholder": "Europäische Krankenversicherungskarte",
         "deadlineLabel": "Frist (optional)",
