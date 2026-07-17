@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const MESSAGE_MAX = 2000
