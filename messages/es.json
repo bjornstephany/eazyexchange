@@ -92,7 +92,7 @@
         "restoreButton": "Restaurar",
         "archiveButton": "Archivar el programa…",
         "stats": {
-          "enrolled": "{count, plural, one {# alumno confirmado} other {# alumnos confirmados}}",
+          "enrolled": "{count, plural, one {# alumno aceptado} other {# alumnos aceptados}}",
           "applications": "{count, plural, one {# candidatura} other {# candidaturas}}",
           "deadline": "plazo de expedientes {date}"
         },
@@ -194,8 +194,9 @@
       "filterLabelMaybe": "Indecisos",
       "filterLabelMissingDocs": "Docs faltantes",
       "startTitle": "Empiece su intercambio",
-      "startBody": "Empiece su intercambio invitando a sus alumnos a postularse.",
+      "startBody": "Empiece su intercambio invitando a sus alumnos a postularse y preparando los formularios y documentos que deberán completar.",
       "inviteCta": "Invitar a sus alumnos a postularse",
+      "prepareFormsCta": "Preparar formularios y documentos",
       "overviewTitle": "Resumen general",
       "progressLabel": "Progreso del intercambio",
       "filterBadge": "Filtro: {label} ✕",
@@ -210,46 +211,24 @@
       "actionsHeading": "Por hacer ahora",
       "upToDate": "Todo al día ✓",
       "nextDeadlineSuffix": " — próxima fecha límite el {date}.",
-      "sending": "Enviando…",
-      "timelineHeading": "Recorrido",
-      "acceptCta": "Aceptar e invitar",
-      "rejectCta": "Rechazar",
-      "notePlaceholder": "Nota para el alumno (opcional)",
-      "notifyByEmail": "Avisar por correo electrónico",
-      "confirmRejectCta": "Confirmar el rechazo",
       "formsAndDocsHeading": "Formularios y documentos",
       "dueSuffix": " · fecha límite {date}",
       "autoReminderHint": "Recordatorios automáticos diarios durante el periodo de vencimiento.",
       "pills": {
         "complete": "Completo",
-        "confirmedParen": "Confirmado(a)",
+        "accepted": "Aceptado(a)",
         "toExamine": "Por examinar",
-        "invitedWaiting": "Invitado — a la espera",
+        "acceptedAwaiting": "Aceptado(a) — a la espera",
         "maybe": "Quizás",
         "declined": "Ha declinado",
         "rejected": "Rechazado",
         "dash": "—",
         "waiting": "En espera",
-        "confirmed": "Confirmado",
         "hesitates": "Indeciso"
-      },
-      "timeline": {
-        "received": "Candidatura recibida",
-        "awaitingReview": "A la espera de examen",
-        "awaitingReviewSub": "Por aceptar o rechazar",
-        "rejected": "Candidatura rechazada",
-        "accepted": "Candidatura aceptada",
-        "inviteSent": "Invitación enviada automáticamente",
-        "inviteSentSub": "Correo enviado nada más aceptar",
-        "awaitingResponse": "A la espera de respuesta",
-        "respondedYes": "Ha respondido: Sí",
-        "respondedYesSub": "Participación confirmada",
-        "respondedMaybe": "Ha respondido: Quizás",
-        "respondedNo": "Ha respondido: No"
       },
       "funnel": {
         "candidatures": "Candidaturas",
-        "confirmed": "Confirmados",
+        "accepted": "Aceptados",
         "late": "Con retraso",
         "complete": "Completos"
       },
@@ -270,7 +249,7 @@
         "missingDocsDesc": "Documentos no recibidos antes de la fecha límite.",
         "missingDocsCta": "Ver los alumnos",
         "maybeTitle": "{n, plural, one {# alumno indeciso — a recordar} other {# alumnos indecisos — a recordar}}",
-        "maybeDesc": "Respuestas «Quizás» a convertir en confirmación.",
+        "maybeDesc": "Respuestas «Quizás» para hacer seguimiento con las familias.",
         "maybeCta": "Enviar recordatorio"
       },
       "subline": "{a, plural, one {# candidatura} other {# candidaturas}} por examinar, {r, plural, one {# expediente} other {# expedientes}} por verificar, {l, plural, one {# alumno} other {# alumnos}} con retraso.",
@@ -501,7 +480,7 @@
         "pending": "{n, plural, one {# documento esperado} other {# documentos esperados}}"
       },
       "dueLabel": "Fecha límite {date}",
-      "listSummary": "{n, plural, one {# alumno confirmado} other {# alumnos confirmados}} · {done, plural, one {# expediente completo} other {# expedientes completos}}",
+      "listSummary": "{n, plural, one {# alumno aceptado} other {# alumnos aceptados}} · {done, plural, one {# expediente completo} other {# expedientes completos}}",
       "reminderNote": {
         "complete": "Expediente completo — ningún recordatorio previsto para {firstName}.",
         "pending": "Recordatorios automáticos por correo electrónico hasta su recepción — {firstName} y sus padres reciben la lista de documentos esperados.",
@@ -516,7 +495,7 @@
         "backLabel": "Volver a formularios"
       },
       "students": {
-        "emptyHeading": "Ningún alumno confirmado para esta sesión.",
+        "emptyHeading": "Ningún alumno aceptado para esta sesión.",
         "emptyBodyPrefix": "Los alumnos aparecen aquí una vez aceptada su candidatura y creada su cuenta.",
         "emptyBodyLink": "Ver las candidaturas"
       },

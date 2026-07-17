@@ -92,7 +92,7 @@
         "restoreButton": "Restaurer",
         "archiveButton": "Archiver le programme…",
         "stats": {
-          "enrolled": "{count, plural, one {# élève confirmé} other {# élèves confirmés}}",
+          "enrolled": "{count, plural, one {# élève accepté} other {# élèves acceptés}}",
           "applications": "{count, plural, one {# candidature} other {# candidatures}}",
           "deadline": "échéance dossiers {date}"
         },
@@ -194,8 +194,9 @@
       "filterLabelMaybe": "Hésitent",
       "filterLabelMissingDocs": "Docs manquants",
       "startTitle": "Commencez votre échange",
-      "startBody": "Commencez votre échange en invitant vos élèves à postuler.",
+      "startBody": "Commencez votre échange en invitant vos élèves à postuler et en préparant les formulaires et documents qu'ils devront compléter.",
       "inviteCta": "Inviter vos élèves à postuler",
+      "prepareFormsCta": "Préparer les formulaires & documents",
       "overviewTitle": "Vue d'ensemble",
       "progressLabel": "Progression de l'échange",
       "filterBadge": "Filtre : {label} ✕",
@@ -210,46 +211,24 @@
       "actionsHeading": "À faire maintenant",
       "upToDate": "Tout est à jour ✓",
       "nextDeadlineSuffix": " — prochaine échéance le {date}.",
-      "sending": "Envoi…",
-      "timelineHeading": "Parcours",
-      "acceptCta": "Accepter & inviter",
-      "rejectCta": "Refuser",
-      "notePlaceholder": "Note pour l'élève (facultatif)",
-      "notifyByEmail": "Prévenir par e-mail",
-      "confirmRejectCta": "Confirmer le refus",
       "formsAndDocsHeading": "Formulaires & documents",
       "dueSuffix": " · échéance {date}",
       "autoReminderHint": "Relances automatiques quotidiennes en période d'échéance.",
       "pills": {
         "complete": "Complet",
-        "confirmedParen": "Confirmé(e)",
+        "accepted": "Accepté(e)",
         "toExamine": "À examiner",
-        "invitedWaiting": "Invité — en attente",
+        "acceptedAwaiting": "Accepté(e) — en attente",
         "maybe": "Peut-être",
         "declined": "A décliné",
         "rejected": "Refusé",
         "dash": "—",
         "waiting": "En attente",
-        "confirmed": "Confirmé",
         "hesitates": "Hésite"
-      },
-      "timeline": {
-        "received": "Candidature reçue",
-        "awaitingReview": "En attente d’examen",
-        "awaitingReviewSub": "À accepter ou refuser",
-        "rejected": "Candidature refusée",
-        "accepted": "Candidature acceptée",
-        "inviteSent": "Invitation envoyée automatiquement",
-        "inviteSentSub": "Email envoyé dès l’acceptation",
-        "awaitingResponse": "En attente de réponse",
-        "respondedYes": "A répondu : Oui",
-        "respondedYesSub": "Participation confirmée",
-        "respondedMaybe": "A répondu : Peut-être",
-        "respondedNo": "A répondu : Non"
       },
       "funnel": {
         "candidatures": "Candidatures",
-        "confirmed": "Confirmés",
+        "accepted": "Acceptés",
         "late": "En retard",
         "complete": "Complets"
       },
@@ -270,7 +249,7 @@
         "missingDocsDesc": "Pièces non reçues avant l’échéance.",
         "missingDocsCta": "Voir les élèves",
         "maybeTitle": "{n, plural, one {# élève hésite — à relancer} other {# élèves hésitent — à relancer}}",
-        "maybeDesc": "Réponses « Peut-être » à convertir en confirmation.",
+        "maybeDesc": "Réponses « Peut-être » à relancer.",
         "maybeCta": "Relancer"
       },
       "subline": "{a, plural, one {# candidature} other {# candidatures}} à examiner, {r, plural, one {# dossier} other {# dossiers}} à vérifier, {l, plural, one {# élève} other {# élèves}} en retard.",
@@ -501,7 +480,7 @@
         "pending": "{n, plural, one {# pièce attendue} other {# pièces attendues}}"
       },
       "dueLabel": "Échéance {date}",
-      "listSummary": "{n, plural, one {# élève confirmé} other {# élèves confirmés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
+      "listSummary": "{n, plural, one {# élève accepté} other {# élèves acceptés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
       "reminderNote": {
         "complete": "Dossier complet — aucune relance prévue pour {firstName}.",
         "pending": "Relances automatiques par e-mail jusqu’à réception — {firstName} et ses parents reçoivent la liste des pièces attendues.",
@@ -516,7 +495,7 @@
         "backLabel": "Retour aux formulaires"
       },
       "students": {
-        "emptyHeading": "Aucun élève confirmé pour cette session.",
+        "emptyHeading": "Aucun élève accepté pour cette session.",
         "emptyBodyPrefix": "Les élèves apparaissent ici une fois leur candidature acceptée et leur compte créé.",
         "emptyBodyLink": "Voir les candidatures"
       },

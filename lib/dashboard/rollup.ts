@@ -38,7 +38,10 @@ export function p(n: number): string {
 }
 
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
-const ACCEPTED_GROUP_STATUSES = ['accepted', 'maybe', 'declined', 'enrolling', 'enrolled']
+
+// The funnel's Accepted group: everyone the organizer accepted who hasn't
+// declined or been rejected.
+const ACCEPTED_FILTER_STATUSES = ['accepted', 'maybe', 'enrolling', 'enrolled']
 
 // per-assignment completion state
 type AssignmentState = 'incomplete' | 'awaiting' | 'done'
@@ -145,36 +148,6 @@ export function nextDeadline(rollups: DossierRollup[]): string | null {
   return earliest
 }
 
-export function timelineFor(app: AppRow, t: T): { dot: Pill['kind']; title: string; sub: string }[] {
-  const entries: { dot: Pill['kind']; title: string; sub: string }[] = [
-    { dot: 'ok', title: t('organizer.dashboard.timeline.received'), sub: frShortDate(app.submitted_at) },
-  ]
-
-  const { status } = app
-  if (status === 'submitted') {
-    entries.push({ dot: 'neutral', title: t('organizer.dashboard.timeline.awaitingReview'), sub: t('organizer.dashboard.timeline.awaitingReviewSub') })
-    return entries
-  }
-  if (status === 'rejected') {
-    entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.rejected'), sub: '' })
-    return entries
-  }
-  if (ACCEPTED_GROUP_STATUSES.includes(status)) {
-    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.accepted'), sub: '' })
-    entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.inviteSent'), sub: t('organizer.dashboard.timeline.inviteSentSub') })
-    if (status === 'accepted') {
-      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.awaitingResponse'), sub: '' })
-    } else if (CONFIRMED_STATUSES.includes(status)) {
-      entries.push({ dot: 'ok', title: t('organizer.dashboard.timeline.respondedYes'), sub: t('organizer.dashboard.timeline.respondedYesSub') })
-    } else if (status === 'maybe') {
-      entries.push({ dot: 'warn', title: t('organizer.dashboard.timeline.respondedMaybe'), sub: '' })
-    } else if (status === 'declined') {
-      entries.push({ dot: 'bad', title: t('organizer.dashboard.timeline.respondedNo'), sub: '' })
-    }
-  }
-  return entries
-}
-
 // ---- Unified lifecycle view (single dashboard, no phases) ----
 
 export type EnrolledStudent = { id: string; full_name: string; email: string }
@@ -191,9 +164,9 @@ export function candidaturePill(status: string | null, t: T): Pill {
   switch (status) {
     case null:
     case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.confirmedParen') }
+    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.accepted') }
     case 'submitted': return { kind: 'neutral', label: t('organizer.dashboard.pills.toExamine') }
-    case 'accepted': return { kind: 'warn', label: t('organizer.dashboard.pills.invitedWaiting') }
+    case 'accepted': return { kind: 'warn', label: t('organizer.dashboard.pills.acceptedAwaiting') }
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.maybe') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
@@ -207,7 +180,7 @@ export function applicantStatusPill(status: string, t: T): Pill {
     case 'submitted': return { kind: 'neutral', label: t('organizer.dashboard.pills.toExamine') }
     case 'accepted': return { kind: 'warn', label: t('organizer.dashboard.pills.waiting') }
     case 'enrolling':
-    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.confirmed') }
+    case 'enrolled': return { kind: 'ok', label: t('organizer.dashboard.pills.accepted') }
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.hesitates') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
@@ -223,7 +196,7 @@ function normEmail(e: string): string {
 // that reached enrolling/enrolled and matches an enrolled student's email is
 // merged into that student's row; a confirmed application with no matching
 // student (shouldn't happen — enrollment reuses the application email) falls
-// back to an applicant row with a Confirmé pill, never silently dropped.
+// back to an applicant row with an Accepté pill, never silently dropped.
 export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], rollups: DossierRollup[], t: T): LifecycleRow[] {
   const rollupByStudent = new Map(rollups.map(r => [r.studentId, r]))
   const enrolledEmails = new Set(students.map(s => normEmail(s.email)))
@@ -243,7 +216,17 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
   const enrolledRows: LifecycleRow[] = students.flatMap(s => {
     const rollup = rollupByStudent.get(s.id)
     if (!rollup) return []
-    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name: rollup.name, candidature: candidaturePill(null, t), rollup }]
+    // A student who replied yes but hasn't finished account setup has an empty
+    // profile full_name. Reuse the merge's email match to borrow the applicant
+    // name from their confirmed application, else show the email. The row's
+    // rollup copy carries the resolved name so the drawer header shows it too.
+    let name = rollup.name.trim()
+    if (!name) {
+      const match = apps.find(a => CONFIRMED_STATUSES.includes(a.status) && normEmail(a.email) === normEmail(s.email))
+      name = (match ? applicantName(match.data) : '') || s.email
+    }
+    const resolved = name === rollup.name ? rollup : { ...rollup, name }
+    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name, candidature: candidaturePill(null, t), rollup: resolved }]
   })
 
   return [...applicantRows, ...enrolledRows]
@@ -254,13 +237,17 @@ export function closedCount(rows: LifecycleRow[]): number {
 }
 
 // Candidatures counts ALL received applications, including rejected/declined
-// (historical volume) — the hide-closed toggle only affects the table.
-export function lifecycleFunnel(apps: AppRow[], rollups: DossierRollup[], t: T): FunnelStage[] {
+// (historical volume) — the hide-closed toggle only affects the table. The
+// Accepted tile counts exactly the rows its filter shows: enrolled rows plus
+// applicant rows still in the accepted group (needs the built rows so the
+// enrolled-application dedupe is already applied).
+export function lifecycleFunnel(apps: AppRow[], rows: LifecycleRow[], rollups: DossierRollup[], t: T): FunnelStage[] {
   const complete = rollups.filter(r => dossierComplete(r)).length
+  const accepted = rows.filter(r => r.kind === 'enrolled' || ACCEPTED_FILTER_STATUSES.includes(r.app.status)).length
   return [
     { key: 'all', label: t('organizer.dashboard.funnel.candidatures'), count: apps.length },
     { key: 'toreview', label: t('organizer.dashboard.pills.toExamine'), count: apps.filter(a => a.status === 'submitted').length },
-    { key: 'confirmed', label: t('organizer.dashboard.funnel.confirmed'), count: rollups.length },
+    { key: 'accepted', label: t('organizer.dashboard.funnel.accepted'), count: accepted },
     { key: 'review', label: t('common.status.toVerify'), count: rollups.filter(r => r.overall.kind === 'info').length },
     { key: 'late', label: t('organizer.dashboard.funnel.late'), count: rollups.filter(r => r.late).length },
     { key: 'complete', label: t('organizer.dashboard.funnel.complete'), count: complete, display: `${complete} / ${rollups.length}` },
@@ -273,7 +260,7 @@ export function lifecycleFilter(rows: LifecycleRow[], key: string | null, showCl
   switch (key) {
     case 'toreview': return visible.filter(r => r.kind === 'applicant' && r.app.status === 'submitted')
     case 'maybe': return visible.filter(r => r.kind === 'applicant' && r.app.status === 'maybe')
-    case 'confirmed': return visible.filter(r => r.kind === 'enrolled' || CONFIRMED_STATUSES.includes(r.app.status))
+    case 'accepted': return visible.filter(r => r.kind === 'enrolled' || ACCEPTED_FILTER_STATUSES.includes(r.app.status))
     case 'review': return visible.filter(r => r.kind === 'enrolled' && r.rollup.overall.kind === 'info')
     case 'late': return visible.filter(r => r.kind === 'enrolled' && r.rollup.late)
     case 'missingdocs': return visible.filter(r => r.kind === 'enrolled' && (r.rollup.docs === 'missing' || r.rollup.docs === 'pending'))

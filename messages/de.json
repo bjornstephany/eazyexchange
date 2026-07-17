@@ -92,7 +92,7 @@
         "restoreButton": "Wiederherstellen",
         "archiveButton": "Programm archivieren…",
         "stats": {
-          "enrolled": "{count, plural, one {# bestätigter Schüler} other {# bestätigte Schüler}}",
+          "enrolled": "{count, plural, one {# angenommener Schüler} other {# angenommene Schüler}}",
           "applications": "{count, plural, one {# Bewerbung} other {# Bewerbungen}}",
           "deadline": "Frist für Dossiers {date}"
         },
@@ -194,8 +194,9 @@
       "filterLabelMaybe": "Unentschlossen",
       "filterLabelMissingDocs": "Fehlende Dokumente",
       "startTitle": "Starten Sie Ihren Austausch",
-      "startBody": "Starten Sie Ihren Austausch, indem Sie Ihre Schüler zur Bewerbung einladen.",
+      "startBody": "Starten Sie Ihren Austausch, indem Sie Ihre Schüler zur Bewerbung einladen und die Formulare und Dokumente vorbereiten, die sie ausfüllen müssen.",
       "inviteCta": "Schüler zur Bewerbung einladen",
+      "prepareFormsCta": "Formulare & Dokumente vorbereiten",
       "overviewTitle": "Übersicht",
       "progressLabel": "Fortschritt des Austauschs",
       "filterBadge": "Filter: {label} ✕",
@@ -210,46 +211,24 @@
       "actionsHeading": "Jetzt zu erledigen",
       "upToDate": "Alles auf dem neuesten Stand ✓",
       "nextDeadlineSuffix": " — nächste Frist am {date}.",
-      "sending": "Wird gesendet…",
-      "timelineHeading": "Verlauf",
-      "acceptCta": "Annehmen & einladen",
-      "rejectCta": "Ablehnen",
-      "notePlaceholder": "Notiz für den Schüler (optional)",
-      "notifyByEmail": "Per E-Mail benachrichtigen",
-      "confirmRejectCta": "Ablehnung bestätigen",
       "formsAndDocsHeading": "Formulare & Dokumente",
       "dueSuffix": " · Frist {date}",
       "autoReminderHint": "Automatische tägliche Erinnerungen während der Fristperiode.",
       "pills": {
         "complete": "Vollständig",
-        "confirmedParen": "Bestätigt",
+        "accepted": "Angenommen",
         "toExamine": "Zu prüfen",
-        "invitedWaiting": "Eingeladen — wartet auf Antwort",
+        "acceptedAwaiting": "Angenommen — wartet auf Antwort",
         "maybe": "Vielleicht",
         "declined": "Hat abgelehnt",
         "rejected": "Abgelehnt",
         "dash": "—",
         "waiting": "Wartet",
-        "confirmed": "Bestätigt",
         "hesitates": "Unentschlossen"
-      },
-      "timeline": {
-        "received": "Bewerbung erhalten",
-        "awaitingReview": "Wartet auf Prüfung",
-        "awaitingReviewSub": "Anzunehmen oder abzulehnen",
-        "rejected": "Bewerbung abgelehnt",
-        "accepted": "Bewerbung angenommen",
-        "inviteSent": "Einladung automatisch gesendet",
-        "inviteSentSub": "E-Mail bei Annahme gesendet",
-        "awaitingResponse": "Wartet auf Antwort",
-        "respondedYes": "Geantwortet: Ja",
-        "respondedYesSub": "Teilnahme bestätigt",
-        "respondedMaybe": "Geantwortet: Vielleicht",
-        "respondedNo": "Geantwortet: Nein"
       },
       "funnel": {
         "candidatures": "Bewerbungen",
-        "confirmed": "Bestätigt",
+        "accepted": "Angenommen",
         "late": "Verspätet",
         "complete": "Vollständig"
       },
@@ -270,7 +249,7 @@
         "missingDocsDesc": "Unterlagen vor der Frist nicht eingegangen.",
         "missingDocsCta": "Schüler anzeigen",
         "maybeTitle": "{n, plural, one {# Schüler unentschlossen — zu erinnern} other {# Schüler unentschlossen — zu erinnern}}",
-        "maybeDesc": "„Vielleicht“-Antworten in Bestätigungen umwandeln.",
+        "maybeDesc": "„Vielleicht“-Antworten zum Nachfassen bei den Familien.",
         "maybeCta": "Erinnern"
       },
       "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand.",
@@ -501,7 +480,7 @@
         "pending": "{n, plural, one {# erwartete Unterlage} other {# erwartete Unterlagen}}"
       },
       "dueLabel": "Frist {date}",
-      "listSummary": "{n, plural, one {# bestätigter Schüler} other {# bestätigte Schüler}} · {done, plural, one {# vollständiges Dossier} other {# vollständige Dossiers}}",
+      "listSummary": "{n, plural, one {# angenommener Schüler} other {# angenommene Schüler}} · {done, plural, one {# vollständiges Dossier} other {# vollständige Dossiers}}",
       "reminderNote": {
         "complete": "Dossier vollständig — keine Erinnerung für {firstName} geplant.",
         "pending": "Automatische E-Mail-Erinnerungen bis zum Eingang — {firstName} und die Eltern erhalten die Liste der erwarteten Unterlagen.",
@@ -516,7 +495,7 @@
         "backLabel": "Zurück zu den Formularen"
       },
       "students": {
-        "emptyHeading": "Noch keine bestätigten Schüler für diese Session.",
+        "emptyHeading": "Noch keine angenommenen Schüler für diese Session.",
         "emptyBodyPrefix": "Schüler erscheinen hier, sobald ihre Bewerbung angenommen und ihr Konto erstellt wurde.",
         "emptyBodyLink": "Bewerbungen ansehen"
       },

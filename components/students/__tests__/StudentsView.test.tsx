@@ -47,7 +47,7 @@ describe('StudentsView', () => {
   it('renders subline, chips with counts, and selects the first student', () => {
     renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.getByRole('heading', { name: 'Élèves' })).toBeInTheDocument()
-    expect(screen.getByText('2 élèves confirmés · 1 dossier complet')).toBeInTheDocument()
+    expect(screen.getByText('2 élèves acceptés · 1 dossier complet')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Tous/ })).toBeInTheDocument()
     // first in the given order (already status-sorted by the action) is selected
     expect(screen.getByText('Première · 1re G2 · Français')).toBeInTheDocument()

@@ -92,7 +92,7 @@
         "restoreButton": "Restore",
         "archiveButton": "Archive the program…",
         "stats": {
-          "enrolled": "{count, plural, one {# confirmed student} other {# confirmed students}}",
+          "enrolled": "{count, plural, one {# accepted student} other {# accepted students}}",
           "applications": "{count, plural, one {# application} other {# applications}}",
           "deadline": "file deadline {date}"
         },
@@ -194,8 +194,9 @@
       "filterLabelMaybe": "Undecided",
       "filterLabelMissingDocs": "Missing docs",
       "startTitle": "Start your exchange",
-      "startBody": "Start your exchange by inviting your students to apply.",
+      "startBody": "Start your exchange by inviting your students to apply and preparing the forms and documents they will need to complete.",
       "inviteCta": "Invite your students to apply",
+      "prepareFormsCta": "Prepare forms & documents",
       "overviewTitle": "Overview",
       "progressLabel": "Exchange progress",
       "filterBadge": "Filter: {label} ✕",
@@ -210,46 +211,24 @@
       "actionsHeading": "To do now",
       "upToDate": "All caught up ✓",
       "nextDeadlineSuffix": " — next deadline on {date}.",
-      "sending": "Sending…",
-      "timelineHeading": "Timeline",
-      "acceptCta": "Accept & invite",
-      "rejectCta": "Reject",
-      "notePlaceholder": "Note for the student (optional)",
-      "notifyByEmail": "Notify by email",
-      "confirmRejectCta": "Confirm rejection",
       "formsAndDocsHeading": "Forms & documents",
       "dueSuffix": " · due {date}",
       "autoReminderHint": "Automatic reminders sent daily as the deadline approaches.",
       "pills": {
         "complete": "Complete",
-        "confirmedParen": "Confirmed",
+        "accepted": "Accepted",
         "toExamine": "To review",
-        "invitedWaiting": "Invited — awaiting reply",
+        "acceptedAwaiting": "Accepted — awaiting reply",
         "maybe": "Maybe",
         "declined": "Declined",
         "rejected": "Rejected",
         "dash": "—",
         "waiting": "Awaiting",
-        "confirmed": "Confirmed",
         "hesitates": "Undecided"
-      },
-      "timeline": {
-        "received": "Application received",
-        "awaitingReview": "Awaiting review",
-        "awaitingReviewSub": "To accept or reject",
-        "rejected": "Application rejected",
-        "accepted": "Application accepted",
-        "inviteSent": "Invitation sent automatically",
-        "inviteSentSub": "Email sent upon acceptance",
-        "awaitingResponse": "Awaiting response",
-        "respondedYes": "Replied: Yes",
-        "respondedYesSub": "Participation confirmed",
-        "respondedMaybe": "Replied: Maybe",
-        "respondedNo": "Replied: No"
       },
       "funnel": {
         "candidatures": "Applications",
-        "confirmed": "Confirmed",
+        "accepted": "Accepted",
         "late": "Late",
         "complete": "Complete"
       },
@@ -270,7 +249,7 @@
         "missingDocsDesc": "Documents not received before the deadline.",
         "missingDocsCta": "View students",
         "maybeTitle": "{n, plural, one {# student undecided — to follow up} other {# students undecided — to follow up}}",
-        "maybeDesc": "« Maybe » replies to convert into confirmation.",
+        "maybeDesc": "« Maybe » replies to follow up with families.",
         "maybeCta": "Send reminder"
       },
       "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late.",
@@ -501,7 +480,7 @@
         "pending": "{n, plural, one {# document expected} other {# documents expected}}"
       },
       "dueLabel": "Deadline {date}",
-      "listSummary": "{n, plural, one {# confirmed student} other {# confirmed students}} · {done, plural, one {# complete file} other {# complete files}}",
+      "listSummary": "{n, plural, one {# accepted student} other {# accepted students}} · {done, plural, one {# complete file} other {# complete files}}",
       "reminderNote": {
         "complete": "File complete — no reminder scheduled for {firstName}.",
         "pending": "Automatic email reminders until received — {firstName} and their parents receive the list of expected documents.",
@@ -516,7 +495,7 @@
         "backLabel": "Back to forms"
       },
       "students": {
-        "emptyHeading": "No confirmed students for this session yet.",
+        "emptyHeading": "No accepted students for this session yet.",
         "emptyBodyPrefix": "Students appear here once their application is accepted and their account is created.",
         "emptyBodyLink": "View applications"
       },
