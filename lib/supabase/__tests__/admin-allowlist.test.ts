@@ -21,6 +21,7 @@ const ALLOWLIST = [
   'lib/audit.ts',
   'lib/auth/provision.ts',
   'lib/email-log.ts',
+  'lib/error-reporting.ts',
   'lib/rate-limit.ts',
 ].sort()
 
@@ -28,7 +29,7 @@ const ALLOWLIST = [
 // __dirname, which is unreliable under vitest's ESM transform.
 const ROOT = process.cwd()
 const SCAN_DIRS = ['app', 'actions', 'lib', 'components']
-const ROOT_FILES = ['middleware.ts']
+const ROOT_FILES = ['middleware.ts', 'instrumentation.ts']
 // Matches only static `import … from '…/supabase/admin'`. Assumes the app's
 // static-import convention (verified: no dynamic `import()` of the admin client
 // exists today) — a dynamic import would slip past this guard.

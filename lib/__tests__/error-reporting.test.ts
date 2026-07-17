@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+const rpcMock = vi.fn(async (_fn: string, _args: unknown) => ({ error: null as { code?: string } | null }))
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({ rpc: (fn: string, args: unknown) => rpcMock(fn, args) }),
+}))
+
 import {
   normalizeMessage, redactEmails, truncate, errorFingerprint,
-  MESSAGE_MAX, STACK_MAX,
+  MESSAGE_MAX, STACK_MAX, reportServerError,
 } from '../error-reporting'
 
 describe('normalizeMessage', () => {
@@ -66,5 +72,78 @@ describe('truncate', () => {
 
   it('leaves short strings untouched', () => {
     expect(truncate('short', MESSAGE_MAX)).toBe('short')
+  })
+})
+
+describe('reportServerError', () => {
+  const ctx = { routePath: '/exchanges/[id]', method: 'POST' }
+  let errorSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    rpcMock.mockClear()
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => errorSpy.mockRestore())
+
+  it('records via record_error_report with a normalized fingerprint and the concrete message', async () => {
+    const err = Object.assign(new Error('Exchange 0f8fad5b-d9cb-469f-a165-70867728950e not found'), { digest: 'dgst123' })
+    await reportServerError(err, ctx)
+    expect(rpcMock).toHaveBeenCalledTimes(1)
+    const [fn, args] = rpcMock.mock.calls[0] as [string, Record<string, unknown>]
+    expect(fn).toBe('record_error_report')
+    expect(args).toMatchObject({
+      p_message: 'Exchange 0f8fad5b-d9cb-469f-a165-70867728950e not found',
+      p_route_path: '/exchanges/[id]',
+      p_method: 'POST',
+      p_digest: 'dgst123',
+      p_fingerprint: errorFingerprint(normalizeMessage('Exchange 0f8fad5b-d9cb-469f-a165-70867728950e not found'), '/exchanges/[id]'),
+    })
+    expect(typeof args.p_stack).toBe('string')
+  })
+
+  it('skips Next.js control-flow digests (redirect / notFound are not bugs)', async () => {
+    for (const digest of ['NEXT_REDIRECT;replace;/login;307;', 'NEXT_NOT_FOUND', 'NEXT_HTTP_ERROR_FALLBACK;404']) {
+      await reportServerError(Object.assign(new Error('x'), { digest }), ctx)
+    }
+    expect(rpcMock).not.toHaveBeenCalled()
+  })
+
+  it('redacts emails from message and stack before storage', async () => {
+    const err = new Error('mail to parent.dupont@example.com bounced')
+    err.stack = 'Error: mail to parent.dupont@example.com bounced\n    at sendMail'
+    await reportServerError(err, ctx)
+    const [, args] = rpcMock.mock.calls[0] as [string, Record<string, unknown>]
+    expect(args.p_message).toBe('mail to <email> bounced')
+    expect(args.p_stack).not.toContain('parent.dupont@example.com')
+  })
+
+  it('truncates message to 2000 and stack to 8000 chars', async () => {
+    const err = new Error('m'.repeat(5000))
+    err.stack = 's'.repeat(20000)
+    await reportServerError(err, ctx)
+    const [, args] = rpcMock.mock.calls[0] as [string, { p_message: string; p_stack: string }]
+    expect(args.p_message).toHaveLength(MESSAGE_MAX)
+    expect(args.p_stack).toHaveLength(STACK_MAX)
+  })
+
+  it('handles non-Error throwables: message from String(), no stack, no digest', async () => {
+    await reportServerError('plain string failure', ctx)
+    const [, args] = rpcMock.mock.calls[0] as [string, Record<string, unknown>]
+    expect(args.p_message).toBe('plain string failure')
+    expect(args.p_stack).toBeUndefined()
+    expect(args.p_digest).toBeUndefined()
+  })
+
+  it('resolves and logs only an error code when the RPC returns an error', async () => {
+    rpcMock.mockResolvedValueOnce({ error: { code: '42501' } })
+    await expect(reportServerError(new Error('secret contents'), ctx)).resolves.toBeUndefined()
+    const logged = errorSpy.mock.calls.flat().join(' ')
+    expect(logged).toContain('42501')
+    expect(logged).not.toContain('secret contents')
+  })
+
+  it('resolves even when the admin client throws (never-throw contract)', async () => {
+    rpcMock.mockRejectedValueOnce(new Error('network down'))
+    await expect(reportServerError(new Error('boom'), ctx)).resolves.toBeUndefined()
   })
 })
