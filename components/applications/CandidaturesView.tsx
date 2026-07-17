@@ -8,6 +8,7 @@ import { applicantName } from '@/lib/application-form'
 import { acceptApplications, rejectApplications } from '@/actions/applications-review'
 import { setApplicationOpen } from '@/actions/exchanges'
 import { StatusPill } from '@/components/dashboard/StatusPill'
+import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
 
 type TabKey = 'all' | 'toreview' | 'accepted' | 'rejected'
 
@@ -313,7 +314,10 @@ export function CandidaturesView({
                 onChange={() => toggleOne(a.id)}
                 onClick={e => e.stopPropagation()}
               />
-              <span className="text-sm text-navy">{applicantName(a.data) || a.email}</span>
+              <span className="flex min-w-0 items-center gap-2.5">
+                <ApplicantAvatar photoUrl={a.photoUrl ?? null} data={a.data} email={a.email} />
+                <span className="truncate text-sm text-navy">{applicantName(a.data) || a.email}</span>
+              </span>
               <span className="text-sm text-muted-foreground">{a.data.grade ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{a.data.native_language ?? '—'}</span>
               <span className="text-sm text-muted-foreground">{frShortDate(a.submitted_at)}</span>
