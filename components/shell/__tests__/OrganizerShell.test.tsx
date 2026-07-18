@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent, within } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 let mockPathname = '/dashboard'
@@ -191,25 +191,30 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('Archivé')).toBeInTheDocument()
   })
 
-  it('rail contains Élèves but not Réglages when an exchange is active', () => {
+  it('rail contains a Réglages gear tab linking to /settings', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByRole('link', { name: /Élèves/ })).toHaveAttribute('href', '/students')
-    expect(screen.queryByRole('link', { name: /Réglages/ })).toBeNull()
+    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
   })
 
-  it('Réglages lives in the profile menu and links to /settings', () => {
-    renderShell({ pathname: '/dashboard' })
-    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
-    expect(screen.getByRole('link', { name: 'Réglages' })).toHaveAttribute('href', '/settings')
-    expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
-  })
-
-  it('shows a Feedback rail button that opens the feedback modal', () => {
+  it('Réglages gear tab is visible even with no exchanges', () => {
     renderWithIntl(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
+    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
+  })
+
+  it('profile menu contains only Se déconnecter, not Réglages', () => {
+    renderShell({ pathname: '/dashboard' })
+    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
+    expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
+    const menu = screen.getByRole('button', { name: 'Se déconnecter' }).closest('div') as HTMLElement
+    expect(within(menu).queryByRole('link', { name: 'Réglages' })).toBeNull()
+  })
+
+  it('shows a Feedback button in the header that opens the feedback modal', () => {
+    renderShell({ pathname: '/dashboard' })
     expect(screen.queryByText('feedback-modal-open')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /Feedback/ }))
     expect(screen.getByText('feedback-modal-open')).toBeInTheDocument()

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconStudents, IconFeedback } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -177,24 +177,14 @@ export function OrganizerShell({
             </>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setFeedbackOpen(true)}
-          className="mt-auto flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium text-rail-inactive hover:bg-white/5 hover:text-white"
-        >
-          <IconFeedback />
-          <span>{t('shell.nav.feedback')}</span>
-        </button>
+        <div className="mt-auto">
+          <RailItem href="/settings" label={t('shell.accountMenu.settings')} active={isSettings}>
+            <IconSettings />
+          </RailItem>
+        </div>
         <div ref={menuRef} className="relative mt-2.5">
           {menuOpen && (
             <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
-              <Link
-                href="/settings"
-                onClick={() => setMenuOpen(false)}
-                className="block w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
-              >
-                {t('shell.accountMenu.settings')}
-              </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
@@ -245,15 +235,25 @@ export function OrganizerShell({
               </button>
             )}
           </div>
-          {!isSettings && active && isStudents && (
-            <input
-              type="search"
-              value={listSearch}
-              onChange={(e) => setListSearch(e.target.value)}
-              placeholder={t('shell.studentSearch.placeholder')}
-              className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {!isSettings && active && isStudents && (
+              <input
+                type="search"
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                placeholder={t('shell.studentSearch.placeholder')}
+                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="flex h-[38px] items-center gap-2 rounded-[9px] border px-3.5 text-[13px] font-medium text-muted-foreground hover:bg-hoverrow hover:text-foreground"
+            >
+              <IconFeedbackLight />
+              <span>{t('shell.nav.feedback')}</span>
+            </button>
+          </div>
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
           <div className="mx-auto max-w-6xl">
