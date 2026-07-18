@@ -233,7 +233,6 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
     .update({ application_open: open, application_deadline: deadline })
     .eq('id', exchangeId)
   if (error) throw error
-  revalidatePath(`/exchanges/${exchangeId}`)
   // Application state also drives the Candidatures page and the Aperçu.
   revalidatePath('/applications')
   revalidatePath('/dashboard')

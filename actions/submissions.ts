@@ -317,10 +317,10 @@ export async function approveSubmission(assignmentId: string) {
     metadata: { assignment_id: assignmentId },
   })
 
-  revalidatePath(`/exchanges`)
-  // Approval status also drives the dashboard grid and the student directory
-  // cellMap (organizer's own browser). The student's /my-forms view is a
-  // different actor — accepted cross-actor staleness per the spec (§1c).
+  // Review returns via history-back to its origin list (Documents drawer or
+  // Student detail) — keep both fresh, plus the dashboard grid. The student's
+  // /my-forms view is a different actor — accepted cross-actor staleness.
+  revalidatePath('/documents')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }
@@ -383,8 +383,8 @@ export async function rejectSubmission(assignmentId: string, note: string) {
     })
   }
 
-  revalidatePath(`/exchanges`)
   // Same surfaces (and same cross-actor exemption) as approveSubmission above.
+  revalidatePath('/documents')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }
