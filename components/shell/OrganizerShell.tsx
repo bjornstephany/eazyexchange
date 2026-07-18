@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight } from './RailIcons'
+import { IconOverview, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -155,13 +155,6 @@ export function OrganizerShell({
         <div className="flex w-full flex-col items-center gap-1.5">
           <RailItem href="/dashboard" label={t('shell.nav.dashboard')} active={pathname === '/dashboard'}>
             <IconOverview />
-          </RailItem>
-          <RailItem
-            href="/exchanges"
-            label={t('shell.nav.exchanges')}
-            active={pathname === '/exchanges' || (pathname.startsWith('/exchanges/') && !pathname.includes('/applications'))}
-          >
-            <IconExchanges />
           </RailItem>
           {active && (
             <>

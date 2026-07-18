@@ -133,7 +133,6 @@
     "shell": {
       "nav": {
         "dashboard": "Resumen",
-        "exchanges": "Intercambios",
         "applications": "Candid.",
         "files": "Archivos",
         "students": "Alumnos",
@@ -304,10 +303,6 @@
       }
     },
     "exchanges": {
-      "title": "Intercambios",
-      "subtitle": "Haga seguimiento de todos sus programas de intercambio — pasados, en curso y próximos.",
-      "listLabel": "Sus intercambios",
-      "emptyState": "Ningún intercambio por el momento — cree el primero.",
       "reminders": {
         "heading": "Recordatorios automáticos",
         "description": "Se envían correos de recordatorio a los alumnos cuyo expediente está incompleto. El recordatorio manual sigue disponible aunque los recordatorios estén desactivados.",
@@ -499,7 +494,7 @@
         "emptyBodyLink": "Ver las candidaturas"
       },
       "submissionReview": {
-        "backLink": "← Volver al intercambio",
+        "backLink": "← Volver",
         "unknownStudent": "Desconocido",
         "notSubmitted": "No enviado",
         "notStarted": "Este alumno aún no ha empezado este formulario.",

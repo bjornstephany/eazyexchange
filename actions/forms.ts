@@ -231,10 +231,8 @@ export async function updateTemplateMeta(
   }).eq('id', id)
   if (error) throw error
   revalidatePath('/forms', 'layout')
-  // Name/deadline also feed the dashboard grid and the exchange cards' %
-  // complete once the template is active.
+  // Name/deadline also feed the dashboard grid once the template is active.
   revalidatePath('/dashboard')
-  revalidatePath('/exchanges')
   return { ok: true }
 }
 
@@ -293,9 +291,8 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
   }
 
   revalidatePath('/forms', 'layout')
-  // Newly active → now appears in the dashboard grid and exchange % complete.
+  // Newly active → now appears in the dashboard grid.
   revalidatePath('/dashboard')
-  revalidatePath('/exchanges')
   return { ok: true }
 }
 
@@ -333,9 +330,8 @@ export async function deleteTemplate(id: string): Promise<void> {
   const { error } = await supabase.from('form_templates').delete().eq('id', id)
   if (error) throw error
   revalidatePath('/forms', 'layout')
-  // If it was active, it drops off the dashboard grid and exchange % complete.
+  // If it was active, it drops off the dashboard grid.
   revalidatePath('/dashboard')
-  revalidatePath('/exchanges')
 }
 
 const REMIND_COOLDOWN_MS = 24 * 3600 * 1000

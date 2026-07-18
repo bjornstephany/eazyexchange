@@ -18,7 +18,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
     setError(null)
     try {
       await approveSubmission(assignmentId)
-      router.push('/dashboard')
+      router.back()
     } catch (err: any) {
       setError(err.message ?? 'Failed to approve')
       setLoading(null)
@@ -31,7 +31,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
     setError(null)
     try {
       await rejectSubmission(assignmentId, note.trim())
-      router.push('/dashboard')
+      router.back()
     } catch (err: any) {
       setError(err.message ?? 'Failed to reject')
       setLoading(null)

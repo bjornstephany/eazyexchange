@@ -133,7 +133,6 @@
     "shell": {
       "nav": {
         "dashboard": "Overview",
-        "exchanges": "Exchanges",
         "applications": "Apps.",
         "files": "Files",
         "students": "Students",
@@ -304,10 +303,6 @@
       }
     },
     "exchanges": {
-      "title": "Exchanges",
-      "subtitle": "Track all your exchange programs — past, ongoing and upcoming.",
-      "listLabel": "Your exchanges",
-      "emptyState": "No exchange yet — create the first one.",
       "reminders": {
         "heading": "Automatic reminders",
         "description": "Reminder emails are sent to students whose file is incomplete. Manual follow-up remains available even if reminders are disabled.",
@@ -499,7 +494,7 @@
         "emptyBodyLink": "View applications"
       },
       "submissionReview": {
-        "backLink": "← Back to exchange",
+        "backLink": "← Back",
         "unknownStudent": "Unknown",
         "notSubmitted": "Not submitted",
         "notStarted": "This student has not started this form yet.",

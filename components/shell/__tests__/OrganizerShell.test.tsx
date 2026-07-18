@@ -12,7 +12,10 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
 vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
-vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
+vi.mock('@/actions/exchanges', () => ({
+  createExchange: vi.fn(),
+  getExchangeProgressSummaries: vi.fn().mockResolvedValue({}),
+}))
 vi.mock('@/components/shell/FeedbackModal', () => ({
   FeedbackModal: ({ open }: { open: boolean }) => (open ? <div>feedback-modal-open</div> : null),
 }))
@@ -43,7 +46,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     expect(screen.getByText('Aperçu')).toBeInTheDocument()
-    expect(screen.getByText('Échanges')).toBeInTheDocument()
+    expect(screen.queryByText('Échanges')).toBeNull()
     expect(screen.getByText('Candid.')).toBeInTheDocument()
   })
 
@@ -53,17 +56,17 @@ describe('OrganizerShell', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    expect(screen.getByRole('link', { name: /Échanges/ })).toHaveAttribute('href', '/exchanges')
     expect(screen.getByRole('link', { name: /Candid\./ })).toHaveAttribute('href', '/applications')
   })
 
-  it('Échanges stays visible with zero exchanges', () => {
+  it('only Aperçu stays with zero exchanges', () => {
     renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
-    expect(screen.getByRole('link', { name: /Échanges/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Aperçu/ })).toBeInTheDocument()
+    expect(screen.queryByText('Échanges')).toBeNull()
     expect(screen.queryByText('Candid.')).toBeNull()
   })
 
@@ -119,7 +122,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
-    expect(screen.getByText('Échanges')).toBeInTheDocument()
+    expect(screen.getByText('Aperçu')).toBeInTheDocument()
   })
 
   it('dismisses the session selector panel on outside click', () => {

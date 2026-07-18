@@ -9,15 +9,6 @@ export function IconOverview() {
   )
 }
 
-export function IconExchanges() {
-  return (
-    <div className="relative h-3 w-5">
-      <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-[1.5px] border-current" />
-      <div className="absolute right-0 top-0 h-3 w-3 rounded-full border-[1.5px] border-current bg-rail" />
-    </div>
-  )
-}
-
 export function IconApplications() {
   return (
     <div className="flex h-[17px] w-[14px] flex-col justify-center gap-[2px] rounded-[2px] border-[1.5px] border-current px-[3px]">
