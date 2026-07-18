@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
-export function SubmissionReview({ assignmentId, exchangeId }: { assignmentId: string; exchangeId: string }) {
+export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
   const [note, setNote] = useState('')
   const [showReject, setShowReject] = useState(false)
   const [loading, setLoading] = useState<'approve' | 'reject' | null>(null)
@@ -18,7 +18,7 @@ export function SubmissionReview({ assignmentId, exchangeId }: { assignmentId: s
     setError(null)
     try {
       await approveSubmission(assignmentId)
-      router.push(`/exchanges/${exchangeId}`)
+      router.push('/dashboard')
     } catch (err: any) {
       setError(err.message ?? 'Failed to approve')
       setLoading(null)
@@ -31,7 +31,7 @@ export function SubmissionReview({ assignmentId, exchangeId }: { assignmentId: s
     setError(null)
     try {
       await rejectSubmission(assignmentId, note.trim())
-      router.push(`/exchanges/${exchangeId}`)
+      router.push('/dashboard')
     } catch (err: any) {
       setError(err.message ?? 'Failed to reject')
       setLoading(null)
