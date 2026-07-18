@@ -149,21 +149,6 @@ async function assertExchangeInScope(supabase: SupabaseClient<Database>, exchang
   return profile.school_id as string
 }
 
-export async function getExchange(exchangeId: string) {
-  const supabase = await createClient()
-  await requireUser()
-  await assertExchangeInScope(supabase, exchangeId)
-
-  const { data, error } = await supabase
-    .from('exchanges')
-    .select('*, school_a:schools!school_a_id(name), school_b:schools!school_b_id(name)')
-    .eq('id', exchangeId)
-    .single()
-
-  if (error) throw error
-  return data
-}
-
 export async function getExchangeGrid(exchangeId: string) {
   const supabase = await createClient()
   await requireUser()
@@ -267,5 +252,5 @@ export async function updateReminderSettings(
     .update({ reminders_enabled: enabled, reminder_cadence: cadence })
     .eq('id', exchangeId)
   if (error) throw error
-  revalidatePath(`/exchanges/${exchangeId}`)
+  revalidatePath('/settings')
 }

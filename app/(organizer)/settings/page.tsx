@@ -25,17 +25,16 @@ export default async function SettingsPage() {
   const locale = await resolveLocale()
 
   let billing: BillingOverview | null = null
+  if (isOwner) billing = await getBillingOverview()
+
   let program: ProgramInfo | null = null
-  if (isOwner) {
-    billing = await getBillingOverview()
-    const exchanges = await getExchanges()
-    const cookieStore = await cookies()
-    const active = resolveActiveExchange(
-      exchanges.map((e: any) => ({ ...e, archived: !!e.archived_at })),
-      cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value,
-    )
-    if (active) program = await getProgramInfo(active.id)
-  }
+  const exchanges = await getExchanges()
+  const cookieStore = await cookies()
+  const active = resolveActiveExchange(
+    exchanges.map((e: any) => ({ ...e, archived: !!e.archived_at })),
+    cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value,
+  )
+  if (active) program = await getProgramInfo(active.id)
 
   return (
     <SettingsView

@@ -9,6 +9,7 @@ import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
 import { LanguageSelect } from './LanguageSelect'
+import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
@@ -29,7 +30,7 @@ export function SettingsView(props: SettingsProps) {
     { key: 'compte', label: t('settings.nav.compte') },
     { key: 'equipe', label: t('settings.nav.equipe') },
     ...(props.isOwner ? [{ key: 'fact' as const, label: t('settings.nav.fact') }] : []),
-    ...(props.isOwner && props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
+    ...(props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
   ]
 
   return (
@@ -63,7 +64,17 @@ export function SettingsView(props: SettingsProps) {
           )}
           {section === 'equipe' && <TeamCard team={props.team} isOwner={props.isOwner} />}
           {section === 'fact' && props.billing && <BillingCard billing={props.billing} />}
-          {section === 'prog' && props.program && <ProgramCard program={props.program} />}
+          {section === 'prog' && props.program && (
+            <>
+              <ProgramCard program={props.program} isOwner={props.isOwner} />
+              <ReminderSettingsCard
+                exchangeId={props.program.id}
+                initialEnabled={props.program.remindersEnabled}
+                initialCadence={props.program.reminderCadence}
+                readOnly={props.program.archived}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

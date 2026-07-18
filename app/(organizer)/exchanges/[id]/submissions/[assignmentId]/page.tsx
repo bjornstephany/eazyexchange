@@ -10,7 +10,7 @@ export default async function SubmissionReviewPage({
 }: {
   params: Promise<{ id: string; assignmentId: string }>
 }) {
-  const { id: exchangeId, assignmentId } = await params
+  const { assignmentId } = await params
   const { template, student, submission } = await getSubmissionForReview(assignmentId)
   const t = await getTranslations('organizer')
 
@@ -27,7 +27,7 @@ export default async function SubmissionReviewPage({
   return (
     <div>
       <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
-        <Link href={`/exchanges/${exchangeId}`}>{t('pages.submissionReview.backLink')}</Link>
+        <Link href="/dashboard">{t('pages.submissionReview.backLink')}</Link>
       </Button>
 
       <div className="flex items-start justify-between mb-6">
@@ -94,7 +94,7 @@ export default async function SubmissionReviewPage({
       )}
 
       {canReview && (
-        <SubmissionReview assignmentId={assignmentId} exchangeId={exchangeId} />
+        <SubmissionReview assignmentId={assignmentId} />
       )}
 
       {submission && !canReview && submission.review_note && (
