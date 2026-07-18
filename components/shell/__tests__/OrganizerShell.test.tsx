@@ -134,24 +134,26 @@ describe('OrganizerShell', () => {
     expect(screen.queryByText('+ Nouvel échange')).toBeNull()
   })
 
-  it('shows Formul. and Docs rail items when an exchange is active', () => {
+  it('shows one Fichiers rail item pointing at /forms', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByText('Formul.')).toBeInTheDocument()
-    expect(screen.getByText('Docs')).toBeInTheDocument()
-    expect(screen.getByText('Formul.').closest('a')).toHaveAttribute('href', '/forms')
-    expect(screen.getByText('Docs').closest('a')).toHaveAttribute('href', '/documents')
+    expect(screen.getByText('Fichiers')).toBeInTheDocument()
+    expect(screen.queryByText('Formul.')).toBeNull()
+    expect(screen.queryByText('Docs')).toBeNull()
+    expect(screen.getByText('Fichiers').closest('a')).toHaveAttribute('href', '/forms')
+  })
+
+  it('Fichiers is active on both /forms and /documents path prefixes', () => {
+    const { unmount } = renderShell({ pathname: '/forms' })
+    expect(screen.getByText('Fichiers').closest('a')).toHaveClass('bg-white/10')
+    unmount()
+    renderShell({ pathname: '/documents/t1' })
+    expect(screen.getByText('Fichiers').closest('a')).toHaveClass('bg-white/10')
   })
 
   it('shows no top-bar search or create button on /forms', () => {
     renderShell({ pathname: '/forms' })
     expect(screen.queryByPlaceholderText('Rechercher un formulaire…')).toBeNull()
     expect(screen.queryByRole('button', { name: /Nouveau formulaire/ })).toBeNull()
-  })
-
-  it('shows no top-bar search or create button on /documents', () => {
-    renderShell({ pathname: '/documents' })
-    expect(screen.queryByPlaceholderText('Rechercher un document…')).toBeNull()
-    expect(screen.queryByRole('button', { name: /Demander un document/ })).toBeNull()
   })
 
   it('shows no invite button on /dashboard', () => {

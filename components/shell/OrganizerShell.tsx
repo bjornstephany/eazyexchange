@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconExchanges, IconApplications, IconForms, IconDocs, IconStudents, IconFeedback } from './RailIcons'
+import { IconOverview, IconExchanges, IconApplications, IconForms, IconStudents, IconFeedback } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -168,11 +168,8 @@ export function OrganizerShell({
               <RailItem href="/applications" label={t('shell.nav.applications')} active={pathname.startsWith('/applications')}>
                 <IconApplications />
               </RailItem>
-              <RailItem href="/forms" label={t('shell.nav.forms')} active={pathname.startsWith('/forms')}>
+              <RailItem href="/forms" label={t('shell.nav.files')} active={pathname.startsWith('/forms') || pathname.startsWith('/documents')}>
                 <IconForms />
-              </RailItem>
-              <RailItem href="/documents" label={t('shell.nav.documents')} active={pathname.startsWith('/documents')}>
-                <IconDocs />
               </RailItem>
               <RailItem href="/students" label={t('shell.nav.students')} active={pathname.startsWith('/students')}>
                 <IconStudents />

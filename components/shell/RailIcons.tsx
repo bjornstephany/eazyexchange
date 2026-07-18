@@ -36,15 +36,6 @@ export function IconForms() {
   )
 }
 
-export function IconDocs() {
-  return (
-    <div className="relative h-[17px] w-4">
-      <div className="absolute left-0 top-0 h-3.5 w-[11px] rounded-[2px] border-[1.5px] border-current" />
-      <div className="absolute bottom-0 right-0 h-3.5 w-[11px] rounded-[2px] border-[1.5px] border-current bg-rail" />
-    </div>
-  )
-}
-
 export function IconStudents() {
   return (
     <div className="relative h-4 w-4 rounded-full border-[1.5px] border-current">

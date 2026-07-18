@@ -33,7 +33,7 @@ describe('rail prefetch', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    for (const label of ['Aperçu', 'Échanges', 'Candid.', 'Formul.', 'Docs', 'Élèves']) {
+    for (const label of ['Aperçu', 'Échanges', 'Candid.', 'Fichiers', 'Élèves']) {
       expect(screen.getByRole('link', { name: new RegExp(label) })).toHaveAttribute('data-prefetch', 'true')
     }
   })
