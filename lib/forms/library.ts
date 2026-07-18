@@ -18,3 +18,21 @@ export function libraryEntries(
     .filter((std) => q === '' || std.name.toLowerCase().includes(q) || std.description.toLowerCase().includes(q))
     .map((std) => ({ ...std, added: existingKeys.includes(std.key) }))
 }
+
+export type GroupedLibraryEntries = { forms: LibraryEntry[]; docs: LibraryEntry[] }
+
+// One query filters the whole standard library; entries come back grouped for
+// the merged drawer's two subsections (Formulaires = online+pdf, Documents = doc).
+export function libraryEntriesGrouped(
+  existingKeys: readonly string[],
+  query: string,
+): GroupedLibraryEntries {
+  const q = query.trim().toLowerCase()
+  const matches = STANDARD_TEMPLATES
+    .filter((std) => q === '' || std.name.toLowerCase().includes(q) || std.description.toLowerCase().includes(q))
+    .map((std) => ({ ...std, added: existingKeys.includes(std.key) }))
+  return {
+    forms: matches.filter((e) => e.kind !== 'doc'),
+    docs: matches.filter((e) => e.kind === 'doc'),
+  }
+}
