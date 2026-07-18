@@ -14,7 +14,7 @@ import { StudentsView } from '@/components/students/StudentsView'
 import type { StudentVM } from '@/lib/students/directory'
 
 const base: StudentVM = {
-  id: 's1', name: 'Camille Laurent', firstName: 'Camille', initials: 'CL', avatarBg: '#2456E6',
+  id: 's1', name: 'Camille Laurent', firstName: 'Camille', initials: 'CL', avatarBg: '#2456E6', photoUrl: null,
   statusKey: 'complet', overall: { kind: 'ok', label: 'Complet' }, summary: 'Dossier complet',
   sub: 'Première · 1re G2 · Français',
   identity: [

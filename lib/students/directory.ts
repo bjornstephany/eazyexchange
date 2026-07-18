@@ -37,6 +37,7 @@ export type StudentVM = {
   firstName: string
   initials: string
   avatarBg: string
+  photoUrl: string | null
   statusKey: StatusKey
   overall: Pill
   summary: string
@@ -102,7 +103,7 @@ function parentCard(role: 'PÈRE' | 'MÈRE', prefix: 'father' | 'mother', data: 
 
 export function buildStudentVM(input: {
   student: { id: string; full_name: string; email: string }
-  application: { id: string; data: Record<string, string> } | null
+  application: { id: string; data: Record<string, string>; photoUrl?: string | null } | null
   templates: DirectoryTemplate[]
   cellMap: CellMap
   avatarIndex: number
@@ -173,6 +174,7 @@ export function buildStudentVM(input: {
     firstName: student.full_name.split(/\s+/)[0] ?? student.full_name,
     initials: initialsOf(student.full_name),
     avatarBg: AVATAR_BG[avatarIndex % AVATAR_BG.length],
+    photoUrl: application?.photoUrl ?? null,
     statusKey,
     overall: rollup.overall,
     summary,

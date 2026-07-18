@@ -123,11 +123,23 @@ describe('buildStudentVM', () => {
     expect(late.statusKey).toBe('retard')
     expect(late.summary).toBe('Échéance dépassée — 1 pièce attendue')
   })
+
+  it('carries the application photoUrl through; null without a photo or application', () => {
+    const cellMap: CellMap = { 's1:t1': { assignmentId: 'a1', status: 'approved' } }
+    const withPhoto = buildStudentVM({
+      student,
+      application: { ...application, photoUrl: 'https://signed.example/app1/photo.jpg' },
+      templates, cellMap, avatarIndex: 0, today,
+    }, t)
+    expect(withPhoto.photoUrl).toBe('https://signed.example/app1/photo.jpg')
+    expect(vm(cellMap).photoUrl).toBeNull()
+    expect(vm(cellMap, null).photoUrl).toBeNull()
+  })
 })
 
 describe('list helpers', () => {
   const mk = (id: string, name: string, statusKey: StudentVM['statusKey']): StudentVM => ({
-    id, name, firstName: name.split(' ')[0], initials: 'XX', avatarBg: AVATAR_BG[0],
+    id, name, firstName: name.split(' ')[0], initials: 'XX', avatarBg: AVATAR_BG[0], photoUrl: null,
     statusKey, overall: { kind: 'ok', label: 'Complet' }, summary: '', sub: '',
     identity: [], parents: [], applicationId: null, checklist: [],
     provided: 0, total: 0, pct: 0, dueLabel: null,
