@@ -398,7 +398,7 @@ export async function getTemplateFileUrl(id: string): Promise<string> {
   return data.signedUrl
 }
 
-export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'docs'): Promise<{
+export async function getTemplatesPage(exchangeId: string): Promise<{
   templates: TemplateVM[]
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
@@ -414,14 +414,12 @@ export async function getTemplatesPage(exchangeId: string, family: 'forms' | 'do
     throw new Error('Unauthorized')
   }
 
-  const kinds: TemplateKind[] = family === 'forms' ? ['online', 'pdf'] : ['doc']
   const [{ data: templates }, { data: enrollments }] = await Promise.all([
     supabase
       .from('form_templates')
       .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, external_url, form_fields(label, "order")')
       .eq('exchange_id', exchangeId)
       .eq('school_id', schoolId)
-      .in('kind', kinds)
       .order('created_at'),
     supabase.from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId),
   ])

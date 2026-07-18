@@ -1,18 +1,6 @@
-import { cookies } from 'next/headers'
-import { getExchanges } from '@/actions/exchanges'
-import { getTemplatesPage } from '@/actions/forms'
-import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
-import { DocsView } from '@/components/documents/DocsView'
-import { EmptyDashboard } from '@/components/dashboard/EmptyDashboard'
+import { redirect } from 'next/navigation'
 
-export default async function DocumentsPage() {
-  const exchanges = await getExchanges()
-  const cookieStore = await cookies()
-  const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
-  if (!active) return <EmptyDashboard />
-
-  const { templates, enrolledStudents } = await getTemplatesPage(active.id, 'docs')
-  return (
-    <DocsView exchangeId={active.id} templates={templates} enrolledStudents={enrolledStudents} />
-  )
+// The Docs tab merged into « Fichiers » (/forms) — 2026-07-18 spec.
+export default function DocumentsPage() {
+  redirect('/forms')
 }

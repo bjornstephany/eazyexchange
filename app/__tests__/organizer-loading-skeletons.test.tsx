@@ -5,18 +5,18 @@ import DashboardLoading from '@/app/(organizer)/dashboard/loading'
 import ExchangesLoading from '@/app/(organizer)/exchanges/loading'
 import ApplicationsLoading from '@/app/(organizer)/applications/loading'
 import FormsLoading from '@/app/(organizer)/forms/loading'
-import DocumentsLoading from '@/app/(organizer)/documents/loading'
 import StudentsLoading from '@/app/(organizer)/students/loading'
 import ExchangeDetailLoading from '@/app/(organizer)/exchanges/[id]/loading'
 import FormDetailLoading from '@/app/(organizer)/forms/[templateId]/loading'
 import DocDetailLoading from '@/app/(organizer)/documents/[templateId]/loading'
 
+// /documents is now a bare redirect() to /forms (Fichiers tab merge) — it has
+// no loading.tsx of its own, so it's not part of this list-route matrix.
 const skeletons = [
   ['dashboard', DashboardLoading],
   ['exchanges', ExchangesLoading],
   ['applications', ApplicationsLoading],
   ['forms', FormsLoading],
-  ['documents', DocumentsLoading],
   ['students', StudentsLoading],
 ] as const
 
