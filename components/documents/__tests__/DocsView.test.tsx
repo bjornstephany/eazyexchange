@@ -73,7 +73,7 @@ describe('DocsView', () => {
     renderWithIntl(<DocsView exchangeId="ex1" templates={[]} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: /Ajouter/ }))
     expect(screen.getByText('Passeport de l’élève')).toBeInTheDocument()
-    expect(screen.queryByText('Autorisation médicale')).toBeNull()
+    expect(screen.getByText('Autorisation médicale')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Demander un document' })).toBeInTheDocument()
   })
 
@@ -81,7 +81,7 @@ describe('DocsView', () => {
     renderWithIntl(<DocsView exchangeId="ex1" templates={[]} enrolledStudents={students} />)
     fireEvent.click(screen.getByRole('button', { name: /Ajouter/ }))
     fireEvent.click(within(screen.getByTestId('lib-entry-esta')).getByRole('button', { name: 'Ajouter' }))
-    await waitFor(() => expect(screen.queryByText('Bibliothèque')).toBeNull())
+    await waitFor(() => expect(screen.queryByPlaceholderText('Rechercher…')).toBeNull())
     expect(addStandard).toHaveBeenCalledWith('ex1', 'esta')
   })
 

@@ -18,40 +18,41 @@ beforeEach(() => {
 const base = { exchangeId: 'ex1', existingKeys: [] as string[], onClose: vi.fn(), onAdded: vi.fn() }
 
 describe('LibraryDrawer', () => {
-  it('forms family lists only online+pdf entries with the custom tiles', () => {
-    renderWithIntl(<LibraryDrawer {...base} family="forms" />)
+  it('lists both subsections with their entries and all three custom tiles', () => {
+    renderWithIntl(<LibraryDrawer {...base} />)
+    // Subsection headings
+    expect(screen.getByText('Formulaires')).toBeInTheDocument()
+    expect(screen.getByText('Documents')).toBeInTheDocument()
+    // One entry from each family
     expect(screen.getByText('Autorisation médicale')).toBeInTheDocument()
-    expect(screen.getByText('AST — autorisation de sortie du territoire (CERFA 15646)')).toBeInTheDocument()
-    expect(screen.queryByText('Passeport de l’élève')).toBeNull()
+    expect(screen.getByText('Passeport de l’élève')).toBeInTheDocument()
+    // All three custom tiles
     expect(screen.getByRole('button', { name: 'Téléverser un PDF' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Créer un formulaire en ligne' })).toBeInTheDocument()
-  })
-
-  it('docs family lists only doc entries with the request tile', () => {
-    renderWithIntl(<LibraryDrawer {...base} family="docs" />)
-    expect(screen.getByText('Passeport de l’élève')).toBeInTheDocument()
-    expect(screen.queryByText('Autorisation médicale')).toBeNull()
     expect(screen.getByRole('button', { name: 'Demander un document' })).toBeInTheDocument()
   })
 
-  it('search filters entries client-side', () => {
-    renderWithIntl(<LibraryDrawer {...base} family="forms" />)
+  it('one search filters both subsections and hides an empty subsection', () => {
+    renderWithIntl(<LibraryDrawer {...base} />)
     fireEvent.change(screen.getByPlaceholderText('Rechercher…'), { target: { value: 'absence' } })
     expect(screen.getByText('Demande d’absence')).toBeInTheDocument()
     expect(screen.queryByText('Autorisation médicale')).toBeNull()
+    // No doc matches « absence » → the Documents subsection disappears entirely
+    expect(screen.getByText('Formulaires')).toBeInTheDocument()
+    expect(screen.queryByText('Documents')).toBeNull()
+    expect(screen.queryByText('Passeport de l’élève')).toBeNull()
   })
 
-  it('greys already-added entries (no Ajouter button)', () => {
-    renderWithIntl(<LibraryDrawer {...base} family="docs" existingKeys={['passeport']} />)
-    const entry = screen.getByTestId('lib-entry-passeport')
-    expect(within(entry).getByText('Déjà ajouté ✓')).toBeInTheDocument()
-    expect(within(entry).queryByRole('button', { name: 'Ajouter' })).toBeNull()
+  it('greys already-added entries across both families (combined existingKeys)', () => {
+    renderWithIntl(<LibraryDrawer {...base} existingKeys={['medical', 'passeport']} />)
+    expect(within(screen.getByTestId('lib-entry-medical')).getByText('Déjà ajouté ✓')).toBeInTheDocument()
+    expect(within(screen.getByTestId('lib-entry-passeport')).getByText('Déjà ajouté ✓')).toBeInTheDocument()
     expect(within(screen.getByTestId('lib-entry-esta')).getByRole('button', { name: 'Ajouter' })).toBeInTheDocument()
   })
 
   it('Ajouter calls addStandardTemplate and fires onAdded with the new id', async () => {
     const onAdded = vi.fn()
-    renderWithIntl(<LibraryDrawer {...base} family="forms" onAdded={onAdded} />)
+    renderWithIntl(<LibraryDrawer {...base} onAdded={onAdded} />)
     fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
     await waitFor(() => expect(onAdded).toHaveBeenCalledWith('std-1'))
     expect(addStandard).toHaveBeenCalledWith('ex1', 'medical')
@@ -59,14 +60,14 @@ describe('LibraryDrawer', () => {
 
   it('shows a structured add failure inline', async () => {
     addStandard.mockResolvedValue({ ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' })
-    renderWithIntl(<LibraryDrawer {...base} family="forms" />)
+    renderWithIntl(<LibraryDrawer {...base} />)
     fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
     expect(await screen.findByText('Ce modèle est déjà ajouté à cet échange.')).toBeInTheDocument()
   })
 
   it('custom online tile flips to the create form and creates a draft', async () => {
     const onAdded = vi.fn()
-    renderWithIntl(<LibraryDrawer {...base} family="forms" onAdded={onAdded} />)
+    renderWithIntl(<LibraryDrawer {...base} onAdded={onAdded} />)
     fireEvent.click(screen.getByRole('button', { name: 'Créer un formulaire en ligne' }))
     fireEvent.change(screen.getByLabelText('Nom du formulaire'), { target: { value: 'Mon form' } })
     fireEvent.click(screen.getByRole('button', { name: 'Créer le brouillon' }))
@@ -77,8 +78,8 @@ describe('LibraryDrawer', () => {
     expect(fd.get('exchange_id')).toBe('ex1')
   })
 
-  it('docs create form carries audience and condition', async () => {
-    renderWithIntl(<LibraryDrawer {...base} family="docs" />)
+  it('doc tile keeps the audience and condition fields', async () => {
+    renderWithIntl(<LibraryDrawer {...base} />)
     fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
     fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'CEAM' } })
     fireEvent.click(screen.getByLabelText('Selon la situation'))
@@ -93,7 +94,7 @@ describe('LibraryDrawer', () => {
 
   it('Escape and backdrop close the drawer', () => {
     const onClose = vi.fn()
-    renderWithIntl(<LibraryDrawer {...base} family="forms" onClose={onClose} />)
+    renderWithIntl(<LibraryDrawer {...base} onClose={onClose} />)
     fireEvent.click(screen.getByTestId('drawer-backdrop'))
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(2)

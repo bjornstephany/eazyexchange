@@ -47,7 +47,7 @@ export function DocsView({
       </TemplateGrid>
 
       {showLibrary && (
-        <LibraryDrawer family="docs" exchangeId={exchangeId} existingKeys={existingKeys}
+        <LibraryDrawer exchangeId={exchangeId} existingKeys={existingKeys}
           onClose={() => setShowLibrary(false)}
           onAdded={(id) => { setShowLibrary(false); setOpenId(id) }} />
       )}

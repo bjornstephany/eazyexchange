@@ -57,9 +57,8 @@ describe('FormsView', () => {
   it('« + Ajouter » opens the library drawer scoped to forms', () => {
     renderWithIntl(<FormsView exchangeId="ex1" templates={[]} />)
     fireEvent.click(screen.getByRole('button', { name: /Ajouter/ }))
-    expect(screen.getByText('Bibliothèque')).toBeInTheDocument()
     expect(screen.getByText('Autorisation médicale')).toBeInTheDocument()
-    expect(screen.queryByText('Passeport de l’élève')).toBeNull()
+    expect(screen.getByText('Passeport de l’élève')).toBeInTheDocument()
   })
 
   it('existing standard keys are passed to the drawer as already added', () => {
@@ -72,7 +71,7 @@ describe('FormsView', () => {
     renderWithIntl(<FormsView exchangeId="ex1" templates={[]} />)
     fireEvent.click(screen.getByRole('button', { name: /Ajouter/ }))
     fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
-    await waitFor(() => expect(screen.queryByText('Bibliothèque')).toBeNull())
+    await waitFor(() => expect(screen.queryByPlaceholderText('Rechercher…')).toBeNull())
     expect(addStandard).toHaveBeenCalledWith('ex1', 'medical')
   })
 

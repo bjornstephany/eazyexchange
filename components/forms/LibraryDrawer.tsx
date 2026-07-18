@@ -1,22 +1,22 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { libraryEntries, type LibraryFamily } from '@/lib/forms/library'
+import { libraryEntriesGrouped } from '@/lib/forms/library'
 import { addStandardTemplate, createDraftTemplate } from '@/actions/forms'
 
 type CreateMode = 'pdf' | 'online' | 'doc'
 
-// Right library drawer (460px, same pattern as FormDrawer): search over the
-// standard library filtered to the page's family, an « Ajouter » per entry
-// (greyed when the exchange already has that standard_key), then the custom
-// tiles which flip the drawer to the short create form — same fields and
-// createDraftTemplate action the old add panels used. Adding or creating
-// hands the new template id to onAdded (the views close the drawer and open
-// the detail drawer, the same continuation as the old onCreated).
+// Right library drawer (460px, same pattern as FormDrawer): one search box
+// over the whole standard library, rendered as two subsections — Formulaires
+// then Documents, an empty subsection is hidden — with an « Ajouter » per
+// entry (greyed when the exchange already has that standard_key), then the
+// three custom tiles which flip the drawer to the short create form — same
+// fields and createDraftTemplate action as before. Adding or creating hands
+// the new template id to onAdded (the view closes the drawer and opens the
+// detail drawer).
 export function LibraryDrawer({
-  family, exchangeId, existingKeys, onClose, onAdded,
+  exchangeId, existingKeys, onClose, onAdded,
 }: {
-  family: LibraryFamily
   exchangeId: string
   existingKeys: string[]
   onClose: () => void
@@ -35,7 +35,11 @@ export function LibraryDrawer({
     return () => document.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  const entries = libraryEntries(family, existingKeys, query)
+  const grouped = libraryEntriesGrouped(existingKeys, query)
+  const sections = [
+    { id: 'forms', heading: t('library.formsSection'), entries: grouped.forms },
+    { id: 'docs', heading: t('library.docsSection'), entries: grouped.docs },
+  ].filter((s) => s.entries.length > 0)
 
   async function handleAdd(key: string) {
     setBusyKey(key)
@@ -56,7 +60,7 @@ export function LibraryDrawer({
       <div className="absolute right-0 top-0 flex h-full w-[460px] max-w-full flex-col bg-card shadow-modal animate-[drwIn_.25s_ease-out]">
         <div className="flex flex-none items-center justify-between border-b px-[26px] pb-[18px] pt-6">
           <div className="font-display text-lg font-semibold text-navy">
-            {family === 'forms' ? t('forms.addFormLabel') : t('documents.addDocLabel')}
+            {t('library.addTitle')}
           </div>
           <button type="button" onClick={onClose} aria-label={t('forms.close')}
             className="h-8 w-8 rounded-lg border bg-card text-base text-muted-foreground">✕</button>
@@ -68,30 +72,34 @@ export function LibraryDrawer({
               placeholder={t('library.searchPlaceholder')}
               className="mb-5 h-11 w-full rounded-[10px] border border-frame bg-card px-3 text-[14px] placeholder:text-placeholder focus:border-brand focus:outline-none" />
 
-            <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
-              {t('library.heading')}
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {entries.map((entry) => (
-                <div key={entry.key} data-testid={`lib-entry-${entry.key}`}
-                  className={`rounded-xl border border-dashed border-frame p-3.5 ${entry.added ? 'opacity-45' : ''}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-display text-[13.5px] font-semibold leading-snug text-navy">{entry.name}</div>
-                      <div className="mt-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">{entry.description}</div>
-                    </div>
-                    {entry.added ? (
-                      <span className="flex-none pt-0.5 text-[11.5px] font-semibold text-muted-foreground">{t('library.alreadyAdded')}</span>
-                    ) : (
-                      <button type="button" disabled={busyKey !== null} onClick={() => handleAdd(entry.key)}
-                        className="flex-none rounded-lg bg-subtle px-3 py-1.5 text-[12.5px] font-semibold text-navy hover:bg-hoverrow disabled:opacity-60">
-                        {busyKey === entry.key ? t('library.adding') : c('actions.add')}
-                      </button>
-                    )}
-                  </div>
+            {sections.map((section) => (
+              <div key={section.id} className="mb-5">
+                <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
+                  {section.heading}
                 </div>
-              ))}
-            </div>
+                <div className="flex flex-col gap-2.5">
+                  {section.entries.map((entry) => (
+                    <div key={entry.key} data-testid={`lib-entry-${entry.key}`}
+                      className={`rounded-xl border border-dashed border-frame p-3.5 ${entry.added ? 'opacity-45' : ''}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-display text-[13.5px] font-semibold leading-snug text-navy">{entry.name}</div>
+                          <div className="mt-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">{entry.description}</div>
+                        </div>
+                        {entry.added ? (
+                          <span className="flex-none pt-0.5 text-[11.5px] font-semibold text-muted-foreground">{t('library.alreadyAdded')}</span>
+                        ) : (
+                          <button type="button" disabled={busyKey !== null} onClick={() => handleAdd(entry.key)}
+                            className="flex-none rounded-lg bg-subtle px-3 py-1.5 text-[12.5px] font-semibold text-navy hover:bg-hoverrow disabled:opacity-60">
+                            {busyKey === entry.key ? t('library.adding') : c('actions.add')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
             {error && <p className="mt-3 text-sm text-danger-text">{error}</p>}
 
             <div className="my-5 flex items-center gap-3">
@@ -99,23 +107,20 @@ export function LibraryDrawer({
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-placeholder">{t('library.customHeading')}</span>
               <div className="h-px flex-1 bg-background" />
             </div>
-            {family === 'forms' ? (
-              <div className="grid grid-cols-2 gap-2.5">
-                <button type="button" onClick={() => setCreateMode('pdf')}
-                  className="rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
-                  <span aria-hidden="true">⤒</span> {t('library.uploadPdfTile')}
-                </button>
-                <button type="button" onClick={() => setCreateMode('online')}
-                  className="rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
-                  <span aria-hidden="true">✎</span> {t('library.createOnlineTile')}
-                </button>
-              </div>
-            ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              <button type="button" onClick={() => setCreateMode('pdf')}
+                className="rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
+                <span aria-hidden="true">⤒</span> {t('library.uploadPdfTile')}
+              </button>
+              <button type="button" onClick={() => setCreateMode('online')}
+                className="rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
+                <span aria-hidden="true">✎</span> {t('library.createOnlineTile')}
+              </button>
               <button type="button" onClick={() => setCreateMode('doc')}
-                className="w-full rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
+                className="col-span-2 rounded-xl border bg-card p-3.5 text-left text-[13px] font-semibold text-navy hover:border-brand">
                 <span aria-hidden="true">+</span> {t('library.requestDocTile')}
               </button>
-            )}
+            </div>
           </div>
         ) : (
           <CreateTemplateForm mode={createMode} exchangeId={exchangeId}
