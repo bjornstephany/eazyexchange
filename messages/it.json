@@ -133,7 +133,6 @@
     "shell": {
       "nav": {
         "dashboard": "Panoramica",
-        "exchanges": "Scambi",
         "applications": "Candid.",
         "files": "File",
         "students": "Studenti",
@@ -304,10 +303,6 @@
       }
     },
     "exchanges": {
-      "title": "Scambi",
-      "subtitle": "Segui tutti i tuoi programmi di scambio — passati, in corso e futuri.",
-      "listLabel": "I tuoi scambi",
-      "emptyState": "Nessuno scambio per il momento — crea il primo.",
       "reminders": {
         "heading": "Solleciti automatici",
         "description": "Vengono inviate e-mail di sollecito agli studenti il cui fascicolo è incompleto. Il sollecito manuale resta disponibile anche se i solleciti automatici sono disattivati.",

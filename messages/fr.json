@@ -133,7 +133,6 @@
     "shell": {
       "nav": {
         "dashboard": "Aperçu",
-        "exchanges": "Échanges",
         "applications": "Candid.",
         "files": "Fichiers",
         "students": "Élèves",
@@ -304,10 +303,6 @@
       }
     },
     "exchanges": {
-      "title": "Échanges",
-      "subtitle": "Suivez tous vos programmes d'échange — passés, en cours et à venir.",
-      "listLabel": "Vos échanges",
-      "emptyState": "Aucun échange pour l'instant — créez le premier.",
       "reminders": {
         "heading": "Rappels automatiques",
         "description": "Des e-mails de rappel sont envoyés aux élèves dont le dossier est incomplet. La relance manuelle reste disponible même si les rappels sont désactivés.",

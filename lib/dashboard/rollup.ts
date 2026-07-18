@@ -346,15 +346,3 @@ export function progressSummary(apps: AppRow[], rollups: DossierRollup[]): Excha
   if (apps.length === 0) return null
   return { done: apps.filter(a => a.status !== 'submitted').length, total: apps.length, kind: 'candidatures' }
 }
-
-// Exchange-card progress (Échanges page): dossier progress once anyone is
-// enrolled, candidature progress before that.
-export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[], t: T): { done: number; total: number; label: string } {
-  if (rollups.length > 0) {
-    const done = rollups.filter(r => dossierComplete(r)).length
-    return { done, total: rollups.length, label: t('organizer.dashboard.progressDossiers', { done, total: rollups.length }) }
-  }
-  const total = apps.length
-  const done = apps.filter(a => a.status !== 'submitted').length
-  return { done, total, label: t('organizer.dashboard.progressCandidatures', { done, total }) }
-}
