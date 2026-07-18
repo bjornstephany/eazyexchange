@@ -12,7 +12,10 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
 vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
-vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
+vi.mock('@/actions/exchanges', () => ({
+  createExchange: vi.fn(),
+  getExchangeProgressSummaries: vi.fn().mockResolvedValue({}),
+}))
 vi.mock('@/components/shell/FeedbackModal', () => ({
   FeedbackModal: ({ open }: { open: boolean }) => (open ? <div>feedback-modal-open</div> : null),
 }))
