@@ -1,8 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { getSubmissionForReview } from '@/actions/submissions'
 import { SubmissionReview } from '@/components/SubmissionReview'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { HistoryBackLink } from '@/components/HistoryBackLink'
 import { Badge } from '@/components/ui/badge'
 
 export default async function SubmissionReviewPage({
@@ -26,9 +25,7 @@ export default async function SubmissionReviewPage({
 
   return (
     <div>
-      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
-        <Link href="/dashboard">{t('pages.submissionReview.backLink')}</Link>
-      </Button>
+      <HistoryBackLink label={t('pages.submissionReview.backLink')} />
 
       <div className="flex items-start justify-between mb-6">
         <div>

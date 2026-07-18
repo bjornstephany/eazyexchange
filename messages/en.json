@@ -494,7 +494,7 @@
         "emptyBodyLink": "View applications"
       },
       "submissionReview": {
-        "backLink": "← Back to exchange",
+        "backLink": "← Back",
         "unknownStudent": "Unknown",
         "notSubmitted": "Not submitted",
         "notStarted": "This student has not started this form yet.",
