@@ -17,6 +17,7 @@ import { logAudit } from '@/lib/audit'
 import { isLocale, type Locale } from '@/lib/i18n/config'
 import { getTranslations } from 'next-intl/server'
 import type Stripe from 'stripe'
+import type { ReminderCadence } from './exchanges'
 
 type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
 
@@ -283,13 +284,14 @@ export async function removeOrganizer(userId: string): Promise<void> {
 export type ProgramInfo = {
   id: string; name: string; year: number; archived: boolean
   enrolled: number; applications: number; earliestDeadline: string | null
+  remindersEnabled: boolean; reminderCadence: ReminderCadence
 }
 
 // Scope check: the exchange must belong to the caller's school (either side).
 async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exchangeId: string) {
   const { data: exchange } = await supabase
     .from('exchanges')
-    .select('id, name, year, archived_at, school_a_id, school_b_id')
+    .select('id, name, year, archived_at, school_a_id, school_b_id, reminders_enabled, reminder_cadence')
     .eq('id', exchangeId).maybeSingle()
   if (!exchange || (exchange.school_a_id !== schoolId && exchange.school_b_id !== schoolId)) {
     throw new Error('Unauthorized')
@@ -299,7 +301,7 @@ async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exc
 
 export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx({ orgRole: 'owner' })
+  const ctx = await getOrganizerCtx()
   const exchange = await getScopedExchange(supabase, ctx.schoolId, exchangeId)
 
   const [{ count: enrolled }, { count: applications }, { data: firstDeadline }] = await Promise.all([
@@ -318,6 +320,8 @@ export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
     archived: !!exchange.archived_at,
     enrolled: enrolled ?? 0, applications: applications ?? 0,
     earliestDeadline: (firstDeadline?.deadline as string | null) ?? null,
+    remindersEnabled: exchange.reminders_enabled ?? true,
+    reminderCadence: (exchange.reminder_cadence ?? 'normale') as ReminderCadence,
   }
 }
 

@@ -267,5 +267,5 @@ export async function updateReminderSettings(
     .update({ reminders_enabled: enabled, reminder_cadence: cadence })
     .eq('id', exchangeId)
   if (error) throw error
-  revalidatePath(`/exchanges/${exchangeId}`)
+  revalidatePath('/settings')
 }
