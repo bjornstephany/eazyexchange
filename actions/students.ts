@@ -11,6 +11,7 @@ import {
 } from '@/lib/students/directory'
 import { sendStudentReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { signApplicationPhotoUrls } from '@/lib/application-photos'
 
 // Throw unless the caller is an organizer whose school is on this exchange.
 // Returns the school id. (Same shape as getTemplatesPage's scope check.)
@@ -65,7 +66,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
       : Promise.resolve([]),
     supabase
       .from('applications')
-      .select('id, enrolled_user_id, data')
+      .select('id, enrolled_user_id, data, photo_path')
       .eq('exchange_id', exchangeId)
       .in('enrolled_user_id', studentIds)
       .then(r => r.data ?? []),
@@ -76,9 +77,22 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
     const submission = Array.isArray(a.submissions) ? a.submissions[0] : a.submissions
     cellMap[`${a.student_id}:${a.template_id}`] = { assignmentId: a.id, status: submission?.status }
   }
-  const appByStudent = new Map<string, { id: string; data: Record<string, string> }>()
+  // Organizer scope verified above (assertOrganizerInExchange) — the helper
+  // signs with the service-role client, one batched call for the page.
+  const photoPaths = applications
+    .map(a => a.photo_path)
+    .filter((p): p is string => p !== null)
+  const photoUrlByPath = await signApplicationPhotoUrls(photoPaths)
+
+  const appByStudent = new Map<string, { id: string; data: Record<string, string>; photoUrl: string | null }>()
   for (const a of applications) {
-    if (a.enrolled_user_id) appByStudent.set(a.enrolled_user_id, { id: a.id, data: a.data ?? {} })
+    if (a.enrolled_user_id) {
+      appByStudent.set(a.enrolled_user_id, {
+        id: a.id,
+        data: a.data ?? {},
+        photoUrl: a.photo_path ? photoUrlByPath.get(a.photo_path) ?? null : null,
+      })
+    }
   }
 
   const dirTemplates = (templates ?? []) as DirectoryTemplate[]
