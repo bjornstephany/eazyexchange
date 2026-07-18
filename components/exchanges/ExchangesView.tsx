@@ -1,6 +1,9 @@
 'use client'
 import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { setActiveExchange } from '@/actions/session'
 import { useShellUi } from '@/components/shell/ShellUiContext'
 
 export type ExchangeCardData = {
@@ -13,10 +16,22 @@ export type ExchangeCardData = {
 
 function ExchangeCard({ exchange }: { exchange: ExchangeCardData }) {
   const { id, name, year, pct, pctLabel } = exchange
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+
+  // Opening an exchange = making it the active one (same as the shell's
+  // SessionSelector); every organizer page derives from the cookie.
+  async function open() {
+    if (busy) return
+    setBusy(true)
+    await setActiveExchange(id)
+    router.push('/dashboard')
+  }
+
   return (
-    <Link
-      href={`/exchanges/${id}`}
-      className="bg-card border rounded-[14px] p-5 hover:bg-hoverrow-soft flex flex-col"
+    <button
+      type="button" onClick={open} disabled={busy}
+      className="bg-card border rounded-[14px] p-5 hover:bg-hoverrow-soft flex flex-col text-left disabled:opacity-70"
     >
       <div className="flex items-center gap-2.5">
         <span className="font-display text-base font-bold text-navy">{name}</span>
@@ -27,13 +42,13 @@ function ExchangeCard({ exchange }: { exchange: ExchangeCardData }) {
       <div className="text-[13px] text-muted-foreground mt-1">{pctLabel}</div>
       {pct !== null && (
         <>
-          <div className="h-[8px] rounded-pill bg-track mt-2.5">
+          <div className="h-[8px] rounded-pill bg-track mt-2.5 w-full">
             <div className="h-full rounded-pill bg-brand" style={{ width: `${pct}%` }} />
           </div>
           <div className="text-[12px] text-muted-foreground mt-1">{pct}%</div>
         </>
       )}
-    </Link>
+    </button>
   )
 }
 
