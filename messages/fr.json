@@ -136,8 +136,6 @@
         "exchanges": "Échanges",
         "applications": "Candid.",
         "files": "Fichiers",
-        "forms": "Formul.",
-        "documents": "Docs",
         "students": "Élèves",
         "feedback": "Feedback"
       },
@@ -340,9 +338,6 @@
       "docsEmpty": "Aucun document demandé pour le moment."
     },
     "forms": {
-      "title": "Formulaires",
-      "yourFormsCount": "Vos formulaires · {count}",
-      "addFormLabel": "Ajouter un formulaire",
       "close": "Fermer",
       "deleteConfirm": "Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées.",
       "addPanel": {
@@ -402,9 +397,6 @@
       "docPlaceholder": "Copie à déposer"
     },
     "documents": {
-      "title": "Documents",
-      "requestedHeading": "Pièces demandées · {count}",
-      "addDocLabel": "Demander un document",
       "close": "Fermer",
       "editButton": "Modifier",
       "deleteConfirm": "Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés.",
@@ -444,7 +436,6 @@
       }
     },
     "library": {
-      "heading": "Bibliothèque",
       "addTitle": "Ajouter",
       "formsSection": "Formulaires",
       "docsSection": "Documents",
@@ -499,9 +490,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Retour aux documents"
-      },
       "formDetail": {
         "backLabel": "Retour aux formulaires"
       },

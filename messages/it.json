@@ -136,8 +136,6 @@
         "exchanges": "Scambi",
         "applications": "Candid.",
         "files": "File",
-        "forms": "Mod.",
-        "documents": "Doc.",
         "students": "Studenti",
         "feedback": "Feedback"
       },
@@ -340,9 +338,6 @@
       "docsEmpty": "Ancora nessun documento richiesto."
     },
     "forms": {
-      "title": "Moduli",
-      "yourFormsCount": "I tuoi moduli · {count}",
-      "addFormLabel": "Aggiungi un modulo",
       "close": "Chiudi",
       "deleteConfirm": "Eliminare questo modello? Le risposte già inviate dagli studenti verranno eliminate definitivamente.",
       "addPanel": {
@@ -402,9 +397,6 @@
       "docPlaceholder": "Copia da caricare"
     },
     "documents": {
-      "title": "Documenti",
-      "requestedHeading": "Documenti richiesti · {count}",
-      "addDocLabel": "Richiedi un documento",
       "close": "Chiudi",
       "editButton": "Modifica",
       "deleteConfirm": "Eliminare questo documento? I file già inviati dalle famiglie verranno eliminati definitivamente.",
@@ -444,7 +436,6 @@
       }
     },
     "library": {
-      "heading": "Biblioteca",
       "addTitle": "Aggiungi",
       "formsSection": "Moduli",
       "docsSection": "Documenti",
@@ -499,9 +490,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Torna ai documenti"
-      },
       "formDetail": {
         "backLabel": "Torna ai moduli"
       },
