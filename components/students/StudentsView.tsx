@@ -62,12 +62,17 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
                     isSel ? 'border-[1.5px] border-brand shadow-float' : 'border hover:border-placeholder'
                   }`}
                 >
-                  <span
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-xs font-semibold text-white"
-                    style={{ background: s.avatarBg }}
-                  >
-                    {s.initials}
-                  </span>
+                  {s.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.photoUrl} alt="" className="h-9 w-9 flex-none rounded-full border object-cover" />
+                  ) : (
+                    <span
+                      className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-xs font-semibold text-white"
+                      style={{ background: s.avatarBg }}
+                    >
+                      {s.initials}
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-foreground">{s.name}</span>
                     <span className="mt-0.5 block truncate text-[11.5px] text-tertiary">{s.summary}</span>

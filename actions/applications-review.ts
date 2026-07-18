@@ -1,10 +1,9 @@
 'use server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { randomToken } from '@/lib/tokens'
 import { applicantName as buildApplicantName } from '@/lib/application-form'
-import { APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
+import { signApplicationPhotoUrls } from '@/lib/application-photos'
 import { sendInvitationEmail, sendApplicationRejectionEmail } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
@@ -80,20 +79,10 @@ export async function listApplications(
   if (error) throw error
   const rows = (data ?? []) as unknown as (ApplicationListRow & { photo_path: string | null })[]
 
-  // Organizer authorization verified above; the application-photos bucket is
-  // private with no per-user storage policy, so sign with the admin client —
-  // one batched call for the whole list (same pattern as getApplicationForReview).
+  // Organizer authorization verified above — signApplicationPhotoUrls uses the
+  // service-role client (the bucket has no per-user storage policy).
   const paths = rows.map(r => r.photo_path).filter((p): p is string => p !== null)
-  const urlByPath = new Map<string, string>()
-  if (paths.length > 0) {
-    const admin = createAdminClient()
-    const { data: signed } = await admin.storage
-      .from(APPLICATION_PHOTO_BUCKET)
-      .createSignedUrls(paths, 3600)
-    for (const s of signed ?? []) {
-      if (s.path && s.signedUrl) urlByPath.set(s.path, s.signedUrl)
-    }
-  }
+  const urlByPath = await signApplicationPhotoUrls(paths)
   return rows.map(r => ({
     id: r.id, status: r.status, submitted_at: r.submitted_at, data: r.data, email: r.email,
     photoUrl: r.photo_path ? urlByPath.get(r.photo_path) ?? null : null,
@@ -107,12 +96,9 @@ export async function getApplicationForReview(applicationId: string) {
 
   let photoUrl: string | null = null
   if (application.photo_path) {
-    // Organizer authorization already verified above; use admin to sign the URL
-    // (the application-photos bucket has no per-user storage policy).
-    const admin = createAdminClient()
-    const { data } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
-      .createSignedUrl(application.photo_path, 3600)
-    photoUrl = data?.signedUrl ?? null
+    // Organizer authorization already verified above (assertOrganizerOwnsApplication).
+    const urls = await signApplicationPhotoUrls([application.photo_path])
+    photoUrl = urls.get(application.photo_path) ?? null
   }
   return { application, photoUrl }
 }

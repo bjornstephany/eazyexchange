@@ -32,12 +32,17 @@ export function StudentDetail({ vm, exchangeId }: { vm: StudentVM; exchangeId: s
       {/* header */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-center gap-[15px]">
-          <span
-            className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold text-white"
-            style={{ background: vm.avatarBg }}
-          >
-            {vm.initials}
-          </span>
+          {vm.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={vm.photoUrl} alt="" className="h-14 w-14 flex-none rounded-full border object-cover" />
+          ) : (
+            <span
+              className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold text-white"
+              style={{ background: vm.avatarBg }}
+            >
+              {vm.initials}
+            </span>
+          )}
           <div>
             <div className="flex items-center gap-2.5">
               <span className="font-display text-[22px] font-bold tracking-[-.02em] text-foreground">{vm.name}</span>
