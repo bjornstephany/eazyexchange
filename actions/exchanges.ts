@@ -16,6 +16,12 @@ import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
+import { getTranslations } from 'next-intl/server'
+import { listApplications } from './applications-review'
+import {
+  rollupStudent, progressSummary,
+  type AppRow, type TemplateInfo, type ExchangeProgressSummary,
+} from '@/lib/dashboard/rollup'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '@/types/db'
 
@@ -253,4 +259,40 @@ export async function updateReminderSettings(
     .eq('id', exchangeId)
   if (error) throw error
   revalidatePath('/settings')
+}
+
+// Re-export for dropdown consumers (type-only exports are legal in 'use server').
+export type { ExchangeProgressSummary }
+
+// Per-exchange completion counts for the shell's exchange dropdown. Reuses the
+// same pipeline as the dashboard (listApplications + grid → rollupStudent →
+// progressSummary) so the numbers always agree with it. Fetched lazily on
+// first dropdown open — never from the organizer layout.
+export async function getExchangeProgressSummaries(): Promise<Record<string, ExchangeProgressSummary>> {
+  await requireOrganizer()
+  const exchanges = await getExchanges()
+  const tr = await getTranslations()
+
+  const entries = await Promise.all(
+    exchanges.map(async (exchange): Promise<[string, ExchangeProgressSummary]> => {
+      // One bad exchange must never break the dropdown: fail to null.
+      try {
+        const [applications, grid] = await Promise.all([
+          listApplications(exchange.id),
+          getExchangeGrid(exchange.id),
+        ])
+        const apps: AppRow[] = applications.map(a => ({
+          id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
+        }))
+        const templates: TemplateInfo[] = grid.templates.map(t => ({
+          id: t.id, type: t.type as TemplateInfo['type'], name: t.name, deadline: t.deadline as string,
+        }))
+        const rollups = grid.students.map(s => rollupStudent(s, templates, grid.cellMap, undefined, tr))
+        return [exchange.id, progressSummary(apps, rollups)]
+      } catch {
+        return [exchange.id, null]
+      }
+    }),
+  )
+  return Object.fromEntries(entries)
 }
