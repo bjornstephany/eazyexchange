@@ -101,4 +101,14 @@ describe('StudentsView', () => {
     expect(screen.queryByRole('link', { name: 'Candidature' })).toBeNull()
     expect(screen.getByText('Candidature introuvable pour cet élève.')).toBeInTheDocument()
   })
+
+  it('renders the application photo in the row and the detail avatar; initials fall back', () => {
+    const withPhoto = { ...base, photoUrl: 'https://signed.example/app1/photo.jpg' }
+    const { container } = renderWithIntl(<StudentsView exchangeId="ex1" students={[withPhoto, second]} />)
+    // First (selected) student → photo twice: list row + detail header. alt=""
+    // (decorative — the name renders beside it), so query by src, not role.
+    expect(container.querySelectorAll('img[src="https://signed.example/app1/photo.jpg"]')).toHaveLength(2)
+    // Second student has no photo → initials circle remains.
+    expect(screen.getByText('YB')).toBeInTheDocument()
+  })
 })
