@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { randomToken, tokenExpired } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
-import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
+import { missingRequiredApplication, overLimitApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
 import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
 import {
@@ -40,6 +40,10 @@ function resumeExpiry(deadline: string | null): string {
 const APPLICATION_CAP_PER_EXCHANGE = 2000
 
 export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' } | { closed: true }
+
+// Structured result for the two draft-writing actions: expected validation
+// outcomes must be return values, never throws (prod redacts thrown messages).
+export type ApplyWriteResult = { ok: true } | { ok: false; overLimit: string[] }
 
 export async function startApplication(
   slug: string,
@@ -238,8 +242,10 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
   })
 }
 
-export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<void> {
+export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  const overLimit = overLimitApplicationFields(data)
+  if (overLimit.length > 0) return { ok: false, overLimit }
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
@@ -250,10 +256,13 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
   const { error } = await admin
     .from('applications').update({ data }).eq('resume_token', token)
   if (error) throw error
+  return { ok: true }
 }
 
-export async function submitApplication(token: string, data: Record<string, string>): Promise<void> {
+export async function submitApplication(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  const overLimit = overLimitApplicationFields(data)
+  if (overLimit.length > 0) return { ok: false, overLimit }
 
   const admin = createAdminClient()
   const { data: app } = await admin
@@ -300,6 +309,7 @@ export async function submitApplication(token: string, data: Record<string, stri
       ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
     }).catch(() => {})
   ))
+  return { ok: true }
 }
 
 export async function uploadApplicationPhoto(token: string, formData: FormData): Promise<{ path: string }> {

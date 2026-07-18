@@ -19,9 +19,9 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
     return <ApplicationDetail application={application} photoUrl={photoUrl} exchangeName={active.name} year={active.year} />
   }
 
-  const applications = await listApplications(active.id)
-  const apps: AppRow[] = applications.map((a: any) => ({
-    id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
+  const applications = await listApplications(active.id, { withPhotos: true })
+  const apps: AppRow[] = applications.map(a => ({
+    id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email, photoUrl: a.photoUrl ?? null,
   }))
   return (
     <CandidaturesView
