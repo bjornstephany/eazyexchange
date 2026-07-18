@@ -6,7 +6,7 @@ import {
   rollupStudent, formsPill, docsPill, dossierComplete,
   nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
-  lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
+  lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress, progressSummary,
   type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent, type DossierRollup,
 } from '@/lib/dashboard/rollup'
 
@@ -378,5 +378,23 @@ describe('exchangeProgress', () => {
   it('empty dossiers count in the total but never as done', () => {
     const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
     expect(exchangeProgress([], [empty], t)).toEqual({ done: 0, total: 1, label: '0 / 1 dossiers validés' })
+  })
+})
+
+describe('progressSummary', () => {
+  it('dossier progress once students are enrolled', () => {
+    const R2 = [ROLLUPS[0], rollupStudent({ id: 's2', full_name: 'B' }, T, {}, TODAY, t)]
+    expect(progressSummary([app('submitted')], R2)).toEqual({ done: 1, total: 2, kind: 'dossiers' })
+  })
+  it('candidature progress before any enrollment', () => {
+    expect(progressSummary([app('submitted'), app('accepted')], []))
+      .toEqual({ done: 1, total: 2, kind: 'candidatures' })
+  })
+  it('null when there is nothing to count', () => {
+    expect(progressSummary([], [])).toBeNull()
+  })
+  it('empty dossiers count in the total but never as done', () => {
+    const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
+    expect(progressSummary([], [empty])).toEqual({ done: 0, total: 1, kind: 'dossiers' })
   })
 })

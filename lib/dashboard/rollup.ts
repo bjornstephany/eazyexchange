@@ -329,6 +329,24 @@ export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], a
   return cards
 }
 
+// Raw, label-free exchange progress for the shell's exchange dropdown: dossier
+// progress once anyone is enrolled, candidature progress before that, null when
+// there is nothing to count. The client formats the label with the existing
+// organizer.dashboard.progress* keys, so the numbers always match the dashboard.
+export type ExchangeProgressSummary = {
+  done: number
+  total: number
+  kind: 'dossiers' | 'candidatures'
+} | null
+
+export function progressSummary(apps: AppRow[], rollups: DossierRollup[]): ExchangeProgressSummary {
+  if (rollups.length > 0) {
+    return { done: rollups.filter(r => dossierComplete(r)).length, total: rollups.length, kind: 'dossiers' }
+  }
+  if (apps.length === 0) return null
+  return { done: apps.filter(a => a.status !== 'submitted').length, total: apps.length, kind: 'candidatures' }
+}
+
 // Exchange-card progress (Échanges page): dossier progress once anyone is
 // enrolled, candidature progress before that.
 export function exchangeProgress(apps: AppRow[], rollups: DossierRollup[], t: T): { done: number; total: number; label: string } {
