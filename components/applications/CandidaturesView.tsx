@@ -318,9 +318,9 @@ export function CandidaturesView({
                 <ApplicantAvatar photoUrl={a.photoUrl ?? null} data={a.data} email={a.email} />
                 <span className="truncate text-sm text-navy">{applicantName(a.data) || a.email}</span>
               </span>
-              <span className="text-sm text-muted-foreground">{a.data.grade ?? '—'}</span>
-              <span className="text-sm text-muted-foreground">{a.data.native_language ?? '—'}</span>
-              <span className="text-sm text-muted-foreground">{frShortDate(a.submitted_at)}</span>
+              <span className="text-sm text-navy">{a.data.grade ?? '—'}</span>
+              <span className="text-sm text-navy">{a.data.native_language ?? '—'}</span>
+              <span className="text-sm text-navy">{frShortDate(a.submitted_at)}</span>
               <StatusPill pill={applicantStatusPill(a.status, tr)} />
               <span className="text-muted-foreground">›</span>
             </div>
