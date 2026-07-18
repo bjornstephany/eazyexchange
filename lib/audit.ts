@@ -12,9 +12,11 @@ export type AuditAction =
   | 'exchange.restored'
   | 'billing.subscription_updated'
   | 'billing.grace_started'
+  | 'subject.erased'
+  | 'retention.sweep'
 
 export type AuditTargetType =
-  | 'submission' | 'application' | 'user' | 'organizer_invite' | 'exchange' | 'school'
+  | 'submission' | 'application' | 'user' | 'organizer_invite' | 'exchange' | 'school' | 'system'
 
 // Append an entry to the tamper-evident audit_log (service-role only — clients
 // have no write path, see 20260709000002). Await it at call sites, but it NEVER
