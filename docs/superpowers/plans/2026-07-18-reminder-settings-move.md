@@ -1,5 +1,9 @@
 # Reminder Settings → Settings/Programme Implementation Plan
 
+> **SUPERSEDED (2026-07-18, never executed):** folded into
+> `2026-07-18-remove-exchanges-tab.md` (its Tasks 8–9). Task 3 here conflicts
+> with the newer spec (ExchangesView is deleted, not repurposed). Do not execute.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Move the per-exchange automatic-reminder settings from the near-empty `/exchanges/[id]` page into Settings → Programme (visible to all organizers), and make exchange cards on `/exchanges` switch the active exchange instead of linking to the deleted page.
