@@ -91,10 +91,10 @@ describe('addStandardTemplate', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/forms', 'layout')
   })
 
-  it('revalidates /documents for a doc-kind key', async () => {
+  it('revalidates /forms for a doc-kind key', async () => {
     const res = await addStandardTemplate('ex1', 'passeport')
     expect(res).toEqual({ ok: true, id: 'tpl-new' })
     expect(inserted.fields).toHaveLength(0)
-    expect(revalidatePath).toHaveBeenCalledWith('/documents', 'layout')
+    expect(revalidatePath).toHaveBeenCalledWith('/forms', 'layout')
   })
 })

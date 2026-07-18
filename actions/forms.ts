@@ -176,7 +176,7 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
     throw err
   }
 
-  revalidatePath(kind === 'doc' ? '/documents' : '/forms', 'layout')
+  revalidatePath('/forms', 'layout')
   return { ok: true, id: templateId }
 }
 
@@ -195,7 +195,7 @@ export async function addStandardTemplate(exchangeId: string, standardKey: strin
   const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id })
   if ('duplicate' in res) return { ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' }
 
-  revalidatePath(std.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  revalidatePath('/forms', 'layout')
   return { ok: true, id: res.id }
 }
 
@@ -230,7 +230,7 @@ export async function updateTemplateMeta(
     external_url: externalUrl,
   }).eq('id', id)
   if (error) throw error
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  revalidatePath('/forms', 'layout')
   // Name/deadline also feed the dashboard grid and the exchange cards' %
   // complete once the template is active.
   revalidatePath('/dashboard')
@@ -292,7 +292,7 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
     if (insertError) throw insertError
   }
 
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  revalidatePath('/forms', 'layout')
   // Newly active → now appears in the dashboard grid and exchange % complete.
   revalidatePath('/dashboard')
   revalidatePath('/exchanges')
@@ -332,7 +332,7 @@ export async function deleteTemplate(id: string): Promise<void> {
   }
   const { error } = await supabase.from('form_templates').delete().eq('id', id)
   if (error) throw error
-  revalidatePath(tmpl.kind === 'doc' ? '/documents' : '/forms', 'layout')
+  revalidatePath('/forms', 'layout')
   // If it was active, it drops off the dashboard grid and exchange % complete.
   revalidatePath('/dashboard')
   revalidatePath('/exchanges')
