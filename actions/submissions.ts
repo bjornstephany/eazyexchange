@@ -317,10 +317,12 @@ export async function approveSubmission(assignmentId: string) {
     metadata: { assignment_id: assignmentId },
   })
 
-  // Review returns via history-back to its origin list (Documents drawer or
-  // Student detail) — keep both fresh, plus the dashboard grid. The student's
-  // /my-forms view is a different actor — accepted cross-actor staleness.
-  revalidatePath('/documents')
+  // Review returns via history-back to its origin list (Documents drawer on
+  // /forms, or Student detail on /students) — keep both fresh, plus the
+  // dashboard grid. /documents only redirects to /forms, so revalidate /forms
+  // itself (matching actions/forms.ts). The student's /my-forms view is a
+  // different actor — accepted cross-actor staleness.
+  revalidatePath('/forms', 'layout')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }
@@ -384,7 +386,7 @@ export async function rejectSubmission(assignmentId: string, note: string) {
   }
 
   // Same surfaces (and same cross-actor exemption) as approveSubmission above.
-  revalidatePath('/documents')
+  revalidatePath('/forms', 'layout')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }
