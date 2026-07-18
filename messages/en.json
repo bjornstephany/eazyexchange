@@ -38,7 +38,8 @@
         "compte": "Personal account",
         "equipe": "Team & roles",
         "fact": "Billing",
-        "prog": "Program"
+        "prog": "Program",
+        "donnees": "Data & privacy"
       },
       "profile": {
         "fullNameLabel": "Full name",
@@ -108,6 +109,21 @@
         "passwordUpdateFailed": "The password could not be updated. Please try again.",
         "passwordMismatch": "Passwords do not match."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Data & privacy",
+      "subtitle": "Delete or export a person's data on request (GDPR).",
+      "students": "Students",
+      "applicants": "Applicants",
+      "empty": "No one yet.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "confirmTitle": "Permanently delete this data?",
+      "confirmBody": "This action is irreversible. All of {name}'s forms, documents and information will be permanently erased.",
+      "confirmCancel": "Cancel",
+      "confirmConfirm": "Delete permanently",
+      "deleteError": "Deletion failed. Try again.",
+      "deleted": "Data deleted."
     },
     "billing": {
       "per": "/ year",

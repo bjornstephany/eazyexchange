@@ -38,7 +38,8 @@
         "compte": "Cuenta personal",
         "equipe": "Equipo y roles",
         "fact": "Facturación",
-        "prog": "Programa"
+        "prog": "Programa",
+        "donnees": "Datos y privacidad"
       },
       "profile": {
         "fullNameLabel": "Nombre completo",
@@ -108,6 +109,21 @@
         "passwordUpdateFailed": "No se ha podido actualizar la contraseña. Vuelva a intentarlo.",
         "passwordMismatch": "Las contraseñas no coinciden."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Datos y privacidad",
+      "subtitle": "Elimine o exporte los datos de una persona a petición (RGPD).",
+      "students": "Alumnos",
+      "applicants": "Candidatos",
+      "empty": "Nadie por el momento.",
+      "delete": "Eliminar",
+      "deleting": "Eliminando…",
+      "confirmTitle": "¿Eliminar definitivamente estos datos?",
+      "confirmBody": "Esta acción es irreversible. Todos los formularios, documentos e información de {name} se borrarán definitivamente.",
+      "confirmCancel": "Cancelar",
+      "confirmConfirm": "Eliminar definitivamente",
+      "deleteError": "La eliminación falló. Inténtelo de nuevo.",
+      "deleted": "Datos eliminados."
     },
     "billing": {
       "per": "/ año",

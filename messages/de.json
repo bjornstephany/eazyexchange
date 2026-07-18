@@ -38,7 +38,8 @@
         "compte": "Persönliches Konto",
         "equipe": "Team & Rollen",
         "fact": "Abrechnung",
-        "prog": "Programm"
+        "prog": "Programm",
+        "donnees": "Daten & Datenschutz"
       },
       "profile": {
         "fullNameLabel": "Vollständiger Name",
@@ -108,6 +109,21 @@
         "passwordUpdateFailed": "Das Passwort konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
         "passwordMismatch": "Die Passwörter stimmen nicht überein."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Daten & Datenschutz",
+      "subtitle": "Löschen oder exportieren Sie die Daten einer Person auf Anfrage (DSGVO).",
+      "students": "Schüler",
+      "applicants": "Bewerber",
+      "empty": "Noch niemand.",
+      "delete": "Löschen",
+      "deleting": "Wird gelöscht…",
+      "confirmTitle": "Diese Daten endgültig löschen?",
+      "confirmBody": "Diese Aktion ist unwiderruflich. Alle Formulare, Dokumente und Informationen von {name} werden endgültig gelöscht.",
+      "confirmCancel": "Abbrechen",
+      "confirmConfirm": "Endgültig löschen",
+      "deleteError": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+      "deleted": "Daten gelöscht."
     },
     "billing": {
       "per": "/ Jahr",
