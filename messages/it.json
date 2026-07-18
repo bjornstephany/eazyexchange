@@ -135,6 +135,7 @@
         "dashboard": "Panoramica",
         "exchanges": "Scambi",
         "applications": "Candid.",
+        "files": "File",
         "forms": "Mod.",
         "documents": "Doc.",
         "students": "Studenti",
@@ -331,6 +332,13 @@
         }
       }
     },
+    "files": {
+      "title": "File",
+      "formsHeading": "Moduli · {count}",
+      "docsHeading": "Documenti richiesti · {count}",
+      "formsEmpty": "Ancora nessun modulo.",
+      "docsEmpty": "Ancora nessun documento richiesto."
+    },
     "forms": {
       "title": "Moduli",
       "yourFormsCount": "I tuoi moduli · {count}",
@@ -437,6 +445,9 @@
     },
     "library": {
       "heading": "Biblioteca",
+      "addTitle": "Aggiungi",
+      "formsSection": "Moduli",
+      "docsSection": "Documenti",
       "searchPlaceholder": "Cerca…",
       "alreadyAdded": "Già aggiunto ✓",
       "adding": "Aggiunta…",

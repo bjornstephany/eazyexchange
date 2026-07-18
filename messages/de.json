@@ -135,6 +135,7 @@
         "dashboard": "Übersicht",
         "exchanges": "Austausche",
         "applications": "Bewerb.",
+        "files": "Dateien",
         "forms": "Formul.",
         "documents": "Dok.",
         "students": "Schüler",
@@ -331,6 +332,13 @@
         }
       }
     },
+    "files": {
+      "title": "Dateien",
+      "formsHeading": "Formulare · {count}",
+      "docsHeading": "Angeforderte Unterlagen · {count}",
+      "formsEmpty": "Noch keine Formulare.",
+      "docsEmpty": "Noch keine angeforderten Unterlagen."
+    },
     "forms": {
       "title": "Formulare",
       "yourFormsCount": "Ihre Formulare · {count}",
@@ -437,6 +445,9 @@
     },
     "library": {
       "heading": "Bibliothek",
+      "addTitle": "Hinzufügen",
+      "formsSection": "Formulare",
+      "docsSection": "Dokumente",
       "searchPlaceholder": "Suchen…",
       "alreadyAdded": "Bereits hinzugefügt ✓",
       "adding": "Wird hinzugefügt…",

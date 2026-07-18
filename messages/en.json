@@ -135,6 +135,7 @@
         "dashboard": "Overview",
         "exchanges": "Exchanges",
         "applications": "Apps.",
+        "files": "Files",
         "forms": "Forms",
         "documents": "Docs",
         "students": "Students",
@@ -331,6 +332,13 @@
         }
       }
     },
+    "files": {
+      "title": "Files",
+      "formsHeading": "Forms · {count}",
+      "docsHeading": "Requested documents · {count}",
+      "formsEmpty": "No forms yet.",
+      "docsEmpty": "No requested documents yet."
+    },
     "forms": {
       "title": "Forms",
       "yourFormsCount": "Your forms · {count}",
@@ -437,6 +445,9 @@
     },
     "library": {
       "heading": "Library",
+      "addTitle": "Add",
+      "formsSection": "Forms",
+      "docsSection": "Documents",
       "searchPlaceholder": "Search…",
       "alreadyAdded": "Already added ✓",
       "adding": "Adding…",

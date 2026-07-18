@@ -135,6 +135,7 @@
         "dashboard": "Resumen",
         "exchanges": "Intercambios",
         "applications": "Candid.",
+        "files": "Archivos",
         "forms": "Formul.",
         "documents": "Docs",
         "students": "Alumnos",
@@ -331,6 +332,13 @@
         }
       }
     },
+    "files": {
+      "title": "Archivos",
+      "formsHeading": "Formularios · {count}",
+      "docsHeading": "Documentos solicitados · {count}",
+      "formsEmpty": "Aún no hay formularios.",
+      "docsEmpty": "Aún no hay documentos solicitados."
+    },
     "forms": {
       "title": "Formularios",
       "yourFormsCount": "Sus formularios · {count}",
@@ -437,6 +445,9 @@
     },
     "library": {
       "heading": "Biblioteca",
+      "addTitle": "Añadir",
+      "formsSection": "Formularios",
+      "docsSection": "Documentos",
       "searchPlaceholder": "Buscar…",
       "alreadyAdded": "Ya añadido ✓",
       "adding": "Añadiendo…",
