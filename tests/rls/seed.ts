@@ -70,6 +70,9 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   await sql`insert into exchange_enrollments (exchange_id, user_id)
     values (${fx.exchangeA}, ${fx.studentA})`
 
+  await sql`insert into exchange_program_details (exchange_id, destination, chaperones, association_name)
+    values (${fx.exchangeA}, 'le Minnesota', array['Polly STEPHANY'], 'AGESSIA')`
+
   await sql`insert into form_templates
       (id, exchange_id, school_id, name, description, type, kind, status, audience, deadline, created_by)
     values (${fx.templateA}, ${fx.exchangeA}, ${fx.schoolA}, ${'Fiche RLS ' + suffix}, null,

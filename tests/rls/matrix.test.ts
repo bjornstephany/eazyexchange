@@ -204,6 +204,21 @@ describe.each([
       tx`insert into feedback (user_id, school_id, type, message)
          values (${uid()}, ${fx.schoolA}, 'bug', 'cross-school stamp')`))
   })
+
+  it('exchange_program_details: cannot read school A details', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select exchange_id from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
+  })
+
+  it('exchange_program_details: cannot upsert school A details', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
+  })
+
+  it('exchange_program_details: cannot insert into school A exchange', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into exchange_program_details (exchange_id, destination) values (${fx.exchangeA}, 'pwned')`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -280,6 +295,26 @@ describe('own-school allow', () => {
       tx`insert into feedback (user_id, school_id, type, message)
          values (${fx.orgB}, ${fx.schoolB}, 'suggestion', 'own row')`)).toBe(1)
   })
+
+  it('organizer A reads own program details', async () => {
+    expect(await readRows(fx.orgA, (tx) =>
+      tx`select destination from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(1)
+  })
+
+  it('organizer A updates own program details', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchange_program_details set destination = 'le Wisconsin' where exchange_id = ${fx.exchangeA}`)).toBe(1)
+  })
+
+  it('enrolled student A reads program details', async () => {
+    expect(await readRows(fx.studentA, (tx) =>
+      tx`select destination from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(1)
+  })
+
+  it('enrolled student A cannot write program details', async () => {
+    expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -336,5 +371,9 @@ describe('partner boundary on the shared exchange', () => {
     expect(await writeOutcome(sql, fx.orgC, (tx) =>
       tx`insert into exchange_enrollments (exchange_id, user_id)
          values (${fx.exchangeShared}, ${fx.studentC})`)).toBe(1)
+  })
+  it('partner organizer C cannot read school A program details (not on exchange A)', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select exchange_id from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
   })
 })
