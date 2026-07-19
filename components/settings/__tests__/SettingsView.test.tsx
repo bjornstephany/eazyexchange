@@ -118,6 +118,7 @@ const owner = {
     id: 'ex1', name: 'Programme Espagne', year: 2026, archived: false,
     enrolled: 10, applications: 12, earliestDeadline: '2026-10-10',
     remindersEnabled: true, reminderCadence: 'normale' as const,
+    goodNewsSubject: 'Bonne nouvelle', goodNewsBody: 'Bonjour',
   },
 }
 

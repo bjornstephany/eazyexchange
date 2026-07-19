@@ -103,6 +103,23 @@
           "confirm": "Archivia il programma"
         }
       },
+      "goodNews": {
+        "heading": "E-mail «Buona notizia» ai genitori",
+        "description": "Inviata ai genitori quando accetti una candidatura. I pulsanti Sì / No / Domande vengono aggiunti automaticamente.",
+        "subjectLabel": "Oggetto",
+        "bodyLabel": "Messaggio",
+        "placeholdersLabel": "Segnaposto disponibili:",
+        "previewLabel": "Anteprima",
+        "resetToDefault": "Ripristina il modello predefinito",
+        "saveButton": "Salva",
+        "savedNotice": "Modello salvato.",
+        "errors": {
+          "subjectEmpty": "L’oggetto non può essere vuoto.",
+          "bodyEmpty": "Il messaggio non può essere vuoto.",
+          "tooLong": "Il modello è troppo lungo.",
+          "saveFailed": "Impossibile salvare il modello. Riprova."
+        }
+      },
       "errors": {
         "nameEmpty": "Il nome non può essere vuoto.",
         "schoolNameEmpty": "Il nome dell’istituto non può essere vuoto.",

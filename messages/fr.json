@@ -103,6 +103,23 @@
           "confirm": "Archiver le programme"
         }
       },
+      "goodNews": {
+        "heading": "E-mail « Bonne nouvelle » aux parents",
+        "description": "Envoyé aux parents lorsque vous acceptez une candidature. Les boutons Oui / Non / Questions sont ajoutés automatiquement.",
+        "subjectLabel": "Objet",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Balises disponibles :",
+        "previewLabel": "Aperçu",
+        "resetToDefault": "Rétablir le modèle par défaut",
+        "saveButton": "Enregistrer",
+        "savedNotice": "Modèle enregistré.",
+        "errors": {
+          "subjectEmpty": "L’objet ne peut pas être vide.",
+          "bodyEmpty": "Le message ne peut pas être vide.",
+          "tooLong": "Le modèle est trop long.",
+          "saveFailed": "Le modèle n’a pas pu être enregistré. Réessayez."
+        }
+      },
       "errors": {
         "nameEmpty": "Le nom ne peut pas être vide.",
         "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",

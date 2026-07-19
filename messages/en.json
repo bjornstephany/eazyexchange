@@ -103,6 +103,23 @@
           "confirm": "Archive the program"
         }
       },
+      "goodNews": {
+        "heading": "Parent “Good news” email",
+        "description": "Sent to the parents when you accept an application. The Yes / No / Questions buttons are added automatically.",
+        "subjectLabel": "Subject",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Available placeholders:",
+        "previewLabel": "Preview",
+        "resetToDefault": "Reset to the default template",
+        "saveButton": "Save",
+        "savedNotice": "Template saved.",
+        "errors": {
+          "subjectEmpty": "The subject cannot be empty.",
+          "bodyEmpty": "The message cannot be empty.",
+          "tooLong": "The template is too long.",
+          "saveFailed": "The template could not be saved. Please try again."
+        }
+      },
       "errors": {
         "nameEmpty": "Name cannot be empty.",
         "schoolNameEmpty": "School name cannot be empty.",

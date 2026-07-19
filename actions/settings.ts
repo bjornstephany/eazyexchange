@@ -16,6 +16,8 @@ import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 import { logAudit } from '@/lib/audit'
 import { isLocale, type Locale } from '@/lib/i18n/config'
 import { getTranslations } from 'next-intl/server'
+import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { DEFAULT_GOOD_NEWS_SUBJECT, DEFAULT_GOOD_NEWS_BODY } from '@/lib/good-news-template'
 import type Stripe from 'stripe'
 import type { ReminderCadence } from './exchanges'
 
@@ -285,13 +287,14 @@ export type ProgramInfo = {
   id: string; name: string; year: number; archived: boolean
   enrolled: number; applications: number; earliestDeadline: string | null
   remindersEnabled: boolean; reminderCadence: ReminderCadence
+  goodNewsSubject: string; goodNewsBody: string
 }
 
 // Scope check: the exchange must belong to the caller's school (either side).
 async function getScopedExchange(supabase: SupabaseClient, schoolId: string, exchangeId: string) {
   const { data: exchange } = await supabase
     .from('exchanges')
-    .select('id, name, year, archived_at, school_a_id, school_b_id, reminders_enabled, reminder_cadence')
+    .select('id, name, year, archived_at, school_a_id, school_b_id, reminders_enabled, reminder_cadence, good_news_subject, good_news_body')
     .eq('id', exchangeId).maybeSingle()
   if (!exchange || (exchange.school_a_id !== schoolId && exchange.school_b_id !== schoolId)) {
     throw new Error('Unauthorized')
@@ -322,6 +325,8 @@ export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
     earliestDeadline: (firstDeadline?.deadline as string | null) ?? null,
     remindersEnabled: exchange.reminders_enabled ?? true,
     reminderCadence: (exchange.reminder_cadence ?? 'normale') as ReminderCadence,
+    goodNewsSubject: (exchange.good_news_subject as string | null)?.trim() || DEFAULT_GOOD_NEWS_SUBJECT,
+    goodNewsBody: (exchange.good_news_body as string | null)?.trim() || DEFAULT_GOOD_NEWS_BODY,
   }
 }
 
@@ -359,3 +364,36 @@ export async function restoreExchange(exchangeId: string): Promise<void> {
   revalidatePath('/', 'layout')
 }
 
+
+export type SaveTemplateResult = { ok: true } | { ok: false; message: string }
+
+const GOOD_NEWS_SUBJECT_MAX = 200
+const GOOD_NEWS_BODY_MAX = 5000
+
+export async function updateGoodNewsTemplate(
+  exchangeId: string, subject: string, body: string,
+): Promise<SaveTemplateResult> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx()
+  const t = await getTranslations('organizer')
+  await getScopedExchange(supabase, ctx.schoolId, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
+
+  const s = subject.trim()
+  const b = body.trim()
+  // Expected validation outcomes travel as return values (prod redacts throws).
+  if (!s) return { ok: false, message: t('settings.goodNews.errors.subjectEmpty') }
+  if (!b) return { ok: false, message: t('settings.goodNews.errors.bodyEmpty') }
+  if (s.length > GOOD_NEWS_SUBJECT_MAX || b.length > GOOD_NEWS_BODY_MAX) {
+    return { ok: false, message: t('settings.goodNews.errors.tooLong') }
+  }
+
+  const { error } = await supabase
+    .from('exchanges')
+    .update({ good_news_subject: s, good_news_body: b })
+    .eq('id', exchangeId)
+  if (error) return { ok: false, message: t('settings.goodNews.errors.saveFailed') }
+
+  revalidatePath('/settings')
+  return { ok: true }
+}

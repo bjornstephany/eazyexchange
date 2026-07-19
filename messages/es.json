@@ -103,6 +103,23 @@
           "confirm": "Archivar el programa"
         }
       },
+      "goodNews": {
+        "heading": "Correo «Buenas noticias» a los padres",
+        "description": "Se envía a los padres cuando aceptas una candidatura. Los botones Sí / No / Preguntas se añaden automáticamente.",
+        "subjectLabel": "Asunto",
+        "bodyLabel": "Mensaje",
+        "placeholdersLabel": "Etiquetas disponibles:",
+        "previewLabel": "Vista previa",
+        "resetToDefault": "Restablecer la plantilla predeterminada",
+        "saveButton": "Guardar",
+        "savedNotice": "Plantilla guardada.",
+        "errors": {
+          "subjectEmpty": "El asunto no puede estar vacío.",
+          "bodyEmpty": "El mensaje no puede estar vacío.",
+          "tooLong": "La plantilla es demasiado larga.",
+          "saveFailed": "No se pudo guardar la plantilla. Inténtalo de nuevo."
+        }
+      },
       "errors": {
         "nameEmpty": "El nombre no puede estar vacío.",
         "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",

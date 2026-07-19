@@ -103,6 +103,23 @@
           "confirm": "Programm archivieren"
         }
       },
+      "goodNews": {
+        "heading": "„Gute Nachricht“-E-Mail an die Eltern",
+        "description": "Wird an die Eltern gesendet, wenn Sie eine Bewerbung annehmen. Die Schaltflächen Ja / Nein / Fragen werden automatisch hinzugefügt.",
+        "subjectLabel": "Betreff",
+        "bodyLabel": "Nachricht",
+        "placeholdersLabel": "Verfügbare Platzhalter:",
+        "previewLabel": "Vorschau",
+        "resetToDefault": "Auf Standardvorlage zurücksetzen",
+        "saveButton": "Speichern",
+        "savedNotice": "Vorlage gespeichert.",
+        "errors": {
+          "subjectEmpty": "Der Betreff darf nicht leer sein.",
+          "bodyEmpty": "Die Nachricht darf nicht leer sein.",
+          "tooLong": "Die Vorlage ist zu lang.",
+          "saveFailed": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen."
+        }
+      },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
         "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
