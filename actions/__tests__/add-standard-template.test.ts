@@ -77,17 +77,16 @@ describe('addStandardTemplate', () => {
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it('inserts medical as a draft with slot + 9 fields and revalidates /forms', async () => {
+  it('inserts medical (fillable) as a draft with no slot and no fields, revalidates /forms', async () => {
     const res = await addStandardTemplate('ex1', 'medical')
     expect(res).toEqual({ ok: true, id: 'tpl-new' })
     expect(inserted.templates[0]).toMatchObject({
       exchange_id: 'ex1', school_id: 's1', standard_key: 'medical',
-      kind: 'pdf', type: 'document_upload', status: 'draft', audience: 'all',
+      kind: 'fillable', type: 'data_entry', status: 'draft', audience: 'all',
       deadline: null, created_by: 'u1',
     })
-    expect(inserted.slots).toHaveLength(1)
-    expect(inserted.slots[0]).toMatchObject({ template_id: 'tpl-new', label: 'Autorisation médicale', required: true, order: 0 })
-    expect(inserted.fields).toHaveLength(9)
+    expect(inserted.slots).toHaveLength(0)
+    expect(inserted.fields).toHaveLength(0)
     expect(revalidatePath).toHaveBeenCalledWith('/forms', 'layout')
   })
 

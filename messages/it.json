@@ -388,6 +388,7 @@
         "fieldsHeadingPdf": "Campi da compilare",
         "fieldsHeadingOnline": "Domande del modulo",
         "emptyFields": "Questo modulo non ha ancora campi. Aggiungi le tue domande, poi attivalo per inviarlo alle famiglie.",
+        "fillableNote": "Modulo pronto all’uso: compilato e firmato online dalla famiglia, con i dettagli del programma inseriti automaticamente.",
         "activate": "Attiva",
         "activating": "Attivazione…",
         "editTemplate": "Modifica il modello",
@@ -409,6 +410,7 @@
       "pills": {
         "onlineForm": "Modulo online",
         "pdfToSign": "PDF · da firmare",
+        "fillable": "Firma online",
         "active": "Attivo",
         "draft": "Bozza",
         "mandatory": "Obbligatorio",

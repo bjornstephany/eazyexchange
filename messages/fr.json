@@ -388,6 +388,7 @@
         "fieldsHeadingPdf": "Champs à renseigner",
         "fieldsHeadingOnline": "Questions du formulaire",
         "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
+        "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
         "activate": "Activer",
         "activating": "Activation…",
         "editTemplate": "Modifier le modèle",
@@ -409,6 +410,7 @@
       "pills": {
         "onlineForm": "Formulaire en ligne",
         "pdfToSign": "PDF · à signer",
+        "fillable": "À signer en ligne",
         "active": "Actif",
         "draft": "Brouillon",
         "mandatory": "Obligatoire",

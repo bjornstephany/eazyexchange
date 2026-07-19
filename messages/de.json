@@ -388,6 +388,7 @@
         "fieldsHeadingPdf": "Auszufüllende Felder",
         "fieldsHeadingOnline": "Fragen des Formulars",
         "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
+        "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
         "activate": "Aktivieren",
         "activating": "Wird aktiviert…",
         "editTemplate": "Vorlage bearbeiten",
@@ -409,6 +410,7 @@
       "pills": {
         "onlineForm": "Online-Formular",
         "pdfToSign": "PDF · zu unterschreiben",
+        "fillable": "Online unterschreiben",
         "active": "Aktiv",
         "draft": "Entwurf",
         "mandatory": "Obligatorisch",

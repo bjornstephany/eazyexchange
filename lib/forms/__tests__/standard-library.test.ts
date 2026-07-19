@@ -11,9 +11,11 @@ describe('STANDARD_TEMPLATES', () => {
       'passeport', 'passeport-parent', 'esta',
     ])
   })
-  it('has 5 pdf forms and 3 docs, all mandatory, none online', () => {
+  it('has 4 fillable forms, 1 pdf form and 3 docs, all mandatory, none online', () => {
+    expect(STANDARD_TEMPLATES.filter(t => t.kind === 'fillable').map(t => t.key))
+      .toEqual(['medical', 'decharge', 'absence', 'famille'])
     expect(STANDARD_TEMPLATES.filter(t => t.kind === 'pdf').map(t => t.key))
-      .toEqual(['medical', 'decharge', 'absence', 'famille', 'ast'])
+      .toEqual(['ast'])
     expect(STANDARD_TEMPLATES.filter(t => t.kind === 'doc').map(t => t.key))
       .toEqual(['passeport', 'passeport-parent', 'esta'])
     expect(STANDARD_TEMPLATES.every(t => t.audience === 'all' && t.condition_label === null)).toBe(true)
@@ -22,12 +24,9 @@ describe('STANDARD_TEMPLATES', () => {
     expect(STANDARD_TEMPLATES.find(t => t.key === 'esta')?.external_url).toBe('https://esta.cbp.dhs.gov')
     expect(STANDARD_TEMPLATES.filter(t => t.external_url !== null)).toHaveLength(1)
   })
-  it('keeps the medical and décharge checklists; other items are signature-only', () => {
-    expect(STANDARD_TEMPLATES.find(t => t.key === 'medical')?.fields).toHaveLength(9)
-    expect(STANDARD_TEMPLATES.find(t => t.key === 'decharge')?.fields).toHaveLength(6)
+  it('carries no form_fields — fillable structure lives in code, others are signature/upload-only', () => {
     for (const t of STANDARD_TEMPLATES) {
-      if (!['medical', 'decharge'].includes(t.key)) expect(t.fields).toHaveLength(0)
-      if (t.kind === 'doc') expect(t.fields).toHaveLength(0)
+      expect(t.fields).toHaveLength(0)
     }
   })
   it('the parent-passport description stresses the SAME parent as the AST signatory', () => {
@@ -56,16 +55,24 @@ describe('insertStandardTemplate', () => {
     return { supabase, templateInserts, slotInserts, fieldInserts }
   }
 
-  it('inserts a draft with slot and fields for medical', async () => {
+  it('inserts a draft with no slot and no fields for medical (fillable)', async () => {
     const { supabase, templateInserts, slotInserts, fieldInserts } = harness()
     const std = STANDARD_TEMPLATES.find(t => t.key === 'medical')!
     const res = await insertStandardTemplate(supabase as any, std, { exchangeId: 'ex1', schoolId: 's1', userId: 'u1' })
     expect(res).toEqual({ id: 't1' })
     expect(templateInserts[0]).toMatchObject({
       exchange_id: 'ex1', school_id: 's1', standard_key: 'medical', status: 'draft', deadline: null,
+      kind: 'fillable', type: 'data_entry',
     })
+    expect(slotInserts).toHaveLength(0)
+    expect(fieldInserts).toHaveLength(0)
+  })
+
+  it('still inserts a slot for a pdf-kind item (ast)', async () => {
+    const { supabase, slotInserts } = harness()
+    const std = STANDARD_TEMPLATES.find(t => t.key === 'ast')!
+    await insertStandardTemplate(supabase as any, std, { exchangeId: 'ex1', schoolId: 's1', userId: 'u1' })
     expect(slotInserts).toHaveLength(1)
-    expect(fieldInserts).toHaveLength(9)
   })
 
   it('maps a 23505 insert error to { duplicate: true }', async () => {
