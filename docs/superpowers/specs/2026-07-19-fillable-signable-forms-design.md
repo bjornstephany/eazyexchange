@@ -32,7 +32,7 @@ Ship these four forms as product-maintained **fillable, e-signable** templates:
 | Question | Decision |
 |---|---|
 | Signature model | Fully online e-sign: typed full name + « Lu et approuvé » checkbox, server-side timestamp; app generates the completed PDF. No paper path. |
-| Multiple signatories (père, mère, élève) | All sign in one session on the family's device — one signature block per signatory; second parent optional where the original allows. No per-signer email links. |
+| Multiple signatories (père, mère, élève) | All sign in one session on the family's device — one signature block per signatory. Every signature block the paper form shows is required (a two-signature form needs two signatures). No per-signer email links. |
 | Where variables live | One shared « Détails du programme » per exchange (Settings → Programme). Edit once, all forms update. No per-template overrides. |
 | Body text | Fixed, ships with the product. Organizers edit variables only. Wording changes are product updates. |
 | Architecture | Code-defined document definitions rendering both the web form and the PDF (approach A). Rejected: DB-driven rich templates (YAGNI, text in every school's DB); stamping answers onto the original PDFs (mid-sentence variables need text reflow — overlay can't). |
@@ -88,15 +88,17 @@ fields it consumes (used by the activation gate).
 - The medical form stays bilingual EN/FR like the original (it is read by US
   host families). The `0 11 33` phone prefix stays as fixed text before the
   phone blanks.
-- Signature policy per form:
-  - **Décharge:** représentant légal 1 (required) + représentant légal 2
-    (optional) + élève (required, for the code de conduite section), plus the
-    « à ___ le ___ » place blank (date is the server timestamp).
-  - **Engagement:** père + mère blocks, each individually optional but **at
-    least one parent required** (single-parent families), + élève (required).
+- Signature policy per form — **every signature block the paper form shows is
+  required** (a two-signature form needs two signatures; no optional signatory
+  and no "at least one" fallback):
+  - **Décharge:** représentant légal 1 + représentant légal 2 + élève (the
+    élève block signs the code de conduite section), plus the « à ___ le ___ »
+    place blank (date is the server timestamp). Both parent name blanks are
+    required too.
+  - **Engagement:** père + mère + élève — all three required.
   - **Absence:** one parent/responsable légal (required).
-  - **Medical:** father + mother blocks, each individually optional, at least
-    one required.
+  - **Medical:** father + mother — both required. (The two emergency phone
+    numbers stay "at least one" — they are contact fields, not signatures.)
 - No association logo in v1 (the AGESSIA banner on the engagement form is
   dropped; plain heading instead).
 
@@ -166,9 +168,10 @@ RLS (matrix cases in the same PR, `pnpm test:rls`):
    below their paragraphs, then one signature card per signatory (full name
    input — student's prefilled where declared —, required « Lu et approuvé »
    checkbox, legal mention that submitting constitutes an electronic
-   signature). Optional signatories can be left empty entirely, but a
-   partially filled optional block (name without checkbox or vice versa) is a
-   validation error.
+   signature). Every signature block the form defines is required for submit;
+   the validation engine still supports optional blocks generically (used by
+   nothing in the four shipped forms), so a partially filled optional block
+   (name without checkbox or vice versa) is a validation error.
 2. Draft save as today (`status: 'draft'`, `fillable_data` written without
    `signed_at` timestamps; checkbox state not persisted in drafts).
 3. **Submit** (server action under `requireStudent()`): validate all required

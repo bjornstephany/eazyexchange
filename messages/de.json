@@ -155,7 +155,8 @@
         "applications": "Bewerb.",
         "files": "Dateien",
         "students": "Schüler",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Komm."
       },
       "accountMenu": {
         "trigger": "Konto",
@@ -187,6 +188,33 @@
         "placeholder": "Beschreiben Sie Ihre Idee oder das aufgetretene Problem…",
         "submit": "Senden",
         "submitting": "Wird gesendet…"
+      }
+    },
+    "communication": {
+      "heading": "Kommunikation",
+      "subtitle": "Verwalten Sie alles, was Sie an Schüler und Eltern kommunizieren.",
+      "comingSoon": "Demnächst verfügbar.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Vorlagen",
+        "annonces": "Ankündigungen",
+        "auto": "Auto-Erinnerungen"
+      },
+      "info": {
+        "heading": "Wichtige Infos",
+        "description": "Fügen Sie die wichtigsten Infos zum Programm hinzu. Schüler sehen sie im Tab „Infos“ ihres Portals.",
+        "addButton": "Info hinzufügen",
+        "titlePlaceholder": "Titel (z. B. Treffpunkt)",
+        "bodyPlaceholder": "Für Schüler sichtbare Details…",
+        "saveButton": "Speichern",
+        "deleteButton": "Löschen",
+        "empty": "Noch keine Infos.",
+        "readOnlyNotice": "Programm archiviert — schreibgeschützt.",
+        "errors": {
+          "titleRequired": "Der Titel ist erforderlich.",
+          "titleTooLong": "Titel zu lang (max. 120 Zeichen).",
+          "bodyTooLong": "Details zu lang (max. 2000 Zeichen)."
+        }
       }
     },
     "dashboard": {

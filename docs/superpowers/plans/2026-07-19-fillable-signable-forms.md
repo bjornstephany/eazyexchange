@@ -733,7 +733,7 @@ export const decharge: FillableDefinition = {
       { t: 'text', text: 'Nous, soussignés ' },
       { t: 'blank', key: 'parent1_name', label: 'Nom du représentant légal 1' },
       { t: 'text', text: ' et ' },
-      { t: 'blank', key: 'parent2_name', label: 'Nom du représentant légal 2 (facultatif)', required: false },
+      { t: 'blank', key: 'parent2_name', label: 'Nom du représentant légal 2' },
       { t: 'text', text: ', parents (ou responsables légaux) de ' },
       { t: 'blank', key: 'student_name', label: 'Nom de l’élève', prefill: 'student_name' },
       { t: 'text', text: ', reconnaissons que l’association ' },
@@ -764,7 +764,7 @@ export const decharge: FillableDefinition = {
       { t: 'text', text: 'Signature des représentants légaux précédée de la mention « Lu et approuvé »' },
     ] },
     { b: 'signature', key: 'sig_parent1', roleLabel: 'Représentant légal 1', required: true },
-    { b: 'signature', key: 'sig_parent2', roleLabel: 'Représentant légal 2 (facultatif)', required: false },
+    { b: 'signature', key: 'sig_parent2', roleLabel: 'Représentant légal 2', required: true },
     { b: 'divider' },
     { b: 'heading', level: 1, runs: [{ t: 'text', text: 'CODE DE CONDUITE de l’élève' }] },
     { b: 'paragraph', runs: [
@@ -868,9 +868,7 @@ export const engagement: FillableDefinition = {
   key: 'famille',
   title: 'Engagement de famille',
   variables: ['association_name', 'sending_school_name'],
-  requireOneOf: [
-    { keys: ['sig_pere', 'sig_mere'], message: 'Au moins un parent doit signer l’engagement.' },
-  ],
+  requireOneOf: [],
   blocks: [
     { b: 'heading', level: 1, runs: [
       { t: 'text', text: 'ENGAGEMENT DE LA FAMILLE : CONDITIONS POUR PARTICIPER À UN ÉCHANGE ' },
@@ -918,8 +916,8 @@ export const engagement: FillableDefinition = {
       { t: 'text', text: 'Nom, prénom de l’élève : ' },
       { t: 'blank', key: 'student_name', label: 'Nom, prénom de l’élève', prefill: 'student_name' },
     ] },
-    { b: 'signature', key: 'sig_pere', roleLabel: 'Père (au moins un parent doit signer)', required: false },
-    { b: 'signature', key: 'sig_mere', roleLabel: 'Mère (au moins un parent doit signer)', required: false },
+    { b: 'signature', key: 'sig_pere', roleLabel: 'Père', required: true },
+    { b: 'signature', key: 'sig_mere', roleLabel: 'Mère', required: true },
     { b: 'signature', key: 'sig_eleve', roleLabel: 'Élève', required: true, prefill: 'student_name' },
     { b: 'paragraph', style: 'italic', runs: [
       { t: 'text', text: 'Le résultat de la sélection sera communiqué par mail à chaque famille.' },
@@ -939,8 +937,10 @@ export const medical: FillableDefinition = {
   key: 'medical',
   title: 'Autorisation médicale',
   variables: ['chaperones_or_en', 'chaperones_ou', 'travel_period_en'],
+  // Both parent signatures are required (a two-signature form needs two
+  // signatures). The phone rule stays "at least one" — contact fields, not
+  // signatures.
   requireOneOf: [
-    { keys: ['sig_father', 'sig_mother'], message: 'Au moins un parent doit signer l’autorisation. / At least one parent must sign.' },
     { keys: ['mother_phone', 'father_phone'], message: 'Indiquez au moins un numéro de téléphone d’urgence.' },
   ],
   blocks: [
@@ -966,8 +966,8 @@ export const medical: FillableDefinition = {
     { b: 'field', key: 'mother_phone', label: 'Mother’s mobile number / Portable de la mère', input: 'phone', required: false, prefix: '0 11 33' },
     { b: 'field', key: 'father_phone', label: 'Father’s mobile number / Portable du père', input: 'phone', required: false, prefix: '0 11 33' },
     { b: 'field', key: 'medical_needs', label: 'Special medical needs/allergies/restrictions/diet — Contre-indications / allergies / restrictions / régime particuliers', input: 'textarea', required: false },
-    { b: 'signature', key: 'sig_father', roleLabel: 'Father / Père (au moins un parent doit signer)', required: false },
-    { b: 'signature', key: 'sig_mother', roleLabel: 'Mother / Mère (au moins un parent doit signer)', required: false },
+    { b: 'signature', key: 'sig_father', roleLabel: 'Father / Père', required: true },
+    { b: 'signature', key: 'sig_mother', roleLabel: 'Mother / Mère', required: true },
   ],
 }
 ```
@@ -1100,11 +1100,12 @@ describe('renderFillablePdf', () => {
       values: resolveVariables({ exchangeName: 'France-Minnesota 2026', details }),
       data: {
         answers: {
-          parent1_name: 'Jean Dupont', student_name: 'Zoé Dupont',
+          parent1_name: 'Jean Dupont', parent2_name: 'Marie Dupont', student_name: 'Zoé Dupont',
           conduct_student_name: 'Zoé Dupont', parents_place: 'Luynes',
         },
         signatures: [
           { key: 'sig_parent1', role_label: 'Représentant légal 1', full_name: 'Jean Dupont', signed_at: '2026-07-19T10:00:00Z' },
+          { key: 'sig_parent2', role_label: 'Représentant légal 2', full_name: 'Marie Dupont', signed_at: '2026-07-19T10:00:00Z' },
           { key: 'sig_student', role_label: 'Élève', full_name: 'Zoé Dupont', signed_at: '2026-07-19T10:00:00Z' },
         ],
       },
@@ -1967,15 +1968,17 @@ vi.mock('@/lib/pdf/fillable-pdf', () => ({
 
 import { saveFillable } from '../fillable'
 
-// Décharge requires: parent1_name, student_name, conduct_student_name,
-// parents_place + sig_parent1 + sig_student.
+// Décharge requires: parent1_name, parent2_name, student_name,
+// conduct_student_name, parents_place + sig_parent1 + sig_parent2 + sig_student
+// (every signature block the paper form shows is required).
 const completeInput = {
   answers: {
-    parent1_name: 'Jean Dupont', student_name: 'Zoé Dupont',
+    parent1_name: 'Jean Dupont', parent2_name: 'Marie Dupont', student_name: 'Zoé Dupont',
     conduct_student_name: 'Zoé Dupont', parents_place: 'Luynes',
   },
   signatures: [
     { key: 'sig_parent1', full_name: 'Jean Dupont', approved: true },
+    { key: 'sig_parent2', full_name: 'Marie Dupont', approved: true },
     { key: 'sig_student', full_name: 'Zoé Dupont', approved: true },
   ],
 }
@@ -3160,7 +3163,7 @@ BODY
 - Student fill + all-signatories-one-session e-sign → Tasks 7, 8. ✅
 - Server-stamped signatures, PDF gen, submissions columns, documents bucket → Tasks 1, 4, 7. ✅
 - Organizer review + signed-PDF download → Task 10. ✅
-- Content-fidelity rules (neutralized instructions, bilingual medical, single-parent) → Task 3 + `requireOneOf`. ✅
+- Content-fidelity rules (neutralized instructions, bilingual medical; every signature block the paper form shows is required — no optional signatory) → Task 3. ✅
 - RLS (partner isolation, student read) → Tasks 1, 11. ✅
 - Structured errors / no PII / no admin client → enforced throughout (Global Constraints + Task 7 PDF-failure path). ✅
 - Existing pdf-kind templates keep working (only new adds are fillable; `ast` stays pdf) → Task 9. ✅
