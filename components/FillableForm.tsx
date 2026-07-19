@@ -117,6 +117,17 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
     }
     if (b.b === 'field') {
       const v = answers[b.key] ?? ''
+      if (readOnly) {
+        const value = v.trim() === '' ? '—' : (b.prefix ? `${b.prefix} ` : '') + v
+        return (
+          <div key={i} className="mb-4 text-[13px]">
+            <span className="font-semibold text-foreground">{b.label} : </span>
+            <strong className={`font-semibold underline decoration-dotted ${b.input === 'textarea' ? 'whitespace-pre-line' : ''}`}>
+              {value}
+            </strong>
+          </div>
+        )
+      }
       return (
         <div key={i} className="mb-4">
           <label htmlFor={`f-${b.key}`} className="mb-1 block text-[12px] font-semibold text-foreground">
@@ -125,13 +136,13 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
           <div className="flex items-center gap-2">
             {b.prefix && <span className="text-[13px] text-muted-foreground">{b.prefix}</span>}
             {b.input === 'textarea' ? (
-              <textarea id={`f-${b.key}`} rows={3} value={v} disabled={readOnly}
+              <textarea id={`f-${b.key}`} rows={3} value={v}
                 onChange={e => setAnswer(b.key, e.target.value)}
-                className="w-full rounded-[9px] border px-3 py-2 text-[13px] focus-visible:border-brand focus-visible:outline-none disabled:opacity-70" />
+                className="w-full rounded-[9px] border px-3 py-2 text-[13px] focus-visible:border-brand focus-visible:outline-none" />
             ) : (
-              <input id={`f-${b.key}`} type={b.input === 'phone' ? 'tel' : 'text'} value={v} disabled={readOnly}
+              <input id={`f-${b.key}`} type={b.input === 'phone' ? 'tel' : 'text'} value={v}
                 onChange={e => setAnswer(b.key, e.target.value)}
-                className="h-10 w-full max-w-[340px] rounded-[9px] border px-3 text-[13px] focus-visible:border-brand focus-visible:outline-none disabled:opacity-70" />
+                className="h-10 w-full max-w-[340px] rounded-[9px] border px-3 text-[13px] focus-visible:border-brand focus-visible:outline-none" />
             )}
           </div>
         </div>
@@ -139,6 +150,14 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
     }
     if (b.b === 'radio') {
       const v = answers[b.key] ?? ''
+      if (readOnly) {
+        return (
+          <div key={i} className="mb-4 text-[13px]">
+            <span className="font-semibold text-foreground">{b.label} : </span>
+            <strong className="font-semibold underline decoration-dotted">{v.trim() === '' ? '—' : v}</strong>
+          </div>
+        )
+      }
       return (
         <fieldset key={i} className="mb-4">
           <legend className="mb-1 text-[12px] font-semibold text-foreground">
@@ -147,7 +166,7 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
           <div className="flex flex-wrap gap-4">
             {b.options.map(opt => (
               <label key={opt} className="flex cursor-pointer items-center gap-1.5 text-[13px]">
-                <input type="radio" name={`r-${b.key}`} checked={v === opt} disabled={readOnly}
+                <input type="radio" name={`r-${b.key}`} checked={v === opt}
                   onChange={() => setAnswer(b.key, opt)} className="h-4 w-4 border-border" />
                 {opt}
               </label>
@@ -158,9 +177,17 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
     }
     if (b.b === 'check') {
       const checked = (answers[b.key] ?? '') === 'true'
+      if (readOnly) {
+        return (
+          <p key={i} className="mb-3 flex items-start gap-2.5 text-[13.5px] leading-[1.6]">
+            <span>{checked ? '☑' : '☐'}</span>
+            <span>{renderRuns(b.runs)}</span>
+          </p>
+        )
+      }
       return (
         <label key={i} className="mb-3 flex cursor-pointer items-start gap-2.5 text-[13.5px] leading-[1.6]">
-          <input type="checkbox" checked={checked} disabled={readOnly}
+          <input type="checkbox" checked={checked}
             onChange={e => setAnswer(b.key, e.target.checked ? 'true' : 'false')}
             className="mt-1 h-4 w-4 rounded border-border" />
           <span>{renderRuns(b.runs)}</span>

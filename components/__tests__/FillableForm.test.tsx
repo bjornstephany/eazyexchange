@@ -21,6 +21,8 @@ const def: FillableDefinition = {
       { t: 'var', name: 'destination' },
       { t: 'text', text: '.' },
     ] },
+    { b: 'field', key: 'mother_phone', label: 'Portable de la mère', input: 'phone', required: false, prefix: '0 11 33' },
+    { b: 'radio', key: 'regime', label: 'Régime', options: ['interne', 'externe'], required: false },
     { b: 'check', key: 'ok', runs: [{ t: 'text', text: 'J’accepte.' }], required: true },
     { b: 'signature', key: 'sig1', roleLabel: 'Représentant légal 1', required: true },
   ],
@@ -62,9 +64,18 @@ describe('FillableForm', () => {
 
   it('readOnly renders values as text without buttons', () => {
     render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
-      initialData={{ answers: { parent1: 'Jean Dupont', ok: 'true' }, signatures: [{ key: 'sig1', role_label: 'Représentant légal 1', full_name: 'Jean Dupont', signed_at: '2026-07-19T10:00:00Z' }] }}
+      initialData={{ answers: { parent1: 'Jean Dupont', mother_phone: '6 12 34 56 78', regime: 'externe', ok: 'true' }, signatures: [{ key: 'sig1', role_label: 'Représentant légal 1', full_name: 'Jean Dupont', signed_at: '2026-07-19T10:00:00Z' }] }}
       readOnly={true} studentName="Zoé" />)
     expect(screen.queryByRole('button', { name: 'Signer et envoyer' })).toBeNull()
     expect(screen.getAllByText(/Jean Dupont/).length).toBeGreaterThan(0)
+
+    // field and radio render as plain document text, not editable controls (text is
+    // split across a label span and a value strong, so match on aggregated textContent)
+    expect(screen.getByText((_, el) => el?.textContent === 'Portable de la mère : 0 11 33 6 12 34 56 78')).toBeInTheDocument()
+    expect(screen.getByText((_, el) => el?.textContent === 'Régime : externe')).toBeInTheDocument()
+    expect(screen.getByText('☑')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByRole('radio')).toBeNull()
+    expect(screen.queryByRole('checkbox')).toBeNull()
   })
 })
