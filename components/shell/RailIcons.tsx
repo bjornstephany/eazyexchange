@@ -60,3 +60,13 @@ export function IconFeedbackLight() {
     </div>
   )
 }
+
+export function IconCommunication() {
+  return (
+    <div className="relative h-4 w-[17px] rounded-[3px] rounded-bl-none border-[1.5px] border-current">
+      <div className="absolute left-[3px] top-[4px] h-[1.5px] w-[8px] bg-current" />
+      <div className="absolute left-[3px] top-[7px] h-[1.5px] w-[5px] bg-current" />
+      <div className="absolute -bottom-[3px] left-[3px] h-[4px] w-[4px] rotate-45 border-b-[1.5px] border-l-[1.5px] border-current bg-rail" />
+    </div>
+  )
+}
