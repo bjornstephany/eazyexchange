@@ -44,6 +44,17 @@ export async function ApplicationDetail({
         <ApplicationReadView data={application.data} photoUrl={photoUrl} lang="fr" />
       </div>
 
+      {application.status === 'maybe' && application.invite_response_note && (
+        <div data-noprint className="mt-6 rounded-card border bg-card p-6">
+          <h2 className="mb-2 font-display text-sm font-semibold text-foreground">
+            {tr('organizer.applications.questionsHeading')}
+          </h2>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+            {application.invite_response_note}
+          </p>
+        </div>
+      )}
+
       {application.status === 'submitted' && (
         <div data-noprint className="mt-6">
           <ApplicationReviewActions

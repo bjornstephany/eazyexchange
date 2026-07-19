@@ -291,6 +291,7 @@
       "progressCandidatures": "{done} / {total} applications processed"
     },
     "applications": {
+      "questionsHeading": "Family’s questions",
       "backLink": "‹ Back to applications",
       "printCta": "⎙ Print application",
       "subtitle": "Application · {exchangeName} · {year}",

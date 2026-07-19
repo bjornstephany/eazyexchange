@@ -291,6 +291,7 @@
       "progressCandidatures": "{done} / {total} Bewerbungen bearbeitet"
     },
     "applications": {
+      "questionsHeading": "Fragen der Familie",
       "backLink": "‹ Zurück zu den Bewerbungen",
       "printCta": "⎙ Bewerbung drucken",
       "subtitle": "Bewerbung · {exchangeName} · {year}",

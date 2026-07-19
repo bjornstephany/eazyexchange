@@ -291,6 +291,7 @@
       "progressCandidatures": "{done} / {total} candidatures traitées"
     },
     "applications": {
+      "questionsHeading": "Questions de la famille",
       "backLink": "‹ Retour aux candidatures",
       "printCta": "⎙ Imprimer la candidature",
       "subtitle": "Candidature · {exchangeName} · {year}",
