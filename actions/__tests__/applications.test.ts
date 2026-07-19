@@ -140,11 +140,12 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn().mockResolvedValue(undefined),
   sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
   sendChecklistEmail: vi.fn().mockResolvedValue(true),
+  sendStudentSetupEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
 import { respondToInvitation, resumeInviteSetup, getInvitation } from '../invitations'
-import { sendApplicationResumeEmail } from '@/lib/email'
+import { sendApplicationResumeEmail, sendStudentSetupEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 
 function completeAppData(): Record<string, string> {
@@ -403,39 +404,44 @@ describe('respondToInvitation', () => {
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toMatchObject({ ok: false, error: 'closed' })
   })
-  it('on Yes creates a confirmed account with no email, enrolls, finalizes, and mints a session', async () => {
+  it('on Yes creates a confirmed account, enrolls, finalizes, and emails the STUDENT a setup link (no parent session)', async () => {
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
     expect(scenario.createUserAttrs).toMatchObject({ email: 'a@b.co', email_confirm: true })
     expect(scenario.updated.row.status).toBe('enrolled')
     expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
+    // A magiclink is generated to build the student's /auth/confirm setup URL...
     expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
-    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
+    // ...and mailed to the student — but the PARENT is never signed in here.
+    expect(sendStudentSetupEmail).toHaveBeenCalledTimes(1)
+    const arg = (sendStudentSetupEmail as any).mock.calls[0][0]
+    expect(arg.to).toBe('a@b.co')
+    expect(arg.setupUrl).toContain('/auth/confirm?token_hash=hash-1')
+    expect(arg.setupUrl).toContain('type=magiclink')
+    expect(arg.setupUrl).toContain('next=%2Faccept-invite')
+    expect(scenario.verifyOtpAttrs).toBeNull()
   })
-  it('a Yes on an already-claimed (enrolling) invite mints a session instead of a silent no-op', async () => {
+  it('a Yes on an already-claimed (enrolling) invite is idempotent — no second account, no resend', async () => {
     scenario.application.status = 'enrolling'
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
-    expect(scenario.createUserAttrs).toBeNull()           // no second account
-    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
+    expect(scenario.createUserAttrs).toBeNull()
+    expect(sendStudentSetupEmail).not.toHaveBeenCalled()
+    expect(scenario.verifyOtpAttrs).toBeNull()
   })
-  it('a Yes on an already-enrolled invite also mints a session (retry after mint failure)', async () => {
+  it('a Yes on an already-enrolled invite is idempotent success', async () => {
     scenario.application.status = 'enrolled'
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
     expect(scenario.createUserAttrs).toBeNull()
+    expect(sendStudentSetupEmail).not.toHaveBeenCalled()
   })
-  it('returns the structured retry error when the session mint fails after enrollment', async () => {
+  it('a failing student setup email does not fail the confirmation (best-effort)', async () => {
     scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
     const res = await respondToInvitation('inv-1', 'yes', '')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
-    // enrollment itself was finalized — the retry lands in the claim-fail branch
-    expect(scenario.updates.some(u => u.row.status === 'enrolled')).toBe(true)
-  })
-  it('a failing verifyOtp also returns the retry error', async () => {
-    scenario.verifyOtpResult = { data: null, error: { message: 'bad hash' } }
-    const res = await respondToInvitation('inv-1', 'yes', '')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
+    expect(res).toEqual({ ok: true })
+    // enrollment was still finalized
+    expect(scenario.updates.some((u) => u.row.status === 'enrolled')).toBe(true)
   })
   it('returns email_exists and releases the claim when the auth account already exists', async () => {
     scenario.createUserResult = { data: { user: null }, error: { code: 'email_exists', message: 'exists' } }
