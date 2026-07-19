@@ -150,7 +150,16 @@ export function TemplateEditor({
         </div>
       )}
 
-      {template.kind !== 'doc' && (
+      {template.kind === 'fillable' && (
+        <div className="rounded-[14px] border bg-card p-5 text-[13.5px] leading-relaxed text-muted-foreground">
+          Ce formulaire est prêt à l’emploi : son texte et ses champs sont prédéfinis et
+          se remplissent automatiquement avec les <strong>détails du programme</strong>
+          (Réglages → Programme). Les familles le complètent et le signent en ligne ; un
+          PDF signé est généré à l’envoi.
+        </div>
+      )}
+
+      {(template.kind === 'online' || template.kind === 'pdf') && (
         <div className="rounded-[14px] border bg-card p-5">
           <FormBuilder
             templateId={template.id}

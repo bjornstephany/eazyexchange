@@ -29,6 +29,10 @@ describe('pills', () => {
     expect(typePill('pdf', t)).toEqual({ kind: 'neutral', label: 'PDF · à signer' })
     expect(typePill('online', t)).toEqual({ kind: 'info', label: 'Formulaire en ligne' })
   })
+  it('typePill labels fillable distinctly', () => {
+    const tt = ((k: string) => k) as never
+    expect(typePill('fillable', tt)).toEqual({ kind: 'info', label: 'organizer.forms.pills.fillable' })
+  })
   it('status pills', () => {
     expect(statusPill('active', t)).toEqual({ kind: 'ok', label: 'Actif' })
     expect(statusPill('draft', t)).toEqual({ kind: 'warn', label: 'Brouillon' })
@@ -101,5 +105,8 @@ describe('activationHints', () => {
       'Ajoutez au moins une question avant d’activer.',
     ])
     expect(activationHints({ ...base, kind: 'online', fields: ['Q1'] })).toEqual([])
+  })
+  it('activationHints for a fillable draft with a deadline is empty', () => {
+    expect(activationHints({ status: 'draft', kind: 'fillable', deadline: '2026-10-01', template_file_path: null, fields: [] })).toEqual([])
   })
 })

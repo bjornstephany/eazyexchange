@@ -13,7 +13,7 @@ export type PreviewMode = 'pdf-file' | 'pdf-missing' | 'online-paper' | 'doc-pla
 // illustrative placeholder for docs (students upload those — there is no
 // organizer document to preview).
 export function previewMode(t: Pick<TemplateVM, 'kind' | 'template_file_path'>): PreviewMode {
-  if (t.kind === 'online') return 'online-paper'
+  if (t.kind === 'online' || t.kind === 'fillable') return 'online-paper'
   if (t.kind === 'doc') return 'doc-placeholder'
   return t.template_file_path ? 'pdf-file' : 'pdf-missing'
 }

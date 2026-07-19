@@ -4,11 +4,13 @@ import { useTranslations } from 'next-intl'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
 import type { ErasableSubject } from '@/actions/retention'
 import type { Locale } from '@/lib/i18n/config'
+import type { ExchangeProgramDetails } from '@/types/db'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
 import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
+import { ProgramDetailsCard } from './ProgramDetailsCard'
 import { DataPrivacyCard } from './DataPrivacyCard'
 import { LanguageSelect } from './LanguageSelect'
 import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
@@ -20,6 +22,7 @@ export type SettingsProps = {
   team: { members: TeamMember[]; pending: PendingInvite[] }
   billing: BillingOverview | null
   program: ProgramInfo | null
+  programDetails: ExchangeProgramDetails | null
   locale: Locale
   subjects: ErasableSubject[]
 }
@@ -71,6 +74,11 @@ export function SettingsView(props: SettingsProps) {
           {section === 'prog' && props.program && (
             <>
               <ProgramCard program={props.program} isOwner={props.isOwner} />
+              <ProgramDetailsCard
+                exchangeId={props.program.id}
+                initial={props.programDetails}
+                readOnly={props.program.archived}
+              />
               <ReminderSettingsCard
                 exchangeId={props.program.id}
                 initialEnabled={props.program.remindersEnabled}

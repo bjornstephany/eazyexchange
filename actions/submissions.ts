@@ -284,9 +284,19 @@ export async function getSubmissionForReview(assignmentId: string) {
     )
   }
 
+  // Fillable submissions: sign the generated PDF (documents bucket, same
+  // assignment-scoped policy as uploads) for the organizer download button.
+  let generatedPdfUrl: string | null = null
+  if (submission?.generated_pdf_path) {
+    const { data } = await supabase.storage
+      .from('documents')
+      .createSignedUrl(submission.generated_pdf_path, 3600, { download: true })
+    generatedPdfUrl = data?.signedUrl ?? null
+  }
+
   // template is guaranteed by the assignments.template_id FK — assignment
   // lookup above already succeeded, so the referenced template row exists.
-  return { assignment, template: template!, student, submission }
+  return { assignment, template: template!, student, submission, generatedPdfUrl }
 }
 
 export async function approveSubmission(assignmentId: string) {

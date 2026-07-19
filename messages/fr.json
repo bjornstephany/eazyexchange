@@ -103,6 +103,25 @@
           "confirm": "Archiver le programme"
         }
       },
+      "programDetails": {
+        "heading": "Détails du programme",
+        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
+        "destination": "Destination",
+        "destinationHint": "Telle qu’elle apparaîtra dans les formulaires, ex. « le Minnesota, USA »",
+        "travelStart": "Date de départ",
+        "travelEnd": "Date de retour",
+        "chaperones": "Accompagnateurs",
+        "chaperonesHint": "Un nom complet par ligne",
+        "association": "Nom de l’association",
+        "sendingSchool": "Lycée d’origine",
+        "receivingSchool": "Établissement d’accueil",
+        "proviseur": "Nom du proviseur",
+        "sendingCity": "Ville du lycée",
+        "absenceDates": "Jours d’absence à excuser",
+        "absenceDatesHint": "Un jour par ligne, ex. « le jeudi 19 octobre 2026 »",
+        "save": "Enregistrer",
+        "saved": "Enregistré."
+      },
       "errors": {
         "nameEmpty": "Le nom ne peut pas être vide.",
         "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",
@@ -397,6 +416,7 @@
         "fieldsHeadingPdf": "Champs à renseigner",
         "fieldsHeadingOnline": "Questions du formulaire",
         "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
+        "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
         "activate": "Activer",
         "activating": "Activation…",
         "editTemplate": "Modifier le modèle",
@@ -418,6 +438,7 @@
       "pills": {
         "onlineForm": "Formulaire en ligne",
         "pdfToSign": "PDF · à signer",
+        "fillable": "À signer en ligne",
         "active": "Actif",
         "draft": "Brouillon",
         "mandatory": "Obligatoire",
@@ -548,6 +569,7 @@
         "noAnswer": "Aucune réponse",
         "notUploaded": "Non transmis",
         "reviewNoteHeading": "Note de révision",
+        "downloadSignedPdf": "Télécharger le PDF signé",
         "status": {
           "approved": "Approuvé",
           "submitted": "Soumis",

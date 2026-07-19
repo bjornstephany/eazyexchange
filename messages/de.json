@@ -103,6 +103,25 @@
           "confirm": "Programm archivieren"
         }
       },
+      "programDetails": {
+        "heading": "Programmdetails",
+        "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht). Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
+        "destination": "Reiseziel",
+        "destinationHint": "So, wie es in den Formularen erscheint, z. B. « le Minnesota, USA »",
+        "travelStart": "Abreisedatum",
+        "travelEnd": "Rückreisedatum",
+        "chaperones": "Begleitpersonen",
+        "chaperonesHint": "Ein vollständiger Name pro Zeile",
+        "association": "Name des Vereins",
+        "sendingSchool": "Heimatschule",
+        "receivingSchool": "Gastschule",
+        "proviseur": "Name der Schulleitung",
+        "sendingCity": "Stadt der Schule",
+        "absenceDates": "Zu entschuldigende Fehltage",
+        "absenceDatesHint": "Ein Tag pro Zeile, z. B. « le jeudi 19 octobre 2026 »",
+        "save": "Speichern",
+        "saved": "Gespeichert."
+      },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
         "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
@@ -397,6 +416,7 @@
         "fieldsHeadingPdf": "Auszufüllende Felder",
         "fieldsHeadingOnline": "Fragen des Formulars",
         "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
+        "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
         "activate": "Aktivieren",
         "activating": "Wird aktiviert…",
         "editTemplate": "Vorlage bearbeiten",
@@ -418,6 +438,7 @@
       "pills": {
         "onlineForm": "Online-Formular",
         "pdfToSign": "PDF · zu unterschreiben",
+        "fillable": "Online unterschreiben",
         "active": "Aktiv",
         "draft": "Entwurf",
         "mandatory": "Obligatorisch",
@@ -548,6 +569,7 @@
         "noAnswer": "Keine Antwort",
         "notUploaded": "Nicht übermittelt",
         "reviewNoteHeading": "Prüfnotiz",
+        "downloadSignedPdf": "Signiertes PDF herunterladen",
         "status": {
           "approved": "Genehmigt",
           "submitted": "Eingereicht",

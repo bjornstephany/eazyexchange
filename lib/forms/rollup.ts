@@ -13,7 +13,7 @@ import type { useTranslations } from 'next-intl'
 // keys fail `npx tsc --noEmit`.
 type T = ReturnType<typeof useTranslations<never>>
 
-export type TemplateKind = 'online' | 'pdf' | 'doc'
+export type TemplateKind = 'online' | 'pdf' | 'doc' | 'fillable'
 export type AssigneeRow = {
   assignmentId: string
   studentId: string
@@ -51,6 +51,7 @@ export function activationHints(
 }
 
 export function typePill(kind: TemplateKind, t: T): Pill {
+  if (kind === 'fillable') return { kind: 'info', label: t('organizer.forms.pills.fillable') }
   return kind === 'online'
     ? { kind: 'info', label: t('organizer.forms.pills.onlineForm') }
     : { kind: 'neutral', label: t('organizer.forms.pills.pdfToSign') }

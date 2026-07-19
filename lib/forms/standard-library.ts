@@ -8,7 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export type StandardField = { label: string; field_type: 'text' | 'checkbox' }
 export type StandardTemplate = {
   key: string
-  kind: 'online' | 'pdf' | 'doc'
+  kind: 'online' | 'pdf' | 'doc' | 'fillable'
   audience: 'all' | 'conditional'
   name: string
   description: string
@@ -21,31 +21,27 @@ const t = (label: string): StandardField => ({ label, field_type: 'text' })
 
 export const STANDARD_TEMPLATES: StandardTemplate[] = [
   {
-    key: 'medical', kind: 'pdf', audience: 'all', name: 'Autorisation médicale',
+    key: 'medical', kind: 'fillable', audience: 'all', name: 'Autorisation médicale',
     condition_label: null, external_url: null,
-    description: 'Autorisation de soins à télécharger, faire signer par les parents, puis redéposer signée.',
-    fields: [t('Groupe sanguin'), t('Allergies connues'), t('Traitements en cours'),
-      t('Régime alimentaire particulier'), t('Vaccins à jour'), t('Médecin traitant'),
-      t('Personne à prévenir (1)'), t('Personne à prévenir (2)'), t('Autorisation de soins d’urgence')],
-  },
-  {
-    key: 'decharge', kind: 'pdf', audience: 'all', name: 'Décharge de responsabilité / code de conduite',
-    condition_label: null, external_url: null,
-    description: 'Décharge de responsabilité et code de conduite à signer par la famille et l’élève.',
-    fields: [t('Autorisation de participation au programme'), t('Décharge de responsabilité'),
-      t('Autorisation de déplacement / transport'), t('Assurance responsabilité civile'),
-      t('Signature — représentant légal 1'), t('Signature — représentant légal 2')],
-  },
-  {
-    key: 'absence', kind: 'pdf', audience: 'all', name: 'Demande d’absence',
-    condition_label: null, external_url: null,
-    description: 'Demande d’absence au lycée pour la durée de l’échange, à faire signer puis redéposer.',
+    description: 'Autorisation de soins à remplir et signer en ligne par les parents.',
     fields: [],
   },
   {
-    key: 'famille', kind: 'pdf', audience: 'all', name: 'Engagement de famille',
+    key: 'decharge', kind: 'fillable', audience: 'all', name: 'Décharge de responsabilité / code de conduite',
     condition_label: null, external_url: null,
-    description: 'Engagement de la famille d’accueil, à signer puis redéposer.',
+    description: 'Décharge de responsabilité et code de conduite à remplir et signer en ligne par la famille et l’élève.',
+    fields: [],
+  },
+  {
+    key: 'absence', kind: 'fillable', audience: 'all', name: 'Demande d’absence',
+    condition_label: null, external_url: null,
+    description: 'Demande d’absence au lycée pour la durée de l’échange, à remplir et signer en ligne.',
+    fields: [],
+  },
+  {
+    key: 'famille', kind: 'fillable', audience: 'all', name: 'Engagement de famille',
+    condition_label: null, external_url: null,
+    description: 'Engagement de la famille d’accueil, à remplir et signer en ligne.',
     fields: [],
   },
   {
@@ -89,7 +85,7 @@ export async function insertStandardTemplate(
       school_id: opts.schoolId,
       name: std.name,
       description: std.description,
-      type: std.kind === 'online' ? 'data_entry' : 'document_upload',
+      type: std.kind === 'online' || std.kind === 'fillable' ? 'data_entry' : 'document_upload',
       kind: std.kind,
       status: 'draft',
       audience: std.audience,
@@ -107,7 +103,7 @@ export async function insertStandardTemplate(
   }
   const templateId = data.id as string
 
-  if (std.kind !== 'online') {
+  if (std.kind !== 'online' && std.kind !== 'fillable') {
     const { error: slotError } = await supabase
       .from('document_slots')
       .insert({ template_id: templateId, label: std.name, description: null, required: true, order: 0 })

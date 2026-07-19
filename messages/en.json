@@ -103,6 +103,25 @@
           "confirm": "Archive the program"
         }
       },
+      "programDetails": {
+        "heading": "Program details",
+        "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation). Edit them here: every not-yet-signed form updates.",
+        "destination": "Destination",
+        "destinationHint": "As it will appear in the forms, e.g. “le Minnesota, USA”",
+        "travelStart": "Departure date",
+        "travelEnd": "Return date",
+        "chaperones": "Chaperones",
+        "chaperonesHint": "One full name per line",
+        "association": "Association name",
+        "sendingSchool": "Home school",
+        "receivingSchool": "Host school",
+        "proviseur": "Principal’s name",
+        "sendingCity": "School’s city",
+        "absenceDates": "Absence days to excuse",
+        "absenceDatesHint": "One day per line, e.g. “le jeudi 19 octobre 2026”",
+        "save": "Save",
+        "saved": "Saved."
+      },
       "errors": {
         "nameEmpty": "Name cannot be empty.",
         "schoolNameEmpty": "School name cannot be empty.",
@@ -397,6 +416,7 @@
         "fieldsHeadingPdf": "Fields to fill in",
         "fieldsHeadingOnline": "Form questions",
         "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
+        "fillableNote": "Ready-to-use form: filled in and signed online by the family, with the program details inserted automatically.",
         "activate": "Activate",
         "activating": "Activating…",
         "editTemplate": "Edit template",
@@ -418,6 +438,7 @@
       "pills": {
         "onlineForm": "Online form",
         "pdfToSign": "PDF · to sign",
+        "fillable": "Sign online",
         "active": "Active",
         "draft": "Draft",
         "mandatory": "Mandatory",
@@ -548,6 +569,7 @@
         "noAnswer": "No answer",
         "notUploaded": "Not uploaded",
         "reviewNoteHeading": "Review note",
+        "downloadSignedPdf": "Download signed PDF",
         "status": {
           "approved": "Approved",
           "submitted": "Submitted",

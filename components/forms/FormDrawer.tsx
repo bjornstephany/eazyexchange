@@ -104,7 +104,11 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
           <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
             {vm.kind === 'pdf' ? t('forms.drawer.fieldsHeadingPdf') : t('forms.drawer.fieldsHeadingOnline')}
           </div>
-          {vm.fields.length > 0 ? (
+          {vm.kind === 'fillable' ? (
+            <div className="rounded-xl border border-dashed border-frame bg-hoverrow p-[18px] text-[13px] leading-normal text-muted-foreground">
+              {t('forms.drawer.fillableNote')}
+            </div>
+          ) : vm.fields.length > 0 ? (
             <div className="flex flex-col overflow-hidden rounded-xl border">
               {vm.fields.map((label, i) => (
                 <div key={i} className="flex items-center gap-[11px] border-b px-3.5 py-[11px] last:border-0">

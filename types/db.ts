@@ -9,10 +9,23 @@ export type { Json, Tables, TablesInsert, TablesUpdate } from './supabase'
 export type Role = 'organizer' | 'student'
 export type OrgRole = 'owner' | 'admin'
 export type FormType = 'data_entry' | 'document_upload'
-export type TemplateKind = 'online' | 'pdf' | 'doc'
+export type TemplateKind = 'online' | 'pdf' | 'doc' | 'fillable'
 export type TemplateStatus = 'draft' | 'active'
 export type TemplateAudience = 'all' | 'conditional'
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
+
+// One e-signature inside a fillable submission. signed_at is null while the
+// submission is a draft; the submit action stamps it server-side (UTC ISO).
+export type FillableSignature = {
+  key: string
+  role_label: string
+  full_name: string
+  signed_at: string | null
+}
+export type FillableData = {
+  answers: Record<string, string>
+  signatures: FillableSignature[]
+}
 export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
 export type ApplicationStatus =
   | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolling' | 'enrolled'
@@ -30,6 +43,7 @@ export type School = Override<Tables<'schools'>, {
   plan: 'starter' | 'growth' | 'scale' | null
 }>
 export type Exchange = Tables<'exchanges'>
+export type ExchangeProgramDetails = Tables<'exchange_program_details'>
 export type UserProfile = Override<Tables<'users'>, {
   role: Role
   org_role: OrgRole
@@ -51,9 +65,10 @@ export type DocumentSlot = Tables<'document_slots'>
 export type Assignment = Omit<Tables<'assignments'>, 'last_reminded_at'> & {
   last_reminded_at?: string | null
 }
-export type Submission = Override<Tables<'submissions'>, {
+export type Submission = Omit<Tables<'submissions'>, 'status' | 'fillable_data'> & {
   status: SubmissionStatus
-}>
+  fillable_data: FillableData | null
+}
 export type FieldAnswer = Tables<'field_answers'>
 export type DocumentUpload = Tables<'document_uploads'>
 // terms_acknowledged_at stays optional (same reason as Assignment).

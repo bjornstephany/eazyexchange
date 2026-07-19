@@ -10,6 +10,9 @@ import { assertExchangeWritable } from '@/lib/exchange-guard'
 import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
 import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
+import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
+import { missingDetailLabels } from '@/lib/forms/fillable/render'
+import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(): Promise<string> {
@@ -264,6 +267,21 @@ export async function activateTemplate(id: string, studentIds?: string[]): Promi
   if (!tmpl.deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
   if (tmpl.kind === 'pdf' && !tmpl.template_file_path) return { ok: false, message: MSG_PDF_REQUIRED }
   if (tmpl.kind === 'online' && (tmpl.form_fields ?? []).length === 0) return { ok: false, message: MSG_QUESTIONS_REQUIRED }
+
+  if (tmpl.kind === 'fillable') {
+    const def = tmpl.standard_key ? FILLABLE_DEFINITIONS[tmpl.standard_key] : undefined
+    if (!def) return { ok: false, message: 'Modèle à signer inconnu.' }
+    const { data: details } = await supabase
+      .from('exchange_program_details').select('*')
+      .eq('exchange_id', tmpl.exchange_id).maybeSingle<ProgramDetailsValues>()
+    const missing = missingDetailLabels(def, details ?? null)
+    if (missing.length > 0) {
+      return {
+        ok: false,
+        message: `Complétez d’abord les détails du programme (Réglages → Programme) : ${missing.join(', ')}.`,
+      }
+    }
+  }
 
   let chosen: string[] = []
   if (tmpl.audience === 'conditional') {
