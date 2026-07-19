@@ -4,7 +4,7 @@
 // paper originals (spec § PDF generation).
 import React from 'react'
 import { Document, Page, Text, View, Font, StyleSheet, renderToBuffer } from '@react-pdf/renderer'
-import type { FillableDefinition, Run } from '@/lib/forms/fillable/types'
+import type { Block, FillableDefinition, Run } from '@/lib/forms/fillable/types'
 import type { ResolvedVariables } from '@/lib/forms/fillable/render'
 import type { FillableData } from '@/types/db'
 import { notoSansRegular, notoSansBold, notoSansItalic } from './fonts'
@@ -31,7 +31,12 @@ const styles = StyleSheet.create({
   fieldRow: { marginBottom: 6 },
   fieldLabel: { fontWeight: 700 },
   check: { flexDirection: 'row', marginBottom: 5 },
-  checkBox: { width: 14 },
+  // ☑/☐ have no glyph in the embedded NotoSans (verified with fontkit
+  // hasGlyphForCodePoint — false for U+2610/U+2611/U+2713/U+2717/U+2612), so
+  // checked vs unchecked is drawn with a bordered box + a covered "X" glyph
+  // rather than a checkbox codepoint.
+  checkBox: { width: 12, height: 12, borderWidth: 1, borderColor: '#111', marginRight: 6, marginTop: 2, alignItems: 'center', justifyContent: 'center' },
+  checkBoxMark: { fontSize: 9, fontWeight: 700, lineHeight: 1 },
   divider: { borderBottomWidth: 1, borderBottomColor: '#999', borderBottomStyle: 'dashed', marginVertical: 12 },
   sigBox: { borderWidth: 1, borderColor: '#bbb', borderRadius: 4, padding: 10, marginBottom: 8 },
   sigRole: { fontSize: 9, color: '#555', marginBottom: 2 },
@@ -119,7 +124,9 @@ export async function renderFillablePdf(input: {
             const checked = (answers[b.key] ?? '') === 'true'
             return (
               <View key={i} style={styles.check}>
-                <Text style={styles.checkBox}>{checked ? '☑' : '☐'}</Text>
+                <View style={styles.checkBox}>
+                  {checked ? <Text style={styles.checkBoxMark}>X</Text> : null}
+                </View>
                 <Text style={{ flex: 1 }}>
                   <Runs runs={b.runs} values={values} answers={answers} />
                 </Text>
@@ -147,7 +154,13 @@ export async function renderFillablePdf(input: {
               </View>
             )
           }
-          return <View key={i} style={styles.divider} />
+          if (b.b === 'divider') {
+            return <View key={i} style={styles.divider} />
+          }
+          // Exhaustiveness guard: a new Block variant must be handled above
+          // or this fails to compile instead of silently rendering nothing.
+          const _exhaustive: never = b
+          throw new Error(`Unhandled fillable block kind: ${(_exhaustive as Block).b}`)
         })}
         <Text style={styles.footer} fixed>
           {meta.exchangeName}{meta.associationName ? ` — ${meta.associationName}` : ''} · Signé via EazyExchange · Soumission {meta.submissionId}
