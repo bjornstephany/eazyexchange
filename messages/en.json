@@ -541,6 +541,7 @@
         "noAnswer": "No answer",
         "notUploaded": "Not uploaded",
         "reviewNoteHeading": "Review note",
+        "downloadSignedPdf": "Download signed PDF",
         "status": {
           "approved": "Approved",
           "submitted": "Submitted",

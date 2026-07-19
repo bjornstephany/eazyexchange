@@ -541,6 +541,7 @@
         "noAnswer": "Nessuna risposta",
         "notUploaded": "Non caricato",
         "reviewNoteHeading": "Nota di revisione",
+        "downloadSignedPdf": "Scarica il PDF firmato",
         "status": {
           "approved": "Approvato",
           "submitted": "Inviato",

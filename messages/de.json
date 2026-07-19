@@ -541,6 +541,7 @@
         "noAnswer": "Keine Antwort",
         "notUploaded": "Nicht übermittelt",
         "reviewNoteHeading": "Prüfnotiz",
+        "downloadSignedPdf": "Signiertes PDF herunterladen",
         "status": {
           "approved": "Genehmigt",
           "submitted": "Eingereicht",
