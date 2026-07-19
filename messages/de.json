@@ -152,7 +152,6 @@
     "shell": {
       "nav": {
         "dashboard": "Übersicht",
-        "exchanges": "Austausche",
         "applications": "Bewerb.",
         "files": "Dateien",
         "students": "Schüler",
@@ -323,10 +322,6 @@
       }
     },
     "exchanges": {
-      "title": "Austausche",
-      "subtitle": "Verfolgen Sie alle Ihre Austauschprogramme — vergangene, laufende und kommende.",
-      "listLabel": "Ihre Austausche",
-      "emptyState": "Noch kein Austausch — erstellen Sie den ersten.",
       "reminders": {
         "heading": "Automatische Erinnerungen",
         "description": "Erinnerungs-E-Mails werden an Schüler mit unvollständigem Dossier gesendet. Die manuelle Erinnerung bleibt verfügbar, auch wenn die automatischen Erinnerungen deaktiviert sind.",
@@ -518,7 +513,7 @@
         "emptyBodyLink": "Bewerbungen ansehen"
       },
       "submissionReview": {
-        "backLink": "← Zurück zum Austausch",
+        "backLink": "← Zurück",
         "unknownStudent": "Unbekannt",
         "notSubmitted": "Nicht eingereicht",
         "notStarted": "Dieser Schüler hat dieses Formular noch nicht begonnen.",

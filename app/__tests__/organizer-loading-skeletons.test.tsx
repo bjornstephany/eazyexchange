@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import DashboardLoading from '@/app/(organizer)/dashboard/loading'
-import ExchangesLoading from '@/app/(organizer)/exchanges/loading'
 import ApplicationsLoading from '@/app/(organizer)/applications/loading'
 import FormsLoading from '@/app/(organizer)/forms/loading'
 import StudentsLoading from '@/app/(organizer)/students/loading'
@@ -13,7 +12,6 @@ import FormDetailLoading from '@/app/(organizer)/forms/[templateId]/loading'
 // no loading.tsx of its own, so it's not part of this list-route matrix.
 const skeletons = [
   ['dashboard', DashboardLoading],
-  ['exchanges', ExchangesLoading],
   ['applications', ApplicationsLoading],
   ['forms', FormsLoading],
   ['students', StudentsLoading],
