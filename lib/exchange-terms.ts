@@ -17,3 +17,8 @@ export const EXCHANGE_TERMS_EMAIL =
 // Respond page variant (where the actual accept click happens).
 export const EXCHANGE_TERMS_RESPOND =
   `En cliquant sur « Oui, je veux participer », tu reconnais — et tes parents reconnaissent — ${EXCHANGE_TERMS_BODY}`
+
+// Parent-facing respond-page variant (the parent's click is the family's
+// definitive commitment and the terms acknowledgment).
+export const EXCHANGE_TERMS_RESPOND_PARENT =
+  `En confirmant la participation de votre enfant, vous reconnaissez ${EXCHANGE_TERMS_BODY}`

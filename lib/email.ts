@@ -3,6 +3,7 @@ import { frShortDate } from '@/lib/dates'
 import { getAppUrl } from '@/lib/app-url'
 import { EXCHANGE_TERMS_EMAIL } from '@/lib/exchange-terms'
 import { logEmailSend, type EmailLogContext } from '@/lib/email-log'
+import { renderGoodNews } from '@/lib/good-news-template'
 
 const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
 const APP_URL = getAppUrl()
@@ -38,28 +39,29 @@ function layout(body: string, footer = "You're receiving this because you have f
   `
 }
 
-async function send(to: string, subject: string, html: string, label: string, ctx?: EmailLogContext): Promise<boolean> {
+async function send(to: string | string[], subject: string, html: string, label: string, ctx?: EmailLogContext): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
     console.warn(`[email] RESEND_API_KEY not set — skipping ${label}`)
     return false
   }
+  const recipient = Array.isArray(to) ? to.join(', ') : to
   try {
     const { error } = await resend.emails.send({ from: FROM, to, subject, html })
     if (error) {
       logSendError(label, error)
       await logEmailSend({
-        recipient: to, kind: label, status: 'error',
+        recipient, kind: label, status: 'error',
         errorCode: (error as { statusCode?: number }).statusCode ?? null,
         ...ctx,
       })
       return false
     }
-    await logEmailSend({ recipient: to, kind: label, status: 'sent', ...ctx })
+    await logEmailSend({ recipient, kind: label, status: 'sent', ...ctx })
     return true
   } catch {
     console.error(`[email] ${label} failed: send threw`)
-    await logEmailSend({ recipient: to, kind: label, status: 'error', ...ctx })
+    await logEmailSend({ recipient, kind: label, status: 'error', ...ctx })
     return false
   }
 }
@@ -152,6 +154,53 @@ export async function sendInvitationEmail(opts: { to: string; applicantName: str
     <p style="font-size:12px;color:#5C7268;">${EXCHANGE_TERMS_EMAIL}</p>
   `, APP_FOOTER_FR)
   await send(opts.to, `Bonne nouvelle — ta candidature pour ${opts.exchangeName} a été retenue !`, html, 'invitation email', opts.ctx)
+}
+
+// System-controlled button labels, keyed by the applicant's language. NEVER part
+// of the organizer-editable body — appended by the renderer so an organizer
+// cannot break the response links.
+const GOOD_NEWS_BUTTONS: Record<'en' | 'fr', { yes: string; no: string; maybe: string }> = {
+  fr: { yes: 'Oui, nous confirmons', no: 'Non', maybe: 'Oui, mais nous avons des questions…' },
+  en: { yes: 'Yes, we confirm', no: 'No', maybe: 'Yes, but we have questions…' },
+}
+
+export async function sendGoodNewsEmail(opts: {
+  to: string[]
+  studentName: string
+  exchangeName: string
+  subject: string | null
+  body: string | null
+  respondUrl: string
+  language: 'en' | 'fr'
+  ctx?: EmailLogContext
+}): Promise<void> {
+  const { subject, bodyHtml } = renderGoodNews({
+    subject: opts.subject, body: opts.body,
+    studentName: opts.studentName, exchangeName: opts.exchangeName,
+  })
+  const labels = GOOD_NEWS_BUTTONS[opts.language]
+  const btn = (href: string, label: string, bg: string) =>
+    `<a href="${href}" style="display:block;text-align:center;background:${bg};color:#fff;text-decoration:none;padding:12px 16px;border-radius:9px;margin-bottom:8px;font-weight:600;">${esc(label)}</a>`
+  const buttons =
+    btn(`${opts.respondUrl}?r=yes`, labels.yes, '#1F7A57') +
+    btn(`${opts.respondUrl}?r=no`, labels.no, '#5C7268') +
+    btn(`${opts.respondUrl}?r=maybe`, labels.maybe, '#2456E6')
+  const html = layout(`${bodyHtml}<div style="margin-top:20px;">${buttons}</div>`, APP_FOOTER_FR)
+  await send(opts.to, subject, html, 'good news email', opts.ctx)
+}
+
+export async function sendStudentSetupEmail(opts: {
+  to: string
+  exchangeName: string
+  setupUrl: string
+  ctx?: EmailLogContext
+}): Promise<void> {
+  const html = layout(`
+    <p>Bonjour,</p>
+    <p>Tes parents ont confirmé ta participation à <strong>${esc(opts.exchangeName)}</strong> — bravo ! Crée ton accès pour commencer ton dossier :</p>
+    <p><a href="${opts.setupUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon accès</a></p>
+  `, STUDENT_FOOTER)
+  await send(opts.to, `Crée ton accès — ${opts.exchangeName}`, html, 'student setup email', opts.ctx)
 }
 
 export async function sendApplicationRejectionEmail(opts: { to: string; applicantName: string; exchangeName: string; note: string; ctx?: EmailLogContext }): Promise<void> {
