@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   APPLICATION_SECTIONS, allApplicationFields,
   requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields, applicantInitials,
+  parentRecipients,
 } from '../application-form'
 
 describe('application catalog', () => {
@@ -106,6 +107,26 @@ describe('missingRequiredApplication', () => {
     expect(missingRequiredApplication(completeData(), { hasPhoto: false })).toEqual(['photo'])
     expect(missingRequiredApplication(completeData(), { hasPhoto: true })).toEqual([])
     expect(missingRequiredApplication(completeData())).toEqual([])
+  })
+})
+
+describe('parentRecipients', () => {
+  it('returns both parent emails when present, father first', () => {
+    expect(parentRecipients(
+      { father_email: 'dad@x.fr', mother_email: 'mom@x.fr' }, 'student@x.fr',
+    )).toEqual(['dad@x.fr', 'mom@x.fr'])
+  })
+  it('returns only the present parent email', () => {
+    expect(parentRecipients({ father_email: 'dad@x.fr' }, 'student@x.fr')).toEqual(['dad@x.fr'])
+    expect(parentRecipients({ mother_email: 'mom@x.fr' }, 'student@x.fr')).toEqual(['mom@x.fr'])
+  })
+  it('trims and ignores blank parent emails', () => {
+    expect(parentRecipients({ father_email: '  ', mother_email: ' mom@x.fr ' }, 's@x.fr'))
+      .toEqual(['mom@x.fr'])
+  })
+  it('falls back to the student email when no parent email is present', () => {
+    expect(parentRecipients({}, 'student@x.fr')).toEqual(['student@x.fr'])
+    expect(parentRecipients(null, 'student@x.fr')).toEqual(['student@x.fr'])
   })
 })
 

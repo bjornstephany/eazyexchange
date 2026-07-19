@@ -178,3 +178,18 @@ export function applicantInitials(data: Record<string, string> | null | undefine
   const initials = `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
   return initials || email.charAt(0).toUpperCase()
 }
+
+// Good-news email recipients: the present parent emails (father first, mother
+// second), or the student's own email as a last-resort fallback so an accept
+// never silently fails to notify. Blank/whitespace parent values are ignored.
+// A valid submission always has at least one parent group complete (which
+// includes that parent's email), so the fallback is a defensive backstop.
+export function parentRecipients(
+  data: Record<string, string> | null | undefined,
+  fallbackEmail: string,
+): string[] {
+  const emails = [data?.father_email, data?.mother_email]
+    .map((e) => (e ?? '').trim())
+    .filter((e) => e.length > 0)
+  return emails.length > 0 ? emails : [fallbackEmail]
+}
