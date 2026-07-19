@@ -65,18 +65,21 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(async () => {}),
   sendInvitationEmail: vi.fn(async () => {}),
   sendApplicationRejectionEmail: vi.fn(async () => {}),
+  sendGoodNewsEmail: vi.fn(async () => {}),
 }))
 
 import { revalidatePath } from 'next/cache'
-import { acceptApplications, rejectApplications } from '../applications-review'
+import { sendGoodNewsEmail } from '@/lib/email'
+import { acceptApplications, rejectApplications, acceptApplication } from '../applications-review'
 
 beforeEach(() => {
   vi.clearAllMocks()
   scenario = {
-    exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1' },
+    exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1', good_news_subject: null, good_news_body: null },
     profile: { id: 'user-1', school_id: 's-1', role: 'organizer' },
     applications: {
-      'app-ok': { id: 'app-ok', exchange_id: 'ex-1', school_id: 's-1', status: 'submitted', email: 'a@b.co', data: { first_name: 'A', last_name: 'B' } },
+      'app-ok': { id: 'app-ok', exchange_id: 'ex-1', school_id: 's-1', status: 'submitted', email: 'stu@b.co', language: 'fr', data: { first_name: 'A', last_name: 'B', father_email: 'dad@b.co', mother_email: 'mom@b.co' } },
+      'app-noparent': { id: 'app-noparent', exchange_id: 'ex-1', school_id: 's-1', status: 'submitted', email: 'stu2@b.co', language: 'fr', data: { first_name: 'C', last_name: 'D' } },
     },
   }
 })
@@ -104,5 +107,22 @@ describe('rejectApplications', () => {
 
   it('empty input is a no-op', async () => {
     expect(await rejectApplications([], 'note', false)).toEqual({ succeeded: 0, failed: 0 })
+  })
+})
+
+describe('acceptApplication good-news email', () => {
+  it('emails the parents (father + mother) with the rendered template', async () => {
+    await acceptApplication('app-ok')
+    expect(sendGoodNewsEmail).toHaveBeenCalledTimes(1)
+    const arg = (sendGoodNewsEmail as any).mock.calls[0][0]
+    expect(arg.to).toEqual(['dad@b.co', 'mom@b.co'])
+    expect(arg.language).toBe('fr')
+    expect(arg.respondUrl).toContain('/invite/')
+  })
+
+  it('falls back to the student email when no parent email is present', async () => {
+    await acceptApplication('app-noparent')
+    const arg = (sendGoodNewsEmail as any).mock.calls[0][0]
+    expect(arg.to).toEqual(['stu2@b.co'])
   })
 })
