@@ -23,6 +23,8 @@ const ALLOWLIST = [
   'lib/email-log.ts',
   'lib/error-reporting.ts',
   'lib/rate-limit.ts',
+  'lib/retention/erase.ts',
+  'lib/retention/sweep.ts',
 ].sort()
 
 // vitest runs with cwd = repo root (where vitest.config.ts lives); avoid

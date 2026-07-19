@@ -38,7 +38,8 @@
         "compte": "Account personale",
         "equipe": "Team e ruoli",
         "fact": "Fatturazione",
-        "prog": "Programma"
+        "prog": "Programma",
+        "donnees": "Dati e privacy"
       },
       "profile": {
         "fullNameLabel": "Nome completo",
@@ -108,6 +109,24 @@
         "passwordUpdateFailed": "Non è stato possibile aggiornare la password. Riprova.",
         "passwordMismatch": "Le password non corrispondono."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Dati e privacy",
+      "subtitle": "Elimina o esporta i dati di una persona su richiesta (GDPR).",
+      "students": "Studenti",
+      "applicants": "Candidati",
+      "empty": "Nessuno per il momento.",
+      "delete": "Elimina",
+      "deleting": "Eliminazione…",
+      "confirmTitle": "Eliminare definitivamente questi dati?",
+      "confirmBody": "Questa azione è irreversibile. Tutti i moduli, i documenti e le informazioni di {name} saranno eliminati definitivamente.",
+      "confirmCancel": "Annulla",
+      "confirmConfirm": "Elimina definitivamente",
+      "deleteError": "Eliminazione non riuscita. Riprova.",
+      "deleted": "Dati eliminati.",
+      "export": "Esporta",
+      "exporting": "Esportazione…",
+      "exportError": "Esportazione non riuscita. Riprova."
     },
     "billing": {
       "per": "/ anno",

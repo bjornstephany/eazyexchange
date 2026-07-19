@@ -6,6 +6,7 @@ import {
   getTeam, getBillingOverview, getProgramInfo,
   type BillingOverview, type ProgramInfo,
 } from '@/actions/settings'
+import { getErasableSubjects } from '@/actions/retention'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { SettingsView } from '@/components/settings/SettingsView'
@@ -36,6 +37,8 @@ export default async function SettingsPage() {
   )
   if (active) program = await getProgramInfo(active.id)
 
+  const subjects = await getErasableSubjects()
+
   return (
     <SettingsView
       profile={{
@@ -48,6 +51,7 @@ export default async function SettingsPage() {
       billing={billing}
       program={program}
       locale={locale}
+      subjects={subjects}
     />
   )
 }

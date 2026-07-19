@@ -38,7 +38,8 @@
         "compte": "Compte personnel",
         "equipe": "Équipe & rôles",
         "fact": "Facturation",
-        "prog": "Programme"
+        "prog": "Programme",
+        "donnees": "Données & confidentialité"
       },
       "profile": {
         "fullNameLabel": "Nom complet",
@@ -108,6 +109,24 @@
         "passwordUpdateFailed": "Le mot de passe n’a pas pu être mis à jour. Réessayez.",
         "passwordMismatch": "Les mots de passe ne correspondent pas."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Données & confidentialité",
+      "subtitle": "Supprimez ou exportez les données d'une personne sur demande (RGPD).",
+      "students": "Élèves",
+      "applicants": "Candidats",
+      "empty": "Aucune personne pour le moment.",
+      "delete": "Supprimer",
+      "deleting": "Suppression…",
+      "confirmTitle": "Supprimer définitivement ces données ?",
+      "confirmBody": "Cette action est irréversible. Tous les formulaires, documents et informations de {name} seront définitivement effacés.",
+      "confirmCancel": "Annuler",
+      "confirmConfirm": "Supprimer définitivement",
+      "deleteError": "La suppression a échoué. Réessayez.",
+      "deleted": "Données supprimées.",
+      "export": "Exporter",
+      "exporting": "Export…",
+      "exportError": "L'export a échoué. Réessayez."
     },
     "billing": {
       "per": "/ an",

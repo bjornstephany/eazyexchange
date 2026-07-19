@@ -2,12 +2,14 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
+import type { ErasableSubject } from '@/actions/retention'
 import type { Locale } from '@/lib/i18n/config'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
 import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
+import { DataPrivacyCard } from './DataPrivacyCard'
 import { LanguageSelect } from './LanguageSelect'
 import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
 
@@ -19,9 +21,10 @@ export type SettingsProps = {
   billing: BillingOverview | null
   program: ProgramInfo | null
   locale: Locale
+  subjects: ErasableSubject[]
 }
 
-type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog'
+type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog' | 'donnees'
 
 export function SettingsView(props: SettingsProps) {
   const t = useTranslations('organizer')
@@ -31,6 +34,7 @@ export function SettingsView(props: SettingsProps) {
     { key: 'equipe', label: t('settings.nav.equipe') },
     ...(props.isOwner ? [{ key: 'fact' as const, label: t('settings.nav.fact') }] : []),
     ...(props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
+    { key: 'donnees', label: t('settings.nav.donnees') },
   ]
 
   return (
@@ -75,6 +79,7 @@ export function SettingsView(props: SettingsProps) {
               />
             </>
           )}
+          {section === 'donnees' && <DataPrivacyCard subjects={props.subjects} />}
         </div>
       </div>
     </div>

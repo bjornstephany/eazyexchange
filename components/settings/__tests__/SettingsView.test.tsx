@@ -33,6 +33,7 @@ const baseProps = {
   billing: null,
   program: null,
   locale: 'fr' as const,
+  subjects: [],
 }
 
 describe('SettingsView — Compte', () => {
