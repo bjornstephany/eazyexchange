@@ -396,6 +396,59 @@ export type Database = {
           },
         ]
       }
+      exchange_program_details: {
+        Row: {
+          absence_dates: string[]
+          association_name: string | null
+          chaperones: string[]
+          destination: string | null
+          exchange_id: string
+          proviseur_name: string | null
+          receiving_school_name: string | null
+          sending_city: string | null
+          sending_school_name: string | null
+          travel_end: string | null
+          travel_start: string | null
+          updated_at: string
+        }
+        Insert: {
+          absence_dates?: string[]
+          association_name?: string | null
+          chaperones?: string[]
+          destination?: string | null
+          exchange_id: string
+          proviseur_name?: string | null
+          receiving_school_name?: string | null
+          sending_city?: string | null
+          sending_school_name?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+        }
+        Update: {
+          absence_dates?: string[]
+          association_name?: string | null
+          chaperones?: string[]
+          destination?: string | null
+          exchange_id?: string
+          proviseur_name?: string | null
+          receiving_school_name?: string | null
+          sending_city?: string | null
+          sending_school_name?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_program_details_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: true
+            referencedRelation: "exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchanges: {
         Row: {
           application_deadline: string | null
@@ -772,6 +825,8 @@ export type Database = {
         Row: {
           assignment_id: string
           created_at: string
+          fillable_data: Json | null
+          generated_pdf_path: string | null
           id: string
           review_note: string | null
           reviewed_at: string | null
@@ -783,6 +838,8 @@ export type Database = {
         Insert: {
           assignment_id: string
           created_at?: string
+          fillable_data?: Json | null
+          generated_pdf_path?: string | null
           id?: string
           review_note?: string | null
           reviewed_at?: string | null
@@ -794,6 +851,8 @@ export type Database = {
         Update: {
           assignment_id?: string
           created_at?: string
+          fillable_data?: Json | null
+          generated_pdf_path?: string | null
           id?: string
           review_note?: string | null
           reviewed_at?: string | null
@@ -1046,3 +1105,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
