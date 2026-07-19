@@ -16,7 +16,6 @@ to change those, tell a Claude session instead of editing.
 - Google search appearance: add favicon + fix meta description getting cut off in results
 - signup email verification: replace the confirmation link (opens new tab) with a code (OTP) the user types into the original tab, then continues onboarding there
 - optional modern click-through professional onboarding tour explaining the features to new users
-- fix staging migration-ledger drift: `supabase db push --db-url $STAGING_DB_URL` is broken — 10 stamped versions in staging's ledger have no local files (20260703000002/000003, 20260705000001-4, 20260707000001/000004, 20260715000001, 20260717145051). Reconcile via `supabase migration repair` / `db pull` (or rebuild staging) so staging migrations work again; discovered 2026-07-19 during data-retention rollout (worked around with direct SQL that time)
 
 ## In progress
 
