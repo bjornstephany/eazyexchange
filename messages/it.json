@@ -103,6 +103,25 @@
           "confirm": "Archivia il programma"
         }
       },
+      "programDetails": {
+        "heading": "Dettagli del programma",
+        "subtitle": "Questi dati compilano automaticamente i moduli da firmare online (liberatoria, richiesta di assenza, impegno della famiglia, autorizzazione medica). Modificali qui: tutti i moduli non ancora firmati si aggiornano.",
+        "destination": "Destinazione",
+        "destinationHint": "Come apparirà nei moduli, es. « le Minnesota, USA »",
+        "travelStart": "Data di partenza",
+        "travelEnd": "Data di ritorno",
+        "chaperones": "Accompagnatori",
+        "chaperonesHint": "Un nome completo per riga",
+        "association": "Nome dell’associazione",
+        "sendingSchool": "Istituto di provenienza",
+        "receivingSchool": "Istituto ospitante",
+        "proviseur": "Nome del preside",
+        "sendingCity": "Città dell’istituto",
+        "absenceDates": "Giorni di assenza da giustificare",
+        "absenceDatesHint": "Un giorno per riga, es. « le jeudi 19 octobre 2026 »",
+        "save": "Salva",
+        "saved": "Salvato."
+      },
       "errors": {
         "nameEmpty": "Il nome non può essere vuoto.",
         "schoolNameEmpty": "Il nome dell’istituto non può essere vuoto.",

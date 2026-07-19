@@ -103,6 +103,25 @@
           "confirm": "Archiver le programme"
         }
       },
+      "programDetails": {
+        "heading": "Détails du programme",
+        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
+        "destination": "Destination",
+        "destinationHint": "Telle qu’elle apparaîtra dans les formulaires, ex. « le Minnesota, USA »",
+        "travelStart": "Date de départ",
+        "travelEnd": "Date de retour",
+        "chaperones": "Accompagnateurs",
+        "chaperonesHint": "Un nom complet par ligne",
+        "association": "Nom de l’association",
+        "sendingSchool": "Lycée d’origine",
+        "receivingSchool": "Établissement d’accueil",
+        "proviseur": "Nom du proviseur",
+        "sendingCity": "Ville du lycée",
+        "absenceDates": "Jours d’absence à excuser",
+        "absenceDatesHint": "Un jour par ligne, ex. « le jeudi 19 octobre 2026 »",
+        "save": "Enregistrer",
+        "saved": "Enregistré."
+      },
       "errors": {
         "nameEmpty": "Le nom ne peut pas être vide.",
         "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",

@@ -103,6 +103,25 @@
           "confirm": "Archivar el programa"
         }
       },
+      "programDetails": {
+        "heading": "Detalles del programa",
+        "subtitle": "Estos datos rellenan automáticamente los formularios para firmar en línea (descarga de responsabilidad, solicitud de ausencia, compromiso familiar, autorización médica). Edítalos aquí: todos los formularios aún no firmados se actualizan.",
+        "destination": "Destino",
+        "destinationHint": "Tal como aparecerá en los formularios, p. ej. « le Minnesota, USA »",
+        "travelStart": "Fecha de salida",
+        "travelEnd": "Fecha de regreso",
+        "chaperones": "Acompañantes",
+        "chaperonesHint": "Un nombre completo por línea",
+        "association": "Nombre de la asociación",
+        "sendingSchool": "Centro de origen",
+        "receivingSchool": "Centro de acogida",
+        "proviseur": "Nombre del director",
+        "sendingCity": "Ciudad del centro",
+        "absenceDates": "Días de ausencia a justificar",
+        "absenceDatesHint": "Un día por línea, p. ej. « le jeudi 19 octobre 2026 »",
+        "save": "Guardar",
+        "saved": "Guardado."
+      },
       "errors": {
         "nameEmpty": "El nombre no puede estar vacío.",
         "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",

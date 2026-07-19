@@ -103,6 +103,25 @@
           "confirm": "Programm archivieren"
         }
       },
+      "programDetails": {
+        "heading": "Programmdetails",
+        "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht). Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
+        "destination": "Reiseziel",
+        "destinationHint": "So, wie es in den Formularen erscheint, z. B. « le Minnesota, USA »",
+        "travelStart": "Abreisedatum",
+        "travelEnd": "Rückreisedatum",
+        "chaperones": "Begleitpersonen",
+        "chaperonesHint": "Ein vollständiger Name pro Zeile",
+        "association": "Name des Vereins",
+        "sendingSchool": "Heimatschule",
+        "receivingSchool": "Gastschule",
+        "proviseur": "Name der Schulleitung",
+        "sendingCity": "Stadt der Schule",
+        "absenceDates": "Zu entschuldigende Fehltage",
+        "absenceDatesHint": "Ein Tag pro Zeile, z. B. « le jeudi 19 octobre 2026 »",
+        "save": "Speichern",
+        "saved": "Gespeichert."
+      },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
         "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
