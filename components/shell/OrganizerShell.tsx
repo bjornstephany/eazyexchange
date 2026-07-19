@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
-import { IconOverview, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight } from './RailIcons'
+import { IconOverview, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight, IconCommunication } from './RailIcons'
 import { SessionSelector } from './SessionSelector'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -166,6 +166,9 @@ export function OrganizerShell({
               </RailItem>
               <RailItem href="/students" label={t('shell.nav.students')} active={pathname.startsWith('/students')}>
                 <IconStudents />
+              </RailItem>
+              <RailItem href="/communication" label={t('shell.nav.communication')} active={pathname.startsWith('/communication')}>
+                <IconCommunication />
               </RailItem>
             </>
           )}

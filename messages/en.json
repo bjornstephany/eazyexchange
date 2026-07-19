@@ -174,7 +174,8 @@
         "applications": "Apps.",
         "files": "Files",
         "students": "Students",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comms"
       },
       "accountMenu": {
         "trigger": "Account",
@@ -206,6 +207,33 @@
         "placeholder": "Describe your idea or the problem you ran into…",
         "submit": "Send",
         "submitting": "Sending…"
+      }
+    },
+    "communication": {
+      "heading": "Communication",
+      "subtitle": "Manage everything you communicate to students and parents.",
+      "comingSoon": "Coming soon.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Templates",
+        "annonces": "Announcements",
+        "auto": "Auto reminders"
+      },
+      "info": {
+        "heading": "Key information",
+        "description": "Add the program’s key information. Students see it in the “Infos” tab of their portal.",
+        "addButton": "Add information",
+        "titlePlaceholder": "Title (e.g. Meeting point)",
+        "bodyPlaceholder": "Details visible to students…",
+        "saveButton": "Save",
+        "deleteButton": "Delete",
+        "empty": "No information yet.",
+        "readOnlyNotice": "Program archived — read only.",
+        "errors": {
+          "titleRequired": "Title is required.",
+          "titleTooLong": "Title too long (120 characters max).",
+          "bodyTooLong": "Details too long (2000 characters max)."
+        }
       }
     },
     "dashboard": {

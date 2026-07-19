@@ -174,7 +174,8 @@
         "applications": "Candid.",
         "files": "File",
         "students": "Studenti",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comun."
       },
       "accountMenu": {
         "trigger": "Account",
@@ -206,6 +207,33 @@
         "placeholder": "Descrivi la tua idea o il problema riscontrato…",
         "submit": "Invia",
         "submitting": "Invio…"
+      }
+    },
+    "communication": {
+      "heading": "Comunicazione",
+      "subtitle": "Gestisci tutto ciò che comunichi agli studenti e alle famiglie.",
+      "comingSoon": "Presto disponibile.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Modelli",
+        "annonces": "Annunci",
+        "auto": "Promemoria auto."
+      },
+      "info": {
+        "heading": "Informazioni utili",
+        "description": "Aggiungi le informazioni chiave del programma. Gli studenti le vedono nella scheda «Infos» del loro portale.",
+        "addButton": "Aggiungi informazione",
+        "titlePlaceholder": "Titolo (es. Punto d’incontro)",
+        "bodyPlaceholder": "Dettagli visibili agli studenti…",
+        "saveButton": "Salva",
+        "deleteButton": "Elimina",
+        "empty": "Nessuna informazione per ora.",
+        "readOnlyNotice": "Programma archiviato — sola lettura.",
+        "errors": {
+          "titleRequired": "Il titolo è obbligatorio.",
+          "titleTooLong": "Titolo troppo lungo (max 120 caratteri).",
+          "bodyTooLong": "Dettagli troppo lunghi (max 2000 caratteri)."
+        }
       }
     },
     "dashboard": {
