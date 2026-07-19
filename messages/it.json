@@ -123,7 +123,10 @@
       "confirmCancel": "Annulla",
       "confirmConfirm": "Elimina definitivamente",
       "deleteError": "Eliminazione non riuscita. Riprova.",
-      "deleted": "Dati eliminati."
+      "deleted": "Dati eliminati.",
+      "export": "Esporta",
+      "exporting": "Esportazione…",
+      "exportError": "Esportazione non riuscita. Riprova."
     },
     "billing": {
       "per": "/ anno",

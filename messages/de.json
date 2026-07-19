@@ -123,7 +123,10 @@
       "confirmCancel": "Abbrechen",
       "confirmConfirm": "Endgültig löschen",
       "deleteError": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
-      "deleted": "Daten gelöscht."
+      "deleted": "Daten gelöscht.",
+      "export": "Exportieren",
+      "exporting": "Export…",
+      "exportError": "Export fehlgeschlagen. Bitte erneut versuchen."
     },
     "billing": {
       "per": "/ Jahr",

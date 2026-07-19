@@ -123,7 +123,10 @@
       "confirmCancel": "Annuler",
       "confirmConfirm": "Supprimer définitivement",
       "deleteError": "La suppression a échoué. Réessayez.",
-      "deleted": "Données supprimées."
+      "deleted": "Données supprimées.",
+      "export": "Exporter",
+      "exporting": "Export…",
+      "exportError": "L'export a échoué. Réessayez."
     },
     "billing": {
       "per": "/ an",

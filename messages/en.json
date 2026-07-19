@@ -123,7 +123,10 @@
       "confirmCancel": "Cancel",
       "confirmConfirm": "Delete permanently",
       "deleteError": "Deletion failed. Try again.",
-      "deleted": "Data deleted."
+      "deleted": "Data deleted.",
+      "export": "Export",
+      "exporting": "Exporting…",
+      "exportError": "Export failed. Try again."
     },
     "billing": {
       "per": "/ year",

@@ -1,13 +1,14 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
-import { eraseSubject } from '@/actions/retention'
+import { eraseSubject, exportSubject } from '@/actions/retention'
 import type { ErasableSubject } from '@/actions/retention'
 
 export function DataPrivacyCard({ subjects }: { subjects: ErasableSubject[] }) {
   const t = useTranslations('organizer.dataPrivacy')
   const [pending, setPending] = useState<ErasableSubject | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [exportingId, setExportingId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const students = subjects.filter(s => s.kind === 'student')
@@ -24,18 +25,37 @@ export function DataPrivacyCard({ subjects }: { subjects: ErasableSubject[] }) {
     })
   }
 
+  async function onExport(s: ErasableSubject) {
+    setError(null); setExportingId(s.id)
+    try {
+      const res = await exportSubject({ kind: s.kind, id: s.id })
+      if (!res.ok) { setError(t('exportError')); return }
+      const bytes = Uint8Array.from(atob(res.base64), c => c.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/zip' }))
+      const a = document.createElement('a')
+      a.href = url; a.download = res.filename; a.click()
+      URL.revokeObjectURL(url)
+    } finally { setExportingId(null) }
+  }
+
   const row = (s: ErasableSubject) => (
     <li key={`${s.kind}:${s.id}`} className="flex items-center justify-between gap-3 py-2.5 border-t first:border-t-0">
       <div className="min-w-0">
         <div className="truncate text-[13.5px] font-medium text-foreground">{s.name || s.email}</div>
         <div className="truncate text-[12px] text-muted-foreground">{s.email}{s.status ? ` · ${s.status}` : ''}</div>
       </div>
-      <button
-        type="button" onClick={() => { setError(null); setPending(s) }}
-        className="flex-none rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
-      >
-        {t('delete')}
-      </button>
+      <div className="flex flex-none items-center gap-2">
+        <button type="button" onClick={() => onExport(s)} disabled={exportingId === s.id}
+          className="rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium hover:bg-muted disabled:opacity-60">
+          {exportingId === s.id ? t('exporting') : t('export')}
+        </button>
+        <button
+          type="button" onClick={() => { setError(null); setPending(s) }}
+          className="rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
+        >
+          {t('delete')}
+        </button>
+      </div>
     </li>
   )
 

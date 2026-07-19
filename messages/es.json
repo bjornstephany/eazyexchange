@@ -123,7 +123,10 @@
       "confirmCancel": "Cancelar",
       "confirmConfirm": "Eliminar definitivamente",
       "deleteError": "La eliminación falló. Inténtelo de nuevo.",
-      "deleted": "Datos eliminados."
+      "deleted": "Datos eliminados.",
+      "export": "Exportar",
+      "exporting": "Exportando…",
+      "exportError": "La exportación falló. Inténtelo de nuevo."
     },
     "billing": {
       "per": "/ año",
