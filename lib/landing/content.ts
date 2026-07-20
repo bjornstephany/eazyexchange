@@ -100,7 +100,12 @@ export interface LandingContent {
     totalValue: string
   }
   closing: { title: string; cta: string; note: string }
-  footer: { product: string; login: string; copyright: string }
+  footer: {
+    product: string
+    login: string
+    copyright: string
+    legal: { mentions: string; cgu: string; cgv: string; confidentialite: string }
+  }
 }
 
 const pill = (label: string, tone: PillTone): Pill => ({ label, tone })
@@ -314,7 +319,12 @@ const fr: LandingContent = {
     cta: 'Démarrer mon échange gratuit',
     note: 'Premier échange gratuit · sans carte bancaire',
   },
-  footer: { product: 'Produit', login: 'Se connecter', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Produit',
+    login: 'Se connecter',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Mentions légales', cgu: 'CGU', cgv: 'CGV', confidentialite: 'Confidentialité' },
+  },
 }
 
 const en: LandingContent = {
@@ -526,7 +536,12 @@ const en: LandingContent = {
     cta: 'Start my free exchange',
     note: 'First exchange free · no credit card',
   },
-  footer: { product: 'Product', login: 'Log in', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Product',
+    login: 'Log in',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Legal notice', cgu: 'Terms', cgv: 'Sales terms', confidentialite: 'Privacy' },
+  },
 }
 
 const es: LandingContent = {
@@ -738,7 +753,12 @@ const es: LandingContent = {
     cta: 'Empezar mi intercambio gratis',
     note: 'Primer intercambio gratis · sin tarjeta de crédito',
   },
-  footer: { product: 'Producto', login: 'Iniciar sesión', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Producto',
+    login: 'Iniciar sesión',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Aviso legal', cgu: 'Condiciones', cgv: 'Venta', confidentialite: 'Privacidad' },
+  },
 }
 
 const it: LandingContent = {
@@ -950,7 +970,12 @@ const it: LandingContent = {
     cta: 'Inizia il mio scambio gratuito',
     note: 'Primo scambio gratuito · senza carta di credito',
   },
-  footer: { product: 'Prodotto', login: 'Accedi', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Prodotto',
+    login: 'Accedi',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Note legali', cgu: 'Condizioni', cgv: 'Vendita', confidentialite: 'Privacy' },
+  },
 }
 
 const de: LandingContent = {
@@ -1162,7 +1187,12 @@ const de: LandingContent = {
     cta: 'Meinen kostenlosen Austausch starten',
     note: 'Erster Austausch gratis · keine Kreditkarte',
   },
-  footer: { product: 'Produkt', login: 'Anmelden', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Produkt',
+    login: 'Anmelden',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Impressum', cgu: 'AGB', cgv: 'Verkauf', confidentialite: 'Datenschutz' },
+  },
 }
 
 export const landingContent: Record<Locale, LandingContent> = { fr, en, es, it, de }
