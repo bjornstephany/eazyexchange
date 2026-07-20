@@ -23,4 +23,7 @@ describe('hasPlaceholders', () => {
   it('detects a placeholder in the intro', () => {
     expect(hasPlaceholders({ ...base, intro: 'Édité par [PLACEHOLDER].' })).toBe(true)
   })
+  it('detects the hinted placeholder form [PLACEHOLDER : hint]', () => {
+    expect(hasPlaceholders({ ...base, sections: [{ id: 's1', heading: 'H', blocks: [{ t: 'p', text: 'SIREN : [PLACEHOLDER : SIREN]' }] }] })).toBe(true)
+  })
 })

@@ -17,7 +17,10 @@ export interface LegalDocument {
   sections: LegalSection[]
 }
 
-const TOKEN = '[PLACEHOLDER]'
+// Opening substring so both the bare token `[PLACEHOLDER]` and the hinted
+// form `[PLACEHOLDER : SIREN]` trigger the draft banner. Once every
+// placeholder is filled (the token removed), no match remains.
+const TOKEN = '[PLACEHOLDER'
 
 export function hasPlaceholders(doc: LegalDocument): boolean {
   if (doc.intro?.includes(TOKEN)) return true
