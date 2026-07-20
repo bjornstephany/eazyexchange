@@ -270,6 +270,7 @@
         "copy": "Copier",
         "closeWarning": "Vous ne reverrez plus ce lien — copiez-le avant de fermer.",
         "closeAnyway": "Fermer quand même",
+        "inviteByEmail": "Inviter par e-mail",
         "close": "Fermer"
       },
       "filterLabelMaybe": "Hésitent",
