@@ -6,6 +6,7 @@ import { isInGrace, exchangeCap, hasActivePlan, TRIAL_EXCHANGE_CAP } from '@/lib
 import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 import { OrganizerShell, type ExchangeOption } from '@/components/shell/OrganizerShell'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { mustOnboard } from '@/lib/onboarding/gate'
 import { NextIntlClientProvider } from 'next-intl'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { loadMessages } from '@/lib/i18n/messages'
@@ -20,9 +21,6 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   const supabase = await createClient()
 
   const school = profile?.schools ?? null
-  // Hard gate: no organizer page renders with an empty school name. A fresh
-  // organizer (email/password or Google) lands here and is sent to onboarding.
-  if (school && school.name === '') redirect('/onboarding')
   const showGrace = school ? isInGrace(school as never) : false
 
   const { data: exchangeRows } = await supabase
@@ -39,6 +37,13 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   // created) to decide whether "+ Nouvel échange" should offer creation or
   // send the organizer to /billing.
   const ownedCount = rows.filter(e => e.school_a_id === profile.school_id).length
+
+  // Hard gate: no organizer page renders until the school is named AND owns at
+  // least one exchange. Catches fresh signups and existing empty accounts.
+  // ownedCount includes archived exchanges, so archiving your only exchange
+  // does not re-trap you here.
+  if (school && mustOnboard(school.name, ownedCount)) redirect('/onboarding')
+
   const cap = school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP
   const atCap = ownedCount >= cap
   // Feeds the informational banner in the "Nouvel échange" modal.
