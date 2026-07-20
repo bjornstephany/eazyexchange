@@ -20,6 +20,7 @@ vi.mock('@/lib/supabase/request', () => ({
 // The exchange row / application rows the mocked client returns — set per test.
 let exchangeRow: { school_a_id: string; school_b_id: string | null } | null = null
 let appRows: any[] = []
+let orArg: string | null = null
 
 const createSignedUrls = vi.fn(async (paths: string[], _expiresIn: number) => ({
   data: paths.map(p => ({ path: p, signedUrl: `https://signed.example/${p}`, error: null })),
@@ -33,6 +34,7 @@ function makeClient() {
         select: () => builder,
         eq: () => builder,
         neq: () => builder,
+        or: (arg: string) => { orArg = arg; return builder },
         order: async () => ({ data: appRows, error: null }),
         maybeSingle: async () =>
           table === 'exchanges' ? { data: exchangeRow, error: null } : { data: null, error: null },
@@ -50,6 +52,7 @@ import { listApplications } from '../applications-review'
 
 beforeEach(() => {
   appRows = [{ id: 'app-1' }]
+  orArg = null
   createSignedUrls.mockClear()
 })
 
@@ -67,6 +70,14 @@ describe('listApplications scope check', () => {
   it("returns rows for the caller's own exchange", async () => {
     exchangeRow = { school_a_id: 'school-1', school_b_id: null }
     await expect(listApplications('ex-1')).resolves.toEqual([{ id: 'app-1' }])
+  })
+})
+
+describe('listApplications visibility', () => {
+  it('includes invited-origin rows but hides self-serve drafts', async () => {
+    exchangeRow = { school_a_id: 'school-1', school_b_id: null }
+    await listApplications('ex-1')
+    expect(orArg).toBe('status.neq.draft,invited_at.not.is.null')
   })
 })
 

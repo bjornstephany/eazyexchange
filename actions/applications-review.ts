@@ -67,7 +67,7 @@ export async function listApplications(
       // Avoids shipping the private resume_token / invite_token to the browser.
       .select('id, status, submitted_at, data, email')
       .eq('exchange_id', exchangeId)
-      .neq('status', 'draft')
+      .or('status.neq.draft,invited_at.not.is.null')
       .order('submitted_at', { ascending: false })
     if (error) throw error
     return (data ?? []) as unknown as ApplicationListRow[]
@@ -77,7 +77,7 @@ export async function listApplications(
     .from('applications')
     .select('id, status, submitted_at, data, email, photo_path')
     .eq('exchange_id', exchangeId)
-    .neq('status', 'draft')
+    .or('status.neq.draft,invited_at.not.is.null')
     .order('submitted_at', { ascending: false })
   if (error) throw error
   const rows = (data ?? []) as unknown as (ApplicationListRow & { photo_path: string | null })[]
