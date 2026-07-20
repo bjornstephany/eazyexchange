@@ -1,7 +1,7 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { randomToken, tokenExpired } from '@/lib/tokens'
+import { randomToken, tokenExpired, resumeTokenExpiry } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { missingRequiredApplication, overLimitApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
@@ -21,15 +21,6 @@ function applicationsClosed(exchange: { application_open: boolean; application_d
     if (today > exchange.application_deadline) return true
   }
   return false
-}
-
-const RESUME_FALLBACK_MS = 30 * 24 * 60 * 60 * 1000
-
-// When a resume link should die: end of the deadline day (the day after, 00:00
-// UTC — the moment applicationsClosed flips), or 30 days out if no deadline.
-function resumeExpiry(deadline: string | null): string {
-  if (deadline) return new Date(new Date(`${deadline}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000).toISOString()
-  return new Date(Date.now() + RESUME_FALLBACK_MS).toISOString()
 }
 
 // Hard sanity cap, not a product limit: no legitimate exchange approaches this
@@ -99,7 +90,7 @@ export async function startApplication(
     // token. The inbox is the only recovery channel — re-send the resume link
     // (already capped by the 3/hr-per-email limit above) and keep it alive.
     await admin.from('applications')
-      .update({ resume_token_expires_at: resumeExpiry(exchange.application_deadline) })
+      .update({ resume_token_expires_at: resumeTokenExpiry(exchange.application_deadline) })
       .eq('id', existing.id)
     void sendApplicationResumeEmail({
       to: email,
@@ -145,7 +136,7 @@ export async function startApplication(
     email,
     resume_token: token,
     invite_token: null,
-    resume_token_expires_at: resumeExpiry(exchange.application_deadline),
+    resume_token_expires_at: resumeTokenExpiry(exchange.application_deadline),
     invite_token_expires_at: null,
     status: 'draft',
     language: input.language,
@@ -206,7 +197,8 @@ export async function getApplicationDraft(token: string) {
   // Once submitted (or further along) the application is final — the resume link
   // can no longer reopen it. Return a marker only, never the PII, so the page
   // shows an "already submitted" notice instead of the form.
-  if (app.status !== 'draft') {
+  // 'invited' (organizer-sent, untouched) and 'draft' both render the form.
+  if (app.status !== 'draft' && app.status !== 'invited') {
     return { expired: false as const, submitted: true as const, exchangeName }
   }
   // Signed URL so a returning draft shows its already-uploaded photo (the
@@ -279,10 +271,13 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
   await assertExchangeWritable(admin, app.exchange_id)
+  // First edit of an organizer-invited row marks it "started".
+  const patch: { data: Record<string, string>; status?: 'draft' } =
+    app.status === 'invited' ? { data, status: 'draft' } : { data }
   const { error } = await admin
-    .from('applications').update({ data }).eq('resume_token', token)
+    .from('applications').update(patch).eq('resume_token', token)
   if (error) throw error
   return { ok: true }
 }
@@ -299,7 +294,7 @@ export async function submitApplication(token: string, data: Record<string, stri
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted')
 
   // Server-side backstop of the client submit gate — same policy, including
   // the photo (which lives on the row, not in `data`).
@@ -367,7 +362,7 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
   await assertExchangeWritable(admin, app.exchange_id)
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
@@ -375,7 +370,10 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
   const { error: upErr } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type })
   if (upErr) throw upErr
-  const { error } = await admin.from('applications').update({ photo_path: path }).eq('id', app.id)
+  // First upload of an organizer-invited row marks it "started".
+  const patch: { photo_path: string; status?: 'draft' } =
+    app.status === 'invited' ? { photo_path: path, status: 'draft' } : { photo_path: path }
+  const { error } = await admin.from('applications').update(patch).eq('id', app.id)
   if (error) throw error
   return { path }
 }
