@@ -18,7 +18,7 @@ function Block({ block }: { block: LegalBlock }) {
 }
 
 export function LegalDocumentView({ doc }: { doc: LegalDocument }) {
-  const draft = hasPlaceholders(doc)
+  const draft = doc.draft === true || hasPlaceholders(doc)
   const updated = new Date(doc.lastUpdated).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',

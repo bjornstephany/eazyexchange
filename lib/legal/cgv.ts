@@ -3,6 +3,7 @@ import type { LegalDocument } from './types'
 
 export const cgv: LegalDocument = {
   slug: 'cgv',
+  draft: true,
   title: 'Conditions Générales de Vente',
   lastUpdated: '2026-07-20',
   intro:

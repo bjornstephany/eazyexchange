@@ -15,6 +15,7 @@ export interface LegalDocument {
   intro?: string
   lastUpdated: string
   sections: LegalSection[]
+  draft?: boolean
 }
 
 // Opening substring so both the bare token `[PLACEHOLDER]` and the hinted

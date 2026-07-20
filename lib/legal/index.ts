@@ -18,5 +18,6 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
 }
 
 export function getLegalDocument(slug: string): LegalDocument | null {
-  return (LEGAL_DOCUMENTS as Record<string, LegalDocument>)[slug] ?? null
+  if (!(LEGAL_SLUGS as readonly string[]).includes(slug)) return null
+  return LEGAL_DOCUMENTS[slug as LegalSlug]
 }

@@ -28,4 +28,10 @@ describe('legal registry', () => {
     expect(getLegalDocument('cgu')?.slug).toBe('cgu')
     expect(getLegalDocument('nope')).toBeNull()
   })
+
+  it('rejects prototype-chain keys instead of returning an inherited value', () => {
+    expect(getLegalDocument('constructor')).toBeNull()
+    expect(getLegalDocument('__proto__')).toBeNull()
+    expect(getLegalDocument('toString')).toBeNull()
+  })
 })

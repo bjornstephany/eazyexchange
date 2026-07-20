@@ -3,6 +3,7 @@ import type { LegalDocument } from './types'
 
 export const mentionsLegales: LegalDocument = {
   slug: 'mentions-legales',
+  draft: true,
   title: 'Mentions légales',
   lastUpdated: '2026-07-20',
   intro:

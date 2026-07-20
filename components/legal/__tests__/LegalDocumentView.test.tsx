@@ -27,4 +27,9 @@ describe('LegalDocumentView', () => {
     rerender(<LegalDocumentView doc={{ ...doc, intro: 'Édité par [PLACEHOLDER].' }} />)
     expect(screen.getByText(/brouillon/i)).toBeInTheDocument()
   })
+
+  it('shows the draft banner when doc.draft is true, even with no placeholders', () => {
+    render(<LegalDocumentView doc={{ ...doc, draft: true }} />)
+    expect(screen.getByText(/brouillon/i)).toBeInTheDocument()
+  })
 })

@@ -3,6 +3,7 @@ import type { LegalDocument } from './types'
 
 export const confidentialite: LegalDocument = {
   slug: 'confidentialite',
+  draft: true,
   title: 'Politique de confidentialité',
   lastUpdated: '2026-07-20',
   intro:
