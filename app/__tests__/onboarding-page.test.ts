@@ -4,7 +4,16 @@ const redirect = vi.fn((url: string) => { throw new Error('REDIRECT:' + url) })
 vi.mock('next/navigation', () => ({ redirect: (u: string) => redirect(u) }))
 // Defensive: the page transitively imports the action module.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({}) }))
+let ownedExchangeCount = 0
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ count: ownedExchangeCount, error: null }),
+      }),
+    }),
+  }),
+}))
 
 let authedUser: { id: string } | null
 let profile: any
@@ -24,6 +33,7 @@ beforeEach(() => {
   redirect.mockClear()
   authedUser = { id: 'u1' }
   profile = { role: 'organizer', school_id: 's-1', schools: { name: '' } }
+  ownedExchangeCount = 0
 })
 
 describe('OnboardingPage', () => {
@@ -37,8 +47,20 @@ describe('OnboardingPage', () => {
     expect(await getRedirect()).toBe('/my-forms')
   })
 
-  it('redirects an organizer whose school name is already set to /dashboard', async () => {
+  it('redirects a fully-onboarded organizer (named + has exchange) to /dashboard', async () => {
     profile = { role: 'organizer', school_id: 's-1', schools: { name: 'Lincoln High' } }
+    ownedExchangeCount = 2
     expect(await getRedirect()).toBe('/dashboard')
+  })
+
+  it('renders (no redirect) for a named school that owns no exchange', async () => {
+    profile = { role: 'organizer', school_id: 's-1', schools: { name: 'Lincoln High' } }
+    ownedExchangeCount = 0
+    await expect(OnboardingPage()).resolves.toBeTruthy() // renders at step 2
+  })
+
+  it('renders (no redirect) for a blank school name', async () => {
+    profile = { role: 'organizer', school_id: 's-1', schools: { name: '' } }
+    await expect(OnboardingPage()).resolves.toBeTruthy() // renders at step 1
   })
 })
