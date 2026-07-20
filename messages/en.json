@@ -353,6 +353,18 @@
       "linkLabel": "Application link",
       "copyCta": "Copy",
       "copiedCta": "Copied ✓",
+      "invite": {
+        "openCta": "Invite by email",
+        "title": "Invite by email",
+        "description": "Paste students' email addresses — one per line or comma-separated.",
+        "placeholder": "marie@school.org\nleo@school.org",
+        "sendCta": "Send invitations",
+        "sending": "Sending…",
+        "close": "Close",
+        "notOpenError": "Open applications and set a deadline first.",
+        "tooManyError": "Too many addresses (max 200 per send).",
+        "result": "{sent} sent · {skipped} already in the list · {invalid} invalid"
+      },
       "tabs": {
         "all": "All",
         "toReview": "To review",

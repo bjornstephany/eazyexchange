@@ -353,6 +353,18 @@
       "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
+      "invite": {
+        "openCta": "Per E-Mail einladen",
+        "title": "Per E-Mail einladen",
+        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "placeholder": "marie@schule.de\nleo@schule.de",
+        "sendCta": "Einladungen senden",
+        "sending": "Senden…",
+        "close": "Schließen",
+        "notOpenError": "Öffne zuerst die Bewerbungen und lege eine Frist fest.",
+        "tooManyError": "Zu viele Adressen (max. 200 pro Versand).",
+        "result": "{sent} gesendet · {skipped} bereits in der Liste · {invalid} ungültig"
+      },
       "tabs": {
         "all": "Alle",
         "toReview": "Zu prüfen",

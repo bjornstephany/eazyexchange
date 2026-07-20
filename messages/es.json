@@ -353,6 +353,18 @@
       "linkLabel": "Enlace de candidatura",
       "copyCta": "Copiar",
       "copiedCta": "Copiado ✓",
+      "invite": {
+        "openCta": "Invitar por correo",
+        "title": "Invitar por correo",
+        "description": "Pega los correos de los alumnos — uno por línea o separados por comas.",
+        "placeholder": "marie@escuela.es\nleo@escuela.es",
+        "sendCta": "Enviar invitaciones",
+        "sending": "Enviando…",
+        "close": "Cerrar",
+        "notOpenError": "Primero abre las candidaturas y fija una fecha límite.",
+        "tooManyError": "Demasiadas direcciones (máx. 200 por envío).",
+        "result": "{sent} enviadas · {skipped} ya en la lista · {invalid} no válidas"
+      },
       "tabs": {
         "all": "Todas",
         "toReview": "Por examinar",

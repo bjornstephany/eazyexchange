@@ -353,6 +353,18 @@
       "linkLabel": "Link di candidatura",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
+      "invite": {
+        "openCta": "Invita via e-mail",
+        "title": "Invita via e-mail",
+        "description": "Incolla le e-mail degli studenti — una per riga o separate da virgole.",
+        "placeholder": "marie@scuola.it\nleo@scuola.it",
+        "sendCta": "Invia inviti",
+        "sending": "Invio…",
+        "close": "Chiudi",
+        "notOpenError": "Apri prima le candidature e imposta una scadenza.",
+        "tooManyError": "Troppi indirizzi (max 200 per invio).",
+        "result": "{sent} inviate · {skipped} già nell'elenco · {invalid} non valide"
+      },
       "tabs": {
         "all": "Tutte",
         "toReview": "Da esaminare",
