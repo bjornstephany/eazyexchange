@@ -1,0 +1,30 @@
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { LegalDocumentView } from '../LegalDocumentView'
+import type { LegalDocument } from '@/lib/legal'
+
+const doc: LegalDocument = {
+  slug: 'x',
+  title: 'Titre du document',
+  lastUpdated: '2026-07-20',
+  intro: 'Introduction.',
+  sections: [
+    { id: 's1', heading: 'Section un', blocks: [{ t: 'p', text: 'Paragraphe.' }, { t: 'ul', items: ['a', 'b'] }] },
+  ],
+}
+
+describe('LegalDocumentView', () => {
+  it('renders title, heading and list items', () => {
+    render(<LegalDocumentView doc={doc} />)
+    expect(screen.getByRole('heading', { level: 1, name: 'Titre du document' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Section un' })).toBeInTheDocument()
+    expect(screen.getByText('a')).toBeInTheDocument()
+  })
+
+  it('shows the draft banner only when placeholders are present', () => {
+    const { rerender } = render(<LegalDocumentView doc={doc} />)
+    expect(screen.queryByText(/brouillon/i)).not.toBeInTheDocument()
+    rerender(<LegalDocumentView doc={{ ...doc, intro: 'Édité par [PLACEHOLDER].' }} />)
+    expect(screen.getByText(/brouillon/i)).toBeInTheDocument()
+  })
+})
