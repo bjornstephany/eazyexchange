@@ -66,6 +66,13 @@ export default async function BillingPage({
           {school?.stripe_customer_id && (
             <Link href="/billing/portal" className="text-center text-sm font-semibold text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F]">Gérer la facturation</Link>
           )}
+          <p className="m-0 text-center text-xs leading-[1.5] text-[#8A97B2]">
+            En souscrivant, vous acceptez nos{' '}
+            <Link href="/legal/cgv" className="font-medium text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F]">
+              Conditions Générales de Vente
+            </Link>
+            .
+          </p>
         </>
       )}
     </CenteredCard>
