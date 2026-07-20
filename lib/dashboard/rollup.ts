@@ -170,6 +170,8 @@ export function candidaturePill(status: string | null, t: T): Pill {
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.maybe') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    case 'invited': return { kind: 'neutral', label: t('organizer.dashboard.pills.invited') }
+    case 'draft': return { kind: 'neutral', label: t('organizer.dashboard.pills.started') }
     default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
@@ -184,6 +186,8 @@ export function applicantStatusPill(status: string, t: T): Pill {
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.hesitates') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    case 'invited': return { kind: 'neutral', label: t('organizer.dashboard.pills.invited') }
+    case 'draft': return { kind: 'neutral', label: t('organizer.dashboard.pills.started') }
     default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }

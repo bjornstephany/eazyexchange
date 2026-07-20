@@ -304,6 +304,8 @@
         "declined": "Declined",
         "rejected": "Rejected",
         "dash": "—",
+        "invited": "Invited",
+        "started": "Started",
         "waiting": "Awaiting",
         "hesitates": "Undecided"
       },
