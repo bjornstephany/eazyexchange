@@ -103,6 +103,23 @@
           "confirm": "Archive the program"
         }
       },
+      "goodNews": {
+        "heading": "Parent “Good news” email",
+        "description": "Sent to the parents when you accept an application. The Yes / No / Questions buttons are added automatically.",
+        "subjectLabel": "Subject",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Available placeholders:",
+        "previewLabel": "Preview",
+        "resetToDefault": "Reset to the default template",
+        "saveButton": "Save",
+        "savedNotice": "Template saved.",
+        "errors": {
+          "subjectEmpty": "The subject cannot be empty.",
+          "bodyEmpty": "The message cannot be empty.",
+          "tooLong": "The template is too long.",
+          "saveFailed": "The template could not be saved. Please try again."
+        }
+      },
       "programDetails": {
         "heading": "Program details",
         "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation). Edit them here: every not-yet-signed form updates.",
@@ -321,6 +338,7 @@
       "progressCandidatures": "{done} / {total} applications processed"
     },
     "applications": {
+      "questionsHeading": "Family’s questions",
       "backLink": "‹ Back to applications",
       "printCta": "⎙ Print application",
       "subtitle": "Application · {exchangeName} · {year}",

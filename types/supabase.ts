@@ -494,6 +494,8 @@ export type Database = {
           apply_slug: string | null
           archived_at: string | null
           created_at: string
+          good_news_body: string | null
+          good_news_subject: string | null
           id: string
           name: string
           phase: number
@@ -510,6 +512,8 @@ export type Database = {
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
+          good_news_body?: string | null
+          good_news_subject?: string | null
           id?: string
           name: string
           phase?: number
@@ -526,6 +530,8 @@ export type Database = {
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
+          good_news_body?: string | null
+          good_news_subject?: string | null
           id?: string
           name?: string
           phase?: number

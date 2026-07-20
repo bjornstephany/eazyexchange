@@ -103,6 +103,23 @@
           "confirm": "Archivia il programma"
         }
       },
+      "goodNews": {
+        "heading": "E-mail «Buona notizia» ai genitori",
+        "description": "Inviata ai genitori quando accetti una candidatura. I pulsanti Sì / No / Domande vengono aggiunti automaticamente.",
+        "subjectLabel": "Oggetto",
+        "bodyLabel": "Messaggio",
+        "placeholdersLabel": "Segnaposto disponibili:",
+        "previewLabel": "Anteprima",
+        "resetToDefault": "Ripristina il modello predefinito",
+        "saveButton": "Salva",
+        "savedNotice": "Modello salvato.",
+        "errors": {
+          "subjectEmpty": "L’oggetto non può essere vuoto.",
+          "bodyEmpty": "Il messaggio non può essere vuoto.",
+          "tooLong": "Il modello è troppo lungo.",
+          "saveFailed": "Impossibile salvare il modello. Riprova."
+        }
+      },
       "programDetails": {
         "heading": "Dettagli del programma",
         "subtitle": "Questi dati compilano automaticamente i moduli da firmare online (liberatoria, richiesta di assenza, impegno della famiglia, autorizzazione medica). Modificali qui: tutti i moduli non ancora firmati si aggiornano.",
@@ -321,6 +338,7 @@
       "progressCandidatures": "{done} / {total} candidature elaborate"
     },
     "applications": {
+      "questionsHeading": "Domande della famiglia",
       "backLink": "‹ Torna alle candidature",
       "printCta": "⎙ Stampa la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",

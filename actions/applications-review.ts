@@ -2,9 +2,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { randomToken } from '@/lib/tokens'
-import { applicantName as buildApplicantName } from '@/lib/application-form'
+import { applicantName as buildApplicantName, parentRecipients } from '@/lib/application-form'
 import { signApplicationPhotoUrls } from '@/lib/application-photos'
-import { sendInvitationEmail, sendApplicationRejectionEmail } from '@/lib/email'
+import { sendGoodNewsEmail, sendApplicationRejectionEmail } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
@@ -129,11 +129,19 @@ export async function acceptApplication(applicationId: string): Promise<void> {
   })
 
   const { data: exchange } = await supabase
-    .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
+    .from('exchanges')
+    .select('name, good_news_subject, good_news_body')
+    .eq('id', app.exchange_id).maybeSingle()
   const applicantName = buildApplicantName(app.data)
-  void sendInvitationEmail({
-    to: app.email, applicantName, exchangeName: exchange?.name ?? '',
+  const recipients = parentRecipients(app.data as Record<string, string>, app.email)
+  void sendGoodNewsEmail({
+    to: recipients,
+    studentName: applicantName,
+    exchangeName: exchange?.name ?? '',
+    subject: exchange?.good_news_subject ?? null,
+    body: exchange?.good_news_body ?? null,
     respondUrl: `${APP_URL}/invite/${inviteToken}`,
+    language: app.language === 'fr' ? 'fr' : 'en',
     ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   }).catch(() => {})
   revalidatePath(`/exchanges/${app.exchange_id}/applications`)

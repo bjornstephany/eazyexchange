@@ -103,6 +103,23 @@
           "confirm": "Archivar el programa"
         }
       },
+      "goodNews": {
+        "heading": "Correo «Buenas noticias» a los padres",
+        "description": "Se envía a los padres cuando aceptas una candidatura. Los botones Sí / No / Preguntas se añaden automáticamente.",
+        "subjectLabel": "Asunto",
+        "bodyLabel": "Mensaje",
+        "placeholdersLabel": "Etiquetas disponibles:",
+        "previewLabel": "Vista previa",
+        "resetToDefault": "Restablecer la plantilla predeterminada",
+        "saveButton": "Guardar",
+        "savedNotice": "Plantilla guardada.",
+        "errors": {
+          "subjectEmpty": "El asunto no puede estar vacío.",
+          "bodyEmpty": "El mensaje no puede estar vacío.",
+          "tooLong": "La plantilla es demasiado larga.",
+          "saveFailed": "No se pudo guardar la plantilla. Inténtalo de nuevo."
+        }
+      },
       "programDetails": {
         "heading": "Detalles del programa",
         "subtitle": "Estos datos rellenan automáticamente los formularios para firmar en línea (descarga de responsabilidad, solicitud de ausencia, compromiso familiar, autorización médica). Edítalos aquí: todos los formularios aún no firmados se actualizan.",
@@ -321,6 +338,7 @@
       "progressCandidatures": "{done} / {total} candidaturas procesadas"
     },
     "applications": {
+      "questionsHeading": "Preguntas de la familia",
       "backLink": "‹ Volver a las candidaturas",
       "printCta": "⎙ Imprimir la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",

@@ -69,6 +69,11 @@ describe.each([
       tx`update exchanges set name = 'pwned' where id = ${fx.exchangeA}`))
   })
 
+  it('exchanges: cannot write exchange A good-news template', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchanges set good_news_subject = 'pwned' where id = ${fx.exchangeA}`))
+  })
+
   it('exchange_info_cards: cannot read exchange A info cards', async () => {
     expect(await readRows(uid(), (tx) =>
       tx`select id from exchange_info_cards where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
@@ -254,6 +259,11 @@ describe('own-school allow', () => {
   it('organizer A can update their own exchange', async () => {
     expect(await writeOutcome(sql, fx.orgA, (tx) =>
       tx`update exchanges set name = name where id = ${fx.exchangeA}`)).toBe(1)
+  })
+
+  it('organizer A can write their own exchange good-news template', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchanges set good_news_subject = 'Bonne nouvelle', good_news_body = 'Bonjour' where id = ${fx.exchangeA}`)).toBe(1)
   })
 
   it('student A reads their own profile, assignment and template', async () => {

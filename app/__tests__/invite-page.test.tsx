@@ -7,7 +7,6 @@ vi.mock('@/actions/invitations', () => ({
   respondToInvitation: vi.fn(),
   resumeInviteSetup: vi.fn(),
 }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 import InvitePage from '@/app/invite/[token]/page'
 
@@ -16,39 +15,40 @@ const BASE = {
   status: 'accepted', expired: false, setupComplete: null as boolean | null,
 }
 
-async function renderPage() {
-  render(await InvitePage({ params: Promise.resolve({ token: 'tok-1' }) }))
+async function renderPage(r?: string) {
+  render(await InvitePage({
+    params: Promise.resolve({ token: 'tok-1' }),
+    searchParams: Promise.resolve(r ? { r } : {}),
+  }))
 }
 
-describe('InvitePage states', () => {
+describe('InvitePage states (parent-facing)', () => {
   beforeEach(() => { getInvitationMock.mockReset() })
 
-  it('shows the response form for an open invitation', async () => {
+  it('shows the parent response form for an open invitation', async () => {
     getInvitationMock.mockResolvedValue({ ...BASE })
     await renderPage()
-    expect(screen.getByRole('button', { name: /je veux participer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /nous confirmons/i })).toBeInTheDocument()
   })
-  it('offers to resume setup for an enrolled invite with incomplete setup', async () => {
-    getInvitationMock.mockResolvedValue({ ...BASE, status: 'enrolled', setupComplete: false })
-    await renderPage()
-    expect(screen.getByRole('button', { name: /reprendre la configuration/i })).toBeInTheDocument()
+  it('?r=maybe preselects the questions textarea on an open invitation', async () => {
+    getInvitationMock.mockResolvedValue({ ...BASE })
+    await renderPage('maybe')
+    expect(screen.getByPlaceholderText(/vos questions pour l’organisateur/i)).toBeInTheDocument()
   })
-  it('also offers resume while stuck mid-enrollment (enrolling)', async () => {
-    getInvitationMock.mockResolvedValue({ ...BASE, status: 'enrolling', setupComplete: false })
-    await renderPage()
-    expect(screen.getByRole('button', { name: /reprendre la configuration/i })).toBeInTheDocument()
-  })
-  it('links to /login once setup is complete', async () => {
+  it('shows the parent "already confirmed" card for an enrolled invite', async () => {
     getInvitationMock.mockResolvedValue({ ...BASE, status: 'enrolled', setupComplete: true })
     await renderPage()
-    expect(screen.getByText(/ton compte est déjà actif/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /se connecter/i })).toHaveAttribute('href', '/login')
+    expect(screen.getByText(/participation déjà confirmée/i)).toBeInTheDocument()
   })
-  it('an expired enrolled invite keeps the dead-end (no resume)', async () => {
+  it('also shows "already confirmed" while stuck mid-enrollment (enrolling)', async () => {
+    getInvitationMock.mockResolvedValue({ ...BASE, status: 'enrolling', setupComplete: false })
+    await renderPage()
+    expect(screen.getByText(/participation déjà confirmée/i)).toBeInTheDocument()
+  })
+  it('an expired invite shows the expired dead-end', async () => {
     getInvitationMock.mockResolvedValue({ ...BASE, status: 'enrolled', setupComplete: false, expired: true })
     await renderPage()
     expect(screen.getByText(/cette invitation a expiré/i)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /reprendre la configuration/i })).not.toBeInTheDocument()
   })
   it('declined invitations keep the already-answered dead-end', async () => {
     getInvitationMock.mockResolvedValue({ ...BASE, status: 'declined' })

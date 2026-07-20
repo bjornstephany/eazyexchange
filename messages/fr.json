@@ -103,6 +103,23 @@
           "confirm": "Archiver le programme"
         }
       },
+      "goodNews": {
+        "heading": "E-mail « Bonne nouvelle » aux parents",
+        "description": "Envoyé aux parents lorsque vous acceptez une candidature. Les boutons Oui / Non / Questions sont ajoutés automatiquement.",
+        "subjectLabel": "Objet",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Balises disponibles :",
+        "previewLabel": "Aperçu",
+        "resetToDefault": "Rétablir le modèle par défaut",
+        "saveButton": "Enregistrer",
+        "savedNotice": "Modèle enregistré.",
+        "errors": {
+          "subjectEmpty": "L’objet ne peut pas être vide.",
+          "bodyEmpty": "Le message ne peut pas être vide.",
+          "tooLong": "Le modèle est trop long.",
+          "saveFailed": "Le modèle n’a pas pu être enregistré. Réessayez."
+        }
+      },
       "programDetails": {
         "heading": "Détails du programme",
         "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
@@ -321,6 +338,7 @@
       "progressCandidatures": "{done} / {total} candidatures traitées"
     },
     "applications": {
+      "questionsHeading": "Questions de la famille",
       "backLink": "‹ Retour aux candidatures",
       "printCta": "⎙ Imprimer la candidature",
       "subtitle": "Candidature · {exchangeName} · {year}",
