@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
@@ -84,6 +85,17 @@ export default function SignupPage() {
               {loading ? 'Création…' : 'Créer mon compte'}
             </Button>
           </form>
+          <p className="m-0 text-center text-xs leading-[1.5] text-[#8A97B2]">
+            En créant un compte, vous acceptez nos{' '}
+            <Link href="/legal/cgu" className="font-medium text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F]">
+              CGU
+            </Link>{' '}
+            et notre{' '}
+            <Link href="/legal/confidentialite" className="font-medium text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F]">
+              Politique de confidentialité
+            </Link>
+            .
+          </p>
         </AuthCard>
       </div>
     </div>
