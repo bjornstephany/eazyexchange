@@ -270,6 +270,7 @@
         "copy": "Copia",
         "closeWarning": "Non vedrai più questo link — copialo prima di chiudere.",
         "closeAnyway": "Chiudi comunque",
+        "inviteByEmail": "Invita via e-mail",
         "close": "Chiudi"
       },
       "filterLabelMaybe": "Indecisi",
@@ -304,6 +305,8 @@
         "declined": "Ha rinunciato",
         "rejected": "Rifiutato",
         "dash": "—",
+        "invited": "Invitato",
+        "started": "Iniziato",
         "waiting": "In attesa",
         "hesitates": "Indeciso"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Link di candidatura",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
+      "invite": {
+        "openCta": "Invita via e-mail",
+        "title": "Invita via e-mail",
+        "description": "Incolla le e-mail degli studenti — una per riga o separate da virgole.",
+        "placeholder": "marie@scuola.it\nleo@scuola.it",
+        "sendCta": "Invia inviti",
+        "sending": "Invio…",
+        "close": "Chiudi",
+        "notOpenError": "Apri prima le candidature e imposta una scadenza.",
+        "tooManyError": "Troppi indirizzi (max 200 per invio).",
+        "result": "{sent} inviate · {skipped} già nell'elenco · {invalid} non valide"
+      },
       "tabs": {
         "all": "Tutte",
+        "invited": "Invitati",
         "toReview": "Da esaminare",
         "accepted": "Accettate",
         "rejected": "Rifiutate"

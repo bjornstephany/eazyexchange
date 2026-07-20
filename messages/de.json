@@ -270,6 +270,7 @@
         "copy": "Kopieren",
         "closeWarning": "Sie werden diesen Link nicht wiedersehen — kopieren Sie ihn, bevor Sie schließen.",
         "closeAnyway": "Trotzdem schließen",
+        "inviteByEmail": "Per E-Mail einladen",
         "close": "Schließen"
       },
       "filterLabelMaybe": "Unentschlossen",
@@ -304,6 +305,8 @@
         "declined": "Hat abgelehnt",
         "rejected": "Abgelehnt",
         "dash": "—",
+        "invited": "Eingeladen",
+        "started": "Begonnen",
         "waiting": "Wartet",
         "hesitates": "Unentschlossen"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
+      "invite": {
+        "openCta": "Per E-Mail einladen",
+        "title": "Per E-Mail einladen",
+        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "placeholder": "marie@schule.de\nleo@schule.de",
+        "sendCta": "Einladungen senden",
+        "sending": "Senden…",
+        "close": "Schließen",
+        "notOpenError": "Öffne zuerst die Bewerbungen und lege eine Frist fest.",
+        "tooManyError": "Zu viele Adressen (max. 200 pro Versand).",
+        "result": "{sent} gesendet · {skipped} bereits in der Liste · {invalid} ungültig"
+      },
       "tabs": {
         "all": "Alle",
+        "invited": "Eingeladen",
         "toReview": "Zu prüfen",
         "accepted": "Angenommen",
         "rejected": "Abgelehnt"

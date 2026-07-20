@@ -270,6 +270,7 @@
         "copy": "Copier",
         "closeWarning": "Vous ne reverrez plus ce lien — copiez-le avant de fermer.",
         "closeAnyway": "Fermer quand même",
+        "inviteByEmail": "Inviter par e-mail",
         "close": "Fermer"
       },
       "filterLabelMaybe": "Hésitent",
@@ -304,6 +305,8 @@
         "declined": "A décliné",
         "rejected": "Refusé",
         "dash": "—",
+        "invited": "Invité",
+        "started": "Commencé",
         "waiting": "En attente",
         "hesitates": "Hésite"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Lien de candidature",
       "copyCta": "Copier",
       "copiedCta": "Copié ✓",
+      "invite": {
+        "openCta": "Inviter par e-mail",
+        "title": "Inviter par e-mail",
+        "description": "Collez les adresses e-mail des élèves — une par ligne ou séparées par des virgules.",
+        "placeholder": "marie@ecole.fr\nleo@ecole.fr",
+        "sendCta": "Envoyer les invitations",
+        "sending": "Envoi…",
+        "close": "Fermer",
+        "notOpenError": "Ouvrez d'abord les candidatures et fixez une date limite.",
+        "tooManyError": "Trop d'adresses (200 maximum par envoi).",
+        "result": "{sent} envoyée·s · {skipped} déjà dans la liste · {invalid} invalide·s"
+      },
       "tabs": {
         "all": "Toutes",
+        "invited": "Invités",
         "toReview": "À examiner",
         "accepted": "Acceptées",
         "rejected": "Refusées"
