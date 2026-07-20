@@ -26,6 +26,7 @@ export type Database = {
           invite_response_note: string | null
           invite_token: string | null
           invite_token_expires_at: string | null
+          invited_at: string | null
           language: string
           photo_path: string | null
           responded_at: string | null
@@ -51,6 +52,7 @@ export type Database = {
           invite_response_note?: string | null
           invite_token?: string | null
           invite_token_expires_at?: string | null
+          invited_at?: string | null
           language?: string
           photo_path?: string | null
           responded_at?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           invite_response_note?: string | null
           invite_token?: string | null
           invite_token_expires_at?: string | null
+          invited_at?: string | null
           language?: string
           photo_path?: string | null
           responded_at?: string | null
@@ -1149,4 +1152,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
