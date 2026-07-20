@@ -146,3 +146,23 @@ revealed, and no PII is logged.
 
 `pnpm lint`, `pnpm test`, `pnpm build` all green. `pnpm test:rls` not required
 (no schema/RLS/bucket changes).
+
+## Amendment (2026-07-20, post-implementation review decision)
+
+After the feature was built and reviewed, the whole-branch review surfaced that
+the "any prior application" rule, combined with the "already registered — log in"
+remedy, is a dead end for non-enrolled priors (draft/submitted/declined/rejected
+applicants have no account to log into). Bjorn's decision:
+
+**The rule is one application per exchange** (the pre-existing per-exchange
+dedup). **Additionally**, block a new application at the start ONLY when the
+email is **already enrolled** in another exchange of the same school — i.e. an
+auth account already exists (`enrolled_user_id is not null`). Only that case can
+never enroll (it hits `email_exists` at « Oui »), and for it the "log in" remedy
+is always correct. Non-enrolled prior applicants elsewhere are NOT blocked; they
+may apply to a different exchange.
+
+Implementation: both guards (`startApplication` and the `submitApplication`
+backstop) add `.not('enrolled_user_id', 'is', null)`. The client copy is
+unchanged (now always accurate). Cross-school enrolled is left to the existing
+`email_exists` backstop, as before.
