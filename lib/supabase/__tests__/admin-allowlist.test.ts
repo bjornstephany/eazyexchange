@@ -9,6 +9,7 @@ import { join, relative } from 'node:path'
 // extend this list deliberately in the same change and say why in the commit.
 const ALLOWLIST = [
   'actions/apply.ts',
+  'actions/applications-review.ts',
   'actions/invitations.ts',
   'actions/exchanges.ts',
   'actions/join.ts',
