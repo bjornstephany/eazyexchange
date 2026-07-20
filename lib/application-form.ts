@@ -184,12 +184,19 @@ export function applicantInitials(data: Record<string, string> | null | undefine
 // never silently fails to notify. Blank/whitespace parent values are ignored.
 // A valid submission always has at least one parent group complete (which
 // includes that parent's email), so the fallback is a defensive backstop.
+// Minimal, deliberately lax address check: enough to reject junk like "e" that
+// Resend would 422 on (which black-holes the whole send), without trying to be a
+// full RFC validator. Requires local@domain.tld with no spaces.
+function looksLikeEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 export function parentRecipients(
   data: Record<string, string> | null | undefined,
   fallbackEmail: string,
 ): string[] {
   const emails = [data?.father_email, data?.mother_email]
     .map((e) => (e ?? '').trim())
-    .filter((e) => e.length > 0)
+    .filter((e) => looksLikeEmail(e))
   return emails.length > 0 ? emails : [fallbackEmail]
 }

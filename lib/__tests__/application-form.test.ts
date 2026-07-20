@@ -128,6 +128,16 @@ describe('parentRecipients', () => {
     expect(parentRecipients({}, 'student@x.fr')).toEqual(['student@x.fr'])
     expect(parentRecipients(null, 'student@x.fr')).toEqual(['student@x.fr'])
   })
+  it('ignores parent values that are not valid email addresses', () => {
+    // A typo'd parent email ("e") must never become a recipient — Resend rejects
+    // the whole send with 422 and the acceptance email is black-holed.
+    expect(parentRecipients({ father_email: 'e', mother_email: 'e' }, 'student@x.fr'))
+      .toEqual(['student@x.fr'])
+  })
+  it('keeps the valid parent email and drops an invalid sibling', () => {
+    expect(parentRecipients({ father_email: 'dad@x.fr', mother_email: 'nope' }, 's@x.fr'))
+      .toEqual(['dad@x.fr'])
+  })
 })
 
 describe('overLimitApplicationFields', () => {
