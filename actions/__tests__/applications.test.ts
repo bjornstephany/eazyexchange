@@ -179,9 +179,9 @@ beforeEach(() => {
 describe('startApplication', () => {
   beforeEach(() => { scenario.application = null })
 
-  it('rejects an invalid email', async () => {
+  it('returns a structured result for an invalid email', async () => {
     await expect(startApplication('slug', { email: 'nope', first_name: 'A', last_name: 'B', language: 'en' }))
-      .rejects.toThrow('valid email')
+      .resolves.toEqual({ invalidEmail: true })
   })
   it('rejects when the exchange is closed', async () => {
     scenario.exchange.application_open = false

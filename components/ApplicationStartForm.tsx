@@ -45,6 +45,11 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
         setLoading(false)
         return
       }
+      if ('invalidEmail' in res) {
+        setError(fr ? 'Merci d’utiliser une adresse e-mail valide.' : 'Please use a valid email address.')
+        setLoading(false)
+        return
+      }
       setNotice(res.existing)
       setLoading(false)
     } catch (e: unknown) {
@@ -60,7 +65,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
           <button type="button" onClick={() => setLang('fr')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'fr' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>FR</button>
         </div>
       </div>
-      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'Apply to join this student exchange. Start by entering your details below.'}</p>
+      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'To begin your application for this exchange, enter your details below'}</p>
       <div className="flex flex-col gap-4 rounded-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">

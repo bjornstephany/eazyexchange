@@ -39,7 +39,11 @@ function resumeExpiry(deadline: string | null): string {
 // nothing outside this file consumes it (the cap is enforced below).
 const APPLICATION_CAP_PER_EXCHANGE = 2000
 
-export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' } | { closed: true }
+export type StartApplicationResult =
+  | { token: string }
+  | { existing: 'draft' | 'submitted' }
+  | { closed: true }
+  | { invalidEmail: true }
 
 // Structured result for the two draft-writing actions: expected validation
 // outcomes must be return values, never throws (prod redacts thrown messages).
@@ -50,7 +54,10 @@ export async function startApplication(
   input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
 ): Promise<StartApplicationResult> {
   const email = normalizeEmail(input.email)
-  if (!isValidEmail(email)) throw new Error('Please enter a valid email address')
+  // Expected validation outcome, not an exception: prod redacts thrown Server
+  // Action messages to an opaque digest, so return a structured result the
+  // client can render as a friendly "use a valid email" message.
+  if (!isValidEmail(email)) return { invalidEmail: true }
 
   // This endpoint is unauthenticated and emails an arbitrary address, so cap it
   // by source IP and by recipient to prevent enumeration / mail-bombing from our
