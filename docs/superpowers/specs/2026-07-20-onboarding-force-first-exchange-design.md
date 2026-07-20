@@ -106,15 +106,15 @@ the rule for existing empty accounts, not just fresh signups.
 Order of checks: keep the `name === ''` redirect first (so a truly fresh
 account starts at step 1), then the `ownedCount === 0` redirect.
 
-### 5. i18n
+### 5. i18n (none)
 
-New strings in all 5 locales (`en`/`fr`/`es`/`it`/`de`):
-- Step 2 heading/subtext, exchange-name label/placeholder, submit/continue.
-- The 5 card-prompt titles.
-- Validation error(s): empty name, "add at least one card".
-
-Apply careful FR transcription (known accent/apostrophe pitfalls; run the
-apostrophe guard after any FR subagent work).
+The onboarding page/form (`app/onboarding/`) is **hardcoded French** — it
+renders outside the `(organizer)` group, so there is no
+`NextIntlClientProvider` in scope and the existing steps already use French
+literals. The new step and its 5 card-prompt titles are French literals in the
+component, matching the existing onboarding copy. **No `messages/*.json`
+changes.** (Reused server-side message constants — `EXCHANGE_INVALID_MESSAGE`,
+`EXCHANGE_LIMIT_MESSAGE` — are already French.)
 
 ## Testing
 
@@ -125,7 +125,6 @@ apostrophe guard after any FR subagent work).
   `ownedCount === 0`; does not when ≥1 (including archived-only).
 - **`OnboardingForm`**: step-aware start (`initialStep`); cannot advance past
   step 2 without a filled card; invite step stays optional.
-- **i18n**: key-presence check across the 5 locales.
 - `pnpm lint`, `pnpm test`, `pnpm build`. No migration → `test:rls` not required.
 
 ## Non-goals
