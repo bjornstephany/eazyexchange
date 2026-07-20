@@ -392,6 +392,13 @@ describe('submitApplication', () => {
     const res = await submitApplication('tok', completeAppData())
     expect(res).toEqual({ ok: true })
   })
+  it('blocks submission when the email meanwhile applied to another exchange (race backstop)', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    scenario.crossExchangeApp = { id: 'app-other' }
+    const res = await submitApplication('tok', completeAppData())
+    expect(res).toEqual({ ok: false, registered: true })
+    expect(scenario.updated).toBeNull()
+  })
 })
 
 describe('respondToInvitation', () => {

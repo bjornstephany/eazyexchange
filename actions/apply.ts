@@ -48,7 +48,10 @@ export type StartApplicationResult =
 
 // Structured result for the two draft-writing actions: expected validation
 // outcomes must be return values, never throws (prod redacts thrown messages).
-export type ApplyWriteResult = { ok: true } | { ok: false; overLimit: string[] }
+export type ApplyWriteResult =
+  | { ok: true }
+  | { ok: false; overLimit: string[] }
+  | { ok: false; registered: true }
 
 export async function startApplication(
   slug: string,
@@ -313,6 +316,21 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, app.exchange_id)
+
+  // Race backstop for the start-time duplicate guard: if this email started this
+  // draft and THEN entered the funnel in another exchange of the school (a
+  // parallel session), block here rather than letting the eventual « Oui » hit
+  // email_exists. Same per-school rule as startApplication; the same-exchange row
+  // being submitted is excluded by .neq('exchange_id', …).
+  const { data: elsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', app.school_id)
+    .eq('email', app.email)
+    .neq('exchange_id', app.exchange_id)
+    .limit(1)
+    .maybeSingle()
+  if (elsewhere) return { ok: false, registered: true }
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
