@@ -44,10 +44,14 @@ export type StartApplicationResult =
   | { existing: 'draft' | 'submitted' }
   | { closed: true }
   | { invalidEmail: true }
+  | { registered: true }
 
 // Structured result for the two draft-writing actions: expected validation
 // outcomes must be return values, never throws (prod redacts thrown messages).
-export type ApplyWriteResult = { ok: true } | { ok: false; overLimit: string[] }
+export type ApplyWriteResult =
+  | { ok: true }
+  | { ok: false; overLimit: string[] }
+  | { ok: false; registered: true }
 
 export async function startApplication(
   slug: string,
@@ -105,6 +109,23 @@ export async function startApplication(
     }).catch(() => {})
     return { existing: 'draft' }
   }
+
+  // One email = one application across this whole school. A prior row in ANY
+  // other exchange of the same school means this person is already in the funnel
+  // (typically already enrolled elsewhere) — refuse the second application up
+  // front instead of letting them fill everything out and only hit email_exists
+  // at « Oui ». At this point the same-exchange lookup above already returned, so
+  // any match here is necessarily a different exchange. Structured result, not a
+  // throw: the client renders a neutral "already registered — log in" message.
+  const { data: elsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', exchange.school_a_id)
+    .eq('email', email)
+    .neq('exchange_id', exchange.id)
+    .limit(1)
+    .maybeSingle()
+  if (elsewhere) return { registered: true }
 
   // Per-exchange sanity cap — abuse guard only; existing applicants resumed
   // above are never affected. Fail open on a count error: a DB blip must not
@@ -295,6 +316,21 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, app.exchange_id)
+
+  // Race backstop for the start-time duplicate guard: if this email started this
+  // draft and THEN entered the funnel in another exchange of the school (a
+  // parallel session), block here rather than letting the eventual « Oui » hit
+  // email_exists. Same per-school rule as startApplication; the same-exchange row
+  // being submitted is excluded by .neq('exchange_id', …).
+  const { data: elsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', app.school_id)
+    .eq('email', app.email)
+    .neq('exchange_id', app.exchange_id)
+    .limit(1)
+    .maybeSingle()
+  if (elsewhere) return { ok: false, registered: true }
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
