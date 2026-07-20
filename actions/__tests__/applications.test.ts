@@ -21,6 +21,7 @@ let scenario: {
   verifyOtpAttrs: any | null       // captured attrs of auth.verifyOtp
   verifyOtpResult: any             // returned by auth.verifyOtp
   userProfile: any | null          // routes rowFor('users') for getInvitation's maybeSingle lookup
+  crossExchangeApp: any | null     // routes the by-email duplicate-guard maybeSingle (school_id+email, no exchange_id)
 }
 
 function builder(table: string) {
@@ -32,6 +33,8 @@ function builder(table: string) {
       return b
     },
     eq: (col: string, val: any) => { b._filters[col] = val; return b },
+    neq: (col: string, val: any) => { b._filters['neq_' + col] = val; return b },
+    limit: () => b,
     order: () => b,
     insert: (row: any) => {
       scenario.inserted = { table, row }
@@ -68,12 +71,21 @@ function builder(table: string) {
     },
     delete: () => ({ eq: async (_col: string, val: any) => { scenario.deletedProfileUserId = val; return { error: null } } }),
     single: async () => ({ data: rowFor(table), error: rowFor(table) ? null : { message: 'none' } }),
-    maybeSingle: async () => ({
-      data: table === 'applications' && scenario.applicationQueue.length > 0
-        ? scenario.applicationQueue.shift()
-        : rowFor(table),
-      error: null,
-    }),
+    maybeSingle: async () => {
+      if (table === 'applications') {
+        // The duplicate-guard query filters school_id + email but NOT exchange_id
+        // (it uses .neq('exchange_id', …) → recorded as neq_exchange_id). Route it
+        // to crossExchangeApp so it can hit/miss independently of the queue and of
+        // the same-exchange lookup (which sets _filters.exchange_id).
+        const f = b._filters
+        if (f.school_id !== undefined && f.email !== undefined && f.exchange_id === undefined) {
+          return { data: scenario.crossExchangeApp, error: null }
+        }
+        if (scenario.applicationQueue.length > 0) return { data: scenario.applicationQueue.shift(), error: null }
+        return { data: scenario.application, error: null }
+      }
+      return { data: rowFor(table), error: null }
+    },
   }
   return b
 }
@@ -174,6 +186,7 @@ beforeEach(() => {
     verifyOtpAttrs: null,
     verifyOtpResult: { data: { session: {} }, error: null },
     userProfile: null,
+    crossExchangeApp: null,
   }
 })
 
@@ -282,6 +295,14 @@ describe('startApplication', () => {
     scenario.application = { id: 'app-1', status: 'draft', resume_token: 'tok-old' }
     const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
     expect(res).toEqual({ existing: 'draft' })
+  })
+
+  it('blocks a second application when the email already applied to another exchange in the school', async () => {
+    scenario.crossExchangeApp = { id: 'app-other' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ registered: true })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
 })
 

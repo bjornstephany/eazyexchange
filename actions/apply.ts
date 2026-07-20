@@ -44,6 +44,7 @@ export type StartApplicationResult =
   | { existing: 'draft' | 'submitted' }
   | { closed: true }
   | { invalidEmail: true }
+  | { registered: true }
 
 // Structured result for the two draft-writing actions: expected validation
 // outcomes must be return values, never throws (prod redacts thrown messages).
@@ -105,6 +106,23 @@ export async function startApplication(
     }).catch(() => {})
     return { existing: 'draft' }
   }
+
+  // One email = one application across this whole school. A prior row in ANY
+  // other exchange of the same school means this person is already in the funnel
+  // (typically already enrolled elsewhere) — refuse the second application up
+  // front instead of letting them fill everything out and only hit email_exists
+  // at « Oui ». At this point the same-exchange lookup above already returned, so
+  // any match here is necessarily a different exchange. Structured result, not a
+  // throw: the client renders a neutral "already registered — log in" message.
+  const { data: elsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', exchange.school_a_id)
+    .eq('email', email)
+    .neq('exchange_id', exchange.id)
+    .limit(1)
+    .maybeSingle()
+  if (elsewhere) return { registered: true }
 
   // Per-exchange sanity cap — abuse guard only; existing applicants resumed
   // above are never affected. Fail open on a count error: a DB blip must not
