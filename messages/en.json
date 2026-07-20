@@ -367,6 +367,7 @@
       },
       "tabs": {
         "all": "All",
+        "invited": "Invited",
         "toReview": "To review",
         "accepted": "Accepted",
         "rejected": "Rejected"
