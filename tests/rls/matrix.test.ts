@@ -74,6 +74,17 @@ describe.each([
       tx`update exchanges set good_news_subject = 'pwned' where id = ${fx.exchangeA}`))
   })
 
+  it('exchange_info_cards: cannot read exchange A info cards', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from exchange_info_cards where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
+  })
+
+  it('exchange_info_cards: cannot insert an info card into exchange A', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into exchange_info_cards (exchange_id, title, body, position)
+         values (${fx.exchangeA}, 'pwned', '', 9)`))
+  })
+
   it('exchange_enrollments: cannot read exchange A enrollments', async () => {
     expect(await readRows(uid(), (tx) =>
       tx`select id from exchange_enrollments where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
@@ -209,6 +220,21 @@ describe.each([
       tx`insert into feedback (user_id, school_id, type, message)
          values (${uid()}, ${fx.schoolA}, 'bug', 'cross-school stamp')`))
   })
+
+  it('exchange_program_details: cannot read school A details', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select exchange_id from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
+  })
+
+  it('exchange_program_details: cannot upsert school A details', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
+  })
+
+  it('exchange_program_details: cannot insert into school A exchange', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into exchange_program_details (exchange_id, destination) values (${fx.exchangeA}, 'pwned')`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -290,6 +316,47 @@ describe('own-school allow', () => {
       tx`insert into feedback (user_id, school_id, type, message)
          values (${fx.orgB}, ${fx.schoolB}, 'suggestion', 'own row')`)).toBe(1)
   })
+
+  it('organizer A reads own program details', async () => {
+    expect(await readRows(fx.orgA, (tx) =>
+      tx`select destination from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(1)
+  })
+
+  it('organizer A updates own program details', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchange_program_details set destination = 'le Wisconsin' where exchange_id = ${fx.exchangeA}`)).toBe(1)
+  })
+
+  it('enrolled student A reads program details', async () => {
+    expect(await readRows(fx.studentA, (tx) =>
+      tx`select destination from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(1)
+  })
+
+  it('enrolled student A cannot write program details', async () => {
+    expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
+  })
+
+  it('organizer A manages their exchange info cards (read/insert/update/delete)', async () => {
+    const readCount = await runAs(sql, fx.orgA, (tx) =>
+      tx`select id from exchange_info_cards where id = ${fx.infoCardA}`)
+    expect(readCount).toHaveLength(1)
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchange_info_cards set title = 'Point de RDV' where id = ${fx.infoCardA}`)).toBe(1)
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`insert into exchange_info_cards (exchange_id, title, body, position)
+         values (${fx.exchangeA}, 'Bagages', 'Un sac max.', 1)`)).toBe(1)
+  })
+
+  it('enrolled student A reads their exchange info cards but cannot write', async () => {
+    expect(await runAs(sql, fx.studentA, (tx) =>
+      tx`select id from exchange_info_cards where id = ${fx.infoCardA}`)).toHaveLength(1)
+    expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update exchange_info_cards set title = 'pwned' where id = ${fx.infoCardA}`))
+    expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`insert into exchange_info_cards (exchange_id, title, body, position)
+         values (${fx.exchangeA}, 'forged', '', 5)`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -346,5 +413,9 @@ describe('partner boundary on the shared exchange', () => {
     expect(await writeOutcome(sql, fx.orgC, (tx) =>
       tx`insert into exchange_enrollments (exchange_id, user_id)
          values (${fx.exchangeShared}, ${fx.studentC})`)).toBe(1)
+  })
+  it('partner organizer C cannot read school A program details (not on exchange A)', async () => {
+    expect(await readRows(fx.orgC, (tx) =>
+      tx`select exchange_id from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
   })
 })

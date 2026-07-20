@@ -32,6 +32,7 @@ const baseProps = {
   team: { members: [], pending: [] },
   billing: null,
   program: null,
+  programDetails: null,
   locale: 'fr' as const,
   subjects: [],
 }

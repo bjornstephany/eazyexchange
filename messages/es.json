@@ -120,6 +120,25 @@
           "saveFailed": "No se pudo guardar la plantilla. Inténtalo de nuevo."
         }
       },
+      "programDetails": {
+        "heading": "Detalles del programa",
+        "subtitle": "Estos datos rellenan automáticamente los formularios para firmar en línea (descarga de responsabilidad, solicitud de ausencia, compromiso familiar, autorización médica). Edítalos aquí: todos los formularios aún no firmados se actualizan.",
+        "destination": "Destino",
+        "destinationHint": "Tal como aparecerá en los formularios, p. ej. « le Minnesota, USA »",
+        "travelStart": "Fecha de salida",
+        "travelEnd": "Fecha de regreso",
+        "chaperones": "Acompañantes",
+        "chaperonesHint": "Un nombre completo por línea",
+        "association": "Nombre de la asociación",
+        "sendingSchool": "Centro de origen",
+        "receivingSchool": "Centro de acogida",
+        "proviseur": "Nombre del director",
+        "sendingCity": "Ciudad del centro",
+        "absenceDates": "Días de ausencia a justificar",
+        "absenceDatesHint": "Un día por línea, p. ej. « le jeudi 19 octobre 2026 »",
+        "save": "Guardar",
+        "saved": "Guardado."
+      },
       "errors": {
         "nameEmpty": "El nombre no puede estar vacío.",
         "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",
@@ -172,7 +191,8 @@
         "applications": "Candid.",
         "files": "Archivos",
         "students": "Alumnos",
-        "feedback": "Comentarios"
+        "feedback": "Comentarios",
+        "communication": "Coms"
       },
       "accountMenu": {
         "trigger": "Cuenta",
@@ -204,6 +224,33 @@
         "placeholder": "Describa su idea o el problema encontrado…",
         "submit": "Enviar",
         "submitting": "Enviando…"
+      }
+    },
+    "communication": {
+      "heading": "Comunicación",
+      "subtitle": "Gestiona todo lo que comunicas a los estudiantes y a las familias.",
+      "comingSoon": "Próximamente.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Plantillas",
+        "annonces": "Anuncios",
+        "auto": "Recordatorios auto."
+      },
+      "info": {
+        "heading": "Información clave",
+        "description": "Añade la información clave del programa. Los estudiantes la ven en la pestaña «Infos» de su portal.",
+        "addButton": "Añadir información",
+        "titlePlaceholder": "Título (p. ej. Punto de encuentro)",
+        "bodyPlaceholder": "Detalles visibles para los estudiantes…",
+        "saveButton": "Guardar",
+        "deleteButton": "Eliminar",
+        "empty": "Aún no hay información.",
+        "readOnlyNotice": "Programa archivado — solo lectura.",
+        "errors": {
+          "titleRequired": "El título es obligatorio.",
+          "titleTooLong": "Título demasiado largo (120 caracteres máx.).",
+          "bodyTooLong": "Detalles demasiado largos (2000 caracteres máx.)."
+        }
       }
     },
     "dashboard": {
@@ -387,6 +434,7 @@
         "fieldsHeadingPdf": "Campos a cumplimentar",
         "fieldsHeadingOnline": "Preguntas del formulario",
         "emptyFields": "Este formulario todavía no tiene campos. Añada sus preguntas y luego actívelo para enviarlo a las familias.",
+        "fillableNote": "Formulario listo para usar: la familia lo rellena y firma en línea, con los detalles del programa insertados automáticamente.",
         "activate": "Activar",
         "activating": "Activando…",
         "editTemplate": "Modificar la plantilla",
@@ -408,6 +456,7 @@
       "pills": {
         "onlineForm": "Formulario en línea",
         "pdfToSign": "PDF · para firmar",
+        "fillable": "Firmar en línea",
         "active": "Activo",
         "draft": "Borrador",
         "mandatory": "Obligatorio",
@@ -538,6 +587,7 @@
         "noAnswer": "Ninguna respuesta",
         "notUploaded": "No transmitido",
         "reviewNoteHeading": "Nota de revisión",
+        "downloadSignedPdf": "Descargar el PDF firmado",
         "status": {
           "approved": "Aprobado",
           "submitted": "Enviado",

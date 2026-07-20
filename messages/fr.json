@@ -120,6 +120,25 @@
           "saveFailed": "Le modèle n’a pas pu être enregistré. Réessayez."
         }
       },
+      "programDetails": {
+        "heading": "Détails du programme",
+        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
+        "destination": "Destination",
+        "destinationHint": "Telle qu’elle apparaîtra dans les formulaires, ex. « le Minnesota, USA »",
+        "travelStart": "Date de départ",
+        "travelEnd": "Date de retour",
+        "chaperones": "Accompagnateurs",
+        "chaperonesHint": "Un nom complet par ligne",
+        "association": "Nom de l’association",
+        "sendingSchool": "Lycée d’origine",
+        "receivingSchool": "Établissement d’accueil",
+        "proviseur": "Nom du proviseur",
+        "sendingCity": "Ville du lycée",
+        "absenceDates": "Jours d’absence à excuser",
+        "absenceDatesHint": "Un jour par ligne, ex. « le jeudi 19 octobre 2026 »",
+        "save": "Enregistrer",
+        "saved": "Enregistré."
+      },
       "errors": {
         "nameEmpty": "Le nom ne peut pas être vide.",
         "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",
@@ -172,7 +191,8 @@
         "applications": "Candid.",
         "files": "Fichiers",
         "students": "Élèves",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comm."
       },
       "accountMenu": {
         "trigger": "Compte",
@@ -204,6 +224,33 @@
         "placeholder": "Décrivez votre idée ou le problème rencontré…",
         "submit": "Envoyer",
         "submitting": "Envoi…"
+      }
+    },
+    "communication": {
+      "heading": "Communication",
+      "subtitle": "Gérez tout ce que vous communiquez aux élèves et aux parents.",
+      "comingSoon": "Bientôt disponible.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Modèles",
+        "annonces": "Annonces",
+        "auto": "Réglages auto"
+      },
+      "info": {
+        "heading": "Infos pratiques",
+        "description": "Ajoutez les informations clés du programme. Les élèves les voient dans l’onglet « Infos » de leur portail.",
+        "addButton": "Ajouter une info",
+        "titlePlaceholder": "Titre (ex. Point de rendez-vous)",
+        "bodyPlaceholder": "Détails visibles par les élèves…",
+        "saveButton": "Enregistrer",
+        "deleteButton": "Supprimer",
+        "empty": "Aucune info pour l’instant.",
+        "readOnlyNotice": "Programme archivé — lecture seule.",
+        "errors": {
+          "titleRequired": "Le titre est obligatoire.",
+          "titleTooLong": "Titre trop long (120 caractères max).",
+          "bodyTooLong": "Détails trop longs (2000 caractères max)."
+        }
       }
     },
     "dashboard": {
@@ -387,6 +434,7 @@
         "fieldsHeadingPdf": "Champs à renseigner",
         "fieldsHeadingOnline": "Questions du formulaire",
         "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
+        "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
         "activate": "Activer",
         "activating": "Activation…",
         "editTemplate": "Modifier le modèle",
@@ -408,6 +456,7 @@
       "pills": {
         "onlineForm": "Formulaire en ligne",
         "pdfToSign": "PDF · à signer",
+        "fillable": "À signer en ligne",
         "active": "Actif",
         "draft": "Brouillon",
         "mandatory": "Obligatoire",
@@ -538,6 +587,7 @@
         "noAnswer": "Aucune réponse",
         "notUploaded": "Non transmis",
         "reviewNoteHeading": "Note de révision",
+        "downloadSignedPdf": "Télécharger le PDF signé",
         "status": {
           "approved": "Approuvé",
           "submitted": "Soumis",

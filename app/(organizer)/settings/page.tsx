@@ -6,6 +6,8 @@ import {
   getTeam, getBillingOverview, getProgramInfo,
   type BillingOverview, type ProgramInfo,
 } from '@/actions/settings'
+import { getProgramDetails } from '@/actions/fillable'
+import type { ExchangeProgramDetails } from '@/types/db'
 import { getErasableSubjects } from '@/actions/retention'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { resolveLocale } from '@/lib/i18n/resolve'
@@ -37,6 +39,9 @@ export default async function SettingsPage() {
   )
   if (active) program = await getProgramInfo(active.id)
 
+  let programDetails: ExchangeProgramDetails | null = null
+  if (active) programDetails = await getProgramDetails(active.id)
+
   const subjects = await getErasableSubjects()
 
   return (
@@ -50,6 +55,7 @@ export default async function SettingsPage() {
       team={team}
       billing={billing}
       program={program}
+      programDetails={programDetails}
       locale={locale}
       subjects={subjects}
     />
