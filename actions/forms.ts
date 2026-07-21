@@ -125,18 +125,32 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
   await assertExchangeWritable(supabase, exchangeId)
   const kind = formData.get('kind') as TemplateKind
   const name = ((formData.get('name') as string) ?? '').trim()
-  const deadline = ((formData.get('deadline') as string) ?? '').trim() || null
+  const deadline = ((formData.get('deadline') as string) ?? '').trim()
   const audience = (formData.get('audience') as string) === 'conditional' ? 'conditional' : 'all'
   const conditionLabel = ((formData.get('condition_label') as string) ?? '').trim() || null
   const file = formData.get('file') as File | null
 
   if (!['online', 'pdf', 'doc'].includes(kind)) return { ok: false, message: 'Type de modèle invalide.' }
   if (!name) return { ok: false, message: 'Donnez un nom au modèle.' }
+  if (!deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
   if (audience === 'conditional' && kind !== 'doc') return { ok: false, message: 'Seules les pièces peuvent être conditionnelles.' }
   if (kind === 'pdf') {
     if (!file || file.size === 0) return { ok: false, message: 'Téléversez le PDF à faire signer.' }
     const problem = pdfProblem(file)
     if (problem) return { ok: false, message: problem }
+  }
+
+  // Conditional documents pick their audience here so they activate on add
+  // like everything else. Malformed JSON is treated as « no selection ».
+  let studentIds: string[] = []
+  if (audience === 'conditional') {
+    const raw = (formData.get('student_ids') as string) ?? '[]'
+    try {
+      const parsed: unknown = JSON.parse(raw)
+      if (Array.isArray(parsed)) studentIds = parsed.filter((x): x is string => typeof x === 'string')
+    } catch {
+      studentIds = []
+    }
   }
 
   const { data, error } = await supabase.from('form_templates').insert({
@@ -179,7 +193,23 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
     throw err
   }
 
+  // An online form is the only template that can legitimately stay draft: its
+  // questions cannot be authored in a compact add prompt. addField publishes
+  // it the moment the first one is saved.
+  if (kind === 'online') {
+    revalidatePath('/forms', 'layout')
+    return { ok: true, id: templateId }
+  }
+
+  const tmpl = await getOwnedTemplate(supabase, templateId)
+  const activated = await activateTemplateRecord(supabase, tmpl, audience === 'conditional' ? studentIds : undefined)
+  if (!activated.ok) {
+    revalidatePath('/forms', 'layout')
+    return { ok: false, message: activated.message }
+  }
+
   revalidatePath('/forms', 'layout')
+  revalidatePath('/dashboard')
   return { ok: true, id: templateId }
 }
 
