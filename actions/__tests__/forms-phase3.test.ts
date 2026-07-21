@@ -13,12 +13,33 @@ let template: any
 let assignments: any[] = []
 let enrolledUsers: any[] = []
 let exchange: any = { name: 'Espagne' }
-const templateUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
-const assignmentInsert = vi.fn().mockResolvedValue({ error: null })
+// Recorded side effects createDraftTemplate / activateTemplateRecord produce,
+// so new-activation tests can assert on them without a real DB.
+let updates: Record<string, unknown>[] = []
+let assignmentsInserted: unknown[] = []
+// The row createDraftTemplate's own insert() just wrote — getOwnedTemplate's
+// select().maybeSingle() must hand it back so activateTemplateRecord sees the
+// real kind/audience/deadline of what was just created, not the fixture
+// `template` (tpl-1) used by the other describe blocks in this file.
+let insertedTemplate: Record<string, unknown> | null = null
+const templateUpdate = vi.fn((patch: Record<string, unknown>) => ({
+  // Mutate the row select()/maybeSingle() hand back, so a getOwnedTemplate()
+  // re-fetch after this update (the updateTemplateMeta / replaceTemplateFile
+  // re-activation rescue) sees the just-written columns, not stale fixture
+  // data — mirrors the real DB round-trip.
+  eq: async () => { updates.push(patch); Object.assign(insertedTemplate ?? template, patch); return { error: null } },
+}))
+const assignmentInsert = vi.fn((rows: unknown) => { assignmentsInserted.push(rows); return Promise.resolve({ error: null }) })
 const assignmentUpdate = vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ error: null }) })
 const templateDelete = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
-const templateInsert = vi.fn().mockReturnValue({
-  select: () => ({ single: async () => ({ data: { id: 'new-tpl' }, error: null }) }),
+const templateInsert = vi.fn((row: Record<string, unknown>) => {
+  insertedTemplate = {
+    id: 'tpl-new', exchange_id: row.exchange_id, school_id: row.school_id,
+    name: row.name, kind: row.kind, status: 'draft', audience: row.audience,
+    deadline: row.deadline, standard_key: null, condition_label: row.condition_label,
+    template_file_path: null, form_fields: [],
+  }
+  return { select: () => ({ single: async () => ({ data: { id: 'tpl-new' }, error: null }) }) }
 })
 
 const from = vi.fn((table: string) => {
@@ -34,7 +55,10 @@ const from = vi.fn((table: string) => {
   }
   if (table === 'form_templates') {
     return {
-      select: () => ({ eq: () => ({ single: async () => ({ data: template }), maybeSingle: async () => ({ data: template }) }) }),
+      select: () => ({ eq: () => ({
+        single: async () => ({ data: insertedTemplate ?? template }),
+        maybeSingle: async () => ({ data: insertedTemplate ?? template }),
+      }) }),
       insert: templateInsert,
       update: templateUpdate,
       delete: templateDelete,
@@ -67,61 +91,25 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { activateTemplate, deleteTemplate, remindTemplate, createDraftTemplate, updateTemplateMeta, replaceTemplateFile } from '@/actions/forms'
-import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
+import { deleteTemplate, remindTemplate, createDraftTemplate, updateTemplateMeta, replaceTemplateFile } from '@/actions/forms'
+import { MSG_DEADLINE_REQUIRED } from '@/lib/forms/template-result'
 
 beforeEach(() => {
   vi.clearAllMocks()
   role = 'organizer'
   exchange = { name: 'Espagne' }
-  enrolledUsers = []
+  // 'stu-1' is the enrolled/valid student id the new createDraftTemplate
+  // conditional-audience tests target; unused by every other describe below.
+  enrolledUsers = [{ id: 'stu-1' }]
   assignments = []
+  updates = []
+  assignmentsInserted = []
+  insertedTemplate = null
   template = {
     id: 'tpl-1', school_id: 'school-1', exchange_id: 'ex-1', name: 'Passeport',
     kind: 'doc', status: 'draft', audience: 'all', deadline: '2026-10-10',
     template_file_path: null, form_fields: [{ id: 'f1' }],
   }
-})
-
-describe('activateTemplate', () => {
-  it('returns a structured error for a draft without deadline', async () => {
-    template.deadline = null
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_DEADLINE_REQUIRED })
-    expect(templateUpdate).not.toHaveBeenCalled()
-  })
-  it('returns a structured error for a pdf without file', async () => {
-    template.kind = 'pdf'
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_PDF_REQUIRED })
-  })
-  it('returns a structured error for an online form without questions', async () => {
-    template.kind = 'online'
-    template.form_fields = []
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_QUESTIONS_REQUIRED })
-  })
-  it('returns a structured error for a conditional doc without chosen students', async () => {
-    template.audience = 'conditional'
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: 'Choisissez au moins un élève concerné.' })
-  })
-  it('activates an « all » doc and inserts no assignments itself (trigger does it)', async () => {
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: true })
-    expect(templateUpdate).toHaveBeenCalledWith({ status: 'active' })
-    expect(assignmentInsert).not.toHaveBeenCalled()
-  })
-  it('activates a conditional doc inserting assignments for enrolled choices', async () => {
-    template.audience = 'conditional'
-    enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }, { id: 'stu-2', full_name: 'Hugo' }]
-    await expect(activateTemplate('tpl-1', ['stu-1'])).resolves.toEqual({ ok: true })
-    expect(assignmentInsert).toHaveBeenCalledWith([{ template_id: 'tpl-1', student_id: 'stu-1' }])
-  })
-  it('returns a structured error for conditional choices that are not enrolled students', async () => {
-    template.audience = 'conditional'
-    enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }]
-    await expect(activateTemplate('tpl-1', ['stu-1', 'ghost'])).resolves.toEqual({ ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' })
-  })
-  it('non-organizer is rejected', async () => {
-    role = 'student'
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/Unauthorized/)
-  })
 })
 
 describe('createDraftTemplate — structured results', () => {
@@ -136,12 +124,60 @@ describe('createDraftTemplate — structured results', () => {
     expect(templateInsert).not.toHaveBeenCalled()
   })
   it('returns a structured error for a pdf kind without file', async () => {
-    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'pdf', name: 'Autorisation' }))
+    // Deadline required check now runs before the PDF-file check — supply one
+    // so this still exercises the PDF validation, not the deadline gate.
+    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'pdf', name: 'Autorisation', deadline: '2026-09-30' }))
     expect(res).toEqual({ ok: false, message: 'Téléversez le PDF à faire signer.' })
   })
   it('returns the new id on success', async () => {
-    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'doc', name: 'Passeport' }))
-    expect(res).toEqual({ ok: true, id: 'new-tpl' })
+    // Deadline is now required and creation activates the template in-request.
+    const res = await createDraftTemplate(fd({ exchange_id: 'ex-1', kind: 'doc', name: 'Passeport', deadline: '2026-09-30' }))
+    expect(res).toEqual({ ok: true, id: 'tpl-new' })
+  })
+
+  it('refuses a missing deadline as a structured outcome', async () => {
+    const fd = new FormData()
+    fd.set('exchange_id', 'ex-1'); fd.set('kind', 'doc'); fd.set('name', 'Carte vitale')
+    await expect(createDraftTemplate(fd)).resolves.toEqual({
+      ok: false, message: MSG_DEADLINE_REQUIRED,
+    })
+  })
+
+  it('a doc lands ACTIVE in one call', async () => {
+    const fd = new FormData()
+    fd.set('exchange_id', 'ex-1'); fd.set('kind', 'doc'); fd.set('name', 'Carte vitale')
+    fd.set('deadline', '2026-09-30')
+    const res = await createDraftTemplate(fd)
+    expect(res).toEqual({ ok: true, id: 'tpl-new' })
+    expect(updates).toContainEqual({ status: 'active' })
+  })
+
+  it('a conditional doc activates with the chosen students', async () => {
+    const fd = new FormData()
+    fd.set('exchange_id', 'ex-1'); fd.set('kind', 'doc'); fd.set('name', 'Justificatif')
+    fd.set('deadline', '2026-09-30'); fd.set('audience', 'conditional')
+    fd.set('condition_label', 'si parents divorcés')
+    fd.set('student_ids', JSON.stringify(['stu-1']))
+    const res = await createDraftTemplate(fd)
+    expect(res).toEqual({ ok: true, id: 'tpl-new' })
+    expect(assignmentsInserted).toEqual([[{ template_id: 'tpl-new', student_id: 'stu-1' }]])
+  })
+
+  it('a conditional doc with no selection stays draft with a structured message', async () => {
+    const fd = new FormData()
+    fd.set('exchange_id', 'ex-1'); fd.set('kind', 'doc'); fd.set('name', 'Justificatif')
+    fd.set('deadline', '2026-09-30'); fd.set('audience', 'conditional')
+    const res = await createDraftTemplate(fd)
+    expect(res).toEqual({ ok: false, message: 'Choisissez au moins un élève concerné.' })
+  })
+
+  it('an online form stays DRAFT — its questions come next', async () => {
+    const fd = new FormData()
+    fd.set('exchange_id', 'ex-1'); fd.set('kind', 'online'); fd.set('name', 'Questionnaire')
+    fd.set('deadline', '2026-09-30')
+    const res = await createDraftTemplate(fd)
+    expect(res).toEqual({ ok: true, id: 'tpl-new' })
+    expect(updates).not.toContainEqual({ status: 'active' })
   })
 })
 
@@ -187,6 +223,47 @@ describe('updateTemplateMeta / replaceTemplateFile — structured results', () =
     f.set('file', new File(['x'], 'x.pdf', { type: 'application/pdf' }))
     const res = await replaceTemplateFile(f)  // template.kind is 'doc' in beforeEach
     expect(res).toEqual({ ok: false, message: 'Ce modèle n’a pas de PDF.' })
+  })
+
+  // Re-activation rescue: an edit that supplies the exact field the gate was
+  // waiting on must publish the draft, without ever failing the save itself.
+  it('updateTemplateMeta activates an audience=all draft once the missing deadline is saved', async () => {
+    template.deadline = null // the gate's only remaining objection
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Passeport', description: null, deadline: '2026-11-01', condition_label: null, external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).toContainEqual({ status: 'active' })
+  })
+
+  it('updateTemplateMeta never auto-activates a conditional draft (no student picker on this path)', async () => {
+    template.audience = 'conditional'
+    template.deadline = null
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Justificatif', description: null, deadline: '2026-11-01', condition_label: 'si parents divorcés', external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).not.toContainEqual({ status: 'active' })
+  })
+
+  it('updateTemplateMeta does not re-activate an already-active template', async () => {
+    template.status = 'active'
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null, external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).not.toContainEqual({ status: 'active' })
+  })
+
+  it('replaceTemplateFile activates a pdf/audience=all draft once the file is uploaded', async () => {
+    template.kind = 'pdf'
+    template.template_file_path = null // the gate's only remaining objection
+    const f = new FormData()
+    f.set('template_id', 'tpl-1')
+    f.set('file', new File(['x'], 'x.pdf', { type: 'application/pdf' }))
+    const res = await replaceTemplateFile(f)
+    expect(res).toEqual({ ok: true })
+    expect(updates).toContainEqual({ status: 'active' })
   })
 })
 

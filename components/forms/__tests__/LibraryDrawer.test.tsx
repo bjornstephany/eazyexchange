@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 const addStandard = vi.fn()
 const createDraft = vi.fn()
@@ -15,7 +16,20 @@ beforeEach(() => {
   createDraft.mockReset().mockResolvedValue({ ok: true, id: 'new-1' })
 })
 
-const base = { exchangeId: 'ex1', existingKeys: [] as string[], onClose: vi.fn(), onAdded: vi.fn() }
+// Every program detail already filled, so expanding a standard entry asks
+// only for the (now required) deadline — same convention as
+// FichiersView.test.tsx's `fullDetails`.
+const fullDetails: ProgramDetailsValues = {
+  destination: 'le Minnesota', travel_start: '2026-10-17', travel_end: '2026-11-02',
+  chaperones: ['Polly STEPHANY'], association_name: 'AGESSIA',
+  sending_school_name: 'Lycée', receiving_school_name: 'Edina',
+  proviseur_name: 'Mme X', sending_city: 'Luynes', absence_dates: ['le jeudi 19 octobre 2026'],
+}
+
+const base = {
+  exchangeId: 'ex1', existingKeys: [] as string[], programDetails: fullDetails,
+  enrolledStudents: [] as { id: string; full_name: string }[], onClose: vi.fn(), onAdded: vi.fn(),
+}
 
 describe('LibraryDrawer', () => {
   it('lists both subsections with their entries and all three custom tiles', () => {
@@ -50,18 +64,24 @@ describe('LibraryDrawer', () => {
     expect(within(screen.getByTestId('lib-entry-esta')).getByRole('button', { name: 'Ajouter' })).toBeInTheDocument()
   })
 
-  it('Ajouter calls addStandardTemplate and fires onAdded with the new id', async () => {
+  it('Ajouter expands the row, then confirming calls addStandardTemplate and fires onAdded with the new id + kind', async () => {
     const onAdded = vi.fn()
     renderWithIntl(<LibraryDrawer {...base} onAdded={onAdded} />)
-    fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
-    await waitFor(() => expect(onAdded).toHaveBeenCalledWith('std-1'))
-    expect(addStandard).toHaveBeenCalledWith('ex1', 'medical')
+    const row = () => screen.getByTestId('lib-entry-medical')
+    fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter' }))
+    fireEvent.change(within(row()).getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter au programme' }))
+    await waitFor(() => expect(onAdded).toHaveBeenCalledWith('std-1', 'fillable'))
+    expect(addStandard).toHaveBeenCalledWith('ex1', 'medical', { deadline: '2026-09-30', details: {} })
   })
 
   it('shows a structured add failure inline', async () => {
     addStandard.mockResolvedValue({ ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' })
     renderWithIntl(<LibraryDrawer {...base} />)
-    fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
+    const row = () => screen.getByTestId('lib-entry-medical')
+    fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter' }))
+    fireEvent.change(within(row()).getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter au programme' }))
     expect(await screen.findByText('Ce modèle est déjà ajouté à cet échange.')).toBeInTheDocument()
   })
 
@@ -70,8 +90,9 @@ describe('LibraryDrawer', () => {
     renderWithIntl(<LibraryDrawer {...base} onAdded={onAdded} />)
     fireEvent.click(screen.getByRole('button', { name: 'Créer un formulaire en ligne' }))
     fireEvent.change(screen.getByLabelText('Nom du formulaire'), { target: { value: 'Mon form' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Créer le brouillon' }))
-    await waitFor(() => expect(onAdded).toHaveBeenCalledWith('new-1'))
+    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Créer et ajouter les questions' }))
+    await waitFor(() => expect(onAdded).toHaveBeenCalledWith('new-1', 'online'))
     const fd = createDraft.mock.calls[0][0] as FormData
     expect(fd.get('kind')).toBe('online')
     expect(fd.get('name')).toBe('Mon form')
@@ -79,17 +100,30 @@ describe('LibraryDrawer', () => {
   })
 
   it('doc tile keeps the audience and condition fields', async () => {
-    renderWithIntl(<LibraryDrawer {...base} />)
+    renderWithIntl(<LibraryDrawer {...base} enrolledStudents={[{ id: 's1', full_name: 'Jeanne Dupont' }]} />)
     fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
     fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'CEAM' } })
+    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
     fireEvent.click(screen.getByLabelText('Selon la situation'))
     fireEvent.change(screen.getByLabelText('Condition (facultatif)'), { target: { value: 'si séjour UE' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Créer le brouillon' }))
+    fireEvent.click(screen.getByLabelText('Jeanne Dupont'))
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }))
     await waitFor(() => expect(createDraft).toHaveBeenCalled())
     const fd = createDraft.mock.calls[0][0] as FormData
     expect(fd.get('kind')).toBe('doc')
     expect(fd.get('audience')).toBe('conditional')
     expect(fd.get('condition_label')).toBe('si séjour UE')
+  })
+
+  it('disables the submit button for an empty conditional document and enables it once a student is checked', () => {
+    renderWithIntl(<LibraryDrawer {...base} enrolledStudents={[{ id: 's1', full_name: 'Jeanne Dupont' }]} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
+    fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'CEAM' } })
+    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.click(screen.getByLabelText('Selon la situation'))
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled()
+    fireEvent.click(screen.getByLabelText('Jeanne Dupont'))
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeEnabled()
   })
 
   it('Escape and backdrop close the drawer', () => {

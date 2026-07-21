@@ -49,3 +49,8 @@ docs/*.pdf
 
 # Real school reference files (PII risk) — never commit
 docs/exampleSchoolFiles/
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

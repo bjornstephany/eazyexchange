@@ -3,7 +3,7 @@
 import type {
   FillableDefinition, ProgramDetailsValues, ProgramVariable, FillableInput,
 } from './types'
-import { VARIABLE_REQUIREMENTS, DETAIL_LABELS } from './types'
+import { VARIABLE_REQUIREMENTS, DETAIL_LABELS, DETAIL_ORDER } from './types'
 import { MAX_ANSWER_LENGTH } from '@/lib/validation'
 
 const FR_DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })
@@ -65,10 +65,11 @@ export function resolveVariables(input: {
   return out
 }
 
-export function missingDetailLabels(
+// Which detail columns a definition still needs, in DETAIL_ORDER sequence.
+export function missingDetailKeys(
   def: FillableDefinition,
   details: ProgramDetailsValues | null,
-): string[] {
+): (keyof ProgramDetailsValues)[] {
   const missing = new Set<keyof ProgramDetailsValues>()
   for (const v of def.variables) {
     for (const col of VARIABLE_REQUIREMENTS[v]) {
@@ -79,7 +80,14 @@ export function missingDetailLabels(
       if (empty) missing.add(col)
     }
   }
-  return [...missing].map(c => DETAIL_LABELS[c])
+  return DETAIL_ORDER.filter(k => missing.has(k))
+}
+
+export function missingDetailLabels(
+  def: FillableDefinition,
+  details: ProgramDetailsValues | null,
+): string[] {
+  return missingDetailKeys(def, details).map(c => DETAIL_LABELS[c])
 }
 
 type SigBlock = { key: string; roleLabel: string; required: boolean; prefill?: 'student_name' }

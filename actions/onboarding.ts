@@ -10,9 +10,11 @@ import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { validateInfoCard } from '@/lib/exchange/info-card'
 import {
   filledCards,
-  NO_CARDS_MESSAGE,
+  generatedCards,
+  detailsProblem,
   CARD_INVALID_MESSAGE,
   type FirstExchangeCard,
+  type FirstExchangeDetails,
   type CompleteFirstExchangeResult,
 } from '@/lib/onboarding/first-exchange'
 
@@ -34,11 +36,15 @@ export async function completeOnboarding(formData: FormData): Promise<void> {
 }
 
 // The forced onboarding step: create the school's first exchange together with
-// at least one filled-in Info card. Mirrors createExchange's guards (name, plan
-// cap, active-exchange cookie) but additionally requires >=1 card so students
-// land on a non-empty /infos page. Structured returns for expected outcomes.
+// its structured program details. Destination and the travel dates are
+// required — they feed the fillable forms and generate the Destination and
+// Dates clés Info cards, so students always land on a non-empty /infos page
+// without the organizer typing anything twice. Mirrors createExchange's guards
+// (name, plan cap, active-exchange cookie). Structured returns for expected
+// outcomes.
 export async function completeFirstExchange(
   name: string,
+  details: FirstExchangeDetails,
   cards: FirstExchangeCard[],
 ): Promise<CompleteFirstExchangeResult> {
   const supabase = await createClient()
@@ -46,6 +52,9 @@ export async function completeFirstExchange(
 
   const trimmedName = (name ?? '').trim()
   if (!trimmedName) return { ok: false, error: 'invalid', message: EXCHANGE_INVALID_MESSAGE }
+
+  const problem = detailsProblem(details)
+  if (problem) return { ok: false, error: 'invalid', message: problem }
 
   // Plan cap (trial = 1). At 0 exchanges this always passes; kept for parity
   // with createExchange so the rule lives in one shape.
@@ -65,11 +74,8 @@ export async function completeFirstExchange(
     return { ok: false, error: 'limit', message: EXCHANGE_LIMIT_MESSAGE }
   }
 
-  const filled = filledCards(cards)
-  if (filled.length === 0) return { ok: false, error: 'noCards', message: NO_CARDS_MESSAGE }
-
   const validated: { title: string; body: string }[] = []
-  for (const card of filled) {
+  for (const card of [...generatedCards(details), ...filledCards(cards)]) {
     const v = validateInfoCard(card)
     if (!v.ok) return { ok: false, error: 'invalid', message: CARD_INVALID_MESSAGE }
     validated.push(v.value)
@@ -87,6 +93,23 @@ export async function completeFirstExchange(
     .select('id')
     .single()
   if (insertError) throw insertError
+
+  const trim = (v: string) => v.trim() || null
+  const { error: detailsError } = await supabase.from('exchange_program_details').upsert({
+    exchange_id: created.id,
+    destination: trim(details.destination),
+    travel_start: details.travel_start,
+    travel_end: details.travel_end,
+    chaperones: details.chaperones.split('\n').map(s => s.trim()).filter(Boolean),
+    association_name: trim(details.association_name),
+    sending_school_name: trim(details.sending_school_name),
+    receiving_school_name: trim(details.receiving_school_name),
+    proviseur_name: trim(details.proviseur_name),
+    sending_city: trim(details.sending_city),
+    absence_dates: [],
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'exchange_id' })
+  if (detailsError) throw detailsError
 
   const cardRows = validated.map((c, i) => ({
     exchange_id: created.id, title: c.title, body: c.body, position: i,

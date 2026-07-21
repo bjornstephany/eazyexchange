@@ -1,0 +1,81 @@
+{
+  "projectId": "1238c718-c547-47ac-b2c5-0d457f94adc5",
+  "shape": "package",
+  "pkg": "eazyexchange",
+  "globalName": "EazyExchange",
+  "srcDir": "components",
+  "tsconfig": ".design-sync/tsconfig.json",
+  "cssEntry": ".design-sync/.cache/compiled.css",
+  "guidelinesGlob": [],
+  "buildCmd": "npx tailwindcss -c .design-sync/tailwind.config.ts -i .design-sync/tailwind-input.css -o .design-sync/.cache/compiled.css --minify",
+  "componentSrcMap": {
+    "Badge": "components/ui/badge.tsx",
+    "Button": "components/ui/button.tsx",
+    "Card": "components/ui/card.tsx",
+    "Dialog": "components/ui/dialog.tsx",
+    "Input": "components/ui/input.tsx",
+    "Label": "components/ui/label.tsx",
+    "Select": "components/ui/select.tsx",
+    "Skeleton": "components/ui/skeleton.tsx",
+    "Table": "components/ui/table.tsx",
+    "Textarea": "components/ui/textarea.tsx",
+    "Logo": "components/brand/Logo.tsx",
+    "Mark": "components/brand/Mark.tsx",
+    "CardHeader": null,
+    "CardFooter": null,
+    "CardTitle": null,
+    "CardDescription": null,
+    "CardContent": null,
+    "DialogPortal": null,
+    "DialogOverlay": null,
+    "DialogClose": null,
+    "DialogTrigger": null,
+    "DialogContent": null,
+    "DialogHeader": null,
+    "DialogFooter": null,
+    "DialogTitle": null,
+    "DialogDescription": null,
+    "SelectGroup": null,
+    "SelectValue": null,
+    "SelectTrigger": null,
+    "SelectContent": null,
+    "SelectLabel": null,
+    "SelectItem": null,
+    "SelectSeparator": null,
+    "SelectScrollUpButton": null,
+    "SelectScrollDownButton": null,
+    "TableHeader": null,
+    "TableBody": null,
+    "TableFooter": null,
+    "TableHead": null,
+    "TableRow": null,
+    "TableCell": null,
+    "TableCaption": null
+  },
+  "overrides": {
+    "Dialog": {
+      "cardMode": "single",
+      "primaryStory": "Ouvert",
+      "viewport": "820x560"
+    },
+    "Logo": {
+      "cardMode": "column"
+    },
+    "Badge": {
+      "cardMode": "column"
+    },
+    "Card": {
+      "cardMode": "column"
+    },
+    "Label": {
+      "cardMode": "column"
+    },
+    "Skeleton": {
+      "cardMode": "column"
+    },
+    "Textarea": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

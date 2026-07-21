@@ -8,10 +8,11 @@ import type { TemplateVM, AssigneeRow, TemplateKind } from '@/lib/forms/rollup'
 import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
-import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
-import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
-import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
-import { missingDetailLabels } from '@/lib/forms/fillable/render'
+import { MSG_DEADLINE_REQUIRED } from '@/lib/forms/template-result'
+import { STANDARD_TEMPLATES } from '@/lib/forms/standard-library'
+import { insertStandardTemplate } from '@/lib/forms/insert-standard-template'
+import { activateTemplateRecord } from '@/lib/forms/activate'
+import { mergeProgramDetails, type ProgramDetailPatch } from '@/lib/forms/add-requirements'
 import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
@@ -61,6 +62,16 @@ export async function addField(templateId: string, label: string, fieldType: Fie
     required, options: options ?? null, order: nextOrder,
   })
   if (error) throw error
+
+  // Saving the first question is what publishes a custom online form — there
+  // is no Activate button any more. The gate still runs, so a form without a
+  // deadline simply stays draft.
+  const tmpl = await getOwnedTemplate(supabase, templateId)
+  if (tmpl.status === 'draft') {
+    const activated = await activateTemplateRecord(supabase, tmpl)
+    if (activated.ok) revalidatePath('/dashboard')
+  }
+
   // FormBuilder only renders for kind !== 'doc' templates, which live under
   // /forms/[templateId] (not the legacy /exchanges/[id]/forms/* route these
   // used to point at) — without this the editor's own page never refreshes.
@@ -125,18 +136,32 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
   await assertExchangeWritable(supabase, exchangeId)
   const kind = formData.get('kind') as TemplateKind
   const name = ((formData.get('name') as string) ?? '').trim()
-  const deadline = ((formData.get('deadline') as string) ?? '').trim() || null
+  const deadline = ((formData.get('deadline') as string) ?? '').trim()
   const audience = (formData.get('audience') as string) === 'conditional' ? 'conditional' : 'all'
   const conditionLabel = ((formData.get('condition_label') as string) ?? '').trim() || null
   const file = formData.get('file') as File | null
 
   if (!['online', 'pdf', 'doc'].includes(kind)) return { ok: false, message: 'Type de modèle invalide.' }
   if (!name) return { ok: false, message: 'Donnez un nom au modèle.' }
+  if (!deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
   if (audience === 'conditional' && kind !== 'doc') return { ok: false, message: 'Seules les pièces peuvent être conditionnelles.' }
   if (kind === 'pdf') {
     if (!file || file.size === 0) return { ok: false, message: 'Téléversez le PDF à faire signer.' }
     const problem = pdfProblem(file)
     if (problem) return { ok: false, message: problem }
+  }
+
+  // Conditional documents pick their audience here so they activate on add
+  // like everything else. Malformed JSON is treated as « no selection ».
+  let studentIds: string[] = []
+  if (audience === 'conditional') {
+    const raw = (formData.get('student_ids') as string) ?? '[]'
+    try {
+      const parsed: unknown = JSON.parse(raw)
+      if (Array.isArray(parsed)) studentIds = parsed.filter((x): x is string => typeof x === 'string')
+    } catch {
+      studentIds = []
+    }
   }
 
   const { data, error } = await supabase.from('form_templates').insert({
@@ -179,14 +204,38 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
     throw err
   }
 
+  // An online form is the only template that can legitimately stay draft: its
+  // questions cannot be authored in a compact add prompt. addField publishes
+  // it the moment the first one is saved.
+  if (kind === 'online') {
+    revalidatePath('/forms', 'layout')
+    return { ok: true, id: templateId }
+  }
+
+  const tmpl = await getOwnedTemplate(supabase, templateId)
+  const activated = await activateTemplateRecord(supabase, tmpl, audience === 'conditional' ? studentIds : undefined)
+  if (!activated.ok) {
+    revalidatePath('/forms', 'layout')
+    return { ok: false, message: activated.message }
+  }
+
   revalidatePath('/forms', 'layout')
+  revalidatePath('/dashboard')
   return { ok: true, id: templateId }
 }
 
-// Add one standard-library template to an exchange as a draft. The library
-// drawer's « Ajouter » button. Duplicate adds (unique index on
-// (exchange_id, standard_key)) are an expected outcome → structured message.
-export async function addStandardTemplate(exchangeId: string, standardKey: string): Promise<CreateTemplateResult> {
+// Add one standard-library template to an exchange and publish it in the same
+// request. The library drawer's inline « Ajouter » collects the deadline and
+// whatever program details the entry still needs, so the activation gate can
+// no longer fail here — but it still runs, so a UI bug degrades to a draft
+// rather than to a half-configured template sent to families.
+// Duplicate adds (unique index on (exchange_id, standard_key)) and a failing
+// gate are expected outcomes → structured messages.
+export async function addStandardTemplate(
+  exchangeId: string,
+  standardKey: string,
+  input: { deadline: string; details?: ProgramDetailPatch },
+): Promise<CreateTemplateResult> {
   const supabase = await createClient()
   const user = await requireUser()
   const schoolId = await assertOrganizer()
@@ -195,10 +244,36 @@ export async function addStandardTemplate(exchangeId: string, standardKey: strin
   const std = STANDARD_TEMPLATES.find((s) => s.key === standardKey)
   if (!std) return { ok: false, message: 'Modèle standard inconnu.' }
 
-  const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id })
+  const deadline = (input.deadline ?? '').trim()
+  if (!deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
+
+  // Detail answers are per exchange, so they land on the shared row before the
+  // gate reads it — a later fillable form then asks for less or nothing.
+  if (input.details && Object.keys(input.details).length > 0) {
+    const { data: existing } = await supabase
+      .from('exchange_program_details').select('*')
+      .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>()
+    const merged = mergeProgramDetails(existing ?? null, input.details)
+    const { error: detailsError } = await supabase.from('exchange_program_details').upsert({
+      exchange_id: exchangeId, ...merged, updated_at: new Date().toISOString(),
+    }, { onConflict: 'exchange_id' })
+    if (detailsError) throw detailsError
+  }
+
+  const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id, deadline })
   if ('duplicate' in res) return { ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' }
 
+  const tmpl = await getOwnedTemplate(supabase, res.id)
+  const activated = await activateTemplateRecord(supabase, tmpl)
+  if (!activated.ok) {
+    // Keep the draft — the organizer can finish it from Modifier rather than
+    // lose the row (and, for the AST, the uploaded PDF).
+    revalidatePath('/forms', 'layout')
+    return { ok: false, message: activated.message }
+  }
+
   revalidatePath('/forms', 'layout')
+  revalidatePath('/dashboard')
   return { ok: true, id: res.id }
 }
 
@@ -233,6 +308,18 @@ export async function updateTemplateMeta(
     external_url: externalUrl,
   }).eq('id', id)
   if (error) throw error
+
+  // A legacy draft whose only missing piece was the deadline can be rescued
+  // right here — re-run the gate against the freshly-saved row. Restricted to
+  // 'all': for 'conditional', activation is what creates the assignment rows,
+  // and this edit path has no student picker to supply them, so auto-firing
+  // it here would publish to an empty, permanently unfillable audience. If
+  // the gate still refuses (something else is missing), fail soft — the meta
+  // save itself has already succeeded and stays draft, same as today.
+  if (tmpl.status === 'draft' && tmpl.audience === 'all') {
+    await activateTemplateRecord(supabase, await getOwnedTemplate(supabase, id))
+  }
+
   revalidatePath('/forms', 'layout')
   // Name/deadline also feed the dashboard grid once the template is active.
   revalidatePath('/dashboard')
@@ -253,64 +340,16 @@ export async function replaceTemplateFile(formData: FormData): Promise<TemplateA
   if (!uploaded.ok) return { ok: false, message: uploaded.message }
   const { error } = await supabase.from('form_templates').update({ template_file_path: uploaded.path }).eq('id', id)
   if (error) throw error
-  revalidatePath('/forms', 'layout')
-  return { ok: true }
-}
 
-export async function activateTemplate(id: string, studentIds?: string[]): Promise<TemplateActionResult> {
-  const supabase = await createClient()
-  await requireUser()
-  const tmpl = await getOwnedTemplate(supabase, id)
-  await assertExchangeWritable(supabase, tmpl.exchange_id)
-  if (tmpl.status === 'active') return { ok: true }
-
-  if (!tmpl.deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
-  if (tmpl.kind === 'pdf' && !tmpl.template_file_path) return { ok: false, message: MSG_PDF_REQUIRED }
-  if (tmpl.kind === 'online' && (tmpl.form_fields ?? []).length === 0) return { ok: false, message: MSG_QUESTIONS_REQUIRED }
-
-  if (tmpl.kind === 'fillable') {
-    const def = tmpl.standard_key ? FILLABLE_DEFINITIONS[tmpl.standard_key] : undefined
-    if (!def) return { ok: false, message: 'Modèle à signer inconnu.' }
-    const { data: details } = await supabase
-      .from('exchange_program_details').select('*')
-      .eq('exchange_id', tmpl.exchange_id).maybeSingle<ProgramDetailsValues>()
-    const missing = missingDetailLabels(def, details ?? null)
-    if (missing.length > 0) {
-      return {
-        ok: false,
-        message: `Complétez d’abord les détails du programme (Réglages → Programme) : ${missing.join(', ')}.`,
-      }
-    }
-  }
-
-  let chosen: string[] = []
-  if (tmpl.audience === 'conditional') {
-    if (!studentIds || studentIds.length === 0) return { ok: false, message: 'Choisissez au moins un élève concerné.' }
-    // Only enrolled students of our school may be targeted.
-    const { data: enrollments } = await supabase
-      .from('exchange_enrollments').select('user_id').eq('exchange_id', tmpl.exchange_id)
-    const enrolledIds = new Set((enrollments ?? []).map((e) => e.user_id))
-    const { data: validUsers } = await supabase
-      .from('users').select('id')
-      .in('id', studentIds).eq('school_id', tmpl.school_id).eq('role', 'student')
-    const validIds = new Set((validUsers ?? []).map((u) => u.id))
-    chosen = studentIds.filter(sid => enrolledIds.has(sid) && validIds.has(sid))
-    if (chosen.length !== studentIds.length) return { ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' }
-  }
-
-  const { error } = await supabase.from('form_templates').update({ status: 'active' }).eq('id', id)
-  if (error) throw error
-
-  if (tmpl.audience === 'conditional' && chosen.length > 0) {
-    const { error: insertError } = await supabase
-      .from('assignments')
-      .insert(chosen.map(sid => ({ template_id: id, student_id: sid })))
-    if (insertError) throw insertError
+  // Same rescue as updateTemplateMeta: a 'pdf' draft that was only missing
+  // its file can now activate. 'all' only — fail soft on a gate refusal, the
+  // upload itself has already succeeded.
+  if (tmpl.status === 'draft' && tmpl.audience === 'all') {
+    const activated = await activateTemplateRecord(supabase, await getOwnedTemplate(supabase, id))
+    if (activated.ok) revalidatePath('/dashboard')
   }
 
   revalidatePath('/forms', 'layout')
-  // Newly active → now appears in the dashboard grid.
-  revalidatePath('/dashboard')
   return { ok: true }
 }
 
@@ -417,6 +456,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
   exchangeName: string
+  programDetails: ProgramDetailsValues | null
 }> {
   const supabase = await createClient()
   await requireUser()
@@ -428,7 +468,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     throw new Error('Unauthorized')
   }
 
-  const [{ data: templates }, { data: enrollments }] = await Promise.all([
+  const [{ data: templates }, { data: enrollments }, { data: programDetails }] = await Promise.all([
     supabase
       .from('form_templates')
       .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, external_url, form_fields(label, "order")')
@@ -436,6 +476,8 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
       .eq('school_id', schoolId)
       .order('created_at'),
     supabase.from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId),
+    supabase.from('exchange_program_details').select('*')
+      .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>(),
   ])
 
   const enrolledIds = (enrollments ?? []).map((e) => e.user_id)
@@ -483,5 +525,6 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     studentCount: enrolledStudents.length,
     enrolledStudents,
     exchangeName: exchange.name,
+    programDetails: programDetails ?? null,
   }
 }
