@@ -434,6 +434,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
   exchangeName: string
+  programDetails: ProgramDetailsValues | null
 }> {
   const supabase = await createClient()
   await requireUser()
@@ -445,7 +446,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     throw new Error('Unauthorized')
   }
 
-  const [{ data: templates }, { data: enrollments }] = await Promise.all([
+  const [{ data: templates }, { data: enrollments }, { data: programDetails }] = await Promise.all([
     supabase
       .from('form_templates')
       .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, external_url, form_fields(label, "order")')
@@ -453,6 +454,8 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
       .eq('school_id', schoolId)
       .order('created_at'),
     supabase.from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId),
+    supabase.from('exchange_program_details').select('*')
+      .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>(),
   ])
 
   const enrolledIds = (enrollments ?? []).map((e) => e.user_id)
@@ -500,5 +503,6 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     studentCount: enrolledStudents.length,
     enrolledStudents,
     exchangeName: exchange.name,
+    programDetails: programDetails ?? null,
   }
 }
