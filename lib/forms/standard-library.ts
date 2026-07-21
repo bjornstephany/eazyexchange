@@ -2,8 +2,12 @@
 // (2026-07-16) nothing is auto-seeded: organizers add entries from the
 // library drawer (actions/forms.ts → addStandardTemplate). Templates are
 // added WITHOUT files — the PDFs are school-specific, so each school's
-// organizer attaches their own per exchange via the UI.
+// organizer attaches their own per exchange via the UI. The one exception is
+// the AST: CERFA 15646 is a national French form, identical for every school,
+// so it ships with the app (lib/forms/assets.ts) and is copied into the
+// school's own storage path on add. The organizer can still replace it.
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { readBundledPdf } from '@/lib/forms/assets'
 
 export type StandardField = { label: string; field_type: 'text' | 'checkbox' }
 export type StandardTemplate = {
@@ -70,13 +74,14 @@ export const STANDARD_TEMPLATES: StandardTemplate[] = [
   },
 ]
 
-// Insert ONE library entry as a draft template (+ document slot / fields).
-// The partial unique index form_templates_standard_key_unique makes a repeat
-// add an expected outcome — surfaced as { duplicate: true }, never thrown.
+// Insert ONE library entry (+ document slot / fields / bundled PDF). The
+// caller activates it afterwards. The partial unique index
+// form_templates_standard_key_unique makes a repeat add an expected outcome —
+// surfaced as { duplicate: true }, never thrown.
 export async function insertStandardTemplate(
   supabase: SupabaseClient,
   std: StandardTemplate,
-  opts: { exchangeId: string; schoolId: string; userId: string },
+  opts: { exchangeId: string; schoolId: string; userId: string; deadline: string },
 ): Promise<{ id: string } | { duplicate: true }> {
   const { data, error } = await supabase
     .from('form_templates')
@@ -92,7 +97,7 @@ export async function insertStandardTemplate(
       standard_key: std.key,
       condition_label: std.condition_label,
       external_url: std.external_url,
-      deadline: null,
+      deadline: opts.deadline,
       created_by: opts.userId,
     })
     .select('id')
@@ -117,5 +122,21 @@ export async function insertStandardTemplate(
       })))
     if (fieldError) throw fieldError
   }
+
+  // National forms ship with the app; copy into the school's own path so the
+  // download/replace plumbing, bucket and RLS are the same as a manual upload.
+  const bundled = await readBundledPdf(std.key)
+  if (bundled) {
+    const path = `${opts.schoolId}/${templateId}.pdf`
+    const { error: uploadError } = await supabase.storage
+      .from('form-templates')
+      .upload(path, new Blob([new Uint8Array(bundled)], { type: 'application/pdf' }),
+        { upsert: true, contentType: 'application/pdf' })
+    if (uploadError) throw uploadError
+    const { error: pathError } = await supabase
+      .from('form_templates').update({ template_file_path: path }).eq('id', templateId)
+    if (pathError) throw pathError
+  }
+
   return { id: templateId }
 }

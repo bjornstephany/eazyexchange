@@ -8,8 +8,11 @@ import type { TemplateVM, AssigneeRow, TemplateKind } from '@/lib/forms/rollup'
 import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
+import { MSG_DEADLINE_REQUIRED } from '@/lib/forms/template-result'
 import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
 import { activateTemplateRecord } from '@/lib/forms/activate'
+import { mergeProgramDetails, type ProgramDetailPatch } from '@/lib/forms/add-requirements'
+import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(): Promise<string> {
@@ -180,10 +183,18 @@ export async function createDraftTemplate(formData: FormData): Promise<CreateTem
   return { ok: true, id: templateId }
 }
 
-// Add one standard-library template to an exchange as a draft. The library
-// drawer's « Ajouter » button. Duplicate adds (unique index on
-// (exchange_id, standard_key)) are an expected outcome → structured message.
-export async function addStandardTemplate(exchangeId: string, standardKey: string): Promise<CreateTemplateResult> {
+// Add one standard-library template to an exchange and publish it in the same
+// request. The library drawer's inline « Ajouter » collects the deadline and
+// whatever program details the entry still needs, so the activation gate can
+// no longer fail here — but it still runs, so a UI bug degrades to a draft
+// rather than to a half-configured template sent to families.
+// Duplicate adds (unique index on (exchange_id, standard_key)) and a failing
+// gate are expected outcomes → structured messages.
+export async function addStandardTemplate(
+  exchangeId: string,
+  standardKey: string,
+  input: { deadline: string; details?: ProgramDetailPatch },
+): Promise<CreateTemplateResult> {
   const supabase = await createClient()
   const user = await requireUser()
   const schoolId = await assertOrganizer()
@@ -192,10 +203,36 @@ export async function addStandardTemplate(exchangeId: string, standardKey: strin
   const std = STANDARD_TEMPLATES.find((s) => s.key === standardKey)
   if (!std) return { ok: false, message: 'Modèle standard inconnu.' }
 
-  const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id })
+  const deadline = (input.deadline ?? '').trim()
+  if (!deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
+
+  // Detail answers are per exchange, so they land on the shared row before the
+  // gate reads it — a later fillable form then asks for less or nothing.
+  if (input.details && Object.keys(input.details).length > 0) {
+    const { data: existing } = await supabase
+      .from('exchange_program_details').select('*')
+      .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>()
+    const merged = mergeProgramDetails(existing ?? null, input.details)
+    const { error: detailsError } = await supabase.from('exchange_program_details').upsert({
+      exchange_id: exchangeId, ...merged, updated_at: new Date().toISOString(),
+    }, { onConflict: 'exchange_id' })
+    if (detailsError) throw detailsError
+  }
+
+  const res = await insertStandardTemplate(supabase, std, { exchangeId, schoolId, userId: user.id, deadline })
   if ('duplicate' in res) return { ok: false, message: 'Ce modèle est déjà ajouté à cet échange.' }
 
+  const tmpl = await getOwnedTemplate(supabase, res.id)
+  const activated = await activateTemplateRecord(supabase, tmpl)
+  if (!activated.ok) {
+    // Keep the draft — the organizer can finish it from Modifier rather than
+    // lose the row (and, for the AST, the uploaded PDF).
+    revalidatePath('/forms', 'layout')
+    return { ok: false, message: activated.message }
+  }
+
   revalidatePath('/forms', 'layout')
+  revalidatePath('/dashboard')
   return { ok: true, id: res.id }
 }
 
