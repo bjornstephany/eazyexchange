@@ -67,8 +67,8 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { activateTemplate, deleteTemplate, remindTemplate, createDraftTemplate, updateTemplateMeta, replaceTemplateFile } from '@/actions/forms'
-import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
+import { deleteTemplate, remindTemplate, createDraftTemplate, updateTemplateMeta, replaceTemplateFile } from '@/actions/forms'
+import { MSG_DEADLINE_REQUIRED } from '@/lib/forms/template-result'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -81,47 +81,6 @@ beforeEach(() => {
     kind: 'doc', status: 'draft', audience: 'all', deadline: '2026-10-10',
     template_file_path: null, form_fields: [{ id: 'f1' }],
   }
-})
-
-describe('activateTemplate', () => {
-  it('returns a structured error for a draft without deadline', async () => {
-    template.deadline = null
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_DEADLINE_REQUIRED })
-    expect(templateUpdate).not.toHaveBeenCalled()
-  })
-  it('returns a structured error for a pdf without file', async () => {
-    template.kind = 'pdf'
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_PDF_REQUIRED })
-  })
-  it('returns a structured error for an online form without questions', async () => {
-    template.kind = 'online'
-    template.form_fields = []
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: MSG_QUESTIONS_REQUIRED })
-  })
-  it('returns a structured error for a conditional doc without chosen students', async () => {
-    template.audience = 'conditional'
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: false, message: 'Choisissez au moins un élève concerné.' })
-  })
-  it('activates an « all » doc and inserts no assignments itself (trigger does it)', async () => {
-    await expect(activateTemplate('tpl-1')).resolves.toEqual({ ok: true })
-    expect(templateUpdate).toHaveBeenCalledWith({ status: 'active' })
-    expect(assignmentInsert).not.toHaveBeenCalled()
-  })
-  it('activates a conditional doc inserting assignments for enrolled choices', async () => {
-    template.audience = 'conditional'
-    enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }, { id: 'stu-2', full_name: 'Hugo' }]
-    await expect(activateTemplate('tpl-1', ['stu-1'])).resolves.toEqual({ ok: true })
-    expect(assignmentInsert).toHaveBeenCalledWith([{ template_id: 'tpl-1', student_id: 'stu-1' }])
-  })
-  it('returns a structured error for conditional choices that are not enrolled students', async () => {
-    template.audience = 'conditional'
-    enrolledUsers = [{ id: 'stu-1', full_name: 'Léa' }]
-    await expect(activateTemplate('tpl-1', ['stu-1', 'ghost'])).resolves.toEqual({ ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' })
-  })
-  it('non-organizer is rejected', async () => {
-    role = 'student'
-    await expect(activateTemplate('tpl-1')).rejects.toThrow(/Unauthorized/)
-  })
 })
 
 describe('createDraftTemplate — structured results', () => {

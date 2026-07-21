@@ -8,11 +8,8 @@ import type { TemplateVM, AssigneeRow, TemplateKind } from '@/lib/forms/rollup'
 import { sendTemplateReminderEmail } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/template-result'
-import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
-import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
-import { missingDetailLabels } from '@/lib/forms/fillable/render'
-import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
+import { activateTemplateRecord } from '@/lib/forms/activate'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
 async function assertOrganizer(): Promise<string> {
@@ -254,63 +251,6 @@ export async function replaceTemplateFile(formData: FormData): Promise<TemplateA
   const { error } = await supabase.from('form_templates').update({ template_file_path: uploaded.path }).eq('id', id)
   if (error) throw error
   revalidatePath('/forms', 'layout')
-  return { ok: true }
-}
-
-export async function activateTemplate(id: string, studentIds?: string[]): Promise<TemplateActionResult> {
-  const supabase = await createClient()
-  await requireUser()
-  const tmpl = await getOwnedTemplate(supabase, id)
-  await assertExchangeWritable(supabase, tmpl.exchange_id)
-  if (tmpl.status === 'active') return { ok: true }
-
-  if (!tmpl.deadline) return { ok: false, message: MSG_DEADLINE_REQUIRED }
-  if (tmpl.kind === 'pdf' && !tmpl.template_file_path) return { ok: false, message: MSG_PDF_REQUIRED }
-  if (tmpl.kind === 'online' && (tmpl.form_fields ?? []).length === 0) return { ok: false, message: MSG_QUESTIONS_REQUIRED }
-
-  if (tmpl.kind === 'fillable') {
-    const def = tmpl.standard_key ? FILLABLE_DEFINITIONS[tmpl.standard_key] : undefined
-    if (!def) return { ok: false, message: 'Modèle à signer inconnu.' }
-    const { data: details } = await supabase
-      .from('exchange_program_details').select('*')
-      .eq('exchange_id', tmpl.exchange_id).maybeSingle<ProgramDetailsValues>()
-    const missing = missingDetailLabels(def, details ?? null)
-    if (missing.length > 0) {
-      return {
-        ok: false,
-        message: `Complétez d’abord les détails du programme (Réglages → Programme) : ${missing.join(', ')}.`,
-      }
-    }
-  }
-
-  let chosen: string[] = []
-  if (tmpl.audience === 'conditional') {
-    if (!studentIds || studentIds.length === 0) return { ok: false, message: 'Choisissez au moins un élève concerné.' }
-    // Only enrolled students of our school may be targeted.
-    const { data: enrollments } = await supabase
-      .from('exchange_enrollments').select('user_id').eq('exchange_id', tmpl.exchange_id)
-    const enrolledIds = new Set((enrollments ?? []).map((e) => e.user_id))
-    const { data: validUsers } = await supabase
-      .from('users').select('id')
-      .in('id', studentIds).eq('school_id', tmpl.school_id).eq('role', 'student')
-    const validIds = new Set((validUsers ?? []).map((u) => u.id))
-    chosen = studentIds.filter(sid => enrolledIds.has(sid) && validIds.has(sid))
-    if (chosen.length !== studentIds.length) return { ok: false, message: 'Sélection invalide : élève non inscrit à cet échange.' }
-  }
-
-  const { error } = await supabase.from('form_templates').update({ status: 'active' }).eq('id', id)
-  if (error) throw error
-
-  if (tmpl.audience === 'conditional' && chosen.length > 0) {
-    const { error: insertError } = await supabase
-      .from('assignments')
-      .insert(chosen.map(sid => ({ template_id: id, student_id: sid })))
-    if (insertError) throw insertError
-  }
-
-  revalidatePath('/forms', 'layout')
-  // Newly active → now appears in the dashboard grid.
-  revalidatePath('/dashboard')
   return { ok: true }
 }
 
