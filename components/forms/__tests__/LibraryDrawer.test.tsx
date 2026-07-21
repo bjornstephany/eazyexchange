@@ -100,18 +100,30 @@ describe('LibraryDrawer', () => {
   })
 
   it('doc tile keeps the audience and condition fields', async () => {
-    renderWithIntl(<LibraryDrawer {...base} />)
+    renderWithIntl(<LibraryDrawer {...base} enrolledStudents={[{ id: 's1', full_name: 'Jeanne Dupont' }]} />)
     fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
     fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'CEAM' } })
     fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
     fireEvent.click(screen.getByLabelText('Selon la situation'))
     fireEvent.change(screen.getByLabelText('Condition (facultatif)'), { target: { value: 'si séjour UE' } })
+    fireEvent.click(screen.getByLabelText('Jeanne Dupont'))
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }))
     await waitFor(() => expect(createDraft).toHaveBeenCalled())
     const fd = createDraft.mock.calls[0][0] as FormData
     expect(fd.get('kind')).toBe('doc')
     expect(fd.get('audience')).toBe('conditional')
     expect(fd.get('condition_label')).toBe('si séjour UE')
+  })
+
+  it('disables the submit button for an empty conditional document and enables it once a student is checked', () => {
+    renderWithIntl(<LibraryDrawer {...base} enrolledStudents={[{ id: 's1', full_name: 'Jeanne Dupont' }]} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
+    fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'CEAM' } })
+    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.click(screen.getByLabelText('Selon la situation'))
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeDisabled()
+    fireEvent.click(screen.getByLabelText('Jeanne Dupont'))
+    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeEnabled()
   })
 
   it('Escape and backdrop close the drawer', () => {

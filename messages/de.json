@@ -520,7 +520,6 @@
         "deadlineChip": "Frist {date}",
         "trackingHeading": "Nachverfolgung pro Schüler",
         "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert. Aktivieren Sie sie, um die Anfragen zu senden.",
-        "noEnrolledStudents": "Noch keine eingeschriebenen Schüler.",
         "restCount": "+ {count, plural, one {# Schüler} other {# Schüler}} — Unterlage bereitgestellt und validiert",
         "remindedCount": "{count, plural, one {# erinnert} other {# erinnert}}",
         "skippedRecently": " · {count, plural, one {# bereits kürzlich erinnert} other {# bereits kürzlich erinnert}}",

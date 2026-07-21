@@ -520,7 +520,6 @@
         "deadlineChip": "Scadenza {date}",
         "trackingHeading": "Monitoraggio per studente",
         "draftEmptyAll": "Questo documento non è ancora stato richiesto. Attivalo per avviare le richieste.",
-        "noEnrolledStudents": "Nessuno studente iscritto per il momento.",
         "restCount": "+ {count, plural, one {# studente} other {# studenti}} — documento fornito e convalidato",
         "remindedCount": "{count, plural, one {# sollecitato} other {# sollecitati}}",
         "skippedRecently": " · {count, plural, one {# già sollecitato di recente} other {# già sollecitati di recente}}",

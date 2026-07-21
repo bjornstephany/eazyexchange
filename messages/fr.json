@@ -520,7 +520,6 @@
         "deadlineChip": "Échéance {date}",
         "trackingHeading": "Suivi par élève",
         "draftEmptyAll": "Cette pièce n’a pas encore été demandée. Activez-la pour lancer les demandes.",
-        "noEnrolledStudents": "Aucun élève inscrit pour l’instant.",
         "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
         "remindedCount": "{count, plural, one {# relancé} other {# relancés}}",
         "skippedRecently": " · {count, plural, one {# déjà relancé récemment} other {# déjà relancés récemment}}",

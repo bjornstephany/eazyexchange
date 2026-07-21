@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { type TemplateVM, type TemplateKind } from '@/lib/forms/rollup'
+import { type TemplateVM } from '@/lib/forms/rollup'
 import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 import { TemplateGrid } from './TemplateGrid'
 import { TemplateCard } from './TemplateCard'

@@ -520,7 +520,6 @@
         "deadlineChip": "Deadline {date}",
         "trackingHeading": "Student tracking",
         "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
-        "noEnrolledStudents": "No enrolled students yet.",
         "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
         "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
         "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",

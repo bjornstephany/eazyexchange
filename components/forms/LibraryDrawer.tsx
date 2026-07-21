@@ -310,7 +310,7 @@ function CreateTemplateForm({
       )}
       {error && <p className="text-sm text-danger-text">{error}</p>}
       <div className="mt-auto flex gap-2.5 pt-3">
-        <button type="submit" disabled={busy}
+        <button type="submit" disabled={busy || (mode === 'doc' && audience === 'conditional' && chosen.length === 0)}
           className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
           {busy
             ? (isDoc ? t('documents.addPanel.creating') : t('forms.addPanel.creating'))
