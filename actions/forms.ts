@@ -61,6 +61,16 @@ export async function addField(templateId: string, label: string, fieldType: Fie
     required, options: options ?? null, order: nextOrder,
   })
   if (error) throw error
+
+  // Saving the first question is what publishes a custom online form — there
+  // is no Activate button any more. The gate still runs, so a form without a
+  // deadline simply stays draft.
+  const tmpl = await getOwnedTemplate(supabase, templateId)
+  if (tmpl.status === 'draft') {
+    const activated = await activateTemplateRecord(supabase, tmpl)
+    if (activated.ok) revalidatePath('/dashboard')
+  }
+
   // FormBuilder only renders for kind !== 'doc' templates, which live under
   // /forms/[templateId] (not the legacy /exchanges/[id]/forms/* route these
   // used to point at) — without this the editor's own page never refreshes.
