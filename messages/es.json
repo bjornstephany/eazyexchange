@@ -452,8 +452,6 @@
         "fieldsHeadingOnline": "Preguntas del formulario",
         "emptyFields": "Este formulario todavía no tiene campos. Añada sus preguntas y luego actívelo para enviarlo a las familias.",
         "fillableNote": "Formulario listo para usar: la familia lo rellena y firma en línea, con los detalles del programa insertados automáticamente.",
-        "activate": "Activar",
-        "activating": "Activando…",
         "editTemplate": "Modificar la plantilla",
         "download": "Descargar"
       },
@@ -521,16 +519,12 @@
         "maxSize": "10 MB máx.",
         "deadlineChip": "Fecha límite {date}",
         "trackingHeading": "Seguimiento por alumno",
-        "draftEmptyConditional": "Este documento aún no se ha solicitado. Elija a los alumnos afectados y luego actívelo para lanzar las solicitudes.",
         "draftEmptyAll": "Este documento aún no se ha solicitado. Actívelo para lanzar las solicitudes.",
         "noEnrolledStudents": "Ningún alumno inscrito por el momento.",
         "restCount": "+ {count, plural, one {# alumno} other {# alumnos}} — documento proporcionado y validado",
         "remindedCount": "{count, plural, one {# recordado} other {# recordados}}",
         "skippedRecently": " · {count, plural, one {# ya recordado recientemente} other {# ya recordados recientemente}}",
         "failedCount": " · {count} fallidos",
-        "activate": "Activar",
-        "activating": "Activando…",
-        "chooseAndActivate": "Elegir alumnos y activar",
         "sending": "Enviando…",
         "remindFamilies": "Recordar a las familias"
       }

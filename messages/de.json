@@ -452,8 +452,6 @@
         "fieldsHeadingOnline": "Fragen des Formulars",
         "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
         "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
         "editTemplate": "Vorlage bearbeiten",
         "download": "Herunterladen"
       },
@@ -521,16 +519,12 @@
         "maxSize": "Max. 10 MB",
         "deadlineChip": "Frist {date}",
         "trackingHeading": "Nachverfolgung pro Schüler",
-        "draftEmptyConditional": "Diese Unterlage wurde noch nicht angefordert. Wählen Sie die betroffenen Schüler aus und aktivieren Sie sie dann, um die Anfragen zu senden.",
         "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert. Aktivieren Sie sie, um die Anfragen zu senden.",
         "noEnrolledStudents": "Noch keine eingeschriebenen Schüler.",
         "restCount": "+ {count, plural, one {# Schüler} other {# Schüler}} — Unterlage bereitgestellt und validiert",
         "remindedCount": "{count, plural, one {# erinnert} other {# erinnert}}",
         "skippedRecently": " · {count, plural, one {# bereits kürzlich erinnert} other {# bereits kürzlich erinnert}}",
         "failedCount": " · {count} fehlgeschlagen",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
-        "chooseAndActivate": "Schüler auswählen & aktivieren",
         "sending": "Wird gesendet…",
         "remindFamilies": "Familien erinnern"
       }

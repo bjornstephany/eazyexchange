@@ -87,7 +87,7 @@ export function FichiersView({
       )}
       <FormDrawer vm={open && open.kind !== 'doc' ? open : null} onClose={() => setOpenId(null)} />
       <DocDrawer vm={open && open.kind === 'doc' ? open : null} exchangeId={exchangeId}
-        enrolledStudents={enrolledStudents} onClose={() => setOpenId(null)} />
+        onClose={() => setOpenId(null)} />
     </div>
   )
 }

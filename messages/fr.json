@@ -452,8 +452,6 @@
         "fieldsHeadingOnline": "Questions du formulaire",
         "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
         "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
-        "activate": "Activer",
-        "activating": "Activation…",
         "editTemplate": "Modifier le modèle",
         "download": "Télécharger"
       },
@@ -521,16 +519,12 @@
         "maxSize": "10 Mo max",
         "deadlineChip": "Échéance {date}",
         "trackingHeading": "Suivi par élève",
-        "draftEmptyConditional": "Cette pièce n’a pas encore été demandée. Choisissez les élèves concernés puis activez-la pour lancer les demandes.",
         "draftEmptyAll": "Cette pièce n’a pas encore été demandée. Activez-la pour lancer les demandes.",
         "noEnrolledStudents": "Aucun élève inscrit pour l’instant.",
         "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
         "remindedCount": "{count, plural, one {# relancé} other {# relancés}}",
         "skippedRecently": " · {count, plural, one {# déjà relancé récemment} other {# déjà relancés récemment}}",
         "failedCount": " · {count} en échec",
-        "activate": "Activer",
-        "activating": "Activation…",
-        "chooseAndActivate": "Choisir les élèves & activer",
         "sending": "Envoi…",
         "remindFamilies": "Relancer les familles"
       }

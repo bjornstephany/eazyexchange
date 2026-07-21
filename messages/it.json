@@ -452,8 +452,6 @@
         "fieldsHeadingOnline": "Domande del modulo",
         "emptyFields": "Questo modulo non ha ancora campi. Aggiungi le tue domande, poi attivalo per inviarlo alle famiglie.",
         "fillableNote": "Modulo pronto all’uso: compilato e firmato online dalla famiglia, con i dettagli del programma inseriti automaticamente.",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
         "editTemplate": "Modifica il modello",
         "download": "Scarica"
       },
@@ -521,16 +519,12 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Scadenza {date}",
         "trackingHeading": "Monitoraggio per studente",
-        "draftEmptyConditional": "Questo documento non è ancora stato richiesto. Scegli gli studenti interessati, poi attivalo per avviare le richieste.",
         "draftEmptyAll": "Questo documento non è ancora stato richiesto. Attivalo per avviare le richieste.",
         "noEnrolledStudents": "Nessuno studente iscritto per il momento.",
         "restCount": "+ {count, plural, one {# studente} other {# studenti}} — documento fornito e convalidato",
         "remindedCount": "{count, plural, one {# sollecitato} other {# sollecitati}}",
         "skippedRecently": " · {count, plural, one {# già sollecitato di recente} other {# già sollecitati di recente}}",
         "failedCount": " · {count} non riusciti",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
-        "chooseAndActivate": "Scegli gli studenti e attiva",
         "sending": "Invio…",
         "remindFamilies": "Sollecita le famiglie"
       }

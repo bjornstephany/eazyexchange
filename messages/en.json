@@ -452,8 +452,6 @@
         "fieldsHeadingOnline": "Form questions",
         "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
         "fillableNote": "Ready-to-use form: filled in and signed online by the family, with the program details inserted automatically.",
-        "activate": "Activate",
-        "activating": "Activating…",
         "editTemplate": "Edit template",
         "download": "Download"
       },
@@ -521,16 +519,12 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Deadline {date}",
         "trackingHeading": "Student tracking",
-        "draftEmptyConditional": "This document hasn't been requested yet. Choose the students concerned then activate it to send the requests.",
         "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
         "noEnrolledStudents": "No enrolled students yet.",
         "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
         "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
         "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",
         "failedCount": " · {count} failed",
-        "activate": "Activate",
-        "activating": "Activating…",
-        "chooseAndActivate": "Choose students & activate",
         "sending": "Sending…",
         "remindFamilies": "Remind families"
       }
