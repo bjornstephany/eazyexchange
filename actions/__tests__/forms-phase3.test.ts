@@ -23,7 +23,11 @@ let assignmentsInserted: unknown[] = []
 // `template` (tpl-1) used by the other describe blocks in this file.
 let insertedTemplate: Record<string, unknown> | null = null
 const templateUpdate = vi.fn((patch: Record<string, unknown>) => ({
-  eq: async () => { updates.push(patch); return { error: null } },
+  // Mutate the row select()/maybeSingle() hand back, so a getOwnedTemplate()
+  // re-fetch after this update (the updateTemplateMeta / replaceTemplateFile
+  // re-activation rescue) sees the just-written columns, not stale fixture
+  // data — mirrors the real DB round-trip.
+  eq: async () => { updates.push(patch); Object.assign(insertedTemplate ?? template, patch); return { error: null } },
 }))
 const assignmentInsert = vi.fn((rows: unknown) => { assignmentsInserted.push(rows); return Promise.resolve({ error: null }) })
 const assignmentUpdate = vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ error: null }) })
@@ -219,6 +223,47 @@ describe('updateTemplateMeta / replaceTemplateFile — structured results', () =
     f.set('file', new File(['x'], 'x.pdf', { type: 'application/pdf' }))
     const res = await replaceTemplateFile(f)  // template.kind is 'doc' in beforeEach
     expect(res).toEqual({ ok: false, message: 'Ce modèle n’a pas de PDF.' })
+  })
+
+  // Re-activation rescue: an edit that supplies the exact field the gate was
+  // waiting on must publish the draft, without ever failing the save itself.
+  it('updateTemplateMeta activates an audience=all draft once the missing deadline is saved', async () => {
+    template.deadline = null // the gate's only remaining objection
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Passeport', description: null, deadline: '2026-11-01', condition_label: null, external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).toContainEqual({ status: 'active' })
+  })
+
+  it('updateTemplateMeta never auto-activates a conditional draft (no student picker on this path)', async () => {
+    template.audience = 'conditional'
+    template.deadline = null
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Justificatif', description: null, deadline: '2026-11-01', condition_label: 'si parents divorcés', external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).not.toContainEqual({ status: 'active' })
+  })
+
+  it('updateTemplateMeta does not re-activate an already-active template', async () => {
+    template.status = 'active'
+    const res = await updateTemplateMeta('tpl-1', {
+      name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null, external_url: null,
+    })
+    expect(res).toEqual({ ok: true })
+    expect(updates).not.toContainEqual({ status: 'active' })
+  })
+
+  it('replaceTemplateFile activates a pdf/audience=all draft once the file is uploaded', async () => {
+    template.kind = 'pdf'
+    template.template_file_path = null // the gate's only remaining objection
+    const f = new FormData()
+    f.set('template_id', 'tpl-1')
+    f.set('file', new File(['x'], 'x.pdf', { type: 'application/pdf' }))
+    const res = await replaceTemplateFile(f)
+    expect(res).toEqual({ ok: true })
+    expect(updates).toContainEqual({ status: 'active' })
   })
 })
 

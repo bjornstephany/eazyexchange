@@ -450,7 +450,7 @@
         "pdfPreviewLabel": "modello PDF · anteprima del documento",
         "fieldsHeadingPdf": "Campi da compilare",
         "fieldsHeadingOnline": "Domande del modulo",
-        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi le tue domande, poi attivalo per inviarlo alle famiglie.",
+        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi la tua prima domanda per inviarlo alle famiglie.",
         "fillableNote": "Modulo pronto all’uso: compilato e firmato online dalla famiglia, con i dettagli del programma inseriti automaticamente.",
         "editTemplate": "Modifica il modello",
         "download": "Scarica"
@@ -519,7 +519,7 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Scadenza {date}",
         "trackingHeading": "Monitoraggio per studente",
-        "draftEmptyAll": "Questo documento non è ancora stato richiesto. Attivalo per avviare le richieste.",
+        "draftEmptyAll": "Questo documento non è ancora stato richiesto.",
         "restCount": "+ {count, plural, one {# studente} other {# studenti}} — documento fornito e convalidato",
         "remindedCount": "{count, plural, one {# sollecitato} other {# sollecitati}}",
         "skippedRecently": " · {count, plural, one {# già sollecitato di recente} other {# già sollecitati di recente}}",

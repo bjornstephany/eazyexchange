@@ -450,7 +450,7 @@
         "pdfPreviewLabel": "modèle PDF · aperçu du document",
         "fieldsHeadingPdf": "Champs à renseigner",
         "fieldsHeadingOnline": "Questions du formulaire",
-        "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
+        "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez votre première question pour l’envoyer aux familles.",
         "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
         "editTemplate": "Modifier le modèle",
         "download": "Télécharger"
@@ -519,7 +519,7 @@
         "maxSize": "10 Mo max",
         "deadlineChip": "Échéance {date}",
         "trackingHeading": "Suivi par élève",
-        "draftEmptyAll": "Cette pièce n’a pas encore été demandée. Activez-la pour lancer les demandes.",
+        "draftEmptyAll": "Cette pièce n’a pas encore été demandée.",
         "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
         "remindedCount": "{count, plural, one {# relancé} other {# relancés}}",
         "skippedRecently": " · {count, plural, one {# déjà relancé récemment} other {# déjà relancés récemment}}",

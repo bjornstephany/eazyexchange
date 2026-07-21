@@ -308,6 +308,18 @@ export async function updateTemplateMeta(
     external_url: externalUrl,
   }).eq('id', id)
   if (error) throw error
+
+  // A legacy draft whose only missing piece was the deadline can be rescued
+  // right here — re-run the gate against the freshly-saved row. Restricted to
+  // 'all': for 'conditional', activation is what creates the assignment rows,
+  // and this edit path has no student picker to supply them, so auto-firing
+  // it here would publish to an empty, permanently unfillable audience. If
+  // the gate still refuses (something else is missing), fail soft — the meta
+  // save itself has already succeeded and stays draft, same as today.
+  if (tmpl.status === 'draft' && tmpl.audience === 'all') {
+    await activateTemplateRecord(supabase, await getOwnedTemplate(supabase, id))
+  }
+
   revalidatePath('/forms', 'layout')
   // Name/deadline also feed the dashboard grid once the template is active.
   revalidatePath('/dashboard')
@@ -328,6 +340,15 @@ export async function replaceTemplateFile(formData: FormData): Promise<TemplateA
   if (!uploaded.ok) return { ok: false, message: uploaded.message }
   const { error } = await supabase.from('form_templates').update({ template_file_path: uploaded.path }).eq('id', id)
   if (error) throw error
+
+  // Same rescue as updateTemplateMeta: a 'pdf' draft that was only missing
+  // its file can now activate. 'all' only — fail soft on a gate refusal, the
+  // upload itself has already succeeded.
+  if (tmpl.status === 'draft' && tmpl.audience === 'all') {
+    const activated = await activateTemplateRecord(supabase, await getOwnedTemplate(supabase, id))
+    if (activated.ok) revalidatePath('/dashboard')
+  }
+
   revalidatePath('/forms', 'layout')
   return { ok: true }
 }

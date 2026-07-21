@@ -450,7 +450,7 @@
         "pdfPreviewLabel": "PDF-Vorlage · Dokumentvorschau",
         "fieldsHeadingPdf": "Auszufüllende Felder",
         "fieldsHeadingOnline": "Fragen des Formulars",
-        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
+        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre erste Frage hinzu, um es an die Familien zu senden.",
         "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
         "editTemplate": "Vorlage bearbeiten",
         "download": "Herunterladen"
@@ -519,7 +519,7 @@
         "maxSize": "Max. 10 MB",
         "deadlineChip": "Frist {date}",
         "trackingHeading": "Nachverfolgung pro Schüler",
-        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert. Aktivieren Sie sie, um die Anfragen zu senden.",
+        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert.",
         "restCount": "+ {count, plural, one {# Schüler} other {# Schüler}} — Unterlage bereitgestellt und validiert",
         "remindedCount": "{count, plural, one {# erinnert} other {# erinnert}}",
         "skippedRecently": " · {count, plural, one {# bereits kürzlich erinnert} other {# bereits kürzlich erinnert}}",
