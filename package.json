@@ -9,7 +9,9 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:rls": "vitest run --config vitest.rls.config.ts"
+    "test:rls": "vitest run --config vitest.rls.config.ts",
+    "seed": "node scripts/seed-demo.mjs",
+    "seed:staging": "bash -c 'set -a; source .env.staging; set +a; node scripts/seed-demo.mjs'"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.17",
