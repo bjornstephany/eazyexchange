@@ -17,8 +17,6 @@ Flagged during the 2026-07-14 applications refactor, deliberately not fixed ther
 
 - `getApplicationForReview` selects `*` including resume tokens server-side (not
   serialized to the browser today, but the select should be narrowed).
-- `acceptApplication` allows a `rejected → accepted` un-reject; undocumented
-  behavior, decide whether it is intended.
 - `sendRejectionEmail` copy is still English while the rest of the product is
   localized.
 
