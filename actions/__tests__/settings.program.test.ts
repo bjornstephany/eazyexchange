@@ -60,17 +60,8 @@ describe('getProgramInfo', () => {
     expect(info.enrolled).toBe(10)
     expect(info.applications).toBe(12)
   })
-  it('defaults reminder fields when the columns are null', async () => {
-    const info = await getProgramInfo('ex1')
-    expect(info.remindersEnabled).toBe(true)
-    expect(info.reminderCadence).toBe('normale')
-  })
-  it('passes explicit reminder values through', async () => {
-    scenario.exchange = { ...scenario.exchange!, reminders_enabled: false, reminder_cadence: 'insistante' }
-    const info = await getProgramInfo('ex1')
-    expect(info.remindersEnabled).toBe(false)
-    expect(info.reminderCadence).toBe('insistante')
-  })
+  // The reminder and good-news fields moved to getCommunicationSettings —
+  // see actions/__tests__/settings.communication.test.ts.
   it('rejects an out-of-scope exchange', async () => {
     scenario.exchange = { ...scenario.exchange!, school_a_id: 's8', school_b_id: 's9' }
     await expect(getProgramInfo('ex1')).rejects.toThrow('Unauthorized')

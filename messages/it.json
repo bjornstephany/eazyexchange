@@ -229,11 +229,9 @@
     "communication": {
       "heading": "Comunicazione",
       "subtitle": "Gestisci tutto ciò che comunichi agli studenti e alle famiglie.",
-      "comingSoon": "Presto disponibile.",
       "tabs": {
         "infos": "Infos",
         "modeles": "Modelli",
-        "annonces": "Annunci",
         "auto": "Promemoria auto."
       },
       "info": {

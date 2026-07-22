@@ -229,11 +229,9 @@
     "communication": {
       "heading": "Kommunikation",
       "subtitle": "Verwalten Sie alles, was Sie an Schüler und Eltern kommunizieren.",
-      "comingSoon": "Demnächst verfügbar.",
       "tabs": {
         "infos": "Infos",
         "modeles": "Vorlagen",
-        "annonces": "Ankündigungen",
         "auto": "Auto-Erinnerungen"
       },
       "info": {

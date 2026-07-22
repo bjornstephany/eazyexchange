@@ -229,11 +229,9 @@
     "communication": {
       "heading": "Communication",
       "subtitle": "Gérez tout ce que vous communiquez aux élèves et aux parents.",
-      "comingSoon": "Bientôt disponible.",
       "tabs": {
         "infos": "Infos",
         "modeles": "Modèles",
-        "annonces": "Annonces",
         "auto": "Réglages auto"
       },
       "info": {

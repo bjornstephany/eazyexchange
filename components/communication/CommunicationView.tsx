@@ -1,16 +1,23 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import type { InfoCard } from '@/actions/exchanges'
+import type { InfoCard, ReminderCadence } from '@/actions/exchanges'
 import { InfoCardsCard } from './InfoCardsCard'
+import { GoodNewsCard } from './GoodNewsCard'
+import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
 
 export type CommunicationProps = {
   exchangeId: string
   archived: boolean
   infoCards: InfoCard[]
+  exchangeName: string
+  remindersEnabled: boolean
+  reminderCadence: ReminderCadence
+  goodNewsSubject: string
+  goodNewsBody: string
 }
 
-type SubTab = 'infos' | 'modeles' | 'annonces' | 'auto'
+type SubTab = 'infos' | 'modeles' | 'auto'
 
 export function CommunicationView(props: CommunicationProps) {
   const t = useTranslations('organizer')
@@ -18,7 +25,6 @@ export function CommunicationView(props: CommunicationProps) {
   const tabs: { key: SubTab; label: string }[] = [
     { key: 'infos', label: t('communication.tabs.infos') },
     { key: 'modeles', label: t('communication.tabs.modeles') },
-    { key: 'annonces', label: t('communication.tabs.annonces') },
     { key: 'auto', label: t('communication.tabs.auto') },
   ]
 
@@ -51,10 +57,22 @@ export function CommunicationView(props: CommunicationProps) {
               readOnly={props.archived}
             />
           )}
-          {tab !== 'infos' && (
-            <div className="rounded-2xl border bg-card px-7 py-[26px] text-[13px] text-muted-foreground">
-              {t('communication.comingSoon')}
-            </div>
+          {tab === 'modeles' && (
+            <GoodNewsCard
+              exchangeId={props.exchangeId}
+              exchangeName={props.exchangeName}
+              initialSubject={props.goodNewsSubject}
+              initialBody={props.goodNewsBody}
+              readOnly={props.archived}
+            />
+          )}
+          {tab === 'auto' && (
+            <ReminderSettingsCard
+              exchangeId={props.exchangeId}
+              initialEnabled={props.remindersEnabled}
+              initialCadence={props.reminderCadence}
+              readOnly={props.archived}
+            />
           )}
         </div>
       </div>
