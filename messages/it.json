@@ -188,11 +188,20 @@
     "shell": {
       "nav": {
         "dashboard": "Panoramica",
-        "applications": "Candid.",
-        "files": "Moduli / Docs",
+        "applications": "Candidature",
+        "files": "File",
         "students": "Studenti",
         "feedback": "Feedback",
-        "communication": "Comun."
+        "communication": "Comunicazione"
+      },
+      "exchangeGroup": {
+        "title": "I miei scambi",
+        "add": "+ Aggiungi",
+        "empty": "Nessuno scambio"
+      },
+      "sidebar": {
+        "collapse": "Riduci",
+        "expand": "Espandi"
       },
       "accountMenu": {
         "trigger": "Account",
