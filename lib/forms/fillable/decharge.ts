@@ -8,6 +8,7 @@ export const decharge: FillableDefinition = {
   variables: [
     'exchange_name', 'association_name', 'destination',
     'chaperones_et', 'chaperones_ou', 'travel_period', 'receiving_school_name',
+    'sending_city',
   ],
   requireOneOf: [],
   blocks: [
@@ -41,7 +42,7 @@ export const decharge: FillableDefinition = {
     ] },
     { b: 'paragraph', runs: [
       { t: 'text', text: 'Fait à ' },
-      { t: 'blank', key: 'parents_place', label: 'Lieu' },
+      { t: 'var', name: 'sending_city' },
       { t: 'text', text: '.' },
     ] },
     { b: 'paragraph', style: 'bold', runs: [

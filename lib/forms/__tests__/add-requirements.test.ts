@@ -30,7 +30,7 @@ describe('missingProgramFields', () => {
   })
 
   it.each([
-    ['decharge', ['destination', 'travel_start', 'travel_end', 'chaperones', 'association_name', 'receiving_school_name']],
+    ['decharge', ['destination', 'travel_start', 'travel_end', 'chaperones', 'association_name', 'receiving_school_name', 'sending_city']],
     ['medical', ['travel_start', 'travel_end', 'chaperones']],
     ['absence', ['destination', 'travel_start', 'travel_end', 'sending_school_name', 'receiving_school_name', 'proviseur_name', 'sending_city', 'absence_dates']],
     ['famille', ['association_name', 'sending_school_name']],

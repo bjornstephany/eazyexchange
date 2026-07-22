@@ -57,6 +57,18 @@ describe('fillable definitions', () => {
     }
   })
 
+  it('« Fait à » is the organizer’s sending_city, never a student blank', () => {
+    for (const def of defs) {
+      const keys = allKeys(def.blocks)
+      expect(keys).not.toContain('place')
+      expect(keys).not.toContain('parents_place')
+    }
+    for (const key of ['decharge', 'absence'] as const) {
+      const def = FILLABLE_DEFINITIONS[key]
+      expect(usedVariables(def.blocks).has('sending_city')).toBe(true)
+    }
+  })
+
   it('no straight apostrophes in French text (typographic ’ only)', () => {
     const scan = (runs: Run[]) => runs.forEach(r => {
       if (r.t === 'text') expect(r.text).not.toMatch(/'/)
