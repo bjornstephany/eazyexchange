@@ -170,8 +170,8 @@
       "usageUnlimited": "{used} {used, plural, one {active exchange} other {active exchanges}} · unlimited exchanges",
       "plans": {
         "starter": { "label": "Starter", "price": "€199", "desc": "For an independent organizer." },
-        "growth": { "label": "Growth", "price": "€499", "desc": "For growing associations." },
-        "scale": { "label": "Scale", "price": "€799", "desc": "For large exchange networks." }
+        "growth": { "label": "Growth", "price": "€399", "desc": "For growing associations." },
+        "scale": { "label": "Scale", "price": "€599", "desc": "For large exchange networks." }
       },
       "trial": {
         "label": "Free trial",

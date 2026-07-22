@@ -170,8 +170,8 @@
       "usageUnlimited": "{used} {used, plural, one {échange actif} other {échanges actifs}} · échanges illimités",
       "plans": {
         "starter": { "label": "Essentiel", "price": "199 €", "desc": "Pour un organisateur indépendant." },
-        "growth": { "label": "Association", "price": "499 €", "desc": "Pour les associations en pleine croissance." },
-        "scale": { "label": "Réseau", "price": "799 €", "desc": "Pour les grands réseaux d’échanges." }
+        "growth": { "label": "Association", "price": "399 €", "desc": "Pour les associations en pleine croissance." },
+        "scale": { "label": "Réseau", "price": "599 €", "desc": "Pour les grands réseaux d’échanges." }
       },
       "trial": {
         "label": "Essai gratuit",
