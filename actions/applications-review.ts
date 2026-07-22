@@ -9,7 +9,7 @@ import { signApplicationPhotoUrls } from '@/lib/application-photos'
 import { enforceRateLimit } from '@/lib/rate-limit'
 import { sendGoodNewsEmail, sendApplicationRejectionEmail, sendApplicationInviteEmail } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
-import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
 import { logAudit } from '@/lib/audit'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -108,115 +108,194 @@ export async function getApplicationForReview(applicationId: string) {
   return { application, photoUrl }
 }
 
-export async function acceptApplication(applicationId: string): Promise<void> {
+// ---- Application review (single + bulk share one engine) ----
+//
+// Both the single-item actions and the Candidatures bulk buttons run through
+// reviewApplications(). Accepting 30 candidates used to mean 30 × (fetch
+// application → fetch exchange → update → audit → fetch exchange again), all
+// sequential — ~150 round trips in a row. The shared reads are now hoisted out
+// of the loop and the per-application writes run concurrently, so the batch
+// costs two reads plus one parallel write wave whatever its size.
+//
+// Keeping one engine also keeps the rules that matter — school ownership, the
+// archived-exchange gate, the status guards — impossible to drift between the
+// single and bulk paths.
+
+type ReviewOp =
+  | { kind: 'accept' }
+  | { kind: 'reject'; note: string; sendEmail: boolean }
+
+type ReviewOutcome = { ok: true } | { ok: false; error: Error }
+
+type ReviewRow = {
+  id: string
+  exchange_id: string
+  school_id: string
+  status: string
+  email: string
+  language: string | null
+  data: Record<string, string>
+}
+
+type ReviewExchange = {
+  id: string
+  archived_at: string | null
+  name: string
+  good_news_subject: string | null
+  good_news_body: string | null
+}
+
+// Deliberately not `select('*')`: this read is wide (every id in the batch),
+// and the row carries resume_token / invite_token, which have no business
+// here. See BACKLOG.md for the same fix owed to getApplicationForReview.
+const REVIEW_COLUMNS = 'id, exchange_id, school_id, status, email, language, data'
+
+// Only a submitted application can be accepted; a rejected one can be
+// un-rejected (undocumented — see BACKLOG.md). Never accept one that was never
+// submitted.
+const ACCEPTABLE_STATUSES = ['submitted', 'rejected']
+// Never reject an application that has already enrolled (which would leave the
+// student's account, enrollment and assignments live while showing rejected),
+// nor one that was never submitted / already declined.
+const REJECTABLE_STATUSES = ['submitted', 'accepted', 'maybe']
+
+async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOutcome[]> {
+  if (ids.length === 0) return []
   const supabase = await createClient()
-  const user = await requireUser()
-  const app = await assertOrganizerOwnsApplication(supabase, applicationId)
-  if (app.status !== 'submitted' && app.status !== 'rejected') {
-    throw new Error('Only a submitted application can be accepted')
+  const { user, profile } = await requireOrganizer()
+
+  // One read for every application in the batch...
+  const { data: rows } = await supabase
+    .from('applications').select(REVIEW_COLUMNS).in('id', ids)
+  const byId = new Map(((rows ?? []) as ReviewRow[]).map(r => [r.id, r]))
+
+  // ...and one for every exchange they belong to, covering both the
+  // archived-write gate and the email template the accept path needs.
+  const exchangeIds = [...new Set([...byId.values()].map(r => r.exchange_id))]
+  const exchangeById = new Map<string, ReviewExchange>()
+  if (exchangeIds.length > 0) {
+    const { data: exchanges } = await supabase
+      .from('exchanges')
+      .select('id, archived_at, name, good_news_subject, good_news_body')
+      .in('id', exchangeIds)
+    for (const ex of (exchanges ?? []) as ReviewExchange[]) exchangeById.set(ex.id, ex)
   }
-  await assertExchangeWritable(supabase, app.exchange_id)
-  const inviteToken = randomToken()
-  const { error } = await supabase.from('applications').update({
-    status: 'accepted', invite_token: inviteToken,
-    invite_token_expires_at: new Date(Date.now() + INVITE_WINDOW_MS).toISOString(),
-    reviewed_at: new Date().toISOString(), reviewer_id: user.id, review_note: null,
-  }).eq('id', applicationId)
-  if (error) throw error
 
-  await logAudit({
-    action: 'application.accepted',
-    actorUserId: user.id,
-    actorSchoolId: app.school_id,
-    targetType: 'application',
-    targetId: applicationId,
-    metadata: { exchange_id: app.exchange_id },
-  })
+  const reviewedAt = new Date().toISOString()
+  const outcomes = await Promise.all(
+    ids.map(async (id): Promise<ReviewOutcome> => {
+      try {
+        const app = byId.get(id)
+        if (!app) throw new Error('Application not found')
+        // RLS already scopes the read to the caller's school; this refuses a
+        // foreign id outright so a future RLS refactor cannot silently open it.
+        if (app.school_id !== profile.school_id) throw new Error('Unauthorized')
+        const exchange = exchangeById.get(app.exchange_id)
+        if (exchange?.archived_at) throw new Error(ARCHIVED_ERROR)
 
-  const { data: exchange } = await supabase
-    .from('exchanges')
-    .select('name, good_news_subject, good_news_body')
-    .eq('id', app.exchange_id).maybeSingle()
-  const applicantName = buildApplicantName(app.data)
-  const recipients = parentRecipients(app.data as Record<string, string>, app.email)
-  void sendGoodNewsEmail({
-    to: recipients,
-    studentName: applicantName,
-    exchangeName: exchange?.name ?? '',
-    subject: exchange?.good_news_subject ?? null,
-    body: exchange?.good_news_body ?? null,
-    respondUrl: `${APP_URL}/invite/${inviteToken}`,
-    language: app.language === 'fr' ? 'fr' : 'en',
-    ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
-  }).catch(() => {})
-  revalidatePath(`/exchanges/${app.exchange_id}/applications`)
+        if (op.kind === 'accept') {
+          if (!ACCEPTABLE_STATUSES.includes(app.status)) {
+            throw new Error('Only a submitted application can be accepted')
+          }
+          // Every accepted application gets its own invite token — this is why
+          // the batch cannot collapse into a single multi-row UPDATE.
+          const inviteToken = randomToken()
+          const { error } = await supabase.from('applications').update({
+            status: 'accepted', invite_token: inviteToken,
+            invite_token_expires_at: new Date(Date.now() + INVITE_WINDOW_MS).toISOString(),
+            reviewed_at: reviewedAt, reviewer_id: user.id, review_note: null,
+          }).eq('id', id)
+          if (error) throw error
+
+          await logAudit({
+            action: 'application.accepted',
+            actorUserId: user.id,
+            actorSchoolId: app.school_id,
+            targetType: 'application',
+            targetId: id,
+            metadata: { exchange_id: app.exchange_id },
+          })
+
+          void sendGoodNewsEmail({
+            to: parentRecipients(app.data as Record<string, string>, app.email),
+            studentName: buildApplicantName(app.data),
+            exchangeName: exchange?.name ?? '',
+            subject: exchange?.good_news_subject ?? null,
+            body: exchange?.good_news_body ?? null,
+            respondUrl: `${APP_URL}/invite/${inviteToken}`,
+            language: app.language === 'fr' ? 'fr' : 'en',
+            ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
+          }).catch(() => {})
+          return { ok: true }
+        }
+
+        if (!REJECTABLE_STATUSES.includes(app.status)) {
+          throw new Error('This application can no longer be rejected.')
+        }
+        const { error } = await supabase.from('applications').update({
+          status: 'rejected', reviewed_at: reviewedAt,
+          reviewer_id: user.id, review_note: op.note || null,
+        }).eq('id', id)
+        if (error) throw error
+
+        await logAudit({
+          action: 'application.rejected',
+          actorUserId: user.id,
+          actorSchoolId: app.school_id,
+          targetType: 'application',
+          targetId: id,
+          metadata: { exchange_id: app.exchange_id, email_sent: op.sendEmail },
+        })
+
+        if (op.sendEmail) {
+          void sendApplicationRejectionEmail({
+            to: app.email,
+            applicantName: buildApplicantName(app.data),
+            exchangeName: exchange?.name ?? '',
+            note: op.note,
+            ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
+          }).catch(() => {})
+        }
+        return { ok: true }
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e : new Error('Review failed') }
+      }
+    }),
+  )
+
+  for (const exchangeId of exchangeIds) revalidatePath(`/exchanges/${exchangeId}/applications`)
   revalidatePath('/applications')
   revalidatePath('/dashboard')
+  return outcomes
+}
+
+export async function acceptApplication(applicationId: string): Promise<void> {
+  const [outcome] = await reviewApplications([applicationId], { kind: 'accept' })
+  if (outcome && !outcome.ok) throw outcome.error
 }
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
-  const supabase = await createClient()
-  const user = await requireUser()
-  const app = await assertOrganizerOwnsApplication(supabase, applicationId)
-  // Never reject an application that has already enrolled (which would leave the
-  // student's account, enrollment and assignments live while showing rejected),
-  // nor one that was never submitted / already declined.
-  if (!['submitted', 'accepted', 'maybe'].includes(app.status)) {
-    throw new Error('This application can no longer be rejected.')
-  }
-  await assertExchangeWritable(supabase, app.exchange_id)
-  const { error } = await supabase.from('applications').update({
-    status: 'rejected', reviewed_at: new Date().toISOString(),
-    reviewer_id: user.id, review_note: note || null,
-  }).eq('id', applicationId)
-  if (error) throw error
-
-  await logAudit({
-    action: 'application.rejected',
-    actorUserId: user.id,
-    actorSchoolId: app.school_id,
-    targetType: 'application',
-    targetId: applicationId,
-    metadata: { exchange_id: app.exchange_id, email_sent: sendEmail },
-  })
-
-  if (sendEmail) {
-    const { data: exchange } = await supabase
-      .from('exchanges').select('name').eq('id', app.exchange_id).maybeSingle()
-    const applicantName = buildApplicantName(app.data)
-    void sendApplicationRejectionEmail({
-      to: app.email, applicantName, exchangeName: exchange?.name ?? '', note,
-      ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
-    }).catch(() => {})
-  }
-  revalidatePath(`/exchanges/${app.exchange_id}/applications`)
-  revalidatePath('/applications')
-  revalidatePath('/dashboard')
+  const [outcome] = await reviewApplications([applicationId], { kind: 'reject', note, sendEmail })
+  if (outcome && !outcome.ok) throw outcome.error
 }
 
 // ---- Bulk organizer actions (dashboard Candidatures view) ----
 
-// Bulk review from the Candidatures view. Loops the single-item actions so all
-// side effects (invitation email, status guards, ownership assertion) stay in
-// one place; per-id failures don't abort the batch.
-export async function acceptApplications(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+// Per-id failures never abort the batch: a mixed selection partially succeeds
+// and the view reports the tally.
+function tally(outcomes: ReviewOutcome[]): { succeeded: number; failed: number } {
   let succeeded = 0
   let failed = 0
-  for (const id of ids) {
-    try { await acceptApplication(id); succeeded++ } catch { failed++ }
-  }
-  revalidatePath('/applications')
+  for (const o of outcomes) o.ok ? succeeded++ : failed++
   return { succeeded, failed }
 }
 
+export async function acceptApplications(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+  return tally(await reviewApplications(ids, { kind: 'accept' }))
+}
+
 export async function rejectApplications(ids: string[], note: string, sendEmail: boolean): Promise<{ succeeded: number; failed: number }> {
-  let succeeded = 0
-  let failed = 0
-  for (const id of ids) {
-    try { await rejectApplication(id, note, sendEmail); succeeded++ } catch { failed++ }
-  }
-  revalidatePath('/applications')
-  return { succeeded, failed }
+  return tally(await reviewApplications(ids, { kind: 'reject', note, sendEmail }))
 }
 
 // ---- Organizer-sent application invitations ----

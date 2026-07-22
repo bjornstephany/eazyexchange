@@ -5,7 +5,6 @@ pick items off the top when starting new work.
 
 ## Queue
 
-- batch the bulk-accept applications flow (deferred from perf-cold-starts)
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — delete this line if still unwanted)
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)
 - Google search appearance: add favicon + fix meta description getting cut off in results
