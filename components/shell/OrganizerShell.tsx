@@ -93,12 +93,7 @@ export function OrganizerShell({
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
-  const [listSearch, setListSearch] = useState('')
 
-  // Contextual search is page-scoped: leaving the page clears it.
-  useEffect(() => { setListSearch('') }, [pathname])
-
-  const isStudents = pathname.startsWith('/students')
   const isSettings = pathname.startsWith('/settings')
 
   // Every "+ Nouvel échange" affordance routes through this. At the plan's
@@ -114,9 +109,7 @@ export function OrganizerShell({
 
   const shellUi = useMemo<ShellUi>(() => ({
     openNewExchange: handleNewExchange,
-    listSearch,
-    setListSearch,
-  }), [handleNewExchange, listSearch])
+  }), [handleNewExchange])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -232,15 +225,6 @@ export function OrganizerShell({
             )}
           </div>
           <div className="flex items-center gap-3">
-            {!isSettings && active && isStudents && (
-              <input
-                type="search"
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                placeholder={t('shell.studentSearch.placeholder')}
-                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
-              />
-            )}
             <button
               type="button"
               onClick={() => setFeedbackOpen(true)}
