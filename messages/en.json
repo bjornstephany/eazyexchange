@@ -229,11 +229,9 @@
     "communication": {
       "heading": "Communication",
       "subtitle": "Manage everything you communicate to students and parents.",
-      "comingSoon": "Coming soon.",
       "tabs": {
         "infos": "Infos",
         "modeles": "Templates",
-        "annonces": "Announcements",
         "auto": "Auto reminders"
       },
       "info": {

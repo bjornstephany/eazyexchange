@@ -286,8 +286,17 @@ export async function removeOrganizer(userId: string): Promise<void> {
 export type ProgramInfo = {
   id: string; name: string; year: number; archived: boolean
   enrolled: number; applications: number; earliestDeadline: string | null
-  remindersEnabled: boolean; reminderCadence: ReminderCadence
-  goodNewsSubject: string; goodNewsBody: string
+}
+
+// The reminder and good-news settings live in the Communication tab, not in
+// Settings → Programme, so they are read on their own rather than through the
+// heavier getProgramInfo (which also runs three count queries for the header).
+export type CommunicationSettings = {
+  exchangeName: string
+  remindersEnabled: boolean
+  reminderCadence: ReminderCadence
+  goodNewsSubject: string
+  goodNewsBody: string
 }
 
 // Scope check: the exchange must belong to the caller's school (either side).
@@ -323,6 +332,16 @@ export async function getProgramInfo(exchangeId: string): Promise<ProgramInfo> {
     archived: !!exchange.archived_at,
     enrolled: enrolled ?? 0, applications: applications ?? 0,
     earliestDeadline: (firstDeadline?.deadline as string | null) ?? null,
+  }
+}
+
+export async function getCommunicationSettings(exchangeId: string): Promise<CommunicationSettings> {
+  const supabase = await createClient()
+  const ctx = await getOrganizerCtx()
+  const exchange = await getScopedExchange(supabase, ctx.schoolId, exchangeId)
+
+  return {
+    exchangeName: exchange.name,
     remindersEnabled: exchange.reminders_enabled ?? true,
     reminderCadence: (exchange.reminder_cadence ?? 'normale') as ReminderCadence,
     goodNewsSubject: (exchange.good_news_subject as string | null)?.trim() || DEFAULT_GOOD_NEWS_SUBJECT,

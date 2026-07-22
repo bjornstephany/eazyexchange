@@ -118,8 +118,6 @@ const owner = {
   program: {
     id: 'ex1', name: 'Programme Espagne', year: 2026, archived: false,
     enrolled: 10, applications: 12, earliestDeadline: '2026-10-10',
-    remindersEnabled: true, reminderCadence: 'normale' as const,
-    goodNewsSubject: 'Bonne nouvelle', goodNewsBody: 'Bonjour',
   },
 }
 
@@ -187,25 +185,27 @@ describe('SettingsView — owner sections', () => {
 })
 
 describe('SettingsView — Programme for all organizers', () => {
-  it('admin with an active program sees Programme + reminders, no billing, no danger zone', () => {
+  it('admin with an active program sees Programme, no billing, no danger zone', () => {
     render(<SettingsView {...baseProps} program={owner.program} />)
     expect(screen.queryByRole('button', { name: 'Facturation' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
-    expect(screen.getByText('Rappels automatiques')).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: /Normale/ })).toBeChecked()
+    expect(screen.getByText('10 élèves acceptés · 12 candidatures · date limite dossiers 10 oct')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Archiver le programme…' })).toBeNull()
   })
 
-  it('owner sees both the reminder card and the archive zone', () => {
+  it('owner sees the archive zone', () => {
     render(<SettingsView {...owner} />)
     fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
-    expect(screen.getByText('Rappels automatiques')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Archiver le programme…' })).toBeInTheDocument()
   })
 
-  it('archived program renders the reminder card read-only', () => {
-    render(<SettingsView {...owner} program={{ ...owner.program, archived: true }} />)
+  // The reminder and good-news cards moved to the Communication tab — see
+  // components/communication/__tests__/CommunicationView.test.tsx.
+  it('no longer renders the reminder or good-news cards', () => {
+    render(<SettingsView {...owner} />)
     fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
-    expect(screen.getByText('Programme archivé — lecture seule.')).toBeInTheDocument()
+    expect(screen.queryByText('Rappels automatiques')).toBeNull()
+    expect(screen.queryByText('E-mail « Bonne nouvelle » aux parents')).toBeNull()
+    expect(screen.queryByRole('radio', { name: /Normale/ })).toBeNull()
   })
 })
