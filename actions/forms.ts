@@ -294,7 +294,7 @@ export async function updateTemplateMeta(
 
   const name = meta.name.trim()
   if (!name) return { ok: false, message: 'Le nom ne peut pas être vide.' }
-  if (tmpl.status === 'active' && !meta.deadline) return { ok: false, message: 'Un modèle actif doit garder une échéance.' }
+  if (tmpl.status === 'active' && !meta.deadline) return { ok: false, message: 'Un modèle actif doit garder une date limite.' }
   const externalUrl = meta.external_url?.trim() || null
   if (externalUrl && (!externalUrl.startsWith('https://') || externalUrl.length > 500)) {
     return { ok: false, message: 'Le lien externe doit être une URL https:// (500 caractères max).' }

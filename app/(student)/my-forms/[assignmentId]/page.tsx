@@ -70,7 +70,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           )}
           {template.deadline && (
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Échéance {new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              Date limite {new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
             </p>
           )}
         </div>
