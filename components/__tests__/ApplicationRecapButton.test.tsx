@@ -1,16 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 
-const downloadApplicationRecap = vi.fn(async (_token: string) => ({
+const downloadApplicationRecap = vi.fn(async (_token: string, _language?: 'en' | 'fr') => ({
   ok: true as const, filename: 'candidature-zoe-dupont.pdf', pdf: Buffer.from('%PDF-x').toString('base64'),
 }))
 vi.mock('@/actions/apply', () => ({
-  downloadApplicationRecap: (token: string) => downloadApplicationRecap(token),
+  downloadApplicationRecap: (token: string, language?: 'en' | 'fr') => downloadApplicationRecap(token, language),
 }))
 
 import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
 
 let clickSpy: ReturnType<typeof vi.fn>
+let lastAnchor: HTMLAnchorElement | null
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,10 +19,14 @@ beforeEach(() => {
     ok: true, filename: 'candidature-zoe-dupont.pdf', pdf: Buffer.from('%PDF-x').toString('base64'),
   })
   clickSpy = vi.fn()
+  lastAnchor = null
   const origCreate = document.createElement.bind(document)
   vi.spyOn(document, 'createElement').mockImplementation((tag: any) => {
     const el = origCreate(tag)
-    if (tag === 'a') el.click = clickSpy
+    if (tag === 'a') {
+      el.click = clickSpy
+      lastAnchor = el
+    }
     return el
   })
   vi.stubGlobal('URL', { createObjectURL: () => 'blob:x', revokeObjectURL: vi.fn() })
@@ -46,8 +51,9 @@ describe('ApplicationRecapButton', () => {
   it('downloads the PDF with the server-supplied filename', async () => {
     render(<ApplicationRecapButton token="tok-1" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
-    await waitFor(() => expect(downloadApplicationRecap).toHaveBeenCalledWith('tok-1'))
+    await waitFor(() => expect(downloadApplicationRecap).toHaveBeenCalledWith('tok-1', 'fr'))
     await waitFor(() => expect(clickSpy).toHaveBeenCalled())
+    expect(lastAnchor?.download).toBe('candidature-zoe-dupont.pdf')
   })
 
   it('disables the button and shows a preparing label while in flight', async () => {
@@ -64,7 +70,7 @@ describe('ApplicationRecapButton', () => {
     downloadApplicationRecap.mockResolvedValueOnce({ ok: false, reason: 'expired' } as any)
     render(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
-    expect(await screen.findByText(/ce lien a expiré/i)).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(/ce lien a expiré/i)
     expect(clickSpy).not.toHaveBeenCalled()
   })
 

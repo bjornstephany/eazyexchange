@@ -33,7 +33,7 @@ export function ApplicationRecapButton({ token, language }: { token: string; lan
     setBusy(true)
     setError(null)
     try {
-      const res = await downloadApplicationRecap(token)
+      const res = await downloadApplicationRecap(token, language)
       if (!res.ok) {
         // Structured reason, never a thrown message (prod redacts those).
         setError(t[res.reason])
@@ -64,7 +64,7 @@ export function ApplicationRecapButton({ token, language }: { token: string; lan
         <DownloadIcon aria-hidden size={16} strokeWidth={1.75} />
         {busy ? t.preparing : t.label}
       </button>
-      {error && <p className="m-0 text-[13px] text-[#C0392B]">{error}</p>}
+      {error && <p role="alert" className="m-0 text-[13px] text-[#C0392B]">{error}</p>}
     </div>
   )
 }

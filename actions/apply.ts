@@ -388,6 +388,18 @@ export type RecapResult =
   | { ok: true; filename: string; pdf: string /* base64 */ }
   | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' }
 
+// Photos are accepted up to 10 MB (lib/uploads.ts) and are never downscaled
+// before upload, but the recap only ever draws one at 96×120 pt. Holding the
+// full blob + a Uint8Array copy + a Buffer copy inside the JSX + the rendered
+// PDF buffer + its base64 string concurrently for one request can approach
+// ~5x the original photo size in transient memory. This endpoint is public
+// (rate-limited only at 20/hr/IP) and Fluid Compute shares one instance's
+// heap across concurrent invocations, so simultaneous large-photo recaps
+// could OOM the instance. Drop oversized photos rather than risk that — the
+// "render without the photo" path already handles null gracefully.
+// Not exported: a `'use server'` module may only export async functions.
+const MAX_RECAP_PHOTO_BYTES = 2_000_000
+
 // ASCII-folded, lowercase, hyphenated name part for the download filename —
 // « Dupont-Léger » → "dupont-leger". Not exported: a `'use server'` module may
 // only export async functions.
@@ -413,7 +425,7 @@ function recapFilename(data: Record<string, string>): string {
 // is unchanged (the resume token is the applicant's own secret, and the token's
 // expiry still gates it); it is simply a second, narrower door for the same
 // person. It is not a mistake — do not "fix" it to match the branch above.
-export async function downloadApplicationRecap(token: string): Promise<RecapResult> {
+export async function downloadApplicationRecap(token: string, language?: 'en' | 'fr'): Promise<RecapResult> {
   // Same anonymous-token preamble as the other actions in this file.
   const ip = await clientIp()
   await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)
@@ -443,16 +455,27 @@ export async function downloadApplicationRecap(token: string): Promise<RecapResu
       console.warn('[apply] recap photo unavailable — rendering without it')
       photoBytes = null
     }
+    // Never hold an oversized photo through the render pipeline — see the
+    // MAX_RECAP_PHOTO_BYTES comment above.
+    if (photoBytes != null && photoBytes.byteLength > MAX_RECAP_PHOTO_BYTES) {
+      photoBytes = null
+    }
   }
 
   const data = (app.data ?? {}) as Record<string, string>
+  // The caller's live language (e.g. the toggle on the confirmation screen)
+  // wins over the row's — but never trust it blindly: normalize exactly the
+  // way the DB-derived fallback is normalized so an unexpected value can
+  // never reach the renderer.
+  const effectiveLanguage: 'en' | 'fr' =
+    language === 'en' || language === 'fr' ? language : app.language === 'fr' ? 'fr' : 'en'
   const pdf = await renderApplicationRecapPdf({
     exchangeName: app.exchanges?.name ?? '',
     applicantName: buildApplicantName(data),
     submittedAt: app.submitted_at,
     data,
     photoBytes,
-    language: app.language === 'fr' ? 'fr' : 'en',
+    language: effectiveLanguage,
   })
 
   return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }

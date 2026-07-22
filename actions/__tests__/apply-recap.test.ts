@@ -114,9 +114,33 @@ describe('downloadApplicationRecap', () => {
     expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ photoBytes: null }))
   })
 
+  it('drops an oversized photo before rendering but still returns ok', async () => {
+    appRow.photo_path = 'app-1/photo.png'
+    const oversized = new Uint8Array(2_000_001)
+    download.mockResolvedValue({
+      data: { arrayBuffer: async () => oversized.buffer },
+      error: null,
+    } as any)
+    const res = await downloadApplicationRecap('tok')
+    expect(res.ok).toBe(true)
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ photoBytes: null }))
+  })
+
   it('falls back to a bare filename when the name is missing', async () => {
     appRow.data = {}
     const res = await downloadApplicationRecap('tok')
     expect(res.ok && res.filename).toBe('candidature.pdf')
+  })
+
+  it("honors the caller's explicit language over the row's language", async () => {
+    appRow.language = 'fr'
+    await downloadApplicationRecap('tok', 'en')
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ language: 'en' }))
+  })
+
+  it('falls back to the DB-derived language when the caller value is invalid', async () => {
+    appRow.language = 'fr'
+    await downloadApplicationRecap('tok', 'de' as any)
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ language: 'fr' }))
   })
 })
