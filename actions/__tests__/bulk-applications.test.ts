@@ -178,3 +178,42 @@ describe('acceptApplication good-news email', () => {
     expect(arg.to).toEqual(['stu2@b.co'])
   })
 })
+
+describe('acceptApplication (single, change-of-mind)', () => {
+  it('un-rejects and threads the personal note into the good-news email', async () => {
+    scenario.applications['app-rejected'] = {
+      ...scenario.applications['app-ok'], id: 'app-rejected', status: 'rejected',
+    }
+    await acceptApplication('app-rejected', { personalNote: 'Une place s’est libérée !' })
+    expect(updates.map(u => u.id)).toEqual(['app-rejected'])
+    expect(updates[0].row.status).toBe('accepted')
+    expect(sendGoodNewsEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ personalNote: 'Une place s’est libérée !' }),
+    )
+  })
+
+  it('refuses to accept an application the student declined', async () => {
+    scenario.applications['app-declined'] = {
+      ...scenario.applications['app-ok'], id: 'app-declined', status: 'declined',
+    }
+    await expect(acceptApplication('app-declined')).rejects.toThrow(
+      'Only a submitted application can be accepted',
+    )
+    expect(updates).toEqual([])
+    expect(sendGoodNewsEmail).not.toHaveBeenCalled()
+  })
+
+  it('sends no personal note when none was given', async () => {
+    await acceptApplication('app-ok')
+    expect(sendGoodNewsEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ personalNote: null }),
+    )
+  })
+
+  it('bulk accept never carries a personal note', async () => {
+    await acceptApplications(['app-ok'])
+    expect(sendGoodNewsEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ personalNote: null }),
+    )
+  })
+})

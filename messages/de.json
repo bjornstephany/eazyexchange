@@ -368,8 +368,10 @@
         "all": "Alle",
         "invited": "Eingeladen",
         "toReview": "Zu prüfen",
+        "awaiting": "Wartet",
         "accepted": "Angenommen",
-        "rejected": "Abgelehnt"
+        "rejected": "Abgelehnt",
+        "declined": "Abgesagt"
       },
       "selectedCount": "{n, plural, one {# ausgewählt} other {# ausgewählt}}",
       "acceptCta": "Annehmen & einladen",
@@ -382,9 +384,14 @@
       "tableHeader": {
         "student": "Schüler",
         "level": "Klasse 26-27",
-        "nativeLanguage": "Mutterspr.",
+        "gender": "Geschlecht",
         "receivedDate": "Erhalten am",
         "status": "Status"
+      },
+      "gender": {
+        "male": "Junge",
+        "female": "Mädchen",
+        "other": "Divers"
       },
       "emptyTab": "Keine Bewerbungen in diesem Tab.",
       "review": {
@@ -392,9 +399,15 @@
         "statusEnrolled": "Eingeschrieben (hat Ja geantwortet)",
         "statusDeclined": "Hat die Einladung abgelehnt",
         "statusMaybe": "Hat mit Vielleicht geantwortet",
+        "statusNotSubmitted": "Dieser Schüler hat seine Bewerbung noch nicht abgeschickt.",
         "responseLabel": "Antwort:",
         "noteLabel": "Notiz:",
-        "currentlyRejected": "Derzeit abgelehnt. Sie können trotzdem annehmen.",
+        "currentlyRejected": "Derzeit abgelehnt.",
+        "declinedLocked": "Der Schüler hat abgesagt: Eine erneute Einladung ist auf dieser Seite nicht mehr möglich.",
+        "changeMind": "Meinung ändern und einladen",
+        "personalNoteLabel": "Nachricht an die Familie (optional)",
+        "personalNotePlaceholder": "Optionale Nachricht in der Einladungs-E-Mail",
+        "confirmInvite": "Einladen",
         "accept": "Annehmen",
         "notePlaceholder": "Optionale Notiz an den Bewerber",
         "sendRejectionEmail": "Eine Ablehnungs-E-Mail an den Bewerber senden"

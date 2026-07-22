@@ -368,8 +368,10 @@
         "all": "All",
         "invited": "Invited",
         "toReview": "To review",
+        "awaiting": "Awaiting",
         "accepted": "Accepted",
-        "rejected": "Rejected"
+        "rejected": "Rejected",
+        "declined": "Declined"
       },
       "selectedCount": "{n, plural, one {# selected} other {# selected}}",
       "acceptCta": "Accept & invite",
@@ -382,9 +384,14 @@
       "tableHeader": {
         "student": "Student",
         "level": "Grade 26-27",
-        "nativeLanguage": "Native lang.",
+        "gender": "Gender",
         "receivedDate": "Received on",
         "status": "Status"
+      },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
       },
       "emptyTab": "No applications in this tab.",
       "review": {
@@ -392,9 +399,15 @@
         "statusEnrolled": "Enrolled (said Yes)",
         "statusDeclined": "Declined the invitation",
         "statusMaybe": "Responded Maybe",
+        "statusNotSubmitted": "This student hasn’t submitted their application yet.",
         "responseLabel": "Response:",
         "noteLabel": "Note:",
-        "currentlyRejected": "Currently rejected. You can still accept.",
+        "currentlyRejected": "Currently rejected.",
+        "declinedLocked": "The student declined: they can no longer be re-invited from this page.",
+        "changeMind": "Change your mind and invite",
+        "personalNoteLabel": "Message to the family (optional)",
+        "personalNotePlaceholder": "Optional message added to the invitation email",
+        "confirmInvite": "Invite",
         "accept": "Accept",
         "notePlaceholder": "Optional note to the applicant",
         "sendRejectionEmail": "Send a rejection email to the applicant"

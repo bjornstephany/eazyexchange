@@ -55,17 +55,17 @@ export async function ApplicationDetail({
         </div>
       )}
 
-      {application.status === 'submitted' && (
-        <div data-noprint className="mt-6">
-          <ApplicationReviewActions
-            applicationId={application.id}
-            exchangeId={application.exchange_id}
-            status={application.status}
-            response={application.invite_response}
-            note={application.invite_response_note ?? application.review_note}
-          />
-        </div>
-      )}
+      {/* Rendered for every status — the component self-selects what the
+          organizer may do (accept/reject, change of mind, or read-only). */}
+      <div data-noprint className="mt-6">
+        <ApplicationReviewActions
+          applicationId={application.id}
+          exchangeId={application.exchange_id}
+          status={application.status}
+          response={application.invite_response}
+          note={application.invite_response_note ?? application.review_note}
+        />
+      </div>
     </div>
   )
 }

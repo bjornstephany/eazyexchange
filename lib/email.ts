@@ -182,12 +182,18 @@ export async function sendGoodNewsEmail(opts: {
   body: string | null
   respondUrl: string
   language: 'en' | 'fr'
+  // Free text typed by the organizer when they change their mind about an
+  // application they had rejected. Organizer-authored → always escaped.
+  personalNote?: string | null
   ctx?: EmailLogContext
 }): Promise<void> {
   const { subject, bodyHtml } = renderGoodNews({
     subject: opts.subject, body: opts.body,
     studentName: opts.studentName, exchangeName: opts.exchangeName,
   })
+  const noteHtml = opts.personalNote?.trim()
+    ? `<p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${esc(opts.personalNote.trim()).replace(/\n/g, '<br>')}</p>`
+    : ''
   const labels = GOOD_NEWS_BUTTONS[opts.language]
   const btn = (href: string, label: string, bg: string) =>
     `<a href="${href}" style="display:block;text-align:center;background:${bg};color:#fff;text-decoration:none;padding:12px 16px;border-radius:9px;margin-bottom:8px;font-weight:600;">${esc(label)}</a>`
@@ -195,7 +201,7 @@ export async function sendGoodNewsEmail(opts: {
     btn(`${opts.respondUrl}?r=yes`, labels.yes, '#1F7A57') +
     btn(`${opts.respondUrl}?r=no`, labels.no, '#5C7268') +
     btn(`${opts.respondUrl}?r=maybe`, labels.maybe, '#2456E6')
-  const html = layout(`${bodyHtml}<div style="margin-top:20px;">${buttons}</div>`, APP_FOOTER_FR)
+  const html = layout(`${bodyHtml}${noteHtml}<div style="margin-top:20px;">${buttons}</div>`, APP_FOOTER_FR)
   await send(opts.to, subject, html, 'good news email', opts.ctx)
 }
 
