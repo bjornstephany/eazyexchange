@@ -5,16 +5,16 @@ import type { useTranslations } from 'next-intl'
 
 type T = ReturnType<typeof useTranslations<never>>
 
-export type PreviewMode = 'pdf-file' | 'pdf-missing' | 'online-paper' | 'doc-placeholder'
+export type PreviewMode = 'pdf-file' | 'pdf-missing' | 'online-paper' | 'doc-sticker'
 
 // Which preview the card's A4 zone shows (spec table): a real page-1
 // thumbnail when the PDF exists, a dashed « PDF à joindre » when it doesn't
-// yet, a CSS "paper" of the real field labels for online forms, and an
-// illustrative placeholder for docs (students upload those — there is no
-// organizer document to preview).
+// yet, a CSS "paper" of the real field labels for online forms, and a cartoon
+// sticker matched to the document for docs (students upload those — there is
+// no organizer document to preview).
 export function previewMode(t: Pick<TemplateVM, 'kind' | 'template_file_path'>): PreviewMode {
   if (t.kind === 'online' || t.kind === 'fillable') return 'online-paper'
-  if (t.kind === 'doc') return 'doc-placeholder'
+  if (t.kind === 'doc') return 'doc-sticker'
   return t.template_file_path ? 'pdf-file' : 'pdf-missing'
 }
 

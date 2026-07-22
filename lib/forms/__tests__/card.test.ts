@@ -27,8 +27,8 @@ describe('previewMode', () => {
     expect(previewMode(vm({ kind: 'online', template_file_path: null }))).toBe('online-paper')
     expect(previewMode(vm({ kind: 'online', status: 'draft', template_file_path: null }))).toBe('online-paper')
   })
-  it('doc shows the illustrative placeholder', () => {
-    expect(previewMode(vm({ kind: 'doc', template_file_path: null }))).toBe('doc-placeholder')
+  it('doc shows the cartoon sticker', () => {
+    expect(previewMode(vm({ kind: 'doc', template_file_path: null }))).toBe('doc-sticker')
   })
 })
 

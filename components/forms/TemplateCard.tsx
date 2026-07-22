@@ -4,6 +4,8 @@ import { StatusPill } from '@/components/dashboard/StatusPill'
 import { typePill, statusPill, reqPill, type TemplateVM } from '@/lib/forms/rollup'
 import { previewMode, cardCountLabel } from '@/lib/forms/card'
 import { TemplateThumbnail } from './TemplateThumbnail'
+import { DocIllustration } from './DocIllustration'
+import { docIllustrationKey } from '@/lib/forms/doc-illustration'
 
 // Portrait « A4 paper » card (approved mockup option C v2): preview zone on
 // top showing the document itself, then name, type pill and response count.
@@ -35,12 +37,9 @@ export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => voi
           </div>
         )}
         {mode === 'online-paper' && <PaperFields fields={vm.fields} />}
-        {mode === 'doc-placeholder' && (
+        {mode === 'doc-sticker' && (
           <div className="flex h-full flex-col items-center justify-center gap-1.5">
-            <div aria-hidden="true" className="flex h-[60px] w-[46px] flex-none flex-col items-center justify-center gap-1 rounded bg-rail">
-              <div className="h-4 w-4 rounded-full border-2 border-white/60" />
-              <div className="h-[3px] w-6 rounded-sm bg-white/60" />
-            </div>
+            <DocIllustration illustration={docIllustrationKey(vm)} />
             <span className="text-[10px] font-medium text-placeholder">{t('templateCard.docPlaceholder')}</span>
           </div>
         )}

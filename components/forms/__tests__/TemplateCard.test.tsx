@@ -50,6 +50,32 @@ describe('TemplateCard', () => {
     expect(screen.getByText('Obligatoire')).toBeInTheDocument()
   })
 
+  it('doc card renders the sticker matching its standard_key', () => {
+    renderWithIntl(<TemplateCard vm={vm({
+      kind: 'doc', standard_key: 'passeport', name: 'Passeport de l’élève',
+      template_file_path: null,
+    })} onOpen={() => {}} />)
+    expect(screen.getByTestId('doc-illustration')).toHaveAttribute('data-illustration', 'passport')
+    expect(screen.getByText('Copie à déposer')).toBeInTheDocument()
+  })
+
+  it('custom doc card falls back to a keyword match on its name', () => {
+    renderWithIntl(<TemplateCard vm={vm({
+      kind: 'doc', standard_key: null, name: 'Attestation d’assurance',
+      template_file_path: null,
+    })} onOpen={() => {}} />)
+    expect(screen.getByTestId('doc-illustration')).toHaveAttribute('data-illustration', 'insurance')
+  })
+
+  it('the sticker adds no accessible name beyond the card label', () => {
+    renderWithIntl(<TemplateCard vm={vm({
+      kind: 'doc', standard_key: 'passeport', name: 'Passeport de l’élève',
+      template_file_path: null,
+    })} onOpen={() => {}} />)
+    expect(screen.getByTestId('doc-illustration')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getAllByLabelText('Passeport de l’élève')).toHaveLength(1)
+  })
+
   it('clicking anywhere on the card fires onOpen (no other buttons)', () => {
     const onOpen = vi.fn()
     renderWithIntl(<TemplateCard vm={vm({})} onOpen={onOpen} />)
