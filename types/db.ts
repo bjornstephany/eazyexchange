@@ -3,6 +3,7 @@
 // narrows generated rows with the app's closed unions; if a migration isn't
 // re-generated, the aliases below break the build instead of drifting silently.
 import type { Database as Generated, Tables } from './supabase'
+import type { Locale } from '@/lib/i18n/config'
 
 export type { Json, Tables, TablesInsert, TablesUpdate } from './supabase'
 
@@ -78,7 +79,7 @@ export type Application = Omit<
 > & {
   status: ApplicationStatus
   data: Record<string, string>
-  language: 'en' | 'fr'
+  language: Locale
   invite_response: 'yes' | 'no' | 'maybe' | null
   terms_acknowledged_at?: string | null
 }

@@ -311,6 +311,20 @@ describe('own-school allow', () => {
       tx`update users set locale = 'es' where id = ${fx.studentA}`)).toBe(1)
   })
 
+  // Constraint (not RLS) coverage for the i18n Phase 3 widening: the funnel
+  // language domain must track LOCALES, so a new locale never fails closed at
+  // the DB while the UI happily offers it.
+  it('applications: language accepts every supported locale and rejects others', async () => {
+    for (const locale of ['en', 'fr', 'es', 'it', 'de']) {
+      await sql`update applications set language = ${locale} where id = ${fx.applicationA}`
+      const [row] = await sql`select language from applications where id = ${fx.applicationA}`
+      expect(row.language).toBe(locale)
+    }
+    await expect(
+      sql`update applications set language = 'pt' where id = ${fx.applicationA}`,
+    ).rejects.toThrow()
+  })
+
   it('any authenticated user can insert feedback stamped with their own uid', async () => {
     expect(await writeOutcome(sql, fx.orgB, (tx) =>
       tx`insert into feedback (user_id, school_id, type, message)
