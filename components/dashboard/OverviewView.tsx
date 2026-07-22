@@ -210,12 +210,12 @@ export function OverviewView(props: OverviewProps) {
                 <span className="font-medium text-navy">{row.name}</span>
                 <span className="flex items-center gap-2">
                   <StatusPill pill={row.candidature} />
-                  {row.acceptedOn && (
+                  {row.respondedAt && (
                     <span
                       className="text-[11.5px] text-muted-foreground"
-                      title={fullDate(row.acceptedOn)}
+                      title={fullDate(row.respondedAt)}
                     >
-                      {frShortDate(row.acceptedOn)}
+                      {frShortDate(row.respondedAt, { year: true })}
                     </span>
                   )}
                 </span>

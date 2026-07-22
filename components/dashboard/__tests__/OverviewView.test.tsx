@@ -77,25 +77,33 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.queryByText('Nina Rey')).toBeNull()
   })
 
-  it('shows the acceptance date beside the Accepté pill on the enrolled row', () => {
+  it('shows the response date, with the year, beside the pill on the enrolled row', () => {
     renderWithIntl(<OverviewView {...base} />)
     const date = screen.getByTitle('18 septembre 2026')
-    expect(date).toHaveTextContent('18 sept')
+    expect(date).toHaveTextContent('18 sept. 2026')
   })
 
-  it('shows no date on rows that are not enrolled, even when responded_at is set', () => {
-    // Léa is `submitted` with responded_at null; Tom is `declined` WITH a
-    // responded_at — neither may render a date.
+  it('dates a declined row too — the rule is responded_at, not acceptance', () => {
     const closedApps: AppRow[] = [
       ...apps,
       { id: '4', status: 'declined', submitted_at: '2026-09-02', responded_at: '2026-09-05T12:00:00.000+00:00', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
     ]
     renderWithIntl(<OverviewView {...base} apps={closedApps} />)
     fireEvent.click(screen.getByRole('button', { name: 'Afficher les refusés et déclinés (1)' }))
-    expect(screen.getByText('Tom Vidal')).toBeInTheDocument()
-    expect(screen.queryByTitle('5 septembre 2026')).toBeNull()
-    // exactly one date on the whole table — Camille's
-    expect(screen.getAllByTitle(/septembre 2026/)).toHaveLength(1)
+    expect(screen.getByTitle('5 septembre 2026')).toHaveTextContent('5 sept. 2026')
+    // Camille's acceptance and Tom's decline — both dated.
+    expect(screen.getAllByTitle(/septembre 2026/)).toHaveLength(2)
+  })
+
+  it('shows no date while only the organizer has acted (responded_at null)', () => {
+    // Léa is `submitted`; the organizer accepting her would not set responded_at
+    // either — nothing to date until the invitee replies.
+    const pendingApps: AppRow[] = [
+      { id: '5', status: 'accepted', submitted_at: '2026-09-02', responded_at: null, data: { first_name: 'Iris', last_name: 'Roux' }, email: 'i@r.fr' },
+    ]
+    renderWithIntl(<OverviewView {...base} apps={pendingApps} students={[]} rollups={[]} />)
+    expect(screen.getByText('Iris Roux')).toBeInTheDocument()
+    expect(screen.queryByTitle(/2026/)).toBeNull()
   })
 
   it('applicant row click navigates to the application page', () => {

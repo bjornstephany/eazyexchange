@@ -153,8 +153,13 @@ export function nextDeadline(rollups: DossierRollup[]): string | null {
 export type EnrolledStudent = { id: string; full_name: string; email: string }
 
 export type LifecycleRow =
-  | { kind: 'applicant'; key: string; name: string; candidature: Pill; statut: Pill; closed: boolean; acceptedOn: string | null; app: AppRow }
-  | { kind: 'enrolled'; key: string; name: string; candidature: Pill; acceptedOn: string | null; rollup: DossierRollup }
+  // `respondedAt` is the date the invitee replied to their invitation — yes, no,
+  // or maybe alike. `respondToInvitation` is its only writer, so a set value
+  // always means the person themselves answered; it stays null while the
+  // organizer's decision is the only thing that has happened (`submitted`,
+  // `accepted`, `rejected`).
+  | { kind: 'applicant'; key: string; name: string; candidature: Pill; statut: Pill; closed: boolean; respondedAt: string | null; app: AppRow }
+  | { kind: 'enrolled'; key: string; name: string; candidature: Pill; respondedAt: string | null; rollup: DossierRollup }
 
 const CLOSED_STATUSES = ['rejected', 'declined']
 
@@ -192,19 +197,6 @@ export function applicantStatusPill(status: string, t: T): Pill {
   }
 }
 
-// Statuses whose Candidature pill means "joined" — the only ones that carry an
-// acceptance date. `accepted` is excluded on purpose: the organizer said yes but
-// the student has not replied, so there is nothing to date. `maybe`/`declined`
-// do set responded_at, but that is a response date, not an acceptance.
-const ACCEPTED_ON_STATUSES = ['enrolling', 'enrolled']
-
-// ISO timestamp of the moment the invitee accepted to join, or null when the
-// row has no acceptance to date.
-export function acceptedOn(status: string, respondedAt: string | null): string | null {
-  if (!respondedAt) return null
-  return ACCEPTED_ON_STATUSES.includes(status) ? respondedAt : null
-}
-
 function normEmail(e: string): string {
   return e.trim().toLowerCase()
 }
@@ -227,14 +219,14 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
       candidature: candidaturePill(a.status, t),
       statut: applicantStatusPill(a.status, t),
       closed: CLOSED_STATUSES.includes(a.status),
-      acceptedOn: acceptedOn(a.status, a.responded_at),
+      respondedAt: a.responded_at,
       app: a,
     }))
 
   const enrolledRows: LifecycleRow[] = students.flatMap(s => {
     const rollup = rollupByStudent.get(s.id)
     if (!rollup) return []
-    // Single lookup, shared by the name fallback and the acceptance date below.
+    // Single lookup, shared by the name fallback and the response date below.
     const match = apps.find(a => CONFIRMED_STATUSES.includes(a.status) && normEmail(a.email) === normEmail(s.email))
     // A student who replied yes but hasn't finished account setup has an empty
     // profile full_name. Borrow the applicant name from their confirmed
@@ -248,7 +240,9 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
       key: `stu:${s.id}`,
       name,
       candidature: candidaturePill(null, t),
-      acceptedOn: match ? acceptedOn(match.status, match.responded_at) : null,
+      // A directly-invited student with no application row has no funnel
+      // response event to date.
+      respondedAt: match?.responded_at ?? null,
       rollup: resolved,
     }]
   })
