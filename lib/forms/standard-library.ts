@@ -2,8 +2,11 @@
 // (2026-07-16) nothing is auto-seeded: organizers add entries from the
 // library drawer (actions/forms.ts → addStandardTemplate). Templates are
 // added WITHOUT files — the PDFs are school-specific, so each school's
-// organizer attaches their own per exchange via the UI.
-import type { SupabaseClient } from '@supabase/supabase-js'
+// organizer attaches their own per exchange via the UI. The one exception is
+// the AST: CERFA 15646 is a national French form, identical for every school,
+// so it ships with the app (lib/forms/assets.ts) and is copied into the
+// school's own storage path on add (lib/forms/insert-standard-template.ts).
+// The organizer can still replace it.
 
 export type StandardField = { label: string; field_type: 'text' | 'checkbox' }
 export type StandardTemplate = {
@@ -69,53 +72,3 @@ export const STANDARD_TEMPLATES: StandardTemplate[] = [
     fields: [],
   },
 ]
-
-// Insert ONE library entry as a draft template (+ document slot / fields).
-// The partial unique index form_templates_standard_key_unique makes a repeat
-// add an expected outcome — surfaced as { duplicate: true }, never thrown.
-export async function insertStandardTemplate(
-  supabase: SupabaseClient,
-  std: StandardTemplate,
-  opts: { exchangeId: string; schoolId: string; userId: string },
-): Promise<{ id: string } | { duplicate: true }> {
-  const { data, error } = await supabase
-    .from('form_templates')
-    .insert({
-      exchange_id: opts.exchangeId,
-      school_id: opts.schoolId,
-      name: std.name,
-      description: std.description,
-      type: std.kind === 'online' || std.kind === 'fillable' ? 'data_entry' : 'document_upload',
-      kind: std.kind,
-      status: 'draft',
-      audience: std.audience,
-      standard_key: std.key,
-      condition_label: std.condition_label,
-      external_url: std.external_url,
-      deadline: null,
-      created_by: opts.userId,
-    })
-    .select('id')
-    .single()
-  if (error) {
-    if (error.code === '23505') return { duplicate: true }
-    throw error
-  }
-  const templateId = data.id as string
-
-  if (std.kind !== 'online' && std.kind !== 'fillable') {
-    const { error: slotError } = await supabase
-      .from('document_slots')
-      .insert({ template_id: templateId, label: std.name, description: null, required: true, order: 0 })
-    if (slotError) throw slotError
-  }
-  if (std.fields.length > 0) {
-    const { error: fieldError } = await supabase
-      .from('form_fields')
-      .insert(std.fields.map((f, i) => ({
-        template_id: templateId, label: f.label, field_type: f.field_type, required: true, order: i,
-      })))
-    if (fieldError) throw fieldError
-  }
-  return { id: templateId }
-}

@@ -28,8 +28,22 @@ export const APPLICATION_SECTIONS: AppSection[] = [
       { id: 'native_language', type: 'text', label: L('Native language', 'Langue maternelle'), required: true },
       { id: 'nationality', type: 'text', label: L('Nationality(ies)', 'Nationalité(s)'), required: true },
       { id: 'date_of_birth', type: 'date', label: L('Date of birth', 'Date de naissance'), required: true },
-      { id: 'sex', type: 'text', label: L('Sex', 'Sexe'), required: true },
-      { id: 'pronouns', type: 'text', label: L('Pronouns', 'Pronoms'), required: true },
+      {
+        id: 'sex', type: 'radio', label: L('Gender', 'Genre'), required: true,
+        options: [
+          { value: 'male', label: L('Male', 'Garçon') },
+          { value: 'female', label: L('Female', 'Fille') },
+          { value: 'other', label: L('Other', 'Autre') },
+        ],
+      },
+      { id: 'gender_other', type: 'text', label: L('Please specify (e.g. male → female)', 'Précisez (ex. garçon → fille)') },
+      {
+        id: 'pronouns', type: 'radio', label: L('Pronouns', 'Pronoms'), required: true,
+        options: [
+          { value: 'he_him', label: L('He/him', 'Il') },
+          { value: 'she_her', label: L('She/her', 'Elle') },
+        ],
+      },
       { id: 'grade', type: 'text', label: L('Grade in 26-27', 'Niveau 26-27'), required: true },
       { id: 'french_class', type: 'text', label: L('French class in 26-27', 'Classe de français 26-27'), required: true },
       { id: 'email', type: 'email', label: L('E-mail', 'E-mail'), required: true },
@@ -146,6 +160,12 @@ export function missingRequiredApplication(
   const fs = (data.family_status ?? '').trim()
   if ((fs === 'separated' || fs === 'step_family') && empty('separation_housing_address')) {
     missing.push('separation_housing_address')
+  }
+
+  // The gender "specify" field only applies when gender is "other"; the field
+  // is hidden from the form otherwise.
+  if ((data.sex ?? '').trim() === 'other' && empty('gender_other')) {
+    missing.push('gender_other')
   }
 
   // The photo lives on the applications row (photo_path), not in `data`;

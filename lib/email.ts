@@ -249,7 +249,7 @@ export async function sendStudentReminderEmail(opts: {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const n = opts.items.length
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>
@@ -266,7 +266,7 @@ export async function sendChecklistEmail(opts: {
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>

@@ -19,7 +19,8 @@ export default async function DashboardPage() {
     getTranslations(),
   ])
   const apps: AppRow[] = applications.map((a: any) => ({
-    id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
+    id: a.id, status: a.status, submitted_at: a.submitted_at, responded_at: a.responded_at,
+    data: a.data ?? {}, email: a.email,
   }))
   const templates = grid.templates.map((t: any) => ({ id: t.id, type: t.type, name: t.name, deadline: t.deadline }))
   const students: EnrolledStudent[] = grid.students.map((s: any) => ({ id: s.id, full_name: s.full_name, email: s.email }))

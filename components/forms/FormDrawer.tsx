@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from './TemplateIcon'
-import { typePill, statusPill, activationHints, type TemplateVM } from '@/lib/forms/rollup'
+import { typePill, statusPill, type TemplateVM } from '@/lib/forms/rollup'
 import { isSafeExternalUrl } from '@/lib/forms/template-result'
-import { activateTemplate, deleteTemplate, getTemplateFileUrl } from '@/actions/forms'
+import { deleteTemplate, getTemplateFileUrl } from '@/actions/forms'
 
 // Right preview drawer (460px) for a form template, per handoff.
 export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: () => void }) {
@@ -25,7 +25,6 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   }, [vm, onClose])
 
   if (!vm) return null
-  const hints = activationHints(vm)
 
   async function run(fn: () => Promise<unknown>, closeAfter = false) {
     setBusy(true)
@@ -53,18 +52,6 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
   function handleDelete() {
     if (!window.confirm(t('forms.deleteConfirm'))) return
     void run(() => deleteTemplate(vm!.id), true)
-  }
-
-  async function handleActivate() {
-    setBusy(true)
-    setError(null)
-    try {
-      const res = await activateTemplate(vm!.id, undefined)
-      if (!res.ok) setError(res.message)
-    } catch {
-      setError(c('errors.generic'))
-    }
-    setBusy(false)
   }
 
   return (
@@ -126,27 +113,7 @@ export function FormDrawer({ vm, onClose }: { vm: TemplateVM | null; onClose: ()
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
 
-        {hints.length > 0 && (
-          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
-            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
-            <ul className="flex flex-col gap-1">
-              {hints.map((h) => (
-                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
-                  {h}{' '}
-                  <Link href={`/forms/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
-          {vm.status === 'draft' && (
-            <button type="button" disabled={busy} onClick={handleActivate}
-              className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? t('forms.drawer.activating') : t('forms.drawer.activate')}
-            </button>
-          )}
           <Link href={`/forms/${vm.id}`}
             className={`flex-1 rounded-[9px] py-[11px] text-center text-[13px] font-semibold ${vm.status === 'draft' ? 'border border-frame-dashed bg-card text-navy' : 'bg-brand text-white hover:bg-brand-hover'}`}>
             {t('forms.drawer.editTemplate')}

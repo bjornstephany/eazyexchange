@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { SaveIcon } from 'lucide-react'
 import { changePassword } from '@/actions/settings'
 
 export function SecurityCard({ canChangePassword }: { canChangePassword: boolean }) {
@@ -75,8 +76,9 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
             {error && <span className="text-[12.5px] font-medium text-danger-text">{error}</span>}
             <button
               type="button" onClick={handleSave} disabled={busy}
-              className="rounded-[9px] bg-brand px-[15px] py-[9px] text-[12.5px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-[9px] bg-brand px-[15px] py-[9px] text-[12.5px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
             >
+              <SaveIcon aria-hidden size={15} strokeWidth={1.75} />
               {t('settings.security.submitButton')}
             </button>
           </div>

@@ -88,7 +88,7 @@ export function buildDossier(assignments: RawAssignment[], now: Date = new Date(
 
   // Soonest UPCOMING deadline among non-approved items. Overdue items are
   // surfaced per-card (« En retard ») and excluded here so the « Prochaine
-  // échéance » label never shows a past date. ISO strings sort chronologically.
+  // date limite » label never shows a past date. ISO strings sort chronologically.
   const nextDeadline =
     [...todo, ...review]
       .filter(i => !i.overdue && i.deadline != null)
