@@ -67,7 +67,7 @@ This yields the right result for all four definitions and is what Task 3's tests
   - `docIllustrationKey(tpl: Pick<TemplateVM, 'standard_key' | 'name'>): IllustrationKey`
   - `normalizeName(name: string): string`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `lib/forms/__tests__/doc-illustration.test.ts`:
 
@@ -150,12 +150,12 @@ describe('docIllustrationKey — custom names', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm vitest run lib/forms/__tests__/doc-illustration.test.ts`
 Expected: FAIL — `Failed to resolve import "@/lib/forms/doc-illustration"`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `lib/forms/doc-illustration.ts`:
 
@@ -229,12 +229,12 @@ export function docIllustrationKey(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm vitest run lib/forms/__tests__/doc-illustration.test.ts`
 Expected: PASS — all cases green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/forms/doc-illustration.ts lib/forms/__tests__/doc-illustration.test.ts
@@ -256,7 +256,7 @@ git commit -m "feat(forms): keyword matcher picking a sticker per document templ
 - Produces: `<DocIllustration illustration={key} />` — a 64×64 inline SVG,
   `aria-hidden`, `data-testid="doc-illustration"`, `data-illustration={key}`.
 
-- [ ] **Step 1: Update the failing tests**
+- [x] **Step 1: Update the failing tests**
 
 In `lib/forms/__tests__/card.test.ts`, replace the existing doc case:
 
@@ -308,12 +308,12 @@ In `components/forms/__tests__/TemplateCard.test.tsx`, append inside `describe('
 > `organizer.templateCard.docPlaceholder`. If `messages/fr.json` holds a
 > different string, assert that string — do **not** edit the message file.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm vitest run lib/forms/__tests__/card.test.ts components/forms/__tests__/TemplateCard.test.tsx`
 Expected: FAIL — `card.test.ts` expects `'doc-sticker'` but receives `'doc-placeholder'`; `TemplateCard.test.tsx` fails with `Unable to find an element by: [data-testid="doc-illustration"]`.
 
-- [ ] **Step 3: Create the sticker component**
+- [x] **Step 3: Create the sticker component**
 
 Create `components/forms/DocIllustration.tsx`:
 
@@ -480,7 +480,7 @@ export function DocIllustration({ illustration }: { illustration: IllustrationKe
 > `ART` is indexed only by the `IllustrationKey` union returned from Task 1 —
 > never by a raw runtime string — so the own-property guard is not needed here.
 
-- [ ] **Step 4: Rename the preview mode**
+- [x] **Step 4: Rename the preview mode**
 
 In `lib/forms/card.ts`, change the union and the doc branch:
 
@@ -495,7 +495,7 @@ export type PreviewMode = 'pdf-file' | 'pdf-missing' | 'online-paper' | 'doc-sti
 Also update the comment above `previewMode` so « an illustrative placeholder for
 docs » reads « a cartoon sticker matched to the document for docs ».
 
-- [ ] **Step 5: Wire the card**
+- [x] **Step 5: Wire the card**
 
 In `components/forms/TemplateCard.tsx`, add the imports:
 
@@ -529,14 +529,14 @@ with:
         )}
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `pnpm vitest run lib/forms components/forms`
 Expected: PASS. If any other suite referenced `'doc-placeholder'`, update that
 reference to `'doc-sticker'` — the string is a preview-mode identifier, not a
 translation key.
 
-- [ ] **Step 7: Typecheck and commit**
+- [x] **Step 7: Typecheck and commit**
 
 Run: `npx tsc --noEmit`
 Expected: no errors.
@@ -566,7 +566,7 @@ git commit -m "feat(forms): cartoon stickers on document cards"
   - `fillablePreviewBlocks(def: FillableDefinition, resolved: ResolvedVariables): PreviewBlock[]`
   - `fillablePreviewFor(standardKey: string | null, resolved: ResolvedVariables): PreviewBlock[]`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `lib/forms/__tests__/fillable-preview.test.ts`:
 
@@ -689,12 +689,12 @@ describe('fillablePreviewFor', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm vitest run lib/forms/__tests__/fillable-preview.test.ts`
 Expected: FAIL — `Failed to resolve import "@/lib/forms/fillable-preview"`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `lib/forms/fillable-preview.ts`:
 
@@ -849,12 +849,12 @@ function trimRuns(runs: PreviewRun[], budget: number): PreviewRun[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm vitest run lib/forms/__tests__/fillable-preview.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/forms/fillable-preview.ts lib/forms/__tests__/fillable-preview.test.ts
@@ -879,7 +879,7 @@ git commit -m "feat(forms): derive a thumbnail preview from a fillable definitio
   - `TemplateCard` gains an optional prop:
     `{ vm: TemplateVM; resolvedVars?: ResolvedVariables; onOpen: () => void }`.
 
-- [ ] **Step 1: Update the failing tests**
+- [x] **Step 1: Update the failing tests**
 
 In `lib/forms/__tests__/card.test.ts`, replace the online case with one that
 covers both kinds:
@@ -928,13 +928,13 @@ In `components/forms/__tests__/TemplateCard.test.tsx`, append:
   })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm vitest run lib/forms/__tests__/card.test.ts components/forms/__tests__/TemplateCard.test.tsx`
 Expected: FAIL — `previewMode` returns `'online-paper'` for fillable, and
 `data-testid="fillable-paper"` is not found.
 
-- [ ] **Step 3: Create the paper component**
+- [x] **Step 3: Create the paper component**
 
 Create `components/forms/FillablePaper.tsx`:
 
@@ -1007,7 +1007,7 @@ function PaperSkeleton() {
 }
 ```
 
-- [ ] **Step 4: Add the preview mode**
+- [x] **Step 4: Add the preview mode**
 
 In `lib/forms/card.ts`:
 
@@ -1026,7 +1026,7 @@ export function previewMode(t: Pick<TemplateVM, 'kind' | 'template_file_path'>):
 }
 ```
 
-- [ ] **Step 5: Wire the card**
+- [x] **Step 5: Wire the card**
 
 In `components/forms/TemplateCard.tsx`, add the imports:
 
@@ -1054,7 +1054,7 @@ Add the new branch immediately after the `online-paper` branch:
         )}
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `pnpm vitest run lib/forms components/forms`
 Expected: PASS.
@@ -1063,7 +1063,7 @@ Expected: PASS.
 > skeleton for a fillable template, update it to assert the new paper — the
 > blank skeleton was the bug this task fixes.
 
-- [ ] **Step 7: Typecheck and commit**
+- [x] **Step 7: Typecheck and commit**
 
 Run: `npx tsc --noEmit`
 Expected: no errors.
@@ -1094,7 +1094,7 @@ Until this task lands, every fillable card previews with blanks where its
 program variables belong. Tasks 3 and 4 are correct without it — this is what
 makes the preview show the real exchange name, destination and dates.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `components/forms/__tests__/FichiersView.test.tsx`, append inside the top-level
 `describe`:
@@ -1118,13 +1118,13 @@ In `components/forms/__tests__/FichiersView.test.tsx`, append inside the top-lev
 > it has none, copy the `vm()` factory from
 > `components/forms/__tests__/TemplateCard.test.tsx` verbatim.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm vitest run components/forms/__tests__/FichiersView.test.tsx`
 Expected: FAIL — TypeScript rejects the unknown `resolvedVars` prop, and the
 kicker text is not found.
 
-- [ ] **Step 3: Return the resolved variables from the loader**
+- [x] **Step 3: Return the resolved variables from the loader**
 
 In `actions/forms.ts`, **extend the existing import on line 14** rather than
 adding a second statement for the same module (`no-duplicate-imports`). It
@@ -1174,7 +1174,7 @@ Then extend the return statement:
   }
 ```
 
-- [ ] **Step 4: Thread it through the page and the view**
+- [x] **Step 4: Thread it through the page and the view**
 
 In `app/(organizer)/forms/page.tsx`:
 
@@ -1213,7 +1213,7 @@ identical stops them drifting:
             <TemplateCard key={tpl.id} vm={tpl} resolvedVars={resolvedVars} onOpen={() => setOpenId(tpl.id)} />
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `pnpm vitest run components/forms lib/forms actions`
 Expected: PASS.
@@ -1222,7 +1222,7 @@ Expected: PASS.
 > also return `resolvedVars`. If a suite fails with `resolvedVars is undefined`,
 > add `resolvedVars: {}` to that mock's return value.
 
-- [ ] **Step 6: Run the full gate**
+- [x] **Step 6: Run the full gate**
 
 ```bash
 pnpm lint
@@ -1237,7 +1237,7 @@ Expected: lint clean, all suites pass, no type errors, build succeeds.
 > belong to a sibling worktree, not this change. Re-run scoped:
 > `pnpm vitest run --exclude '**/.claude/**'`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add actions/forms.ts app/\(organizer\)/forms/page.tsx \
