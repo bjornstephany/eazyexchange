@@ -12,24 +12,28 @@ import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
 import { InviteByEmailDialog } from '@/components/applications/InviteByEmailDialog'
 import { Button } from '@/components/ui/button'
 
-type TabKey = 'all' | 'invited' | 'toreview' | 'accepted' | 'rejected'
+type TabKey = 'all' | 'invited' | 'toreview' | 'awaiting' | 'accepted' | 'rejected' | 'declined'
 
-const TAB_KEYS: TabKey[] = ['all', 'invited', 'toreview', 'accepted', 'rejected']
-
-const ACCEPTED_STATUSES = ['accepted', 'maybe', 'enrolling', 'enrolled']
-const REJECTED_STATUSES = ['rejected', 'declined']
+const TAB_KEYS: TabKey[] = ['all', 'invited', 'toreview', 'awaiting', 'accepted', 'rejected', 'declined']
 
 // Invited/started rows are organizer-sent invitations still in the funnel; they
 // are shown for tracking but never bulk-selectable for accept/reject.
 const SELECTABLE = (a: AppRow) => a.status !== 'invited' && a.status !== 'draft'
 
+// Every status belongs to exactly one non-"all" tab. "rejected" is the
+// organizer saying no; "declined" is the student saying no — conflating them
+// (as the old REJECTED_STATUSES did) made a student who dropped out look
+// refused. "awaiting" is organizer-accepted with no student reply yet;
+// "accepted" means the student confirmed.
 function matchesTab(a: AppRow, key: TabKey): boolean {
   switch (key) {
     case 'all': return true
     case 'invited': return a.status === 'invited' || a.status === 'draft'
     case 'toreview': return a.status === 'submitted'
-    case 'accepted': return ACCEPTED_STATUSES.includes(a.status)
-    case 'rejected': return REJECTED_STATUSES.includes(a.status)
+    case 'awaiting': return a.status === 'accepted' || a.status === 'maybe'
+    case 'accepted': return a.status === 'enrolling' || a.status === 'enrolled'
+    case 'rejected': return a.status === 'rejected'
+    case 'declined': return a.status === 'declined'
   }
 }
 
@@ -84,8 +88,10 @@ export function CandidaturesView({
       case 'all': return tr('organizer.applications.tabs.all')
       case 'invited': return tr('organizer.applications.tabs.invited')
       case 'toreview': return tr('organizer.applications.tabs.toReview')
+      case 'awaiting': return tr('organizer.applications.tabs.awaiting')
       case 'accepted': return tr('organizer.applications.tabs.accepted')
       case 'rejected': return tr('organizer.applications.tabs.rejected')
+      case 'declined': return tr('organizer.applications.tabs.declined')
     }
   }
 

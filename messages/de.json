@@ -368,8 +368,10 @@
         "all": "Alle",
         "invited": "Eingeladen",
         "toReview": "Zu prüfen",
+        "awaiting": "Wartet",
         "accepted": "Angenommen",
-        "rejected": "Abgelehnt"
+        "rejected": "Abgelehnt",
+        "declined": "Abgesagt"
       },
       "selectedCount": "{n, plural, one {# ausgewählt} other {# ausgewählt}}",
       "acceptCta": "Annehmen & einladen",
