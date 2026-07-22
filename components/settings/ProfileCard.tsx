@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { SaveIcon } from 'lucide-react'
 import { updateProfile } from '@/actions/settings'
 
 const AVATAR_GRADIENT = 'linear-gradient(135deg,#3B6EF6,#0E1B38)' // handoff constant
@@ -81,8 +82,9 @@ export function ProfileCard({ profile, isOwner }: {
         {saved && <span className="text-[12.5px] font-medium text-success-text">{c('states.saved')}</span>}
         <button
           type="button" onClick={handleSave} disabled={busy}
-          className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
         >
+          <SaveIcon aria-hidden size={15} strokeWidth={1.75} />
           {c('actions.save')}
         </button>
       </div>

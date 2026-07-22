@@ -189,7 +189,7 @@ describe('updateTemplateMeta / replaceTemplateFile — structured results', () =
   it('updateTemplateMeta refuses removing the deadline of an active template', async () => {
     template.status = 'active'
     const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: null, condition_label: null, external_url: null })
-    expect(res).toEqual({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
+    expect(res).toEqual({ ok: false, message: 'Un modèle actif doit garder une date limite.' })
   })
   it('updateTemplateMeta returns ok on success', async () => {
     const res = await updateTemplateMeta('tpl-1', { name: 'Passeport', description: null, deadline: '2026-10-10', condition_label: null, external_url: null })

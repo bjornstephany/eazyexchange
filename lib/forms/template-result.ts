@@ -5,7 +5,7 @@
 // messages, so expected validation outcomes must travel as return values
 // (pattern: lib/billing/exchange-limit.ts).
 
-export const MSG_DEADLINE_REQUIRED = 'Ajoutez une échéance avant d’activer.'
+export const MSG_DEADLINE_REQUIRED = 'Ajoutez une date limite avant d’activer.'
 export const MSG_PDF_REQUIRED = 'Téléversez le PDF avant d’activer.'
 export const MSG_QUESTIONS_REQUIRED = 'Ajoutez au moins une question avant d’activer.'
 

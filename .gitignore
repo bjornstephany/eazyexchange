@@ -21,6 +21,8 @@
 # misc
 .DS_Store
 *.pem
+# WSL/NTFS metadata sidecars created when copying files in from Windows
+*:Zone.Identifier
 
 # debug
 npm-debug.log*

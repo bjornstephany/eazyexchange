@@ -86,7 +86,7 @@ describe('buildStudentVM', () => {
     expect(v.provided).toBe(1)
     expect(v.total).toBe(3)
     expect(v.pct).toBe(33)
-    expect(v.dueLabel).toBe('Échéance 3 oct')
+    expect(v.dueLabel).toBe('Date limite 3 oct')
   })
 
   it('maps rejected and draft to « En cours »', () => {
@@ -121,7 +121,7 @@ describe('buildStudentVM', () => {
       avatarIndex: 0, today: new Date('2026-10-05T10:00:00Z'),
     }, t)
     expect(late.statusKey).toBe('retard')
-    expect(late.summary).toBe('Échéance dépassée — 1 pièce attendue')
+    expect(late.summary).toBe('Date limite dépassée — 1 pièce attendue')
   })
 
   it('carries the application photoUrl through; null without a photo or application', () => {
@@ -181,9 +181,9 @@ describe('list helpers', () => {
   it('reminder note: complete vs pending', () => {
     const done = mk('a', 'Camille Laurent', 'complet')
     expect(reminderNote(done, t)).toBe('Dossier complet — aucune relance prévue pour Camille.')
-    const pending = { ...mk('b', 'Yanis Benali', 'incomplet'), dueLabel: 'Échéance 10 oct' }
+    const pending = { ...mk('b', 'Yanis Benali', 'incomplet'), dueLabel: 'Date limite 10 oct' }
     expect(reminderNote(pending, t)).toBe(
-      "Relances automatiques par e-mail jusqu’à réception — Yanis et ses parents reçoivent la liste des pièces attendues (Échéance 10 oct)."
+      "Relances automatiques par e-mail jusqu’à réception — Yanis et ses parents reçoivent la liste des pièces attendues (Date limite 10 oct)."
     )
     const noDue = mk('c', 'Léa C', 'incomplet')
     expect(reminderNote(noDue, t)).toBe(

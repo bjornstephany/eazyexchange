@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { SaveIcon } from 'lucide-react'
 import { updateGoodNewsTemplate } from '@/actions/settings'
 import {
   renderGoodNews,
@@ -93,8 +94,9 @@ export function GoodNewsCard({ exchangeId, exchangeName, initialSubject, initial
         <div className="flex items-center gap-3">
           <button
             type="button" disabled={disabled} onClick={save}
-            className="rounded-[9px] bg-tint-text px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-[9px] bg-tint-text px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
           >
+            <SaveIcon aria-hidden size={15} strokeWidth={1.75} />
             {t('settings.goodNews.saveButton')}
           </button>
           {saved && <span className="text-[12.5px] font-medium text-tint-text">{t('settings.goodNews.savedNotice')}</span>}
