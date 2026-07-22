@@ -85,27 +85,38 @@ each other's branches and commits; recovery means reflog archaeology. This overr
 "commit straight to `main`" shortcut above: small changes still get their own worktree,
 they just merge the same day.
 
-```bash
-pnpm wt <slug>          # -> ../eazyexchange-<slug> on feature/<slug>
-pnpm wt <slug> fix      # -> fix/<slug>
-```
+**The session that starts the work does the work.** Do not hand off to a fresh session —
+move the current one into its own worktree and keep going:
 
-`pnpm wt` branches off fresh `origin/main`, links `.env.local` / `.env.staging` from the
-main checkout, installs deps, and pins a deterministic dev port in `.wtport` (`pnpm dev`
-reads it) so no two worktrees race for 3000. Then start a **new** session in that
-directory — never continue in the session that created it.
+1. **`EnterWorktree`** with `name` = the branch you want (`feature/<slug>`, `fix/<slug>`).
+   It creates `.claude/worktrees/<name>` on that branch off fresh `origin/main` and
+   switches this session's working directory into it. Isolation comes from the
+   worktree, not from a new session.
+2. **`pnpm wt`** (no arguments, from inside the worktree) — links `.env.local` /
+   `.env.staging` from the main checkout, pins a deterministic dev port in `.wtport`
+   (`pnpm dev` reads it) so no two worktrees race for 3000, and installs deps.
+   Skipping it means placeholder-env 500s and a dev server on the wrong branch.
+3. Work, commit, verify, merge — all in this session.
+4. **`ExitWorktree`** (`remove` once merged, `keep` to come back later) returns the
+   session to the main checkout.
+
+Worktrees live under `.claude/worktrees/`, which is gitignored and excluded from
+`tsconfig.json` and `vitest.config.ts` — a sibling worktree can never be staged by
+accident or swept into another worktree's test run. `EnterWorktree` refuses to nest, so
+a session physically cannot end up two worktrees deep.
 
 - **Before every commit, confirm the branch** (`git branch --show-current`). A session
   that finds itself on a branch it did not create must stop and report, not commit.
-- **Never `git add -A` / `git add .`** — stage only the files you touched. A sibling
-  session's half-finished work is often untracked in the same tree.
+- **Never `git add -A` / `git add .`** — stage only the files you touched. Untracked
+  half-finished work turns up in the tree more often than you would expect.
 - **Test failures can be another session's race.** An import that resolves nowhere, or a
   suite that fails once and passes on re-run, usually means a neighbour was mid-write.
   Re-run the single file before debugging it.
 - **`supabase/migrations/` is single-writer.** Worktrees isolate files, not the shared
   Supabase projects: the prod migration ledger and staging DB are global. Only one
   session at a time may add or apply a migration; if another is mid-migration, wait.
-- When a branch is merged: `git worktree remove ../eazyexchange-<slug>`.
+- When a branch is merged, leave via `ExitWorktree` (`remove`) rather than
+  `git worktree remove` — the tool also restores this session's working directory.
 
 ## Backlog
 
