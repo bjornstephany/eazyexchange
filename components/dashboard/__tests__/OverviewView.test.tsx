@@ -14,8 +14,8 @@ import { OverviewView } from '@/components/dashboard/OverviewView'
 import type { AppRow, DossierRollup, EnrolledStudent } from '@/lib/dashboard/rollup'
 
 const apps: AppRow[] = [
-  { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
-  { id: '2', status: 'enrolled', submitted_at: '2026-09-10', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
+  { id: '1', status: 'submitted', submitted_at: '2026-09-12', responded_at: null, data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
+  { id: '2', status: 'enrolled', submitted_at: '2026-09-10', responded_at: '2026-09-18T12:00:00.000+00:00', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
 ]
 const students: EnrolledStudent[] = [{ id: 's1', full_name: 'Camille Laurent', email: 'c@l.fr' }]
 const rollups: DossierRollup[] = [{
@@ -64,8 +64,8 @@ describe('OverviewView — unified lifecycle table', () => {
   it('hides rejected/declined rows behind the « Afficher » toggle', () => {
     const closedApps: AppRow[] = [
       ...apps,
-      { id: '3', status: 'rejected', submitted_at: '2026-09-01', data: { first_name: 'Nina', last_name: 'Rey' }, email: 'n@r.fr' },
-      { id: '4', status: 'declined', submitted_at: '2026-09-02', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
+      { id: '3', status: 'rejected', submitted_at: '2026-09-01', responded_at: null, data: { first_name: 'Nina', last_name: 'Rey' }, email: 'n@r.fr' },
+      { id: '4', status: 'declined', submitted_at: '2026-09-02', responded_at: '2026-09-05T12:00:00.000+00:00', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
     ]
     renderWithIntl(<OverviewView {...base} apps={closedApps} />)
     expect(screen.queryByText('Nina Rey')).toBeNull()
@@ -75,6 +75,27 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('Tom Vidal')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Masquer les refusés et déclinés' }))
     expect(screen.queryByText('Nina Rey')).toBeNull()
+  })
+
+  it('shows the acceptance date beside the Accepté pill on the enrolled row', () => {
+    renderWithIntl(<OverviewView {...base} />)
+    const date = screen.getByTitle('18 septembre 2026')
+    expect(date).toHaveTextContent('18 sept')
+  })
+
+  it('shows no date on rows that are not enrolled, even when responded_at is set', () => {
+    // Léa is `submitted` with responded_at null; Tom is `declined` WITH a
+    // responded_at — neither may render a date.
+    const closedApps: AppRow[] = [
+      ...apps,
+      { id: '4', status: 'declined', submitted_at: '2026-09-02', responded_at: '2026-09-05T12:00:00.000+00:00', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
+    ]
+    renderWithIntl(<OverviewView {...base} apps={closedApps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher les refusés et déclinés (1)' }))
+    expect(screen.getByText('Tom Vidal')).toBeInTheDocument()
+    expect(screen.queryByTitle('5 septembre 2026')).toBeNull()
+    // exactly one date on the whole table — Camille's
+    expect(screen.getAllByTitle(/septembre 2026/)).toHaveLength(1)
   })
 
   it('applicant row click navigates to the application page', () => {

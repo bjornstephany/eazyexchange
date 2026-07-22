@@ -8,3 +8,12 @@ export function frShortDate(iso: string | null): string {
   const formatted = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date)
   return formatted.replace(/\.$/, '')
 }
+
+// "12 septembre 2026" style French long date; empty string for null/invalid
+// input. Used for tooltips where the year matters and space does not.
+export function fullDate(iso: string | null): string {
+  if (!iso) return ''
+  const date = new Date(iso.includes('T') ? iso : iso + 'T00:00:00')
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+}

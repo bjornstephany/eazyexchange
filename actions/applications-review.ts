@@ -27,6 +27,7 @@ export type ApplicationListRow = {
   id: string
   status: string
   submitted_at: string | null
+  responded_at: string | null
   data: Record<string, string>
   email: string
   photoUrl?: string | null
@@ -65,7 +66,7 @@ export async function listApplications(
       .from('applications')
       // Only the columns the Candidatures view + dashboard rollups consume (AppRow).
       // Avoids shipping the private resume_token / invite_token to the browser.
-      .select('id, status, submitted_at, data, email')
+      .select('id, status, submitted_at, responded_at, data, email')
       .eq('exchange_id', exchangeId)
       .or('status.neq.draft,invited_at.not.is.null')
       .order('submitted_at', { ascending: false })
@@ -75,7 +76,7 @@ export async function listApplications(
 
   const { data, error } = await supabase
     .from('applications')
-    .select('id, status, submitted_at, data, email, photo_path')
+    .select('id, status, submitted_at, responded_at, data, email, photo_path')
     .eq('exchange_id', exchangeId)
     .or('status.neq.draft,invited_at.not.is.null')
     .order('submitted_at', { ascending: false })
@@ -87,7 +88,8 @@ export async function listApplications(
   const paths = rows.map(r => r.photo_path).filter((p): p is string => p !== null)
   const urlByPath = await signApplicationPhotoUrls(paths)
   return rows.map(r => ({
-    id: r.id, status: r.status, submitted_at: r.submitted_at, data: r.data, email: r.email,
+    id: r.id, status: r.status, submitted_at: r.submitted_at, responded_at: r.responded_at,
+    data: r.data, email: r.email,
     photoUrl: r.photo_path ? urlByPath.get(r.photo_path) ?? null : null,
   }))
 }
