@@ -5,7 +5,7 @@ import {
   frShortDate,
   rollupStudent, formsPill, docsPill, dossierComplete,
   nextDeadline, p,
-  candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
+  candidaturePill, applicantStatusPill, acceptedOn, buildLifecycleRows, closedCount,
   lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, progressSummary,
   type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent, type DossierRollup,
 } from '@/lib/dashboard/rollup'
@@ -183,6 +183,26 @@ describe('applicantStatusPill', () => {
   ])('%s → %s %s', (s, kind, label) => expect(applicantStatusPill(s, t)).toEqual({ kind, label }))
 })
 
+describe('acceptedOn', () => {
+  const D = '2026-09-18T12:00:00.000+00:00'
+  it.each([
+    ['enrolled', D, D],
+    ['enrolling', D, D],
+    ['accepted', null, null],
+    ['accepted', D, null],
+    ['maybe', D, null],
+    ['declined', D, null],
+    ['rejected', D, null],
+    ['submitted', D, null],
+    ['invited', D, null],
+    ['draft', D, null],
+    ['enrolled', null, null],
+    ['enrolling', null, null],
+  ])('%s + %s → %s', (status, responded, expected) => {
+    expect(acceptedOn(status as string, responded as string | null)).toBe(expected)
+  })
+})
+
 describe('buildLifecycleRows', () => {
   it('applicant rows first (apps order), then enrolled rows (students order)', () => {
     const apps = [app('submitted', { id: 'a1' }), app('maybe', { id: 'a2' })]
@@ -244,6 +264,30 @@ describe('buildLifecycleRows', () => {
     const blankStudents: EnrolledStudent[] = [{ id: 's1', full_name: '  ', email: 'c@l.fr' }]
     const blankRollup = rollupStudent({ id: 's1', full_name: '  ' }, T, cell('approved', 'approved'), TODAY, t)
     expect(buildLifecycleRows([], blankStudents, [blankRollup], t)[0].name).toBe('c@l.fr')
+  })
+  it('an enrolled student inherits acceptedOn from the matching application', () => {
+    const D = '2026-09-18T12:00:00.000+00:00'
+    const apps = [app('enrolled', { id: 'a1', email: ' C@L.FR ', responded_at: D })]
+    const rows = buildLifecycleRows(apps, STUDENTS, ROLLUPS, t)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].acceptedOn).toBe(D)
+  })
+  it('an enrolled student with no matching application has acceptedOn null', () => {
+    const rows = buildLifecycleRows([], STUDENTS, ROLLUPS, t)
+    expect(rows[0].acceptedOn).toBeNull()
+  })
+  it('an applicant row carries its own acceptedOn (null unless enrolling/enrolled)', () => {
+    const D = '2026-09-18T12:00:00.000+00:00'
+    const apps = [app('maybe', { id: 'a1', email: 'm@x.fr', responded_at: D })]
+    const rows = buildLifecycleRows(apps, [], [], t)
+    expect(rows[0].acceptedOn).toBeNull()
+  })
+  it('an orphan enrolled application keeps its acceptedOn on the fallback applicant row', () => {
+    const D = '2026-09-18T12:00:00.000+00:00'
+    const apps = [app('enrolled', { id: 'a1', email: 'orphan@x.fr', responded_at: D })]
+    const rows = buildLifecycleRows(apps, [], [], t)
+    expect(rows[0].kind).toBe('applicant')
+    expect(rows[0].acceptedOn).toBe(D)
   })
 })
 
