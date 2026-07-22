@@ -1,6 +1,5 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { applicantName as buildApplicantName } from '@/lib/application-form'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { tokenExpired } from '@/lib/tokens'
@@ -187,42 +186,6 @@ export async function respondToInvitation(
   })
 
   return { ok: true }
-}
-
-// Abandoned-setup recovery: the invite page shows « Reprendre la configuration »
-// for an enrolled/enrolling invite whose account setup never finished. Token
-// possession + unexpired window is the same trust respondToInvitation relies on.
-export async function resumeInviteSetup(token: string): Promise<InviteActionResult> {
-  const admin = createAdminClient()
-  const { data: app } = await admin
-    .from('applications')
-    .select('status, email, invite_token_expires_at')
-    .eq('invite_token', token).maybeSingle()
-  if (!app) return inviteError('not_found')
-  if (tokenExpired(app.invite_token_expires_at)) return inviteError('expired')
-  if (app.status !== 'enrolled' && app.status !== 'enrolling') return inviteError('closed')
-  const minted = await mintInviteSession(admin, app.email)
-  return minted ? { ok: true } : inviteError('retry')
-}
-
-// generateLink returns the hashed OTP token WITHOUT sending any email; verifying
-// it on the cookie-aware server client is exactly what /auth/confirm does with
-// the emailed link — minus the email. Magiclink (not invite-type) because it
-// also works for existing users, which the retry/recovery paths need.
-async function mintInviteSession(
-  admin: ReturnType<typeof createAdminClient>, email: string,
-): Promise<boolean> {
-  try {
-    const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email })
-    const tokenHash = data?.properties?.hashed_token
-    if (error || !tokenHash) return false
-    const supabase = await createClient()
-    const { error: otpError } = await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash })
-    return !otpError
-  } catch {
-    // Never log the email (PII); the caller surfaces the structured retry error.
-    return false
-  }
 }
 
 // Emails the student a magiclink /auth/confirm setup URL (NOT a session in the
