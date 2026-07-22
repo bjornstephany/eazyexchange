@@ -5,7 +5,6 @@ const getInvitationMock = vi.fn()
 vi.mock('@/actions/invitations', () => ({
   getInvitation: (...a: unknown[]) => getInvitationMock(...a),
   respondToInvitation: vi.fn(),
-  resumeInviteSetup: vi.fn(),
 }))
 
 import InvitePage from '@/app/invite/[token]/page'

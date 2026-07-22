@@ -1,0 +1,18 @@
+/* Design-sync stylesheet input.
+ *
+ * Pulls in the app's real globals.css (the authoritative :root token block and
+ * @tailwind directives) so tokens are never duplicated here, then supplies the
+ * three --font-* variables that next/font injects at runtime in the app but
+ * that nothing defines outside Next. */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@import '../app/globals.css';
+
+@layer base {
+  :root {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Schibsted Grotesk', 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+}

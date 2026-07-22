@@ -282,7 +282,8 @@ export async function getExchangeProgressSummaries(): Promise<Record<string, Exc
           getExchangeGrid(exchange.id),
         ])
         const apps: AppRow[] = applications.map(a => ({
-          id: a.id, status: a.status, submitted_at: a.submitted_at, data: a.data ?? {}, email: a.email,
+          id: a.id, status: a.status, submitted_at: a.submitted_at, responded_at: a.responded_at,
+          data: a.data ?? {}, email: a.email,
         }))
         const templates: TemplateInfo[] = grid.templates.map(t => ({
           id: t.id, type: t.type as TemplateInfo['type'], name: t.name, deadline: t.deadline as string,

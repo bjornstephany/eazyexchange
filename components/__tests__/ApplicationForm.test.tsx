@@ -7,6 +7,7 @@ vi.mock('@/actions/apply', () => ({
   submitApplication: vi.fn(async () => ({ ok: true as const })),
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
   sendApplicationResumeLink: vi.fn(async () => {}),
+  downloadApplicationRecap: vi.fn(async () => ({ ok: true as const, filename: 'c.pdf', pdf: '' })),
 }))
 // Route the validation through a controllable mock so tests don't have to
 // populate all ~50 required fields.
@@ -58,6 +59,14 @@ describe('ApplicationForm', () => {
     expect(readResumeToken('s')).toBeNull()
   })
 
+  it('offers the recap download on the confirmation screen', async () => {
+    const user = userEvent.setup()
+    renderForm({ exchangeName: 'X' })
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/ta candidature a été envoyée/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /télécharger mes réponses/i })).toBeInTheDocument()
+  })
+
   it('renders the photo upload card and the parent helper text', () => {
     renderForm()
     expect(screen.getByRole('button', { name: /choisir une photo/i })).toBeInTheDocument()
@@ -82,6 +91,16 @@ describe('ApplicationForm', () => {
     expect(screen.queryByText(/adresse où sera accueilli le correspondant/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: 'Séparé' }))
     expect(screen.getByText(/adresse où sera accueilli le correspondant/i)).toBeInTheDocument()
+  })
+
+  it('hides the gender specify field until "Autre" is selected', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    expect(screen.queryByText(/^précisez/i)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'Autre' }))
+    expect(screen.getByText(/^précisez/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'Fille' }))
+    expect(screen.queryByText(/^précisez/i)).not.toBeInTheDocument()
   })
 
   it('shows a live character counter on limited profile textareas', () => {

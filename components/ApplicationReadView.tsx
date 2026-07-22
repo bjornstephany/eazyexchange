@@ -1,4 +1,17 @@
-import { APPLICATION_SECTIONS } from '@/lib/application-form'
+import { APPLICATION_SECTIONS, type AppField } from '@/lib/application-form'
+
+// Stored tokens → display labels. Radio answers fall back to the raw string so
+// legacy free-text values (pre-choice sex/pronoun answers) keep rendering.
+function displayValue(f: AppField, raw: string | undefined, lang: 'en' | 'fr'): string {
+  const v = raw?.trim() ?? ''
+  if (!v) return '—'
+  if (f.type === 'radio') return f.options?.find(o => o.value === v)?.label[lang] ?? v
+  if (f.type === 'yesno') {
+    if (v === 'yes') return lang === 'fr' ? 'Oui' : 'Yes'
+    if (v === 'no') return lang === 'fr' ? 'Non' : 'No'
+  }
+  return v
+}
 
 export function ApplicationReadView({
   data,
@@ -22,7 +35,7 @@ export function ApplicationReadView({
             {section.fields.map(f => (
               <div key={f.id}>
                 <dt className="text-xs text-foreground">{f.label[lang]}</dt>
-                <dd className="text-sm text-foreground whitespace-pre-wrap">{data[f.id]?.trim() || '—'}</dd>
+                <dd className="text-sm text-foreground whitespace-pre-wrap">{displayValue(f, data[f.id], lang)}</dd>
               </div>
             ))}
           </dl>

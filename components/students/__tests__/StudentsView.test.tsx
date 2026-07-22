@@ -28,12 +28,12 @@ const base: StudentVM = {
   checklist: [
     { assignmentId: 'a1', label: 'Formulaire de santé', group: 'Formulaire', pill: { kind: 'ok', label: 'Fourni' }, reviewable: true },
   ],
-  provided: 1, total: 1, pct: 100, dueLabel: 'Échéance 10 oct',
+  provided: 1, total: 1, pct: 100, dueLabel: 'Date limite 10 oct',
 }
 const second: StudentVM = {
   ...base, id: 's2', name: 'Yanis Benali', firstName: 'Yanis', initials: 'YB',
   statusKey: 'retard', overall: { kind: 'bad', label: 'En retard' },
-  summary: 'Échéance dépassée — 2 pièces attendues', applicationId: null,
+  summary: 'Date limite dépassée — 2 pièces attendues', applicationId: null,
   checklist: [
     { assignmentId: 'a2', label: 'Passeport', group: 'Document', pill: { kind: 'bad', label: 'Manquant' }, reviewable: false },
     { assignmentId: 'a3', label: 'AST — sortie du territoire', group: 'Document', pill: { kind: 'info', label: 'À vérifier' }, reviewable: true },

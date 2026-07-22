@@ -1,5 +1,6 @@
 import { getApplicationDraft } from '@/actions/apply'
 import { ApplicationForm } from '@/components/ApplicationForm'
+import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
 
 // Reads the live draft (autosaved answers + submitted/expired state) via the
@@ -25,7 +26,10 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
   if (draft.submitted) return (
     <main className="mx-auto max-w-[720px] px-4 py-16">
       <h1 className="mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{draft.exchangeName}</h1>
-      <p className="text-[15px] text-[#0F7A3D]">Ta candidature a déjà été envoyée. Elle ne peut plus être modifiée — l’organisateur reviendra vers toi.</p>
+      <p className="mb-6 text-[15px] text-[#0F7A3D]">Ta candidature a déjà été envoyée. Elle ne peut plus être modifiée — l’organisateur reviendra vers toi.</p>
+      <div className="flex justify-start">
+        <ApplicationRecapButton token={token} language={draft.language} />
+      </div>
     </main>
   )
   return (

@@ -50,8 +50,8 @@ export function buildEmail(studentName: string, exchangeNames: string[], forms: 
     .map(f => {
       const due = esc(frShortDate(f.deadline))
       const label = f.overdue
-        ? `<span style="color: #b91c1c;">en retard — échéance ${due}</span>`
-        : `échéance ${due}`
+        ? `<span style="color: #b91c1c;">en retard — date limite ${due}</span>`
+        : `date limite ${due}`
       return `<li style="margin-bottom: 6px;"><strong>${esc(f.name)}</strong> — ${label}</li>`
     })
     .join('')

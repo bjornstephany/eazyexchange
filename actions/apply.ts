@@ -11,6 +11,7 @@ import {
 } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
+import { renderApplicationRecapPdf } from '@/lib/pdf/application-recap'
 
 const APP_URL = getAppUrl()
 
@@ -101,22 +102,25 @@ export async function startApplication(
     return { existing: 'draft' }
   }
 
-  // One email = one application across this whole school. A prior row in ANY
-  // other exchange of the same school means this person is already in the funnel
-  // (typically already enrolled elsewhere) — refuse the second application up
-  // front instead of letting them fill everything out and only hit email_exists
-  // at « Oui ». At this point the same-exchange lookup above already returned, so
-  // any match here is necessarily a different exchange. Structured result, not a
-  // throw: the client renders a neutral "already registered — log in" message.
-  const { data: elsewhere } = await admin
+  // One account = one email. If this email is already ENROLLED in another
+  // exchange of this school, an auth account already exists for it — a second
+  // application could never enroll (it would hit email_exists at « Oui »), so
+  // refuse it up front and send them to log in. Non-enrolled prior applicants
+  // (draft/submitted/declined/rejected elsewhere) are deliberately NOT blocked:
+  // the rule is one application per exchange, and they have no account to collide
+  // with. The same-exchange lookup above already returned, so any match here is a
+  // different exchange. Structured result, not a throw (prod redacts thrown
+  // messages); the client shows "already registered — log in".
+  const { data: enrolledElsewhere } = await admin
     .from('applications')
     .select('id')
     .eq('school_id', exchange.school_a_id)
     .eq('email', email)
     .neq('exchange_id', exchange.id)
+    .not('enrolled_user_id', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (elsewhere) return { registered: true }
+  if (enrolledElsewhere) return { registered: true }
 
   // Per-exchange sanity cap — abuse guard only; existing applicants resumed
   // above are never affected. Fail open on a count error: a DB blip must not
@@ -196,10 +200,15 @@ export async function getApplicationDraft(token: string) {
   }
   // Once submitted (or further along) the application is final — the resume link
   // can no longer reopen it. Return a marker only, never the PII, so the page
-  // shows an "already submitted" notice instead of the form.
+  // shows an "already submitted" notice instead of the form. `language` is the
+  // one non-marker field: it carries no PII and the page needs it to render the
+  // recap-download button in the language the applicant applied in.
   // 'invited' (organizer-sent, untouched) and 'draft' both render the form.
   if (app.status !== 'draft' && app.status !== 'invited') {
-    return { expired: false as const, submitted: true as const, exchangeName }
+    return {
+      expired: false as const, submitted: true as const, exchangeName,
+      language: app.language === 'fr' ? ('fr' as const) : ('en' as const),
+    }
   }
   // Signed URL so a returning draft shows its already-uploaded photo (the
   // application-photos bucket is private; 1 h outlives any editing session).
@@ -312,20 +321,21 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, app.exchange_id)
 
-  // Race backstop for the start-time duplicate guard: if this email started this
-  // draft and THEN entered the funnel in another exchange of the school (a
-  // parallel session), block here rather than letting the eventual « Oui » hit
-  // email_exists. Same per-school rule as startApplication; the same-exchange row
-  // being submitted is excluded by .neq('exchange_id', …).
-  const { data: elsewhere } = await admin
+  // Race backstop for the start-time guard: if this email became enrolled in
+  // another exchange of the school between starting this draft and submitting
+  // (an account now exists), block here rather than letting the eventual « Oui »
+  // hit email_exists. Same account-based rule as startApplication; the draft's
+  // own exchange is excluded by .neq and it isn't enrolled anyway.
+  const { data: enrolledElsewhere } = await admin
     .from('applications')
     .select('id')
     .eq('school_id', app.school_id)
     .eq('email', app.email)
     .neq('exchange_id', app.exchange_id)
+    .not('enrolled_user_id', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (elsewhere) return { ok: false, registered: true }
+  if (enrolledElsewhere) return { ok: false, registered: true }
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
@@ -376,4 +386,101 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
   const { error } = await admin.from('applications').update(patch).eq('id', app.id)
   if (error) throw error
   return { path }
+}
+
+export type RecapResult =
+  | { ok: true; filename: string; pdf: string /* base64 */ }
+  | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' }
+
+// Photos are accepted up to 10 MB (lib/uploads.ts) and are never downscaled
+// before upload, but the recap only ever draws one at 96×120 pt. Holding the
+// full blob + a Uint8Array copy + a Buffer copy inside the JSX + the rendered
+// PDF buffer + its base64 string concurrently for one request can approach
+// ~5x the original photo size in transient memory. This endpoint is public
+// (rate-limited only at 20/hr/IP) and Fluid Compute shares one instance's
+// heap across concurrent invocations, so simultaneous large-photo recaps
+// could OOM the instance. Drop oversized photos rather than risk that — the
+// "render without the photo" path already handles null gracefully.
+// Not exported: a `'use server'` module may only export async functions.
+const MAX_RECAP_PHOTO_BYTES = 2_000_000
+
+// ASCII-folded, lowercase, hyphenated name part for the download filename —
+// « Dupont-Léger » → "dupont-leger". Not exported: a `'use server'` module may
+// only export async functions.
+function slugPart(value: string): string {
+  return (value ?? '')
+    .trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036F]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
+
+function recapFilename(data: Record<string, string>): string {
+  const parts = [slugPart(data.first_name ?? ''), slugPart(data.last_name ?? '')].filter(Boolean)
+  return parts.length > 0 ? `candidature-${parts.join('-')}.pdf` : 'candidature.pdf'
+}
+
+// The applicant's own answers, back to the applicant, as a PDF they can keep.
+//
+// DELIBERATE PII EGRESS — read this next to getApplicationDraft above, which
+// returns NO PII once status !== 'draft'. This action does the opposite on
+// purpose: it returns the answers *because* they are submitted. The trust model
+// is unchanged (the resume token is the applicant's own secret, and the token's
+// expiry still gates it); it is simply a second, narrower door for the same
+// person. It is not a mistake — do not "fix" it to match the branch above.
+export async function downloadApplicationRecap(token: string, language?: 'en' | 'fr'): Promise<RecapResult> {
+  // Same anonymous-token preamble as the other actions in this file.
+  const ip = await clientIp()
+  await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)
+
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name)')
+    .eq('resume_token', token)
+    .maybeSingle()
+  // Structured returns, not throws: prod redacts thrown Server Action messages.
+  if (!app) return { ok: false, reason: 'not_found' }
+  if (tokenExpired(app.resume_token_expires_at)) return { ok: false, reason: 'expired' }
+  // Only a submitted (or further-along) application has a recap.
+  if (app.status === 'draft' || app.status === 'invited') return { ok: false, reason: 'not_submitted' }
+
+  // A broken or unreadable upload must not cost the applicant their recap:
+  // drop the photo and render the rest. Logged without PII.
+  let photoBytes: Uint8Array | null = null
+  if (app.photo_path) {
+    try {
+      const { data: blob, error } = await admin.storage
+        .from(APPLICATION_PHOTO_BUCKET).download(app.photo_path)
+      if (error || !blob) throw new Error('download failed')
+      photoBytes = new Uint8Array(await blob.arrayBuffer())
+    } catch {
+      console.warn('[apply] recap photo unavailable — rendering without it')
+      photoBytes = null
+    }
+    // Never hold an oversized photo through the render pipeline — see the
+    // MAX_RECAP_PHOTO_BYTES comment above.
+    if (photoBytes != null && photoBytes.byteLength > MAX_RECAP_PHOTO_BYTES) {
+      photoBytes = null
+    }
+  }
+
+  const data = (app.data ?? {}) as Record<string, string>
+  // The caller's live language (e.g. the toggle on the confirmation screen)
+  // wins over the row's — but never trust it blindly: normalize exactly the
+  // way the DB-derived fallback is normalized so an unexpected value can
+  // never reach the renderer.
+  const effectiveLanguage: 'en' | 'fr' =
+    language === 'en' || language === 'fr' ? language : app.language === 'fr' ? 'fr' : 'en'
+  const pdf = await renderApplicationRecapPdf({
+    exchangeName: app.exchanges?.name ?? '',
+    applicantName: buildApplicantName(data),
+    submittedAt: app.submitted_at,
+    data,
+    photoBytes,
+    language: effectiveLanguage,
+  })
+
+  return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }
 }

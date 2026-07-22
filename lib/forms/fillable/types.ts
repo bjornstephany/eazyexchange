@@ -82,6 +82,14 @@ export const DETAIL_LABELS: Record<keyof ProgramDetailsValues, string> = {
   absence_dates: 'Jours d’absence',
 }
 
+// Canonical display order for detail columns — drives the add-time prompt and
+// every missing-detail message, so the organizer always sees the same sequence.
+export const DETAIL_ORDER: (keyof ProgramDetailsValues)[] = [
+  'destination', 'travel_start', 'travel_end', 'chaperones',
+  'association_name', 'sending_school_name', 'receiving_school_name',
+  'proviseur_name', 'sending_city', 'absence_dates',
+]
+
 // What the client sends; the server stamps signed_at (never trusted from client).
 export type SignatureInput = { key: string; full_name: string; approved: boolean }
 export type FillableInput = { answers: Record<string, string>; signatures: SignatureInput[] }

@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Overview",
         "applications": "Apps.",
-        "files": "Files",
+        "files": "Forms / Docs",
         "students": "Students",
         "feedback": "Feedback",
         "communication": "Comms"
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Files",
+      "title": "Forms / Docs",
       "formsHeading": "Forms · {count}",
       "docsHeading": "Requested documents · {count}",
       "formsEmpty": "No forms yet.",
@@ -439,20 +439,19 @@
         "nameLabel": "Form name",
         "namePlaceholderPdf": "Parental authorization",
         "namePlaceholderOnline": "Family questionnaire",
-        "deadlineLabel": "Deadline (optional)",
+        "deadlineLabel": "Deadline",
         "fileLabel": "PDF to be signed",
         "back": "Back",
-        "createDraft": "Create the draft",
+        "createDraft": "Add",
+        "createAndEdit": "Create and add questions",
         "creating": "Creating…"
       },
       "drawer": {
         "pdfPreviewLabel": "PDF template · document preview",
         "fieldsHeadingPdf": "Fields to fill in",
         "fieldsHeadingOnline": "Form questions",
-        "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
+        "emptyFields": "This form has no fields yet. Add your first question to send it to families.",
         "fillableNote": "Ready-to-use form: filled in and signed online by the family, with the program details inserted automatically.",
-        "activate": "Activate",
-        "activating": "Activating…",
         "editTemplate": "Edit template",
         "download": "Download"
       },
@@ -506,11 +505,13 @@
         },
         "nameLabel": "Document name",
         "namePlaceholder": "European health insurance card",
-        "deadlineLabel": "Deadline (optional)",
+        "deadlineLabel": "Deadline",
         "conditionLabel": "Condition (optional)",
         "conditionPlaceholder": "if parents are divorced",
+        "studentsLabel": "Students concerned",
+        "noStudents": "No enrolled students yet.",
         "back": "Back",
-        "createDraft": "Create the draft",
+        "createDraft": "Add",
         "creating": "Creating…"
       },
       "drawer": {
@@ -518,16 +519,11 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Deadline {date}",
         "trackingHeading": "Student tracking",
-        "draftEmptyConditional": "This document hasn't been requested yet. Choose the students concerned then activate it to send the requests.",
-        "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
-        "noEnrolledStudents": "No enrolled students yet.",
+        "draftEmptyAll": "This document hasn't been requested yet.",
         "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
         "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
         "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",
         "failedCount": " · {count} failed",
-        "activate": "Activate",
-        "activating": "Activating…",
-        "chooseAndActivate": "Choose students & activate",
         "sending": "Sending…",
         "remindFamilies": "Remind families"
       }
@@ -539,6 +535,9 @@
       "searchPlaceholder": "Search…",
       "alreadyAdded": "Already added ✓",
       "adding": "Adding…",
+      "deadlineLabel": "Deadline",
+      "detailsHint": "These details are filled into the document automatically.",
+      "confirmAdd": "Add to the programme",
       "customHeading": "Or",
       "uploadPdfTile": "Upload a PDF",
       "createOnlineTile": "Create an online form",

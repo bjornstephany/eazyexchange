@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { APPLICATION_SECTIONS, missingRequiredApplication, overLimitApplicationFields, parentGroupFields, type AppField } from '@/lib/application-form'
 import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/apply'
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
+import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -96,7 +97,12 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
     catch (err: unknown) { setError(err instanceof Error ? err.message : t.unexpected); setSubmitting(false) }
   }
 
-  if (done) return <p className="py-16 text-center text-[15px] text-[#10203F]">{t.done}</p>
+  if (done) return (
+    <div className="flex flex-col items-center gap-5 py-16 text-center">
+      <p className="m-0 text-[15px] text-[#10203F]">{t.done}</p>
+      <ApplicationRecapButton token={token} language={lang} />
+    </div>
+  )
 
   function renderField(f: AppField) {
     const invalid = missing.includes(f.id)
@@ -143,6 +149,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
   }
 
   const showSeparation = data.family_status === 'separated' || data.family_status === 'step_family'
+  const showGenderOther = data.sex === 'other'
   const parentsInvalid = missing.some(id => PARENT_FIELD_IDS.includes(id))
   const total = APPLICATION_SECTIONS.length
   return (
@@ -189,11 +196,12 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
               )}
               {section.fields.map(f => {
                 if (f.id === 'separation_housing_address' && !showSeparation) return null
+                if (f.id === 'gender_other' && !showGenderOther) return null
                 return (
                   <div key={f.id} id={`field-${f.id}`} className={`flex flex-col gap-1.5 ${f.type === 'textarea' || f.type === 'radio' ? 'sm:col-span-2' : ''}`}>
                     <Label htmlFor={f.id} className="text-[13.5px] font-semibold text-[#42506E]">
                       {f.label[lang]}
-                      {(f.required || f.id === 'separation_housing_address') && <span className="ml-1 text-[#C0392B]">*</span>}
+                      {(f.required || f.id === 'separation_housing_address' || f.id === 'gender_other') && <span className="ml-1 text-[#C0392B]">*</span>}
                     </Label>
                     {renderField(f)}
                   </div>

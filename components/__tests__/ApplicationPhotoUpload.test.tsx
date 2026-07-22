@@ -5,6 +5,11 @@ vi.mock('@/actions/apply', () => ({
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
 }))
 
+const compressMock = vi.fn(async (f: File) => f)
+vi.mock('@/lib/image-compression', () => ({
+  compressImage: (f: File) => compressMock(f),
+}))
+
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
 import { uploadApplicationPhoto } from '@/actions/apply'
 
@@ -73,5 +78,35 @@ describe('ApplicationPhotoUpload', () => {
   it('shows the required-field message when invalid', () => {
     renderCard({ invalid: true })
     expect(screen.getByText(/une photo est requise/i)).toBeInTheDocument()
+  })
+
+  it('compresses the picked file before uploading it', async () => {
+    const small = new File(['tiny'], 'me.png', { type: 'image/png' })
+    compressMock.mockResolvedValueOnce(small)
+    renderCard()
+    pickFile()
+    expect(await screen.findByRole('img')).toBeInTheDocument()
+    expect(compressMock).toHaveBeenCalledTimes(1)
+    const fd = vi.mocked(uploadApplicationPhoto).mock.calls[0][1] as FormData
+    expect(fd.get('photo')).toBe(small)
+  })
+
+  it('shows the dedicated message when the image cannot be processed', async () => {
+    compressMock.mockRejectedValueOnce(new Error('image-too-large'))
+    renderCard()
+    pickFile()
+    expect(await screen.findByText(/ne peut pas être traitée/i)).toBeInTheDocument()
+    expect(uploadApplicationPhoto).not.toHaveBeenCalled()
+  })
+
+  it('advertises automatic resizing instead of a size cap', () => {
+    renderCard()
+    expect(screen.getByText(/redimensionnée automatiquement/i)).toBeInTheDocument()
+    expect(screen.queryByText(/10 Mo max/i)).not.toBeInTheDocument()
+  })
+
+  it('offers only image types in the file picker (no PDF)', () => {
+    renderCard()
+    expect(screen.getByLabelText('Photo récente')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp')
   })
 })
