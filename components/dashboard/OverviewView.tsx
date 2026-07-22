@@ -212,7 +212,7 @@ export function OverviewView(props: OverviewProps) {
                   <StatusPill pill={row.candidature} />
                   {row.respondedAt && (
                     <span
-                      className="text-[11.5px] text-muted-foreground"
+                      className="whitespace-nowrap text-[11.5px] text-muted-foreground"
                       title={fullDate(row.respondedAt)}
                     >
                       {frShortDate(row.respondedAt, { year: true })}
