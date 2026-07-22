@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:rls": "vitest run --config vitest.rls.config.ts",
     "seed": "node scripts/seed-demo.mjs",
-    "seed:staging": "bash -c 'set -a; source .env.staging; set +a; node scripts/seed-demo.mjs'"
+    "seed:staging": "bash -c 'test -f .env.staging || { echo \"No .env.staging in $PWD — run this from the main checkout.\"; exit 1; }; set -a; source .env.staging; set +a; node scripts/seed-demo.mjs'"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.17",

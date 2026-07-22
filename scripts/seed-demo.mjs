@@ -248,6 +248,20 @@ function partialData(name, slug) {
 // --- build ------------------------------------------------------------------
 
 console.log(`Seeding ${where} — ${url}`)
+
+// A stopped local stack otherwise surfaces as an opaque `fetch failed` from
+// somewhere deep inside the auth client.
+const { error: reachError } = await db.from('schools').select('id').limit(1)
+if (reachError) {
+  console.error(
+    `Cannot reach ${url}: ${reachError.message}\n` +
+      (isLocal(url)
+        ? 'Is the local stack running? Start it with `supabase start`.'
+        : 'Check the credentials in .env.staging.'),
+  )
+  process.exit(1)
+}
+
 await wipe()
 
 const school = await insertOne('schools', {
