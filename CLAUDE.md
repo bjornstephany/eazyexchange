@@ -88,10 +88,14 @@ they just merge the same day.
 **The session that starts the work does the work.** Do not hand off to a fresh session —
 move the current one into its own worktree and keep going:
 
-1. **`EnterWorktree`** with `name` = the branch you want (`feature/<slug>`, `fix/<slug>`).
-   It creates `.claude/worktrees/<name>` on that branch off fresh `origin/main` and
-   switches this session's working directory into it. Isolation comes from the
-   worktree, not from a new session.
+1. **`EnterWorktree`** with `name` = `feature/<slug>` (or `fix/<slug>`). It creates
+   `.claude/worktrees/<name>` and switches this session's working directory into it.
+   Isolation comes from the worktree, not from a new session. Two warts to fix on
+   arrival, both one-liners:
+   - it names the branch `worktree-feature+<slug>`, not `feature/<slug>` →
+     `git branch -m feature/<slug>`;
+   - it branches off **`origin/main`**, so anything committed to local `main` but not
+     yet pushed is missing → `git merge --ff-only main`.
 2. **`pnpm wt`** (no arguments, from inside the worktree) — links `.env.local` /
    `.env.staging` from the main checkout, pins a deterministic dev port in `.wtport`
    (`pnpm dev` reads it) so no two worktrees race for 3000, and installs deps.
