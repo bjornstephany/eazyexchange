@@ -6,6 +6,9 @@ import { previewMode, cardCountLabel } from '@/lib/forms/card'
 import { TemplateThumbnail } from './TemplateThumbnail'
 import { DocIllustration } from './DocIllustration'
 import { docIllustrationKey } from '@/lib/forms/doc-illustration'
+import { FillablePaper } from './FillablePaper'
+import { fillablePreviewFor } from '@/lib/forms/fillable-preview'
+import type { ResolvedVariables } from '@/lib/forms/fillable/render'
 
 // Portrait « A4 paper » card (approved mockup option C v2): preview zone on
 // top showing the document itself, then name, type pill and response count.
@@ -13,7 +16,11 @@ import { docIllustrationKey } from '@/lib/forms/doc-illustration'
 // anywhere opens the existing detail drawer (Aperçu / Modifier / Supprimer /
 // Télécharger live there). The layout deliberately leaves room for a future
 // « convertir » action.
-export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => void }) {
+export function TemplateCard({ vm, resolvedVars, onOpen }: {
+  vm: TemplateVM
+  resolvedVars?: ResolvedVariables
+  onOpen: () => void
+}) {
   const t = useTranslations('organizer')
   const tr = useTranslations()
   const mode = previewMode(vm)
@@ -37,6 +44,9 @@ export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => voi
           </div>
         )}
         {mode === 'online-paper' && <PaperFields fields={vm.fields} />}
+        {mode === 'fillable-paper' && (
+          <FillablePaper blocks={fillablePreviewFor(vm.standard_key, resolvedVars ?? {})} />
+        )}
         {mode === 'doc-sticker' && (
           <div className="flex h-full flex-col items-center justify-center gap-1.5">
             <DocIllustration illustration={docIllustrationKey(vm)} />

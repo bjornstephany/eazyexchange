@@ -76,6 +76,34 @@ describe('TemplateCard', () => {
     expect(screen.getAllByLabelText('Passeport de l’élève')).toHaveLength(1)
   })
 
+  it('fillable card renders the document title and a signature label', () => {
+    renderWithIntl(<TemplateCard
+      vm={vm({ kind: 'fillable', standard_key: 'decharge', name: 'Décharge de responsabilité', template_file_path: null })}
+      resolvedVars={{ exchange_name: 'France–Canada 2026', association_name: 'Les Amis du Lycée' }}
+      onOpen={() => {}}
+    />)
+    expect(screen.getByTestId('fillable-paper')).toBeInTheDocument()
+    expect(screen.getByText('DÉCHARGE DE RESPONSABILITÉ')).toBeInTheDocument()
+    expect(screen.getByText('ÉCHANGE : France–Canada 2026')).toBeInTheDocument()
+    expect(screen.getByText('Représentant légal 1')).toBeInTheDocument()
+  })
+
+  it('fillable card still renders with no resolved variables (draft exchange)', () => {
+    renderWithIntl(<TemplateCard
+      vm={vm({ kind: 'fillable', standard_key: 'decharge', name: 'Décharge', status: 'draft', template_file_path: null })}
+      onOpen={() => {}}
+    />)
+    expect(screen.getByText('DÉCHARGE DE RESPONSABILITÉ')).toBeInTheDocument()
+  })
+
+  it('fillable card with an unknown standard_key degrades to the skeleton', () => {
+    renderWithIntl(<TemplateCard
+      vm={vm({ kind: 'fillable', standard_key: null, name: 'Formulaire maison', template_file_path: null })}
+      onOpen={() => {}}
+    />)
+    expect(screen.getByTestId('fillable-paper-skeleton')).toBeInTheDocument()
+  })
+
   it('clicking anywhere on the card fires onOpen (no other buttons)', () => {
     const onOpen = vi.fn()
     renderWithIntl(<TemplateCard vm={vm({})} onOpen={onOpen} />)
