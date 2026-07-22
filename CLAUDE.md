@@ -77,6 +77,36 @@ exists, record the advisory and the accepted-risk rationale in
 - Vercel deploys `main` to production. **Never push broken code to `main`** — run the Verifying Changes commands before any push.
 - **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
 
+## Parallel Sessions
+
+Multiple Claude sessions run at once. **One session = one worktree = one branch — no
+exceptions, including one-line copy fixes.** Two sessions sharing a directory entangle
+each other's branches and commits; recovery means reflog archaeology. This overrides the
+"commit straight to `main`" shortcut above: small changes still get their own worktree,
+they just merge the same day.
+
+```bash
+pnpm wt <slug>          # -> ../eazyexchange-<slug> on feature/<slug>
+pnpm wt <slug> fix      # -> fix/<slug>
+```
+
+`pnpm wt` branches off fresh `origin/main`, links `.env.local` / `.env.staging` from the
+main checkout, installs deps, and pins a deterministic dev port in `.wtport` (`pnpm dev`
+reads it) so no two worktrees race for 3000. Then start a **new** session in that
+directory — never continue in the session that created it.
+
+- **Before every commit, confirm the branch** (`git branch --show-current`). A session
+  that finds itself on a branch it did not create must stop and report, not commit.
+- **Never `git add -A` / `git add .`** — stage only the files you touched. A sibling
+  session's half-finished work is often untracked in the same tree.
+- **Test failures can be another session's race.** An import that resolves nowhere, or a
+  suite that fails once and passes on re-run, usually means a neighbour was mid-write.
+  Re-run the single file before debugging it.
+- **`supabase/migrations/` is single-writer.** Worktrees isolate files, not the shared
+  Supabase projects: the prod migration ledger and staging DB are global. Only one
+  session at a time may add or apply a migration; if another is mid-migration, wait.
+- When a branch is merged: `git worktree remove ../eazyexchange-<slug>`.
+
 ## Backlog
 
 `BACKLOG.md` holds deferred work as one-liners, highest priority at the top.

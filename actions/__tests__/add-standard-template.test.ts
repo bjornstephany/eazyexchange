@@ -123,7 +123,7 @@ describe('addStandardTemplate', () => {
 
   it('refuses a missing deadline as a structured outcome', async () => {
     const res = await addStandardTemplate('ex1', 'medical', { deadline: '  ' })
-    expect(res).toEqual({ ok: false, message: 'Ajoutez une échéance avant d’activer.' })
+    expect(res).toEqual({ ok: false, message: 'Ajoutez une date limite avant d’activer.' })
     expect(inserted.templates).toHaveLength(0)
   })
 

@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Panoramica",
         "applications": "Candid.",
-        "files": "File",
+        "files": "Moduli / Docs",
         "students": "Studenti",
         "feedback": "Feedback",
         "communication": "Comun."
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "File",
+      "title": "Moduli / Docs",
       "formsHeading": "Moduli · {count}",
       "docsHeading": "Documenti richiesti · {count}",
       "formsEmpty": "Ancora nessun modulo.",

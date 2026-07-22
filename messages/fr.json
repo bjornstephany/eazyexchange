@@ -95,7 +95,7 @@
         "stats": {
           "enrolled": "{count, plural, one {# élève accepté} other {# élèves acceptés}}",
           "applications": "{count, plural, one {# candidature} other {# candidatures}}",
-          "deadline": "échéance dossiers {date}"
+          "deadline": "date limite dossiers {date}"
         },
         "modal": {
           "title": "Archiver ce programme ?",
@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Aperçu",
         "applications": "Candid.",
-        "files": "Fichiers",
+        "files": "Formulaires / Docs",
         "students": "Élèves",
         "feedback": "Feedback",
         "communication": "Comm."
@@ -292,10 +292,10 @@
       "showClosed": "Afficher les refusés et déclinés ({n})",
       "actionsHeading": "À faire maintenant",
       "upToDate": "Tout est à jour ✓",
-      "nextDeadlineSuffix": " — prochaine échéance le {date}.",
+      "nextDeadlineSuffix": " — prochaine date limite le {date}.",
       "formsAndDocsHeading": "Formulaires & documents",
-      "dueSuffix": " · échéance {date}",
-      "autoReminderHint": "Relances automatiques quotidiennes en période d'échéance.",
+      "dueSuffix": " · date limite {date}",
+      "autoReminderHint": "Relances automatiques quotidiennes à l'approche de la date limite.",
       "pills": {
         "complete": "Complet",
         "accepted": "Accepté(e)",
@@ -327,10 +327,10 @@
         "reviewDesc": "Formulaires et documents reçus, en attente de validation.",
         "reviewCta": "Vérifier",
         "lateTitle": "{n, plural, one {# élève en retard} other {# élèves en retard}}",
-        "lateDesc": "Échéance dépassée — relance renforcée en cours.",
+        "lateDesc": "Date limite dépassée — relance renforcée en cours.",
         "lateCta": "Relancer",
         "missingDocsTitle": "{n, plural, one {# élève : documents manquants} other {# élèves : documents manquants}}",
-        "missingDocsDesc": "Pièces non reçues avant l’échéance.",
+        "missingDocsDesc": "Pièces non reçues avant la date limite.",
         "missingDocsCta": "Voir les élèves",
         "maybeTitle": "{n, plural, one {# élève hésite — à relancer} other {# élèves hésitent — à relancer}}",
         "maybeDesc": "Réponses « Peut-être » à relancer.",
@@ -350,7 +350,7 @@
       "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
       "stateOpen": "Ouvert",
       "stateClosed": "Fermé",
-      "deadlineLabel": "Échéance",
+      "deadlineLabel": "Date limite",
       "linkLabel": "Lien de candidature",
       "copyCta": "Copier",
       "copiedCta": "Copié ✓",
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Fichiers",
+      "title": "Formulaires / Docs",
       "formsHeading": "Formulaires · {count}",
       "docsHeading": "Documents demandés · {count}",
       "formsEmpty": "Aucun formulaire pour le moment.",
@@ -439,7 +439,7 @@
         "nameLabel": "Nom du formulaire",
         "namePlaceholderPdf": "Autorisation parentale",
         "namePlaceholderOnline": "Questionnaire famille",
-        "deadlineLabel": "Échéance",
+        "deadlineLabel": "Date limite",
         "fileLabel": "PDF à faire signer",
         "back": "Retour",
         "createDraft": "Ajouter",
@@ -458,7 +458,7 @@
       "editor": {
         "nameLabel": "Nom",
         "descriptionLabel": "Description",
-        "deadlineLabel": "Échéance",
+        "deadlineLabel": "Date limite",
         "conditionLabel": "Condition",
         "conditionPlaceholder": "si parents divorcés",
         "saving": "Enregistrement…",
@@ -505,7 +505,7 @@
         },
         "nameLabel": "Nom de la pièce",
         "namePlaceholder": "Carte européenne d’assurance maladie",
-        "deadlineLabel": "Échéance",
+        "deadlineLabel": "Date limite",
         "conditionLabel": "Condition (facultatif)",
         "conditionPlaceholder": "si parents divorcés",
         "studentsLabel": "Élèves concernés",
@@ -517,7 +517,7 @@
       "drawer": {
         "acceptedFormats": "PDF · JPG · PNG",
         "maxSize": "10 Mo max",
-        "deadlineChip": "Échéance {date}",
+        "deadlineChip": "Date limite {date}",
         "trackingHeading": "Suivi par élève",
         "draftEmptyAll": "Cette pièce n’a pas encore été demandée.",
         "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
@@ -535,7 +535,7 @@
       "searchPlaceholder": "Rechercher…",
       "alreadyAdded": "Déjà ajouté ✓",
       "adding": "Ajout…",
-      "deadlineLabel": "Échéance",
+      "deadlineLabel": "Date limite",
       "detailsHint": "Ces informations sont insérées automatiquement dans le document.",
       "confirmAdd": "Ajouter au programme",
       "customHeading": "Ou",
@@ -574,10 +574,10 @@
       "summary": {
         "complete": "Dossier complet",
         "toVerify": "{n, plural, one {# pièce à vérifier} other {# pièces à vérifier}}",
-        "late": "Échéance dépassée — {n, plural, one {# pièce attendue} other {# pièces attendues}}",
+        "late": "Date limite dépassée — {n, plural, one {# pièce attendue} other {# pièces attendues}}",
         "pending": "{n, plural, one {# pièce attendue} other {# pièces attendues}}"
       },
-      "dueLabel": "Échéance {date}",
+      "dueLabel": "Date limite {date}",
       "listSummary": "{n, plural, one {# élève accepté} other {# élèves acceptés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
       "reminderNote": {
         "complete": "Dossier complet — aucune relance prévue pour {firstName}.",

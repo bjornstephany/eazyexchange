@@ -139,18 +139,18 @@ describe('OrganizerShell', () => {
 
   it('shows one Fichiers rail item pointing at /forms', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByText('Fichiers')).toBeInTheDocument()
+    expect(screen.getByText('Formulaires / Docs')).toBeInTheDocument()
     expect(screen.queryByText('Formul.')).toBeNull()
     expect(screen.queryByText('Docs')).toBeNull()
-    expect(screen.getByText('Fichiers').closest('a')).toHaveAttribute('href', '/forms')
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveAttribute('href', '/forms')
   })
 
   it('Fichiers is active on both /forms and /documents path prefixes', () => {
     const { unmount } = renderShell({ pathname: '/forms' })
-    expect(screen.getByText('Fichiers').closest('a')).toHaveClass('bg-white/10')
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveClass('bg-white/10')
     unmount()
     renderShell({ pathname: '/documents/t1' })
-    expect(screen.getByText('Fichiers').closest('a')).toHaveClass('bg-white/10')
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveClass('bg-white/10')
   })
 
   it('shows no top-bar search or create button on /forms', () => {

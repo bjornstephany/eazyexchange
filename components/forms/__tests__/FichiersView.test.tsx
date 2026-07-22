@@ -62,7 +62,7 @@ beforeEach(() => {
 describe('FichiersView', () => {
   it('renders the Fichiers title and both sections with counts and the right cards', () => {
     renderView([form({}), doc({})])
-    expect(screen.getByRole('heading', { name: 'Fichiers' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Formulaires / Docs' })).toBeInTheDocument()
     expect(screen.getByText('Formulaires · 1')).toBeInTheDocument()
     expect(screen.getByText('Documents demandés · 1')).toBeInTheDocument()
     expect(screen.getByText('Formulaire de santé')).toBeInTheDocument()
@@ -136,7 +136,7 @@ describe('FichiersView', () => {
     fireEvent.click(screen.getByRole('button', { name: /^\+ Ajouter$/ }))
     fireEvent.click(within(screen.getByTestId('lib-entry-medical')).getByRole('button', { name: 'Ajouter' }))
     const row = screen.getByTestId('lib-entry-medical')
-    expect(within(row).getByLabelText('Échéance')).toBeInTheDocument()
+    expect(within(row).getByLabelText('Date limite')).toBeInTheDocument()
     // details are complete → no extra fields
     expect(within(row).queryByLabelText('Accompagnateurs')).toBeNull()
     // the library list is still visible behind the expansion
@@ -158,7 +158,7 @@ describe('FichiersView', () => {
     fireEvent.click(screen.getByRole('button', { name: /^\+ Ajouter$/ }))
     const row = () => screen.getByTestId('lib-entry-famille')
     fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter' }))
-    fireEvent.change(within(row()).getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.change(within(row()).getByLabelText('Date limite'), { target: { value: '2026-09-30' } })
     fireEvent.change(within(row()).getByLabelText('Nom de l’association'), { target: { value: 'AGESSIA' } })
     fireEvent.change(within(row()).getByLabelText('Lycée d’origine'), { target: { value: 'Lycée Georges Duby' } })
     fireEvent.click(within(row()).getByRole('button', { name: 'Ajouter au programme' }))
@@ -175,7 +175,7 @@ describe('FichiersView', () => {
     fireEvent.click(screen.getByRole('button', { name: /^\+ Ajouter$/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Créer un formulaire en ligne' }))
     fireEvent.change(screen.getByLabelText('Nom du formulaire'), { target: { value: 'Mon form' } })
-    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-09-30' } })
     fireEvent.click(screen.getByRole('button', { name: 'Créer et ajouter les questions' }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/forms/online-1'))
   })
@@ -185,7 +185,7 @@ describe('FichiersView', () => {
     fireEvent.click(screen.getByRole('button', { name: /^\+ Ajouter$/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Demander un document' }))
     fireEvent.change(screen.getByLabelText('Nom de la pièce'), { target: { value: 'Justificatif' } })
-    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-09-30' } })
+    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-09-30' } })
     fireEvent.click(screen.getByRole('radio', { name: 'Selon la situation' }))
     fireEvent.click(screen.getByLabelText('Léa Moreau'))
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }))

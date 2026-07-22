@@ -26,7 +26,7 @@ describe('TemplateEditor', () => {
     renderWithIntl(<TemplateEditor template={base} backHref="/forms" backLabel="Retour aux formulaires" />)
     expect(screen.getByText('Retour aux formulaires')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Accueil 2026' } })
-    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-10-10' } })
+    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-10-10' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     await screen.findByRole('button', { name: 'Enregistrer' })
     expect(updateMeta).toHaveBeenCalledWith('t1', {
@@ -49,10 +49,10 @@ describe('TemplateEditor', () => {
     expect(screen.queryByText(/Questions du formulaire/)).toBeNull()
   })
   it('shows the structured save error inline', async () => {
-    updateMeta.mockResolvedValueOnce({ ok: false, message: 'Un modèle actif doit garder une échéance.' })
+    updateMeta.mockResolvedValueOnce({ ok: false, message: 'Un modèle actif doit garder une date limite.' })
     renderWithIntl(<TemplateEditor template={{ ...base, status: 'active' }} backHref="/forms" backLabel="Retour aux formulaires" />)
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
-    expect(await screen.findByText('Un modèle actif doit garder une échéance.')).toBeInTheDocument()
+    expect(await screen.findByText('Un modèle actif doit garder une date limite.')).toBeInTheDocument()
   })
   it('round-trips the external link field', async () => {
     renderWithIntl(<TemplateEditor template={{ ...base, external_url: 'https://esta.cbp.dhs.gov' }} backHref="/documents" backLabel="Retour aux documents" />)

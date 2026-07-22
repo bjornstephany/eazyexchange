@@ -13,6 +13,9 @@ export function TimeSavings({ savings }: { savings: LandingContent['savings'] })
           </h2>
           <p className="mb-3 max-w-[480px] text-[15.5px] leading-[1.65] text-[#C3CEE6]">{savings.p1}</p>
           <p className="max-w-[480px] text-[15.5px] leading-[1.65] text-[#C3CEE6]">{savings.p2}</p>
+          <p className="mt-5 max-w-[480px] border-l-2 border-[#7EE3A4] pl-4 text-[16.5px] font-medium leading-[1.6] text-white">
+            {savings.focus}
+          </p>
         </div>
         <div className="min-w-[300px] flex-1 rounded-[14px] border border-white/10 bg-[#10203F] px-7 py-[26px]">
           <p className="mb-[18px] font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-[#7FA0F0]">
