@@ -13,6 +13,7 @@ import { STANDARD_TEMPLATES } from '@/lib/forms/standard-library'
 import { insertStandardTemplate } from '@/lib/forms/insert-standard-template'
 import { activateTemplateRecord } from '@/lib/forms/activate'
 import { mergeProgramDetails, type ProgramDetailPatch } from '@/lib/forms/add-requirements'
+import { resolveVariables, type ResolvedVariables } from '@/lib/forms/fillable/render'
 import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
@@ -457,6 +458,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
   enrolledStudents: { id: string; full_name: string }[]
   exchangeName: string
   programDetails: ProgramDetailsValues | null
+  resolvedVars: ResolvedVariables
 }> {
   const supabase = await createClient()
   await requireUser()
@@ -526,5 +528,6 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     enrolledStudents,
     exchangeName: exchange.name,
     programDetails: programDetails ?? null,
+    resolvedVars: resolveVariables({ exchangeName: exchange.name, details: programDetails ?? null }),
   }
 }

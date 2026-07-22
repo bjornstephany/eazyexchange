@@ -11,9 +11,10 @@ export default async function FormsPage() {
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
   if (!active) return <EmptyDashboard />
 
-  const { templates, enrolledStudents, programDetails } = await getTemplatesPage(active.id)
+  const { templates, enrolledStudents, programDetails, resolvedVars } = await getTemplatesPage(active.id)
   return (
     <FichiersView exchangeId={active.id} templates={templates}
-      enrolledStudents={enrolledStudents} programDetails={programDetails} />
+      enrolledStudents={enrolledStudents} programDetails={programDetails}
+      resolvedVars={resolvedVars} />
   )
 }
