@@ -1,6 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { DownloadIcon, TrashIcon } from 'lucide-react'
 import { eraseSubject, exportSubject } from '@/actions/retention'
 import type { ErasableSubject } from '@/actions/retention'
 
@@ -46,13 +47,15 @@ export function DataPrivacyCard({ subjects }: { subjects: ErasableSubject[] }) {
       </div>
       <div className="flex flex-none items-center gap-2">
         <button type="button" onClick={() => onExport(s)} disabled={exportingId === s.id}
-          className="rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium hover:bg-muted disabled:opacity-60">
+          className="flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium hover:bg-muted disabled:opacity-60">
+          <DownloadIcon aria-hidden size={14} strokeWidth={1.75} />
           {exportingId === s.id ? t('exporting') : t('export')}
         </button>
         <button
           type="button" onClick={() => { setError(null); setPending(s) }}
-          className="rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
+          className="flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
         >
+          <TrashIcon aria-hidden size={14} strokeWidth={1.75} />
           {t('delete')}
         </button>
       </div>

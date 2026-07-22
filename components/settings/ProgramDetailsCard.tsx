@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { SaveIcon } from 'lucide-react'
 import { saveProgramDetails, type ProgramDetailsInput } from '@/actions/fillable'
 import type { ExchangeProgramDetails } from '@/types/db'
 
@@ -104,8 +105,9 @@ export function ProgramDetailsCard({ exchangeId, initial, readOnly }: Props) {
         <div className="mt-4 flex justify-end">
           <button
             type="button" disabled={busy} onClick={() => void handleSave()}
-            className="rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-[9px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
           >
+            <SaveIcon aria-hidden size={15} strokeWidth={1.75} />
             {t('settings.programDetails.save')}
           </button>
         </div>
