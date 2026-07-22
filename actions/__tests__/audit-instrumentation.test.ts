@@ -26,6 +26,21 @@ function makeClient() {
         neq: () => builder,
         order: () => builder,
         update: () => builder,
+        in: () => builder,
+        // `.in()` resolves to a row list; `.eq()` chains that end in an update
+        // resolve to `{ error }`. One thenable serves both.
+        then: (onFulfilled: any, onRejected?: any) => {
+          const rows =
+            table === 'applications'
+              ? [{
+                  id: 'app-1', school_id: 'school-1', exchange_id: 'ex-1',
+                  status: 'submitted', email: 'x@x.test', language: 'fr', data: {},
+                }]
+              : table === 'exchanges'
+                ? [{ id: 'ex-1', archived_at: null, name: 'Échange', good_news_subject: null, good_news_body: null }]
+                : []
+          return Promise.resolve({ data: rows, error: null }).then(onFulfilled, onRejected)
+        },
         maybeSingle: async () => {
           if (table === 'assignments') {
             return { data: { form_templates: { school_id: 'school-1', exchange_id: 'ex-1' } }, error: null }

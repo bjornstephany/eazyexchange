@@ -6,17 +6,33 @@ let scenario: {
   profile: any
 }
 
+/** Every row written by an update, keyed by application id — lets a test
+ *  assert that each accepted application got its own invite token. */
+let updates: { id: string; row: any }[] = []
+
 function builder(table: string) {
   const b: any = {
     _filters: {} as Record<string, any>,
+    _in: null as null | { col: string; vals: any[] },
     select: () => b,
     eq: (col: string, val: any) => { b._filters[col] = val; return b },
+    // `.in()` resolves to a row LIST, so the builder itself is thenable.
+    in: (col: string, vals: any[]) => { b._in = { col, vals }; return b },
+    then: (onFulfilled: any, onRejected?: any) => {
+      const ids: string[] = b._in?.vals ?? []
+      const data =
+        table === 'applications'
+          ? ids.map(id => scenario.applications[id]).filter(Boolean)
+          : ids.includes(scenario.exchange?.id) ? [scenario.exchange] : []
+      return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected)
+    },
     order: () => b,
     update: (row: any) => {
       // Return a thenable update object
       const updateObj = {
         eq: (col: string, val: any) => {
           b._filters[col] = val
+          if (table === 'applications' && col === 'id') updates.push({ id: val, row })
           return updateObj
         },
         then: (onFulfilled: any, onRejected?: any) => {
@@ -74,6 +90,7 @@ import { acceptApplications, rejectApplications, acceptApplication } from '../ap
 
 beforeEach(() => {
   vi.clearAllMocks()
+  updates = []
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1', good_news_subject: null, good_news_body: null },
     profile: { id: 'user-1', school_id: 's-1', role: 'organizer' },
@@ -95,6 +112,41 @@ describe('acceptApplications', () => {
 
   it('empty input is a no-op', async () => {
     expect(await acceptApplications([])).toEqual({ succeeded: 0, failed: 0 })
+  })
+
+  // The batch fetches every application in one read and writes them
+  // concurrently — the guards below have to survive that, per id.
+  it('mints a distinct invite token per accepted application', async () => {
+    await acceptApplications(['app-ok', 'app-noparent'])
+    const tokens = updates.map(u => u.row.invite_token)
+    expect(tokens).toHaveLength(2)
+    expect(tokens[0]).toBeTruthy()
+    expect(new Set(tokens).size).toBe(2)
+  })
+
+  it('skips applications belonging to another school', async () => {
+    scenario.applications['app-foreign'] = {
+      ...scenario.applications['app-ok'], id: 'app-foreign', school_id: 's-2',
+    }
+    const res = await acceptApplications(['app-ok', 'app-foreign'])
+    expect(res).toEqual({ succeeded: 1, failed: 1 })
+    expect(updates.map(u => u.id)).toEqual(['app-ok'])
+  })
+
+  it('keeps the status guard per id in a mixed selection', async () => {
+    // 'invited' was never submitted; 'accepted' is already accepted.
+    scenario.applications['app-invited'] = { ...scenario.applications['app-ok'], id: 'app-invited', status: 'invited' }
+    scenario.applications['app-done'] = { ...scenario.applications['app-ok'], id: 'app-done', status: 'accepted' }
+    const res = await acceptApplications(['app-ok', 'app-invited', 'app-done'])
+    expect(res).toEqual({ succeeded: 1, failed: 2 })
+    expect(updates.map(u => u.id)).toEqual(['app-ok'])
+  })
+
+  it('refuses the whole batch when the exchange is archived', async () => {
+    scenario.exchange = { ...scenario.exchange, archived_at: '2026-01-01T00:00:00Z' }
+    const res = await acceptApplications(['app-ok', 'app-noparent'])
+    expect(res).toEqual({ succeeded: 0, failed: 2 })
+    expect(updates).toEqual([])
   })
 })
 
