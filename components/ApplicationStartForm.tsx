@@ -20,6 +20,10 @@ const NOTICE = {
     en: 'Applications are closed for this exchange.',
     fr: 'Les candidatures sont fermées pour cet échange.',
   },
+  registered: {
+    en: 'This email is already registered for an exchange. If you already have an account, log in to continue.',
+    fr: 'Cette adresse e-mail est déjà associée à une candidature. Si tu as déjà un compte, connecte-toi pour continuer.',
+  },
 } as const
 
 export function ApplicationStartForm({ slug }: { slug: string }) {
@@ -27,7 +31,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<'draft' | 'submitted' | 'closed' | null>(null)
+  const [notice, setNotice] = useState<'draft' | 'submitted' | 'closed' | 'registered' | null>(null)
   const router = useRouter()
   const fr = lang === 'fr'
 
@@ -42,6 +46,16 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       }
       if ('closed' in res) {
         setNotice('closed')
+        setLoading(false)
+        return
+      }
+      if ('invalidEmail' in res) {
+        setError(fr ? 'Merci d’utiliser une adresse e-mail valide.' : 'Please use a valid email address.')
+        setLoading(false)
+        return
+      }
+      if ('registered' in res) {
+        setNotice('registered')
         setLoading(false)
         return
       }
@@ -60,7 +74,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
           <button type="button" onClick={() => setLang('fr')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'fr' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>FR</button>
         </div>
       </div>
-      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'Apply to join this student exchange. Start by entering your details below.'}</p>
+      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'To begin your application for this exchange, enter your details below'}</p>
       <div className="flex flex-col gap-4 rounded-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -77,7 +91,14 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
           <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
           <p className="m-0 text-xs text-[#8A97B2]">{fr ? 'Tu peux compléter ta candidature maintenant — nous t’enverrons aussi un lien privé par e-mail pour la reprendre sur n’importe quel appareil.' : 'You can complete your application now — we’ll also email you a private link so you can pick up where you left off on any device.'}</p>
         </div>
-        {notice && <p className="m-0 rounded-[10px] bg-[#E6ECFD] px-4 py-3 text-sm leading-relaxed text-[#1D48C7]">{NOTICE[notice][lang]}</p>}
+        {notice && (
+          <div className="rounded-[10px] bg-[#E6ECFD] px-4 py-3 text-sm leading-relaxed text-[#1D48C7]">
+            <p className="m-0">{NOTICE[notice][lang]}</p>
+            {notice === 'registered' && (
+              <a href="/login" className="mt-1 inline-block font-semibold underline">{fr ? 'Se connecter' : 'Log in'}</a>
+            )}
+          </div>
+        )}
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
         <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name} className="h-12 self-start rounded-[11px] bg-[#2456E6] px-6 text-base font-semibold hover:bg-[#1D48C7]">
           {loading ? '…' : (fr ? 'Commencer ma candidature' : 'Start my application')}

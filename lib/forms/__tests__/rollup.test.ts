@@ -4,7 +4,7 @@ import fr from '@/messages/fr.json'
 import {
   typePill, statusPill, reqPill, formDone, docDone, progressLabel,
   studentPill, docDrawerRows,
-  initials, activationHints, type TemplateVM, type AssigneeRow,
+  initials, type TemplateVM, type AssigneeRow,
 } from '@/lib/forms/rollup'
 
 // Root (unnamespaced) fr translator — the label helpers now build their strings
@@ -28,6 +28,10 @@ describe('pills', () => {
   it('type pills', () => {
     expect(typePill('pdf', t)).toEqual({ kind: 'neutral', label: 'PDF · à signer' })
     expect(typePill('online', t)).toEqual({ kind: 'info', label: 'Formulaire en ligne' })
+  })
+  it('typePill labels fillable distinctly', () => {
+    const tt = ((k: string) => k) as never
+    expect(typePill('fillable', tt)).toEqual({ kind: 'info', label: 'organizer.forms.pills.fillable' })
   })
   it('status pills', () => {
     expect(statusPill('active', t)).toEqual({ kind: 'ok', label: 'Actif' })
@@ -77,29 +81,5 @@ describe('initials', () => {
   it('two-word and single-word names', () => {
     expect(initials('Manon Girard')).toBe('MG')
     expect(initials('Manon')).toBe('M')
-  })
-})
-
-describe('activationHints', () => {
-  const base = { status: 'draft' as const, kind: 'doc' as const, deadline: '2026-10-10', template_file_path: null, fields: [] as string[] }
-  it('is empty for an active template', () => {
-    expect(activationHints({ ...base, status: 'active', deadline: null })).toEqual([])
-  })
-  it('is empty for a ready draft', () => {
-    expect(activationHints(base)).toEqual([])
-  })
-  it('flags a missing deadline', () => {
-    expect(activationHints({ ...base, deadline: null })).toEqual(['Ajoutez une échéance avant d’activer.'])
-  })
-  it('flags a missing PDF on pdf kind only', () => {
-    expect(activationHints({ ...base, kind: 'pdf' })).toEqual(['Téléversez le PDF avant d’activer.'])
-    expect(activationHints({ ...base, kind: 'doc' })).toEqual([])
-  })
-  it('flags missing questions on online kind and stacks with missing deadline', () => {
-    expect(activationHints({ ...base, kind: 'online', deadline: null })).toEqual([
-      'Ajoutez une échéance avant d’activer.',
-      'Ajoutez au moins une question avant d’activer.',
-    ])
-    expect(activationHints({ ...base, kind: 'online', fields: ['Q1'] })).toEqual([])
   })
 })

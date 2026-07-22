@@ -38,7 +38,8 @@
         "compte": "Account personale",
         "equipe": "Team e ruoli",
         "fact": "Fatturazione",
-        "prog": "Programma"
+        "prog": "Programma",
+        "donnees": "Dati e privacy"
       },
       "profile": {
         "fullNameLabel": "Nome completo",
@@ -102,12 +103,66 @@
           "confirm": "Archivia il programma"
         }
       },
+      "goodNews": {
+        "heading": "E-mail «Buona notizia» ai genitori",
+        "description": "Inviata ai genitori quando accetti una candidatura. I pulsanti Sì / No / Domande vengono aggiunti automaticamente.",
+        "subjectLabel": "Oggetto",
+        "bodyLabel": "Messaggio",
+        "placeholdersLabel": "Segnaposto disponibili:",
+        "previewLabel": "Anteprima",
+        "resetToDefault": "Ripristina il modello predefinito",
+        "saveButton": "Salva",
+        "savedNotice": "Modello salvato.",
+        "errors": {
+          "subjectEmpty": "L’oggetto non può essere vuoto.",
+          "bodyEmpty": "Il messaggio non può essere vuoto.",
+          "tooLong": "Il modello è troppo lungo.",
+          "saveFailed": "Impossibile salvare il modello. Riprova."
+        }
+      },
+      "programDetails": {
+        "heading": "Dettagli del programma",
+        "subtitle": "Questi dati compilano automaticamente i moduli da firmare online (liberatoria, richiesta di assenza, impegno della famiglia, autorizzazione medica). Modificali qui: tutti i moduli non ancora firmati si aggiornano.",
+        "destination": "Destinazione",
+        "destinationHint": "Come apparirà nei moduli, es. « le Minnesota, USA »",
+        "travelStart": "Data di partenza",
+        "travelEnd": "Data di ritorno",
+        "chaperones": "Accompagnatori",
+        "chaperonesHint": "Un nome completo per riga",
+        "association": "Nome dell’associazione",
+        "sendingSchool": "Istituto di provenienza",
+        "receivingSchool": "Istituto ospitante",
+        "proviseur": "Nome del preside",
+        "sendingCity": "Città dell’istituto",
+        "absenceDates": "Giorni di assenza da giustificare",
+        "absenceDatesHint": "Un giorno per riga, es. « le jeudi 19 octobre 2026 »",
+        "save": "Salva",
+        "saved": "Salvato."
+      },
       "errors": {
         "nameEmpty": "Il nome non può essere vuoto.",
         "schoolNameEmpty": "Il nome dell’istituto non può essere vuoto.",
         "passwordUpdateFailed": "Non è stato possibile aggiornare la password. Riprova.",
         "passwordMismatch": "Le password non corrispondono."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Dati e privacy",
+      "subtitle": "Elimina o esporta i dati di una persona su richiesta (GDPR).",
+      "students": "Studenti",
+      "applicants": "Candidati",
+      "empty": "Nessuno per il momento.",
+      "delete": "Elimina",
+      "deleting": "Eliminazione…",
+      "confirmTitle": "Eliminare definitivamente questi dati?",
+      "confirmBody": "Questa azione è irreversibile. Tutti i moduli, i documenti e le informazioni di {name} saranno eliminati definitivamente.",
+      "confirmCancel": "Annulla",
+      "confirmConfirm": "Elimina definitivamente",
+      "deleteError": "Eliminazione non riuscita. Riprova.",
+      "deleted": "Dati eliminati.",
+      "export": "Esporta",
+      "exporting": "Esportazione…",
+      "exportError": "Esportazione non riuscita. Riprova."
     },
     "billing": {
       "per": "/ anno",
@@ -133,12 +188,11 @@
     "shell": {
       "nav": {
         "dashboard": "Panoramica",
-        "exchanges": "Scambi",
         "applications": "Candid.",
-        "forms": "Mod.",
-        "documents": "Doc.",
+        "files": "Moduli / Docs",
         "students": "Studenti",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comun."
       },
       "accountMenu": {
         "trigger": "Account",
@@ -172,6 +226,33 @@
         "submitting": "Invio…"
       }
     },
+    "communication": {
+      "heading": "Comunicazione",
+      "subtitle": "Gestisci tutto ciò che comunichi agli studenti e alle famiglie.",
+      "comingSoon": "Presto disponibile.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Modelli",
+        "annonces": "Annunci",
+        "auto": "Promemoria auto."
+      },
+      "info": {
+        "heading": "Informazioni utili",
+        "description": "Aggiungi le informazioni chiave del programma. Gli studenti le vedono nella scheda «Infos» del loro portale.",
+        "addButton": "Aggiungi informazione",
+        "titlePlaceholder": "Titolo (es. Punto d’incontro)",
+        "bodyPlaceholder": "Dettagli visibili agli studenti…",
+        "saveButton": "Salva",
+        "deleteButton": "Elimina",
+        "empty": "Nessuna informazione per ora.",
+        "readOnlyNotice": "Programma archiviato — sola lettura.",
+        "errors": {
+          "titleRequired": "Il titolo è obbligatorio.",
+          "titleTooLong": "Titolo troppo lungo (max 120 caratteri).",
+          "bodyTooLong": "Dettagli troppo lunghi (max 2000 caratteri)."
+        }
+      }
+    },
     "dashboard": {
       "title": "Cruscotto",
       "emptyHeading": "Nessuno scambio per il momento",
@@ -189,6 +270,7 @@
         "copy": "Copia",
         "closeWarning": "Non vedrai più questo link — copialo prima di chiudere.",
         "closeAnyway": "Chiudi comunque",
+        "inviteByEmail": "Invita via e-mail",
         "close": "Chiudi"
       },
       "filterLabelMaybe": "Indecisi",
@@ -223,6 +305,8 @@
         "declined": "Ha rinunciato",
         "rejected": "Rifiutato",
         "dash": "—",
+        "invited": "Invitato",
+        "started": "Iniziato",
         "waiting": "In attesa",
         "hesitates": "Indeciso"
       },
@@ -257,6 +341,7 @@
       "progressCandidatures": "{done} / {total} candidature elaborate"
     },
     "applications": {
+      "questionsHeading": "Domande della famiglia",
       "backLink": "‹ Torna alle candidature",
       "printCta": "⎙ Stampa la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",
@@ -269,8 +354,21 @@
       "linkLabel": "Link di candidatura",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
+      "invite": {
+        "openCta": "Invita via e-mail",
+        "title": "Invita via e-mail",
+        "description": "Incolla le e-mail degli studenti — una per riga o separate da virgole.",
+        "placeholder": "marie@scuola.it\nleo@scuola.it",
+        "sendCta": "Invia inviti",
+        "sending": "Invio…",
+        "close": "Chiudi",
+        "notOpenError": "Apri prima le candidature e imposta una scadenza.",
+        "tooManyError": "Troppi indirizzi (max 200 per invio).",
+        "result": "{sent} inviate · {skipped} già nell'elenco · {invalid} non valide"
+      },
       "tabs": {
         "all": "Tutte",
+        "invited": "Invitati",
         "toReview": "Da esaminare",
         "accepted": "Accettate",
         "rejected": "Rifiutate"
@@ -305,10 +403,6 @@
       }
     },
     "exchanges": {
-      "title": "Scambi",
-      "subtitle": "Segui tutti i tuoi programmi di scambio — passati, in corso e futuri.",
-      "listLabel": "I tuoi scambi",
-      "emptyState": "Nessuno scambio per il momento — crea il primo.",
       "reminders": {
         "heading": "Solleciti automatici",
         "description": "Vengono inviate e-mail di sollecito agli studenti il cui fascicolo è incompleto. Il sollecito manuale resta disponibile anche se i solleciti automatici sono disattivati.",
@@ -331,29 +425,33 @@
         }
       }
     },
+    "files": {
+      "title": "Moduli / Docs",
+      "formsHeading": "Moduli · {count}",
+      "docsHeading": "Documenti richiesti · {count}",
+      "formsEmpty": "Ancora nessun modulo.",
+      "docsEmpty": "Ancora nessun documento richiesto."
+    },
     "forms": {
-      "title": "Moduli",
-      "yourFormsCount": "I tuoi moduli · {count}",
-      "addFormLabel": "Aggiungi un modulo",
       "close": "Chiudi",
       "deleteConfirm": "Eliminare questo modello? Le risposte già inviate dagli studenti verranno eliminate definitivamente.",
       "addPanel": {
         "nameLabel": "Nome del modulo",
         "namePlaceholderPdf": "Autorizzazione dei genitori",
         "namePlaceholderOnline": "Questionario famiglia",
-        "deadlineLabel": "Scadenza (facoltativo)",
+        "deadlineLabel": "Scadenza",
         "fileLabel": "PDF da far firmare",
         "back": "Indietro",
-        "createDraft": "Crea la bozza",
+        "createDraft": "Aggiungi",
+        "createAndEdit": "Crea e aggiungi le domande",
         "creating": "Creazione…"
       },
       "drawer": {
         "pdfPreviewLabel": "modello PDF · anteprima del documento",
         "fieldsHeadingPdf": "Campi da compilare",
         "fieldsHeadingOnline": "Domande del modulo",
-        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi le tue domande, poi attivalo per inviarlo alle famiglie.",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
+        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi la tua prima domanda per inviarlo alle famiglie.",
+        "fillableNote": "Modulo pronto all’uso: compilato e firmato online dalla famiglia, con i dettagli del programma inseriti automaticamente.",
         "editTemplate": "Modifica il modello",
         "download": "Scarica"
       },
@@ -373,6 +471,7 @@
       "pills": {
         "onlineForm": "Modulo online",
         "pdfToSign": "PDF · da firmare",
+        "fillable": "Firma online",
         "active": "Attivo",
         "draft": "Bozza",
         "mandatory": "Obbligatorio",
@@ -394,9 +493,6 @@
       "docPlaceholder": "Copia da caricare"
     },
     "documents": {
-      "title": "Documenti",
-      "requestedHeading": "Documenti richiesti · {count}",
-      "addDocLabel": "Richiedi un documento",
       "close": "Chiudi",
       "editButton": "Modifica",
       "deleteConfirm": "Eliminare questo documento? I file già inviati dalle famiglie verranno eliminati definitivamente.",
@@ -409,11 +505,13 @@
         },
         "nameLabel": "Nome del documento",
         "namePlaceholder": "Tessera europea di assicurazione malattia",
-        "deadlineLabel": "Scadenza (facoltativo)",
+        "deadlineLabel": "Scadenza",
         "conditionLabel": "Condizione (facoltativo)",
         "conditionPlaceholder": "se genitori divorziati",
+        "studentsLabel": "Studenti interessati",
+        "noStudents": "Nessuno studente iscritto per ora.",
         "back": "Indietro",
-        "createDraft": "Crea la bozza",
+        "createDraft": "Aggiungi",
         "creating": "Creazione…"
       },
       "drawer": {
@@ -421,25 +519,25 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Scadenza {date}",
         "trackingHeading": "Monitoraggio per studente",
-        "draftEmptyConditional": "Questo documento non è ancora stato richiesto. Scegli gli studenti interessati, poi attivalo per avviare le richieste.",
-        "draftEmptyAll": "Questo documento non è ancora stato richiesto. Attivalo per avviare le richieste.",
-        "noEnrolledStudents": "Nessuno studente iscritto per il momento.",
+        "draftEmptyAll": "Questo documento non è ancora stato richiesto.",
         "restCount": "+ {count, plural, one {# studente} other {# studenti}} — documento fornito e convalidato",
         "remindedCount": "{count, plural, one {# sollecitato} other {# sollecitati}}",
         "skippedRecently": " · {count, plural, one {# già sollecitato di recente} other {# già sollecitati di recente}}",
         "failedCount": " · {count} non riusciti",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
-        "chooseAndActivate": "Scegli gli studenti e attiva",
         "sending": "Invio…",
         "remindFamilies": "Sollecita le famiglie"
       }
     },
     "library": {
-      "heading": "Biblioteca",
+      "addTitle": "Aggiungi",
+      "formsSection": "Moduli",
+      "docsSection": "Documenti",
       "searchPlaceholder": "Cerca…",
       "alreadyAdded": "Già aggiunto ✓",
       "adding": "Aggiunta…",
+      "deadlineLabel": "Scadenza",
+      "detailsHint": "Queste informazioni vengono inserite automaticamente nel documento.",
+      "confirmAdd": "Aggiungi al programma",
       "customHeading": "Oppure",
       "uploadPdfTile": "Carica un PDF",
       "createOnlineTile": "Crea un modulo online",
@@ -488,9 +586,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Torna ai documenti"
-      },
       "formDetail": {
         "backLabel": "Torna ai moduli"
       },
@@ -500,13 +595,14 @@
         "emptyBodyLink": "Vedi le candidature"
       },
       "submissionReview": {
-        "backLink": "← Torna allo scambio",
+        "backLink": "← Indietro",
         "unknownStudent": "Sconosciuto",
         "notSubmitted": "Non inviato",
         "notStarted": "Questo studente non ha ancora iniziato questo modulo.",
         "noAnswer": "Nessuna risposta",
         "notUploaded": "Non caricato",
         "reviewNoteHeading": "Nota di revisione",
+        "downloadSignedPdf": "Scarica il PDF firmato",
         "status": {
           "approved": "Approvato",
           "submitted": "Inviato",

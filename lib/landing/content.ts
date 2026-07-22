@@ -98,9 +98,15 @@ export interface LandingContent {
     rows: { label: string; value: string; green?: boolean }[]
     totalLabel: string
     totalValue: string
+    focus: string
   }
   closing: { title: string; cta: string; note: string }
-  footer: { product: string; login: string; copyright: string }
+  footer: {
+    product: string
+    login: string
+    copyright: string
+    legal: { mentions: string; cgu: string; cgv: string; confidentialite: string }
+  }
 }
 
 const pill = (label: string, tone: PillTone): Pill => ({ label, tone })
@@ -308,13 +314,20 @@ const fr: LandingContent = {
     ],
     totalLabel: 'Votre premier échange sur Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Ces heures, vous les rendez à ce qui compte vraiment : l’expérience et la sécurité de vos élèves — pas la course aux dossiers.',
   },
   closing: {
     title: 'Votre prochain échange, sans la paperasse.',
     cta: 'Démarrer mon échange gratuit',
     note: 'Premier échange gratuit · sans carte bancaire',
   },
-  footer: { product: 'Produit', login: 'Se connecter', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Produit',
+    login: 'Se connecter',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Mentions légales', cgu: 'CGU', cgv: 'CGV', confidentialite: 'Confidentialité' },
+  },
 }
 
 const en: LandingContent = {
@@ -520,13 +533,20 @@ const en: LandingContent = {
     ],
     totalLabel: 'Your first exchange on Eazyexchange',
     totalValue: '€0',
+    focus:
+      'Those hours go back to what matters most — your students’ experience and safety, not chasing paperwork.',
   },
   closing: {
     title: 'Your next exchange, without the paperwork.',
     cta: 'Start my free exchange',
     note: 'First exchange free · no credit card',
   },
-  footer: { product: 'Product', login: 'Log in', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Product',
+    login: 'Log in',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Legal notice', cgu: 'Terms', cgv: 'Sales terms', confidentialite: 'Privacy' },
+  },
 }
 
 const es: LandingContent = {
@@ -732,13 +752,20 @@ const es: LandingContent = {
     ],
     totalLabel: 'Tu primer intercambio en Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Esas horas vuelven a lo que de verdad importa: la experiencia y la seguridad de tus alumnos, no perseguir documentos.',
   },
   closing: {
     title: 'Tu próximo intercambio, sin papeleo.',
     cta: 'Empezar mi intercambio gratis',
     note: 'Primer intercambio gratis · sin tarjeta de crédito',
   },
-  footer: { product: 'Producto', login: 'Iniciar sesión', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Producto',
+    login: 'Iniciar sesión',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Aviso legal', cgu: 'Condiciones', cgv: 'Venta', confidentialite: 'Privacidad' },
+  },
 }
 
 const it: LandingContent = {
@@ -944,13 +971,20 @@ const it: LandingContent = {
     ],
     totalLabel: 'Il tuo primo scambio su Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Quelle ore tornano a ciò che conta davvero: l’esperienza e la sicurezza dei tuoi studenti, non la rincorsa ai documenti.',
   },
   closing: {
     title: 'Il tuo prossimo scambio, senza scartoffie.',
     cta: 'Inizia il mio scambio gratuito',
     note: 'Primo scambio gratuito · senza carta di credito',
   },
-  footer: { product: 'Prodotto', login: 'Accedi', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Prodotto',
+    login: 'Accedi',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Note legali', cgu: 'Condizioni', cgv: 'Vendita', confidentialite: 'Privacy' },
+  },
 }
 
 const de: LandingContent = {
@@ -1156,13 +1190,20 @@ const de: LandingContent = {
     ],
     totalLabel: 'Ihr erster Austausch auf Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Diese Stunden fließen zurück in das, was am wichtigsten ist – das Erlebnis und die Sicherheit Ihrer Schüler, nicht das Hinterherjagen von Unterlagen.',
   },
   closing: {
     title: 'Ihr nächster Austausch, ohne Papierkram.',
     cta: 'Meinen kostenlosen Austausch starten',
     note: 'Erster Austausch gratis · keine Kreditkarte',
   },
-  footer: { product: 'Produkt', login: 'Anmelden', copyright: '© 2026 Eazyexchange' },
+  footer: {
+    product: 'Produkt',
+    login: 'Anmelden',
+    copyright: '© 2026 Eazyexchange',
+    legal: { mentions: 'Impressum', cgu: 'AGB', cgv: 'Verkauf', confidentialite: 'Datenschutz' },
+  },
 }
 
 export const landingContent: Record<Locale, LandingContent> = { fr, en, es, it, de }

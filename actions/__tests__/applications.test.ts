@@ -21,6 +21,7 @@ let scenario: {
   verifyOtpAttrs: any | null       // captured attrs of auth.verifyOtp
   verifyOtpResult: any             // returned by auth.verifyOtp
   userProfile: any | null          // routes rowFor('users') for getInvitation's maybeSingle lookup
+  enrolledElsewhere: any | null    // routes the has-account guard maybeSingle (school_id+email, no exchange_id, enrolled_user_id not null)
 }
 
 function builder(table: string) {
@@ -32,6 +33,9 @@ function builder(table: string) {
       return b
     },
     eq: (col: string, val: any) => { b._filters[col] = val; return b },
+    neq: (col: string, val: any) => { b._filters['neq_' + col] = val; return b },
+    not: () => b,
+    limit: () => b,
     order: () => b,
     insert: (row: any) => {
       scenario.inserted = { table, row }
@@ -68,12 +72,22 @@ function builder(table: string) {
     },
     delete: () => ({ eq: async (_col: string, val: any) => { scenario.deletedProfileUserId = val; return { error: null } } }),
     single: async () => ({ data: rowFor(table), error: rowFor(table) ? null : { message: 'none' } }),
-    maybeSingle: async () => ({
-      data: table === 'applications' && scenario.applicationQueue.length > 0
-        ? scenario.applicationQueue.shift()
-        : rowFor(table),
-      error: null,
-    }),
+    maybeSingle: async () => {
+      if (table === 'applications') {
+        // The has-account guard query filters school_id + email but NOT exchange_id
+        // (it uses .neq('exchange_id', …) → recorded as neq_exchange_id, plus a
+        // .not('enrolled_user_id','is',null) that the mock treats as a no-op).
+        // Route it to enrolledElsewhere so it can hit/miss independently of the
+        // queue and of the same-exchange lookup (which sets _filters.exchange_id).
+        const f = b._filters
+        if (f.school_id !== undefined && f.email !== undefined && f.exchange_id === undefined) {
+          return { data: scenario.enrolledElsewhere, error: null }
+        }
+        if (scenario.applicationQueue.length > 0) return { data: scenario.applicationQueue.shift(), error: null }
+        return { data: scenario.application, error: null }
+      }
+      return { data: rowFor(table), error: null }
+    },
   }
   return b
 }
@@ -140,11 +154,12 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn().mockResolvedValue(undefined),
   sendInvitationEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
   sendChecklistEmail: vi.fn().mockResolvedValue(true),
+  sendStudentSetupEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
-import { respondToInvitation, resumeInviteSetup, getInvitation } from '../invitations'
-import { sendApplicationResumeEmail } from '@/lib/email'
+import { respondToInvitation, getInvitation } from '../invitations'
+import { sendApplicationResumeEmail, sendStudentSetupEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 
 function completeAppData(): Record<string, string> {
@@ -173,15 +188,16 @@ beforeEach(() => {
     verifyOtpAttrs: null,
     verifyOtpResult: { data: { session: {} }, error: null },
     userProfile: null,
+    enrolledElsewhere: null,
   }
 })
 
 describe('startApplication', () => {
   beforeEach(() => { scenario.application = null })
 
-  it('rejects an invalid email', async () => {
+  it('returns a structured result for an invalid email', async () => {
     await expect(startApplication('slug', { email: 'nope', first_name: 'A', last_name: 'B', language: 'en' }))
-      .rejects.toThrow('valid email')
+      .resolves.toEqual({ invalidEmail: true })
   })
   it('rejects when the exchange is closed', async () => {
     scenario.exchange.application_open = false
@@ -282,6 +298,23 @@ describe('startApplication', () => {
     const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
     expect(res).toEqual({ existing: 'draft' })
   })
+
+  it('blocks a new application when the email is already enrolled in another exchange in the school', async () => {
+    scenario.enrolledElsewhere = { id: 'app-other', enrolled_user_id: 'user-x' }
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect(res).toEqual({ registered: true })
+    expect(scenario.inserted).toBeNull()
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('does NOT block a new application when a prior application in another exchange is not enrolled (one application per exchange)', async () => {
+    // The has-account guard filters enrolled_user_id IS NOT NULL, so a non-enrolled
+    // prior elsewhere yields no match — represented by enrolledElsewhere staying null.
+    scenario.enrolledElsewhere = null
+    const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
+    expect('token' in res).toBe(true)
+    expect(scenario.inserted.table).toBe('applications')
+  })
 })
 
 describe('saveApplicationDraft', () => {
@@ -294,6 +327,16 @@ describe('saveApplicationDraft', () => {
     scenario.application.resume_token_expires_at = PAST
     await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('expired')
   })
+  it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
+    const res = await saveApplicationDraft('tok', { lived_abroad: 'x'.repeat(151) })
+    expect(res).toEqual({ ok: false, overLimit: ['lived_abroad'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('returns ok:true after a successful draft save', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1' }
+    const res = await saveApplicationDraft('tok', { first_name: 'A' })
+    expect(res).toEqual({ ok: true })
+  })
 })
 
 describe('getApplicationDraft', () => {
@@ -303,14 +346,16 @@ describe('getApplicationDraft', () => {
     expect(res.expired).toBe(true)
     expect(res.data).toBeUndefined()
   })
-  it('returns the answers read-only once the application is submitted (recap)', async () => {
+  it('returns a submitted marker with NO PII once the application is submitted', async () => {
+    // The post-submit resume page must never receive the answers or the photo:
+    // it renders an "already submitted" notice plus a recap-download button, and
+    // `language` is the one non-marker field it needs (carries no PII).
     scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'fr', photo_path: 'app-1/photo.jpg', exchange_id: 'ex-1', resume_token_expires_at: null, submitted_at: '2026-07-01T10:00:00Z' }
     const res = await getApplicationDraft('tok') as any
     expect(res.submitted).toBe(true)
-    expect(res.data).toEqual({ first_name: 'A' })
     expect(res.language).toBe('fr')
-    expect(res.photoUrl).toContain('app-1/photo.jpg')
-    expect(res.submittedAt).toBe('2026-07-01T10:00:00Z')
+    expect(res.data).toBeUndefined()
+    expect(res.photoUrl).toBeUndefined()
   })
   it('still hides PII behind an expired link even when submitted', async () => {
     scenario.application = { status: 'submitted', data: { first_name: 'A' }, language: 'fr', photo_path: null, exchange_id: 'ex-1', resume_token_expires_at: PAST }
@@ -360,6 +405,23 @@ describe('submitApplication', () => {
     expect(scenario.updated.table).toBe('applications')
     expect(scenario.updated.row.status).toBe('submitted')
   })
+  it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
+    const res = await submitApplication('tok', { ...completeAppData(), sports: 'x'.repeat(151) })
+    expect(res).toEqual({ ok: false, overLimit: ['sports'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('returns ok:true on a successful submission', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    const res = await submitApplication('tok', completeAppData())
+    expect(res).toEqual({ ok: true })
+  })
+  it('blocks submission when the email became enrolled in another exchange (race backstop)', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    scenario.enrolledElsewhere = { id: 'app-other', enrolled_user_id: 'user-x' }
+    const res = await submitApplication('tok', completeAppData())
+    expect(res).toEqual({ ok: false, registered: true })
+    expect(scenario.updated).toBeNull()
+  })
 })
 
 describe('respondToInvitation', () => {
@@ -393,39 +455,44 @@ describe('respondToInvitation', () => {
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toMatchObject({ ok: false, error: 'closed' })
   })
-  it('on Yes creates a confirmed account with no email, enrolls, finalizes, and mints a session', async () => {
+  it('on Yes creates a confirmed account, enrolls, finalizes, and emails the STUDENT a setup link (no parent session)', async () => {
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
     expect(scenario.createUserAttrs).toMatchObject({ email: 'a@b.co', email_confirm: true })
     expect(scenario.updated.row.status).toBe('enrolled')
     expect(scenario.updated.row.enrolled_user_id).toBe('new-user')
+    // A magiclink is generated to build the student's /auth/confirm setup URL...
     expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
-    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
+    // ...and mailed to the student — but the PARENT is never signed in here.
+    expect(sendStudentSetupEmail).toHaveBeenCalledTimes(1)
+    const arg = (sendStudentSetupEmail as any).mock.calls[0][0]
+    expect(arg.to).toBe('a@b.co')
+    expect(arg.setupUrl).toContain('/auth/confirm?token_hash=hash-1')
+    expect(arg.setupUrl).toContain('type=magiclink')
+    expect(arg.setupUrl).toContain('next=%2Faccept-invite')
+    expect(scenario.verifyOtpAttrs).toBeNull()
   })
-  it('a Yes on an already-claimed (enrolling) invite mints a session instead of a silent no-op', async () => {
+  it('a Yes on an already-claimed (enrolling) invite is idempotent — no second account, no resend', async () => {
     scenario.application.status = 'enrolling'
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
-    expect(scenario.createUserAttrs).toBeNull()           // no second account
-    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
+    expect(scenario.createUserAttrs).toBeNull()
+    expect(sendStudentSetupEmail).not.toHaveBeenCalled()
+    expect(scenario.verifyOtpAttrs).toBeNull()
   })
-  it('a Yes on an already-enrolled invite also mints a session (retry after mint failure)', async () => {
+  it('a Yes on an already-enrolled invite is idempotent success', async () => {
     scenario.application.status = 'enrolled'
     const res = await respondToInvitation('inv-1', 'yes', '')
     expect(res).toEqual({ ok: true })
     expect(scenario.createUserAttrs).toBeNull()
+    expect(sendStudentSetupEmail).not.toHaveBeenCalled()
   })
-  it('returns the structured retry error when the session mint fails after enrollment', async () => {
+  it('a failing student setup email does not fail the confirmation (best-effort)', async () => {
     scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
     const res = await respondToInvitation('inv-1', 'yes', '')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
-    // enrollment itself was finalized — the retry lands in the claim-fail branch
-    expect(scenario.updates.some(u => u.row.status === 'enrolled')).toBe(true)
-  })
-  it('a failing verifyOtp also returns the retry error', async () => {
-    scenario.verifyOtpResult = { data: null, error: { message: 'bad hash' } }
-    const res = await respondToInvitation('inv-1', 'yes', '')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
+    expect(res).toEqual({ ok: true })
+    // enrollment was still finalized
+    expect(scenario.updates.some((u) => u.row.status === 'enrolled')).toBe(true)
   })
   it('returns email_exists and releases the claim when the auth account already exists', async () => {
     scenario.createUserResult = { data: { user: null }, error: { code: 'email_exists', message: 'exists' } }
@@ -458,47 +525,6 @@ describe('respondToInvitation', () => {
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
     await respondToInvitation('inv-1', 'maybe', '')
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
-  })
-})
-
-describe('resumeInviteSetup', () => {
-  beforeEach(() => {
-    scenario.application = {
-      id: 'app-1', status: 'enrolled', email: 'a@b.co',
-      invite_token: 'inv-1', invite_token_expires_at: null, enrolled_user_id: 'stu-1',
-    }
-  })
-  it('mints a session for an enrolled invite', async () => {
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toEqual({ ok: true })
-    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
-    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
-  })
-  it('also works mid-enrollment (status enrolling)', async () => {
-    scenario.application.status = 'enrolling'
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toEqual({ ok: true })
-  })
-  it('returns expired for an expired token', async () => {
-    scenario.application.invite_token_expires_at = PAST
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'expired' })
-    expect(scenario.generateLinkAttrs).toBeNull()
-  })
-  it('returns closed when the invitation was never accepted', async () => {
-    scenario.application.status = 'accepted'
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'closed' })
-  })
-  it('returns not_found for an unknown token', async () => {
-    scenario.application = null
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'not_found' })
-  })
-  it('returns retry when the magiclink cannot be generated', async () => {
-    scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
   })
 })
 

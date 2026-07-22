@@ -6,7 +6,7 @@ import {
   rollupStudent, formsPill, docsPill, dossierComplete,
   nextDeadline, p,
   candidaturePill, applicantStatusPill, buildLifecycleRows, closedCount,
-  lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, exchangeProgress,
+  lifecycleFunnel, lifecycleFilter, lifecycleSubline, lifecycleActionCards, progressSummary,
   type AppRow, type TemplateInfo, type CellMap, type EnrolledStudent, type DossierRollup,
 } from '@/lib/dashboard/rollup'
 
@@ -16,7 +16,7 @@ import {
 const t = createTranslator({ locale: 'fr', messages: fr })
 
 const app = (status: string, over: Partial<AppRow> = {}): AppRow =>
-  ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', data: {}, email: 'x@y.fr', ...over })
+  ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', responded_at: null, data: {}, email: 'x@y.fr', ...over })
 
 const T: TemplateInfo[] = [
   { id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' },
@@ -245,6 +245,40 @@ describe('buildLifecycleRows', () => {
     const blankRollup = rollupStudent({ id: 's1', full_name: '  ' }, T, cell('approved', 'approved'), TODAY, t)
     expect(buildLifecycleRows([], blankStudents, [blankRollup], t)[0].name).toBe('c@l.fr')
   })
+  it('an enrolled student inherits respondedAt from the matching application', () => {
+    const D = '2026-09-18T12:00:00.000+00:00'
+    const apps = [app('enrolled', { id: 'a1', email: ' C@L.FR ', responded_at: D })]
+    const rows = buildLifecycleRows(apps, STUDENTS, ROLLUPS, t)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].respondedAt).toBe(D)
+  })
+  it('an enrolled student with no matching application has respondedAt null', () => {
+    const rows = buildLifecycleRows([], STUDENTS, ROLLUPS, t)
+    expect(rows[0].respondedAt).toBeNull()
+  })
+  // The rule is responded_at alone: every status the invitee replied on carries
+  // a date, not just the ones that ended in enrollment.
+  it.each(['declined', 'maybe', 'enrolling', 'enrolled'])(
+    'a %s applicant row exposes its own responded_at', status => {
+      const D = '2026-09-18T12:00:00.000+00:00'
+      const apps = [app(status, { id: 'a1', email: 'm@x.fr', responded_at: D })]
+      expect(buildLifecycleRows(apps, [], [], t)[0].respondedAt).toBe(D)
+    },
+  )
+  // …and statuses that only record an organizer decision stay bare.
+  it.each(['submitted', 'accepted', 'rejected', 'invited', 'draft'])(
+    'a %s applicant row has respondedAt null when the invitee never replied', status => {
+      const apps = [app(status, { id: 'a1', email: 'm@x.fr', responded_at: null })]
+      expect(buildLifecycleRows(apps, [], [], t)[0].respondedAt).toBeNull()
+    },
+  )
+  it('an orphan enrolled application keeps its respondedAt on the fallback applicant row', () => {
+    const D = '2026-09-18T12:00:00.000+00:00'
+    const apps = [app('enrolled', { id: 'a1', email: 'orphan@x.fr', responded_at: D })]
+    const rows = buildLifecycleRows(apps, [], [], t)
+    expect(rows[0].kind).toBe('applicant')
+    expect(rows[0].respondedAt).toBe(D)
+  })
 })
 
 describe('closedCount', () => {
@@ -366,17 +400,20 @@ describe('lifecycleActionCards', () => {
   })
 })
 
-describe('exchangeProgress', () => {
+describe('progressSummary', () => {
   it('dossier progress once students are enrolled', () => {
     const R2 = [ROLLUPS[0], rollupStudent({ id: 's2', full_name: 'B' }, T, {}, TODAY, t)]
-    expect(exchangeProgress([app('submitted')], R2, t)).toEqual({ done: 1, total: 2, label: '1 / 2 dossiers validés' })
+    expect(progressSummary([app('submitted')], R2)).toEqual({ done: 1, total: 2, kind: 'dossiers' })
   })
   it('candidature progress before any enrollment', () => {
-    expect(exchangeProgress([app('submitted'), app('accepted')], [], t))
-      .toEqual({ done: 1, total: 2, label: '1 / 2 candidatures traitées' })
+    expect(progressSummary([app('submitted'), app('accepted')], []))
+      .toEqual({ done: 1, total: 2, kind: 'candidatures' })
+  })
+  it('null when there is nothing to count', () => {
+    expect(progressSummary([], [])).toBeNull()
   })
   it('empty dossiers count in the total but never as done', () => {
     const empty = rollupStudent({ id: 's9', full_name: 'Vide' }, [], {}, TODAY, t)
-    expect(exchangeProgress([], [empty], t)).toEqual({ done: 0, total: 1, label: '0 / 1 dossiers validés' })
+    expect(progressSummary([], [empty])).toEqual({ done: 0, total: 1, kind: 'dossiers' })
   })
 })

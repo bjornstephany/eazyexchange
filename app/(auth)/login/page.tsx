@@ -35,9 +35,14 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push('/')
+    // Route by role so users land in their app, not the marketing page. Pushing
+    // to '/' relied on middleware to bounce the logged-in user off the landing
+    // page, which intermittently left students staring at the marketing site.
+    const { data: profile } = await supabase
+      .from('users').select('role').eq('id', data.user.id).single<{ role: string }>()
+    router.push(profile?.role === 'organizer' ? '/dashboard' : '/my-forms')
     router.refresh()
   }
 

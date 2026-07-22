@@ -13,9 +13,16 @@ import {
 } from '@/lib/billing/exchange-limit'
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { validateInfoCard, type InfoCardError } from '@/lib/exchange/info-card'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
+import { getTranslations } from 'next-intl/server'
+import { listApplications } from './applications-review'
+import {
+  rollupStudent, progressSummary,
+  type AppRow, type TemplateInfo, type ExchangeProgressSummary,
+} from '@/lib/dashboard/rollup'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '@/types/db'
 
@@ -149,21 +156,6 @@ async function assertExchangeInScope(supabase: SupabaseClient<Database>, exchang
   return profile.school_id as string
 }
 
-export async function getExchange(exchangeId: string) {
-  const supabase = await createClient()
-  await requireUser()
-  await assertExchangeInScope(supabase, exchangeId)
-
-  const { data, error } = await supabase
-    .from('exchanges')
-    .select('*, school_a:schools!school_a_id(name), school_b:schools!school_b_id(name)')
-    .eq('id', exchangeId)
-    .single()
-
-  if (error) throw error
-  return data
-}
-
 export async function getExchangeGrid(exchangeId: string) {
   const supabase = await createClient()
   await requireUser()
@@ -242,7 +234,6 @@ export async function setApplicationOpen(exchangeId: string, open: boolean, dead
     .update({ application_open: open, application_deadline: deadline })
     .eq('id', exchangeId)
   if (error) throw error
-  revalidatePath(`/exchanges/${exchangeId}`)
   // Application state also drives the Candidatures page and the Aperçu.
   revalidatePath('/applications')
   revalidatePath('/dashboard')
@@ -267,5 +258,132 @@ export async function updateReminderSettings(
     .update({ reminders_enabled: enabled, reminder_cadence: cadence })
     .eq('id', exchangeId)
   if (error) throw error
-  revalidatePath(`/exchanges/${exchangeId}`)
+  revalidatePath('/settings')
+}
+
+// Re-export for dropdown consumers (type-only exports are legal in 'use server').
+export type { ExchangeProgressSummary }
+
+// Per-exchange completion counts for the shell's exchange dropdown. Reuses the
+// same pipeline as the dashboard (listApplications + grid → rollupStudent →
+// progressSummary) so the numbers always agree with it. Fetched lazily on
+// first dropdown open — never from the organizer layout.
+export async function getExchangeProgressSummaries(): Promise<Record<string, ExchangeProgressSummary>> {
+  await requireOrganizer()
+  const exchanges = await getExchanges()
+  const tr = await getTranslations()
+
+  const entries = await Promise.all(
+    exchanges.map(async (exchange): Promise<[string, ExchangeProgressSummary]> => {
+      // One bad exchange must never break the dropdown: fail to null.
+      try {
+        const [applications, grid] = await Promise.all([
+          listApplications(exchange.id),
+          getExchangeGrid(exchange.id),
+        ])
+        const apps: AppRow[] = applications.map(a => ({
+          id: a.id, status: a.status, submitted_at: a.submitted_at, responded_at: a.responded_at,
+          data: a.data ?? {}, email: a.email,
+        }))
+        const templates: TemplateInfo[] = grid.templates.map(t => ({
+          id: t.id, type: t.type as TemplateInfo['type'], name: t.name, deadline: t.deadline as string,
+        }))
+        const rollups = grid.students.map(s => rollupStudent(s, templates, grid.cellMap, undefined, tr))
+        return [exchange.id, progressSummary(apps, rollups)]
+      } catch {
+        return [exchange.id, null]
+      }
+    }),
+  )
+  return Object.fromEntries(entries)
+}
+
+export type InfoCard = { id: string; title: string; body: string; position: number }
+export type InfoCardResult = { ok: true; card: InfoCard } | { ok: false; error: InfoCardError }
+
+export async function getInfoCards(exchangeId: string): Promise<InfoCard[]> {
+  const supabase = await createClient()
+  await requireOrganizer()
+  await assertExchangeInScope(supabase, exchangeId)
+
+  const { data, error } = await supabase
+    .from('exchange_info_cards')
+    .select('id, title, body, position')
+    .eq('exchange_id', exchangeId)
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as InfoCard[]
+}
+
+export async function addInfoCard(
+  exchangeId: string, input: { title: string; body: string },
+): Promise<InfoCardResult> {
+  const supabase = await createClient()
+  await requireOrganizer()
+  await assertExchangeInScope(supabase, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
+
+  const validated = validateInfoCard(input)
+  if (!validated.ok) return validated
+
+  // Append: next position after the current max for this exchange.
+  const { data: rows } = await supabase
+    .from('exchange_info_cards')
+    .select('position')
+    .eq('exchange_id', exchangeId)
+    .order('position', { ascending: false })
+    .limit(1)
+  const nextPosition = ((rows?.[0]?.position as number | undefined) ?? -1) + 1
+
+  const { data, error } = await supabase
+    .from('exchange_info_cards')
+    .insert({ exchange_id: exchangeId, title: validated.value.title, body: validated.value.body, position: nextPosition })
+    .select('id, title, body, position')
+    .single()
+  if (error) throw error
+  revalidatePath('/communication')
+  return { ok: true, card: data as InfoCard }
+}
+
+export async function updateInfoCard(
+  cardId: string, input: { title: string; body: string },
+): Promise<InfoCardResult> {
+  const supabase = await createClient()
+  await requireOrganizer()
+
+  // Resolve the card's exchange, then scope + writable-guard it.
+  const { data: existing } = await supabase
+    .from('exchange_info_cards').select('exchange_id').eq('id', cardId).maybeSingle()
+  if (!existing) throw new Error('Info card not found')
+  await assertExchangeInScope(supabase, existing.exchange_id as string)
+  await assertExchangeWritable(supabase, existing.exchange_id as string)
+
+  const validated = validateInfoCard(input)
+  if (!validated.ok) return validated
+
+  const { data, error } = await supabase
+    .from('exchange_info_cards')
+    .update({ title: validated.value.title, body: validated.value.body, updated_at: new Date().toISOString() })
+    .eq('id', cardId)
+    .select('id, title, body, position')
+    .single()
+  if (error) throw error
+  revalidatePath('/communication')
+  return { ok: true, card: data as InfoCard }
+}
+
+export async function deleteInfoCard(cardId: string): Promise<void> {
+  const supabase = await createClient()
+  await requireOrganizer()
+
+  const { data: existing } = await supabase
+    .from('exchange_info_cards').select('exchange_id').eq('id', cardId).maybeSingle()
+  if (!existing) throw new Error('Info card not found')
+  await assertExchangeInScope(supabase, existing.exchange_id as string)
+  await assertExchangeWritable(supabase, existing.exchange_id as string)
+
+  const { error } = await supabase.from('exchange_info_cards').delete().eq('id', cardId)
+  if (error) throw error
+  revalidatePath('/communication')
 }

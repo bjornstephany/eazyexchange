@@ -2,13 +2,19 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { TeamMember, PendingInvite, BillingOverview, ProgramInfo } from '@/actions/settings'
+import type { ErasableSubject } from '@/actions/retention'
 import type { Locale } from '@/lib/i18n/config'
+import type { ExchangeProgramDetails } from '@/types/db'
 import { ProfileCard } from './ProfileCard'
 import { SecurityCard } from './SecurityCard'
 import { TeamCard } from './TeamCard'
 import { BillingCard } from './BillingCard'
 import { ProgramCard } from './ProgramCard'
+import { ProgramDetailsCard } from './ProgramDetailsCard'
+import { DataPrivacyCard } from './DataPrivacyCard'
 import { LanguageSelect } from './LanguageSelect'
+import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
+import { GoodNewsCard } from './GoodNewsCard'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
@@ -17,10 +23,12 @@ export type SettingsProps = {
   team: { members: TeamMember[]; pending: PendingInvite[] }
   billing: BillingOverview | null
   program: ProgramInfo | null
+  programDetails: ExchangeProgramDetails | null
   locale: Locale
+  subjects: ErasableSubject[]
 }
 
-type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog'
+type SectionKey = 'compte' | 'equipe' | 'fact' | 'prog' | 'donnees'
 
 export function SettingsView(props: SettingsProps) {
   const t = useTranslations('organizer')
@@ -29,7 +37,8 @@ export function SettingsView(props: SettingsProps) {
     { key: 'compte', label: t('settings.nav.compte') },
     { key: 'equipe', label: t('settings.nav.equipe') },
     ...(props.isOwner ? [{ key: 'fact' as const, label: t('settings.nav.fact') }] : []),
-    ...(props.isOwner && props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
+    ...(props.program ? [{ key: 'prog' as const, label: t('settings.nav.prog') }] : []),
+    { key: 'donnees', label: t('settings.nav.donnees') },
   ]
 
   return (
@@ -63,7 +72,30 @@ export function SettingsView(props: SettingsProps) {
           )}
           {section === 'equipe' && <TeamCard team={props.team} isOwner={props.isOwner} />}
           {section === 'fact' && props.billing && <BillingCard billing={props.billing} />}
-          {section === 'prog' && props.program && <ProgramCard program={props.program} />}
+          {section === 'prog' && props.program && (
+            <>
+              <ProgramCard program={props.program} isOwner={props.isOwner} />
+              <ProgramDetailsCard
+                exchangeId={props.program.id}
+                initial={props.programDetails}
+                readOnly={props.program.archived}
+              />
+              <ReminderSettingsCard
+                exchangeId={props.program.id}
+                initialEnabled={props.program.remindersEnabled}
+                initialCadence={props.program.reminderCadence}
+                readOnly={props.program.archived}
+              />
+              <GoodNewsCard
+                exchangeId={props.program.id}
+                exchangeName={props.program.name}
+                initialSubject={props.program.goodNewsSubject}
+                initialBody={props.program.goodNewsBody}
+                readOnly={props.program.archived}
+              />
+            </>
+          )}
+          {section === 'donnees' && <DataPrivacyCard subjects={props.subjects} />}
         </div>
       </div>
     </div>

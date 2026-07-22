@@ -1,6 +1,6 @@
 import { getApplicationDraft } from '@/actions/apply'
 import { ApplicationForm } from '@/components/ApplicationForm'
-import { ApplicationReadView } from '@/components/ApplicationReadView'
+import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
 
 // Reads the live draft (autosaved answers + submitted/expired state) via the
@@ -23,24 +23,15 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
       body="Les liens de candidature expirent au bout d’un moment pour protéger ton dossier. Demande à ton organisateur de t’en renvoyer un nouveau."
     />
   )
-  if (draft.submitted) {
-    const lang = draft.language === 'fr' ? 'fr' : 'en'
-    const t = lang === 'fr'
-      ? { sent: 'Candidature envoyée', on: 'le', note: 'Elle ne peut plus être modifiée — voici un récapitulatif de tes réponses. L’organisateur reviendra vers toi.' }
-      : { sent: 'Application submitted', on: 'on', note: 'It can no longer be edited — here is a recap of your answers. The organizer will get back to you.' }
-    const date = draft.submittedAt
-      ? new Date(draft.submittedAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-      : null
-    return (
-      <main className="mx-auto max-w-[720px] px-4 py-16">
-        <h1 className="mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{draft.exchangeName}</h1>
-        <p className="text-[15px] text-[#0F7A3D]">{t.sent}{date ? ` ${t.on} ${date}` : ''}. {t.note}</p>
-        <div className="mt-8">
-          <ApplicationReadView data={(draft.data ?? {}) as Record<string, string>} photoUrl={draft.photoUrl} lang={lang} />
-        </div>
-      </main>
-    )
-  }
+  if (draft.submitted) return (
+    <main className="mx-auto max-w-[720px] px-4 py-16">
+      <h1 className="mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{draft.exchangeName}</h1>
+      <p className="mb-6 text-[15px] text-[#0F7A3D]">Ta candidature a déjà été envoyée. Elle ne peut plus être modifiée — l’organisateur reviendra vers toi.</p>
+      <div className="flex justify-start">
+        <ApplicationRecapButton token={token} language={draft.language} />
+      </div>
+    </main>
+  )
   return (
     <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
       <ApplicationForm token={token} slug={draft.slug} exchangeName={draft.exchangeName} initialData={draft.data} initialLanguage={draft.language === 'fr' ? 'fr' : 'en'} initialPhotoUrl={draft.photoUrl} />

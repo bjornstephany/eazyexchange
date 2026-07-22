@@ -97,6 +97,11 @@ describe('middleware', () => {
     const res = await middleware(req('/api/health'))
     expect(res.headers.get('location')).toBeNull()
   })
+
+  it('lets the unauthenticated pg_cron caller reach /api/cron/* (self-auth via CRON_SECRET)', async () => {
+    const res = await middleware(req('/api/cron/retention-sweep'))
+    expect(res.headers.get('location')).toBeNull()
+  })
 })
 
 // The matcher decides which paths the middleware even RUNS on. The public

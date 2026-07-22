@@ -38,7 +38,8 @@
         "compte": "Persönliches Konto",
         "equipe": "Team & Rollen",
         "fact": "Abrechnung",
-        "prog": "Programm"
+        "prog": "Programm",
+        "donnees": "Daten & Datenschutz"
       },
       "profile": {
         "fullNameLabel": "Vollständiger Name",
@@ -102,12 +103,66 @@
           "confirm": "Programm archivieren"
         }
       },
+      "goodNews": {
+        "heading": "„Gute Nachricht“-E-Mail an die Eltern",
+        "description": "Wird an die Eltern gesendet, wenn Sie eine Bewerbung annehmen. Die Schaltflächen Ja / Nein / Fragen werden automatisch hinzugefügt.",
+        "subjectLabel": "Betreff",
+        "bodyLabel": "Nachricht",
+        "placeholdersLabel": "Verfügbare Platzhalter:",
+        "previewLabel": "Vorschau",
+        "resetToDefault": "Auf Standardvorlage zurücksetzen",
+        "saveButton": "Speichern",
+        "savedNotice": "Vorlage gespeichert.",
+        "errors": {
+          "subjectEmpty": "Der Betreff darf nicht leer sein.",
+          "bodyEmpty": "Die Nachricht darf nicht leer sein.",
+          "tooLong": "Die Vorlage ist zu lang.",
+          "saveFailed": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen."
+        }
+      },
+      "programDetails": {
+        "heading": "Programmdetails",
+        "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht). Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
+        "destination": "Reiseziel",
+        "destinationHint": "So, wie es in den Formularen erscheint, z. B. « le Minnesota, USA »",
+        "travelStart": "Abreisedatum",
+        "travelEnd": "Rückreisedatum",
+        "chaperones": "Begleitpersonen",
+        "chaperonesHint": "Ein vollständiger Name pro Zeile",
+        "association": "Name des Vereins",
+        "sendingSchool": "Heimatschule",
+        "receivingSchool": "Gastschule",
+        "proviseur": "Name der Schulleitung",
+        "sendingCity": "Stadt der Schule",
+        "absenceDates": "Zu entschuldigende Fehltage",
+        "absenceDatesHint": "Ein Tag pro Zeile, z. B. « le jeudi 19 octobre 2026 »",
+        "save": "Speichern",
+        "saved": "Gespeichert."
+      },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
         "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
         "passwordUpdateFailed": "Das Passwort konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
         "passwordMismatch": "Die Passwörter stimmen nicht überein."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Daten & Datenschutz",
+      "subtitle": "Löschen oder exportieren Sie die Daten einer Person auf Anfrage (DSGVO).",
+      "students": "Schüler",
+      "applicants": "Bewerber",
+      "empty": "Noch niemand.",
+      "delete": "Löschen",
+      "deleting": "Wird gelöscht…",
+      "confirmTitle": "Diese Daten endgültig löschen?",
+      "confirmBody": "Diese Aktion ist unwiderruflich. Alle Formulare, Dokumente und Informationen von {name} werden endgültig gelöscht.",
+      "confirmCancel": "Abbrechen",
+      "confirmConfirm": "Endgültig löschen",
+      "deleteError": "Löschen fehlgeschlagen. Bitte erneut versuchen.",
+      "deleted": "Daten gelöscht.",
+      "export": "Exportieren",
+      "exporting": "Export…",
+      "exportError": "Export fehlgeschlagen. Bitte erneut versuchen."
     },
     "billing": {
       "per": "/ Jahr",
@@ -133,12 +188,11 @@
     "shell": {
       "nav": {
         "dashboard": "Übersicht",
-        "exchanges": "Austausche",
         "applications": "Bewerb.",
-        "forms": "Formul.",
-        "documents": "Dok.",
+        "files": "Formulare / Docs",
         "students": "Schüler",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Komm."
       },
       "accountMenu": {
         "trigger": "Konto",
@@ -172,6 +226,33 @@
         "submitting": "Wird gesendet…"
       }
     },
+    "communication": {
+      "heading": "Kommunikation",
+      "subtitle": "Verwalten Sie alles, was Sie an Schüler und Eltern kommunizieren.",
+      "comingSoon": "Demnächst verfügbar.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Vorlagen",
+        "annonces": "Ankündigungen",
+        "auto": "Auto-Erinnerungen"
+      },
+      "info": {
+        "heading": "Wichtige Infos",
+        "description": "Fügen Sie die wichtigsten Infos zum Programm hinzu. Schüler sehen sie im Tab „Infos“ ihres Portals.",
+        "addButton": "Info hinzufügen",
+        "titlePlaceholder": "Titel (z. B. Treffpunkt)",
+        "bodyPlaceholder": "Für Schüler sichtbare Details…",
+        "saveButton": "Speichern",
+        "deleteButton": "Löschen",
+        "empty": "Noch keine Infos.",
+        "readOnlyNotice": "Programm archiviert — schreibgeschützt.",
+        "errors": {
+          "titleRequired": "Der Titel ist erforderlich.",
+          "titleTooLong": "Titel zu lang (max. 120 Zeichen).",
+          "bodyTooLong": "Details zu lang (max. 2000 Zeichen)."
+        }
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "emptyHeading": "Noch kein Austausch",
@@ -189,6 +270,7 @@
         "copy": "Kopieren",
         "closeWarning": "Sie werden diesen Link nicht wiedersehen — kopieren Sie ihn, bevor Sie schließen.",
         "closeAnyway": "Trotzdem schließen",
+        "inviteByEmail": "Per E-Mail einladen",
         "close": "Schließen"
       },
       "filterLabelMaybe": "Unentschlossen",
@@ -223,6 +305,8 @@
         "declined": "Hat abgelehnt",
         "rejected": "Abgelehnt",
         "dash": "—",
+        "invited": "Eingeladen",
+        "started": "Begonnen",
         "waiting": "Wartet",
         "hesitates": "Unentschlossen"
       },
@@ -257,6 +341,7 @@
       "progressCandidatures": "{done} / {total} Bewerbungen bearbeitet"
     },
     "applications": {
+      "questionsHeading": "Fragen der Familie",
       "backLink": "‹ Zurück zu den Bewerbungen",
       "printCta": "⎙ Bewerbung drucken",
       "subtitle": "Bewerbung · {exchangeName} · {year}",
@@ -269,8 +354,21 @@
       "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
+      "invite": {
+        "openCta": "Per E-Mail einladen",
+        "title": "Per E-Mail einladen",
+        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "placeholder": "marie@schule.de\nleo@schule.de",
+        "sendCta": "Einladungen senden",
+        "sending": "Senden…",
+        "close": "Schließen",
+        "notOpenError": "Öffne zuerst die Bewerbungen und lege eine Frist fest.",
+        "tooManyError": "Zu viele Adressen (max. 200 pro Versand).",
+        "result": "{sent} gesendet · {skipped} bereits in der Liste · {invalid} ungültig"
+      },
       "tabs": {
         "all": "Alle",
+        "invited": "Eingeladen",
         "toReview": "Zu prüfen",
         "accepted": "Angenommen",
         "rejected": "Abgelehnt"
@@ -305,10 +403,6 @@
       }
     },
     "exchanges": {
-      "title": "Austausche",
-      "subtitle": "Verfolgen Sie alle Ihre Austauschprogramme — vergangene, laufende und kommende.",
-      "listLabel": "Ihre Austausche",
-      "emptyState": "Noch kein Austausch — erstellen Sie den ersten.",
       "reminders": {
         "heading": "Automatische Erinnerungen",
         "description": "Erinnerungs-E-Mails werden an Schüler mit unvollständigem Dossier gesendet. Die manuelle Erinnerung bleibt verfügbar, auch wenn die automatischen Erinnerungen deaktiviert sind.",
@@ -331,29 +425,33 @@
         }
       }
     },
+    "files": {
+      "title": "Formulare / Docs",
+      "formsHeading": "Formulare · {count}",
+      "docsHeading": "Angeforderte Unterlagen · {count}",
+      "formsEmpty": "Noch keine Formulare.",
+      "docsEmpty": "Noch keine angeforderten Unterlagen."
+    },
     "forms": {
-      "title": "Formulare",
-      "yourFormsCount": "Ihre Formulare · {count}",
-      "addFormLabel": "Formular hinzufügen",
       "close": "Schließen",
       "deleteConfirm": "Diese Vorlage löschen? Bereits von Schülern eingereichte Antworten werden endgültig gelöscht.",
       "addPanel": {
         "nameLabel": "Name des Formulars",
         "namePlaceholderPdf": "Elterliche Genehmigung",
         "namePlaceholderOnline": "Familienfragebogen",
-        "deadlineLabel": "Frist (optional)",
+        "deadlineLabel": "Frist",
         "fileLabel": "Zu unterzeichnendes PDF",
         "back": "Zurück",
-        "createDraft": "Entwurf erstellen",
+        "createDraft": "Hinzufügen",
+        "createAndEdit": "Erstellen und Fragen hinzufügen",
         "creating": "Wird erstellt…"
       },
       "drawer": {
         "pdfPreviewLabel": "PDF-Vorlage · Dokumentvorschau",
         "fieldsHeadingPdf": "Auszufüllende Felder",
         "fieldsHeadingOnline": "Fragen des Formulars",
-        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
+        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre erste Frage hinzu, um es an die Familien zu senden.",
+        "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
         "editTemplate": "Vorlage bearbeiten",
         "download": "Herunterladen"
       },
@@ -373,6 +471,7 @@
       "pills": {
         "onlineForm": "Online-Formular",
         "pdfToSign": "PDF · zu unterschreiben",
+        "fillable": "Online unterschreiben",
         "active": "Aktiv",
         "draft": "Entwurf",
         "mandatory": "Obligatorisch",
@@ -394,9 +493,6 @@
       "docPlaceholder": "Kopie einzureichen"
     },
     "documents": {
-      "title": "Dokumente",
-      "requestedHeading": "Angeforderte Unterlagen · {count}",
-      "addDocLabel": "Dokument anfordern",
       "close": "Schließen",
       "editButton": "Bearbeiten",
       "deleteConfirm": "Diese Unterlage löschen? Bereits von Familien gesendete Dateien werden endgültig gelöscht.",
@@ -409,11 +505,13 @@
         },
         "nameLabel": "Name der Unterlage",
         "namePlaceholder": "Europäische Krankenversicherungskarte",
-        "deadlineLabel": "Frist (optional)",
+        "deadlineLabel": "Frist",
         "conditionLabel": "Bedingung (optional)",
         "conditionPlaceholder": "falls Eltern geschieden sind",
+        "studentsLabel": "Betroffene Schüler",
+        "noStudents": "Noch keine eingeschriebenen Schüler.",
         "back": "Zurück",
-        "createDraft": "Entwurf erstellen",
+        "createDraft": "Hinzufügen",
         "creating": "Wird erstellt…"
       },
       "drawer": {
@@ -421,25 +519,25 @@
         "maxSize": "Max. 10 MB",
         "deadlineChip": "Frist {date}",
         "trackingHeading": "Nachverfolgung pro Schüler",
-        "draftEmptyConditional": "Diese Unterlage wurde noch nicht angefordert. Wählen Sie die betroffenen Schüler aus und aktivieren Sie sie dann, um die Anfragen zu senden.",
-        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert. Aktivieren Sie sie, um die Anfragen zu senden.",
-        "noEnrolledStudents": "Noch keine eingeschriebenen Schüler.",
+        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert.",
         "restCount": "+ {count, plural, one {# Schüler} other {# Schüler}} — Unterlage bereitgestellt und validiert",
         "remindedCount": "{count, plural, one {# erinnert} other {# erinnert}}",
         "skippedRecently": " · {count, plural, one {# bereits kürzlich erinnert} other {# bereits kürzlich erinnert}}",
         "failedCount": " · {count} fehlgeschlagen",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
-        "chooseAndActivate": "Schüler auswählen & aktivieren",
         "sending": "Wird gesendet…",
         "remindFamilies": "Familien erinnern"
       }
     },
     "library": {
-      "heading": "Bibliothek",
+      "addTitle": "Hinzufügen",
+      "formsSection": "Formulare",
+      "docsSection": "Dokumente",
       "searchPlaceholder": "Suchen…",
       "alreadyAdded": "Bereits hinzugefügt ✓",
       "adding": "Wird hinzugefügt…",
+      "deadlineLabel": "Frist",
+      "detailsHint": "Diese Angaben werden automatisch in das Dokument eingesetzt.",
+      "confirmAdd": "Zum Programm hinzufügen",
       "customHeading": "Oder",
       "uploadPdfTile": "PDF hochladen",
       "createOnlineTile": "Online-Formular erstellen",
@@ -488,9 +586,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Zurück zu den Dokumenten"
-      },
       "formDetail": {
         "backLabel": "Zurück zu den Formularen"
       },
@@ -500,13 +595,14 @@
         "emptyBodyLink": "Bewerbungen ansehen"
       },
       "submissionReview": {
-        "backLink": "← Zurück zum Austausch",
+        "backLink": "← Zurück",
         "unknownStudent": "Unbekannt",
         "notSubmitted": "Nicht eingereicht",
         "notStarted": "Dieser Schüler hat dieses Formular noch nicht begonnen.",
         "noAnswer": "Keine Antwort",
         "notUploaded": "Nicht übermittelt",
         "reviewNoteHeading": "Prüfnotiz",
+        "downloadSignedPdf": "Signiertes PDF herunterladen",
         "status": {
           "approved": "Genehmigt",
           "submitted": "Eingereicht",

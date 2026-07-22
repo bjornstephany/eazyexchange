@@ -38,7 +38,8 @@
         "compte": "Compte personnel",
         "equipe": "Équipe & rôles",
         "fact": "Facturation",
-        "prog": "Programme"
+        "prog": "Programme",
+        "donnees": "Données & confidentialité"
       },
       "profile": {
         "fullNameLabel": "Nom complet",
@@ -94,7 +95,7 @@
         "stats": {
           "enrolled": "{count, plural, one {# élève accepté} other {# élèves acceptés}}",
           "applications": "{count, plural, one {# candidature} other {# candidatures}}",
-          "deadline": "échéance dossiers {date}"
+          "deadline": "date limite dossiers {date}"
         },
         "modal": {
           "title": "Archiver ce programme ?",
@@ -102,12 +103,66 @@
           "confirm": "Archiver le programme"
         }
       },
+      "goodNews": {
+        "heading": "E-mail « Bonne nouvelle » aux parents",
+        "description": "Envoyé aux parents lorsque vous acceptez une candidature. Les boutons Oui / Non / Questions sont ajoutés automatiquement.",
+        "subjectLabel": "Objet",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Balises disponibles :",
+        "previewLabel": "Aperçu",
+        "resetToDefault": "Rétablir le modèle par défaut",
+        "saveButton": "Enregistrer",
+        "savedNotice": "Modèle enregistré.",
+        "errors": {
+          "subjectEmpty": "L’objet ne peut pas être vide.",
+          "bodyEmpty": "Le message ne peut pas être vide.",
+          "tooLong": "Le modèle est trop long.",
+          "saveFailed": "Le modèle n’a pas pu être enregistré. Réessayez."
+        }
+      },
+      "programDetails": {
+        "heading": "Détails du programme",
+        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
+        "destination": "Destination",
+        "destinationHint": "Telle qu’elle apparaîtra dans les formulaires, ex. « le Minnesota, USA »",
+        "travelStart": "Date de départ",
+        "travelEnd": "Date de retour",
+        "chaperones": "Accompagnateurs",
+        "chaperonesHint": "Un nom complet par ligne",
+        "association": "Nom de l’association",
+        "sendingSchool": "Lycée d’origine",
+        "receivingSchool": "Établissement d’accueil",
+        "proviseur": "Nom du proviseur",
+        "sendingCity": "Ville du lycée",
+        "absenceDates": "Jours d’absence à excuser",
+        "absenceDatesHint": "Un jour par ligne, ex. « le jeudi 19 octobre 2026 »",
+        "save": "Enregistrer",
+        "saved": "Enregistré."
+      },
       "errors": {
         "nameEmpty": "Le nom ne peut pas être vide.",
         "schoolNameEmpty": "Le nom de l’établissement ne peut pas être vide.",
         "passwordUpdateFailed": "Le mot de passe n’a pas pu être mis à jour. Réessayez.",
         "passwordMismatch": "Les mots de passe ne correspondent pas."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Données & confidentialité",
+      "subtitle": "Supprimez ou exportez les données d'une personne sur demande (RGPD).",
+      "students": "Élèves",
+      "applicants": "Candidats",
+      "empty": "Aucune personne pour le moment.",
+      "delete": "Supprimer",
+      "deleting": "Suppression…",
+      "confirmTitle": "Supprimer définitivement ces données ?",
+      "confirmBody": "Cette action est irréversible. Tous les formulaires, documents et informations de {name} seront définitivement effacés.",
+      "confirmCancel": "Annuler",
+      "confirmConfirm": "Supprimer définitivement",
+      "deleteError": "La suppression a échoué. Réessayez.",
+      "deleted": "Données supprimées.",
+      "export": "Exporter",
+      "exporting": "Export…",
+      "exportError": "L'export a échoué. Réessayez."
     },
     "billing": {
       "per": "/ an",
@@ -133,12 +188,11 @@
     "shell": {
       "nav": {
         "dashboard": "Aperçu",
-        "exchanges": "Échanges",
         "applications": "Candid.",
-        "forms": "Formul.",
-        "documents": "Docs",
+        "files": "Formulaires / Docs",
         "students": "Élèves",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comm."
       },
       "accountMenu": {
         "trigger": "Compte",
@@ -172,6 +226,33 @@
         "submitting": "Envoi…"
       }
     },
+    "communication": {
+      "heading": "Communication",
+      "subtitle": "Gérez tout ce que vous communiquez aux élèves et aux parents.",
+      "comingSoon": "Bientôt disponible.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Modèles",
+        "annonces": "Annonces",
+        "auto": "Réglages auto"
+      },
+      "info": {
+        "heading": "Infos pratiques",
+        "description": "Ajoutez les informations clés du programme. Les élèves les voient dans l’onglet « Infos » de leur portail.",
+        "addButton": "Ajouter une info",
+        "titlePlaceholder": "Titre (ex. Point de rendez-vous)",
+        "bodyPlaceholder": "Détails visibles par les élèves…",
+        "saveButton": "Enregistrer",
+        "deleteButton": "Supprimer",
+        "empty": "Aucune info pour l’instant.",
+        "readOnlyNotice": "Programme archivé — lecture seule.",
+        "errors": {
+          "titleRequired": "Le titre est obligatoire.",
+          "titleTooLong": "Titre trop long (120 caractères max).",
+          "bodyTooLong": "Détails trop longs (2000 caractères max)."
+        }
+      }
+    },
     "dashboard": {
       "title": "Tableau de bord",
       "emptyHeading": "Aucun échange pour l’instant",
@@ -189,6 +270,7 @@
         "copy": "Copier",
         "closeWarning": "Vous ne reverrez plus ce lien — copiez-le avant de fermer.",
         "closeAnyway": "Fermer quand même",
+        "inviteByEmail": "Inviter par e-mail",
         "close": "Fermer"
       },
       "filterLabelMaybe": "Hésitent",
@@ -210,10 +292,10 @@
       "showClosed": "Afficher les refusés et déclinés ({n})",
       "actionsHeading": "À faire maintenant",
       "upToDate": "Tout est à jour ✓",
-      "nextDeadlineSuffix": " — prochaine échéance le {date}.",
+      "nextDeadlineSuffix": " — prochaine date limite le {date}.",
       "formsAndDocsHeading": "Formulaires & documents",
-      "dueSuffix": " · échéance {date}",
-      "autoReminderHint": "Relances automatiques quotidiennes en période d'échéance.",
+      "dueSuffix": " · date limite {date}",
+      "autoReminderHint": "Relances automatiques quotidiennes à l'approche de la date limite.",
       "pills": {
         "complete": "Complet",
         "accepted": "Accepté(e)",
@@ -223,6 +305,8 @@
         "declined": "A décliné",
         "rejected": "Refusé",
         "dash": "—",
+        "invited": "Invité",
+        "started": "Commencé",
         "waiting": "En attente",
         "hesitates": "Hésite"
       },
@@ -243,10 +327,10 @@
         "reviewDesc": "Formulaires et documents reçus, en attente de validation.",
         "reviewCta": "Vérifier",
         "lateTitle": "{n, plural, one {# élève en retard} other {# élèves en retard}}",
-        "lateDesc": "Échéance dépassée — relance renforcée en cours.",
+        "lateDesc": "Date limite dépassée — relance renforcée en cours.",
         "lateCta": "Relancer",
         "missingDocsTitle": "{n, plural, one {# élève : documents manquants} other {# élèves : documents manquants}}",
-        "missingDocsDesc": "Pièces non reçues avant l’échéance.",
+        "missingDocsDesc": "Pièces non reçues avant la date limite.",
         "missingDocsCta": "Voir les élèves",
         "maybeTitle": "{n, plural, one {# élève hésite — à relancer} other {# élèves hésitent — à relancer}}",
         "maybeDesc": "Réponses « Peut-être » à relancer.",
@@ -257,6 +341,7 @@
       "progressCandidatures": "{done} / {total} candidatures traitées"
     },
     "applications": {
+      "questionsHeading": "Questions de la famille",
       "backLink": "‹ Retour aux candidatures",
       "printCta": "⎙ Imprimer la candidature",
       "subtitle": "Candidature · {exchangeName} · {year}",
@@ -265,12 +350,25 @@
       "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
       "stateOpen": "Ouvert",
       "stateClosed": "Fermé",
-      "deadlineLabel": "Échéance",
+      "deadlineLabel": "Date limite",
       "linkLabel": "Lien de candidature",
       "copyCta": "Copier",
       "copiedCta": "Copié ✓",
+      "invite": {
+        "openCta": "Inviter par e-mail",
+        "title": "Inviter par e-mail",
+        "description": "Collez les adresses e-mail des élèves — une par ligne ou séparées par des virgules.",
+        "placeholder": "marie@ecole.fr\nleo@ecole.fr",
+        "sendCta": "Envoyer les invitations",
+        "sending": "Envoi…",
+        "close": "Fermer",
+        "notOpenError": "Ouvrez d'abord les candidatures et fixez une date limite.",
+        "tooManyError": "Trop d'adresses (200 maximum par envoi).",
+        "result": "{sent} envoyée·s · {skipped} déjà dans la liste · {invalid} invalide·s"
+      },
       "tabs": {
         "all": "Toutes",
+        "invited": "Invités",
         "toReview": "À examiner",
         "accepted": "Acceptées",
         "rejected": "Refusées"
@@ -305,10 +403,6 @@
       }
     },
     "exchanges": {
-      "title": "Échanges",
-      "subtitle": "Suivez tous vos programmes d'échange — passés, en cours et à venir.",
-      "listLabel": "Vos échanges",
-      "emptyState": "Aucun échange pour l'instant — créez le premier.",
       "reminders": {
         "heading": "Rappels automatiques",
         "description": "Des e-mails de rappel sont envoyés aux élèves dont le dossier est incomplet. La relance manuelle reste disponible même si les rappels sont désactivés.",
@@ -331,36 +425,40 @@
         }
       }
     },
+    "files": {
+      "title": "Formulaires / Docs",
+      "formsHeading": "Formulaires · {count}",
+      "docsHeading": "Documents demandés · {count}",
+      "formsEmpty": "Aucun formulaire pour le moment.",
+      "docsEmpty": "Aucun document demandé pour le moment."
+    },
     "forms": {
-      "title": "Formulaires",
-      "yourFormsCount": "Vos formulaires · {count}",
-      "addFormLabel": "Ajouter un formulaire",
       "close": "Fermer",
       "deleteConfirm": "Supprimer ce modèle ? Les réponses déjà envoyées par les élèves seront définitivement supprimées.",
       "addPanel": {
         "nameLabel": "Nom du formulaire",
         "namePlaceholderPdf": "Autorisation parentale",
         "namePlaceholderOnline": "Questionnaire famille",
-        "deadlineLabel": "Échéance (facultatif)",
+        "deadlineLabel": "Date limite",
         "fileLabel": "PDF à faire signer",
         "back": "Retour",
-        "createDraft": "Créer le brouillon",
+        "createDraft": "Ajouter",
+        "createAndEdit": "Créer et ajouter les questions",
         "creating": "Création…"
       },
       "drawer": {
         "pdfPreviewLabel": "modèle PDF · aperçu du document",
         "fieldsHeadingPdf": "Champs à renseigner",
         "fieldsHeadingOnline": "Questions du formulaire",
-        "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez vos questions puis activez-le pour l’envoyer aux familles.",
-        "activate": "Activer",
-        "activating": "Activation…",
+        "emptyFields": "Ce formulaire n’a pas encore de champs. Ajoutez votre première question pour l’envoyer aux familles.",
+        "fillableNote": "Formulaire prêt à l’emploi : rempli et signé en ligne par la famille, avec les détails du programme insérés automatiquement.",
         "editTemplate": "Modifier le modèle",
         "download": "Télécharger"
       },
       "editor": {
         "nameLabel": "Nom",
         "descriptionLabel": "Description",
-        "deadlineLabel": "Échéance",
+        "deadlineLabel": "Date limite",
         "conditionLabel": "Condition",
         "conditionPlaceholder": "si parents divorcés",
         "saving": "Enregistrement…",
@@ -373,6 +471,7 @@
       "pills": {
         "onlineForm": "Formulaire en ligne",
         "pdfToSign": "PDF · à signer",
+        "fillable": "À signer en ligne",
         "active": "Actif",
         "draft": "Brouillon",
         "mandatory": "Obligatoire",
@@ -394,9 +493,6 @@
       "docPlaceholder": "Copie à déposer"
     },
     "documents": {
-      "title": "Documents",
-      "requestedHeading": "Pièces demandées · {count}",
-      "addDocLabel": "Demander un document",
       "close": "Fermer",
       "editButton": "Modifier",
       "deleteConfirm": "Supprimer cette pièce ? Les fichiers déjà envoyés par les familles seront définitivement supprimés.",
@@ -409,37 +505,39 @@
         },
         "nameLabel": "Nom de la pièce",
         "namePlaceholder": "Carte européenne d’assurance maladie",
-        "deadlineLabel": "Échéance (facultatif)",
+        "deadlineLabel": "Date limite",
         "conditionLabel": "Condition (facultatif)",
         "conditionPlaceholder": "si parents divorcés",
+        "studentsLabel": "Élèves concernés",
+        "noStudents": "Aucun élève inscrit pour l’instant.",
         "back": "Retour",
-        "createDraft": "Créer le brouillon",
+        "createDraft": "Ajouter",
         "creating": "Création…"
       },
       "drawer": {
         "acceptedFormats": "PDF · JPG · PNG",
         "maxSize": "10 Mo max",
-        "deadlineChip": "Échéance {date}",
+        "deadlineChip": "Date limite {date}",
         "trackingHeading": "Suivi par élève",
-        "draftEmptyConditional": "Cette pièce n’a pas encore été demandée. Choisissez les élèves concernés puis activez-la pour lancer les demandes.",
-        "draftEmptyAll": "Cette pièce n’a pas encore été demandée. Activez-la pour lancer les demandes.",
-        "noEnrolledStudents": "Aucun élève inscrit pour l’instant.",
+        "draftEmptyAll": "Cette pièce n’a pas encore été demandée.",
         "restCount": "+ {count, plural, one {# élève} other {# élèves}} — pièce fournie et validée",
         "remindedCount": "{count, plural, one {# relancé} other {# relancés}}",
         "skippedRecently": " · {count, plural, one {# déjà relancé récemment} other {# déjà relancés récemment}}",
         "failedCount": " · {count} en échec",
-        "activate": "Activer",
-        "activating": "Activation…",
-        "chooseAndActivate": "Choisir les élèves & activer",
         "sending": "Envoi…",
         "remindFamilies": "Relancer les familles"
       }
     },
     "library": {
-      "heading": "Bibliothèque",
+      "addTitle": "Ajouter",
+      "formsSection": "Formulaires",
+      "docsSection": "Documents",
       "searchPlaceholder": "Rechercher…",
       "alreadyAdded": "Déjà ajouté ✓",
       "adding": "Ajout…",
+      "deadlineLabel": "Date limite",
+      "detailsHint": "Ces informations sont insérées automatiquement dans le document.",
+      "confirmAdd": "Ajouter au programme",
       "customHeading": "Ou",
       "uploadPdfTile": "Téléverser un PDF",
       "createOnlineTile": "Créer un formulaire en ligne",
@@ -476,10 +574,10 @@
       "summary": {
         "complete": "Dossier complet",
         "toVerify": "{n, plural, one {# pièce à vérifier} other {# pièces à vérifier}}",
-        "late": "Échéance dépassée — {n, plural, one {# pièce attendue} other {# pièces attendues}}",
+        "late": "Date limite dépassée — {n, plural, one {# pièce attendue} other {# pièces attendues}}",
         "pending": "{n, plural, one {# pièce attendue} other {# pièces attendues}}"
       },
-      "dueLabel": "Échéance {date}",
+      "dueLabel": "Date limite {date}",
       "listSummary": "{n, plural, one {# élève accepté} other {# élèves acceptés}} · {done, plural, one {# dossier complet} other {# dossiers complets}}",
       "reminderNote": {
         "complete": "Dossier complet — aucune relance prévue pour {firstName}.",
@@ -488,9 +586,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Retour aux documents"
-      },
       "formDetail": {
         "backLabel": "Retour aux formulaires"
       },
@@ -500,13 +595,14 @@
         "emptyBodyLink": "Voir les candidatures"
       },
       "submissionReview": {
-        "backLink": "← Retour à l’échange",
+        "backLink": "← Retour",
         "unknownStudent": "Inconnu",
         "notSubmitted": "Non soumis",
         "notStarted": "Cet élève n’a pas encore commencé ce formulaire.",
         "noAnswer": "Aucune réponse",
         "notUploaded": "Non transmis",
         "reviewNoteHeading": "Note de révision",
+        "downloadSignedPdf": "Télécharger le PDF signé",
         "status": {
           "approved": "Approuvé",
           "submitted": "Soumis",

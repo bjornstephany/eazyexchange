@@ -38,7 +38,8 @@
         "compte": "Personal account",
         "equipe": "Team & roles",
         "fact": "Billing",
-        "prog": "Program"
+        "prog": "Program",
+        "donnees": "Data & privacy"
       },
       "profile": {
         "fullNameLabel": "Full name",
@@ -102,12 +103,66 @@
           "confirm": "Archive the program"
         }
       },
+      "goodNews": {
+        "heading": "Parent “Good news” email",
+        "description": "Sent to the parents when you accept an application. The Yes / No / Questions buttons are added automatically.",
+        "subjectLabel": "Subject",
+        "bodyLabel": "Message",
+        "placeholdersLabel": "Available placeholders:",
+        "previewLabel": "Preview",
+        "resetToDefault": "Reset to the default template",
+        "saveButton": "Save",
+        "savedNotice": "Template saved.",
+        "errors": {
+          "subjectEmpty": "The subject cannot be empty.",
+          "bodyEmpty": "The message cannot be empty.",
+          "tooLong": "The template is too long.",
+          "saveFailed": "The template could not be saved. Please try again."
+        }
+      },
+      "programDetails": {
+        "heading": "Program details",
+        "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation). Edit them here: every not-yet-signed form updates.",
+        "destination": "Destination",
+        "destinationHint": "As it will appear in the forms, e.g. “le Minnesota, USA”",
+        "travelStart": "Departure date",
+        "travelEnd": "Return date",
+        "chaperones": "Chaperones",
+        "chaperonesHint": "One full name per line",
+        "association": "Association name",
+        "sendingSchool": "Home school",
+        "receivingSchool": "Host school",
+        "proviseur": "Principal’s name",
+        "sendingCity": "School’s city",
+        "absenceDates": "Absence days to excuse",
+        "absenceDatesHint": "One day per line, e.g. “le jeudi 19 octobre 2026”",
+        "save": "Save",
+        "saved": "Saved."
+      },
       "errors": {
         "nameEmpty": "Name cannot be empty.",
         "schoolNameEmpty": "School name cannot be empty.",
         "passwordUpdateFailed": "The password could not be updated. Please try again.",
         "passwordMismatch": "Passwords do not match."
       }
+    },
+    "dataPrivacy": {
+      "heading": "Data & privacy",
+      "subtitle": "Delete or export a person's data on request (GDPR).",
+      "students": "Students",
+      "applicants": "Applicants",
+      "empty": "No one yet.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "confirmTitle": "Permanently delete this data?",
+      "confirmBody": "This action is irreversible. All of {name}'s forms, documents and information will be permanently erased.",
+      "confirmCancel": "Cancel",
+      "confirmConfirm": "Delete permanently",
+      "deleteError": "Deletion failed. Try again.",
+      "deleted": "Data deleted.",
+      "export": "Export",
+      "exporting": "Exporting…",
+      "exportError": "Export failed. Try again."
     },
     "billing": {
       "per": "/ year",
@@ -133,12 +188,11 @@
     "shell": {
       "nav": {
         "dashboard": "Overview",
-        "exchanges": "Exchanges",
         "applications": "Apps.",
-        "forms": "Forms",
-        "documents": "Docs",
+        "files": "Forms / Docs",
         "students": "Students",
-        "feedback": "Feedback"
+        "feedback": "Feedback",
+        "communication": "Comms"
       },
       "accountMenu": {
         "trigger": "Account",
@@ -172,6 +226,33 @@
         "submitting": "Sending…"
       }
     },
+    "communication": {
+      "heading": "Communication",
+      "subtitle": "Manage everything you communicate to students and parents.",
+      "comingSoon": "Coming soon.",
+      "tabs": {
+        "infos": "Infos",
+        "modeles": "Templates",
+        "annonces": "Announcements",
+        "auto": "Auto reminders"
+      },
+      "info": {
+        "heading": "Key information",
+        "description": "Add the program’s key information. Students see it in the “Infos” tab of their portal.",
+        "addButton": "Add information",
+        "titlePlaceholder": "Title (e.g. Meeting point)",
+        "bodyPlaceholder": "Details visible to students…",
+        "saveButton": "Save",
+        "deleteButton": "Delete",
+        "empty": "No information yet.",
+        "readOnlyNotice": "Program archived — read only.",
+        "errors": {
+          "titleRequired": "Title is required.",
+          "titleTooLong": "Title too long (120 characters max).",
+          "bodyTooLong": "Details too long (2000 characters max)."
+        }
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "emptyHeading": "No exchange yet",
@@ -189,6 +270,7 @@
         "copy": "Copy",
         "closeWarning": "You won't see this link again — copy it before closing.",
         "closeAnyway": "Close anyway",
+        "inviteByEmail": "Invite by email",
         "close": "Close"
       },
       "filterLabelMaybe": "Undecided",
@@ -223,6 +305,8 @@
         "declined": "Declined",
         "rejected": "Rejected",
         "dash": "—",
+        "invited": "Invited",
+        "started": "Started",
         "waiting": "Awaiting",
         "hesitates": "Undecided"
       },
@@ -257,6 +341,7 @@
       "progressCandidatures": "{done} / {total} applications processed"
     },
     "applications": {
+      "questionsHeading": "Family’s questions",
       "backLink": "‹ Back to applications",
       "printCta": "⎙ Print application",
       "subtitle": "Application · {exchangeName} · {year}",
@@ -269,8 +354,21 @@
       "linkLabel": "Application link",
       "copyCta": "Copy",
       "copiedCta": "Copied ✓",
+      "invite": {
+        "openCta": "Invite by email",
+        "title": "Invite by email",
+        "description": "Paste students' email addresses — one per line or comma-separated.",
+        "placeholder": "marie@school.org\nleo@school.org",
+        "sendCta": "Send invitations",
+        "sending": "Sending…",
+        "close": "Close",
+        "notOpenError": "Open applications and set a deadline first.",
+        "tooManyError": "Too many addresses (max 200 per send).",
+        "result": "{sent} sent · {skipped} already in the list · {invalid} invalid"
+      },
       "tabs": {
         "all": "All",
+        "invited": "Invited",
         "toReview": "To review",
         "accepted": "Accepted",
         "rejected": "Rejected"
@@ -305,10 +403,6 @@
       }
     },
     "exchanges": {
-      "title": "Exchanges",
-      "subtitle": "Track all your exchange programs — past, ongoing and upcoming.",
-      "listLabel": "Your exchanges",
-      "emptyState": "No exchange yet — create the first one.",
       "reminders": {
         "heading": "Automatic reminders",
         "description": "Reminder emails are sent to students whose file is incomplete. Manual follow-up remains available even if reminders are disabled.",
@@ -331,29 +425,33 @@
         }
       }
     },
+    "files": {
+      "title": "Forms / Docs",
+      "formsHeading": "Forms · {count}",
+      "docsHeading": "Requested documents · {count}",
+      "formsEmpty": "No forms yet.",
+      "docsEmpty": "No requested documents yet."
+    },
     "forms": {
-      "title": "Forms",
-      "yourFormsCount": "Your forms · {count}",
-      "addFormLabel": "Add a form",
       "close": "Close",
       "deleteConfirm": "Delete this template? Responses already submitted by students will be permanently deleted.",
       "addPanel": {
         "nameLabel": "Form name",
         "namePlaceholderPdf": "Parental authorization",
         "namePlaceholderOnline": "Family questionnaire",
-        "deadlineLabel": "Deadline (optional)",
+        "deadlineLabel": "Deadline",
         "fileLabel": "PDF to be signed",
         "back": "Back",
-        "createDraft": "Create the draft",
+        "createDraft": "Add",
+        "createAndEdit": "Create and add questions",
         "creating": "Creating…"
       },
       "drawer": {
         "pdfPreviewLabel": "PDF template · document preview",
         "fieldsHeadingPdf": "Fields to fill in",
         "fieldsHeadingOnline": "Form questions",
-        "emptyFields": "This form has no fields yet. Add your questions then activate it to send it to families.",
-        "activate": "Activate",
-        "activating": "Activating…",
+        "emptyFields": "This form has no fields yet. Add your first question to send it to families.",
+        "fillableNote": "Ready-to-use form: filled in and signed online by the family, with the program details inserted automatically.",
         "editTemplate": "Edit template",
         "download": "Download"
       },
@@ -373,6 +471,7 @@
       "pills": {
         "onlineForm": "Online form",
         "pdfToSign": "PDF · to sign",
+        "fillable": "Sign online",
         "active": "Active",
         "draft": "Draft",
         "mandatory": "Mandatory",
@@ -394,9 +493,6 @@
       "docPlaceholder": "Copy to upload"
     },
     "documents": {
-      "title": "Documents",
-      "requestedHeading": "Requested documents · {count}",
-      "addDocLabel": "Request a document",
       "close": "Close",
       "editButton": "Edit",
       "deleteConfirm": "Delete this document? Files already sent by families will be permanently deleted.",
@@ -409,11 +505,13 @@
         },
         "nameLabel": "Document name",
         "namePlaceholder": "European health insurance card",
-        "deadlineLabel": "Deadline (optional)",
+        "deadlineLabel": "Deadline",
         "conditionLabel": "Condition (optional)",
         "conditionPlaceholder": "if parents are divorced",
+        "studentsLabel": "Students concerned",
+        "noStudents": "No enrolled students yet.",
         "back": "Back",
-        "createDraft": "Create the draft",
+        "createDraft": "Add",
         "creating": "Creating…"
       },
       "drawer": {
@@ -421,25 +519,25 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Deadline {date}",
         "trackingHeading": "Student tracking",
-        "draftEmptyConditional": "This document hasn't been requested yet. Choose the students concerned then activate it to send the requests.",
-        "draftEmptyAll": "This document hasn't been requested yet. Activate it to send the requests.",
-        "noEnrolledStudents": "No enrolled students yet.",
+        "draftEmptyAll": "This document hasn't been requested yet.",
         "restCount": "+ {count, plural, one {# student} other {# students}} — document provided and approved",
         "remindedCount": "{count, plural, one {# reminded} other {# reminded}}",
         "skippedRecently": " · {count, plural, one {# already reminded recently} other {# already reminded recently}}",
         "failedCount": " · {count} failed",
-        "activate": "Activate",
-        "activating": "Activating…",
-        "chooseAndActivate": "Choose students & activate",
         "sending": "Sending…",
         "remindFamilies": "Remind families"
       }
     },
     "library": {
-      "heading": "Library",
+      "addTitle": "Add",
+      "formsSection": "Forms",
+      "docsSection": "Documents",
       "searchPlaceholder": "Search…",
       "alreadyAdded": "Already added ✓",
       "adding": "Adding…",
+      "deadlineLabel": "Deadline",
+      "detailsHint": "These details are filled into the document automatically.",
+      "confirmAdd": "Add to the programme",
       "customHeading": "Or",
       "uploadPdfTile": "Upload a PDF",
       "createOnlineTile": "Create an online form",
@@ -488,9 +586,6 @@
       }
     },
     "pages": {
-      "documentDetail": {
-        "backLabel": "Back to documents"
-      },
       "formDetail": {
         "backLabel": "Back to forms"
       },
@@ -500,13 +595,14 @@
         "emptyBodyLink": "View applications"
       },
       "submissionReview": {
-        "backLink": "← Back to exchange",
+        "backLink": "← Back",
         "unknownStudent": "Unknown",
         "notSubmitted": "Not submitted",
         "notStarted": "This student has not started this form yet.",
         "noAnswer": "No answer",
         "notUploaded": "Not uploaded",
         "reviewNoteHeading": "Review note",
+        "downloadSignedPdf": "Download signed PDF",
         "status": {
           "approved": "Approved",
           "submitted": "Submitted",

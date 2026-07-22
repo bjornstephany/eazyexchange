@@ -14,9 +14,9 @@ import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import type { AppRow } from '@/lib/dashboard/rollup'
 
 const apps: AppRow[] = [
-  { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau', grade: 'Première', native_language: 'Français' }, email: 'l@m.fr' },
-  { id: '2', status: 'submitted', submitted_at: '2026-09-13', data: { first_name: 'Hugo', last_name: 'Petit' }, email: 'h@p.fr' },
-  { id: '3', status: 'rejected', submitted_at: '2026-09-10', data: {}, email: 'r@r.fr' },
+  { id: '1', status: 'submitted', submitted_at: '2026-09-12', responded_at: null, data: { first_name: 'Léa', last_name: 'Moreau', grade: 'Première', native_language: 'Français' }, email: 'l@m.fr' },
+  { id: '2', status: 'submitted', submitted_at: '2026-09-13', responded_at: null, data: { first_name: 'Hugo', last_name: 'Petit' }, email: 'h@p.fr' },
+  { id: '3', status: 'rejected', submitted_at: '2026-09-10', responded_at: null, data: {}, email: 'r@r.fr' },
 ]
 
 describe('CandidaturesView', () => {
@@ -46,7 +46,7 @@ describe('CandidaturesView', () => {
   })
   it('changing the deadline calls setApplicationOpen with the current open state', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
-    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '2026-10-01' } })
+    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-10-01' } })
     expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-10-01')
   })
   it('the toggle closes applications, keeping the current deadline', () => {
@@ -57,7 +57,7 @@ describe('CandidaturesView', () => {
   it('clearing the deadline is ignored (never persists a null deadline)', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
     const callsBefore = setApplicationOpen.mock.calls.length
-    fireEvent.change(screen.getByLabelText('Échéance'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '' } })
     expect(setApplicationOpen).toHaveBeenCalledTimes(callsBefore)
   })
 })

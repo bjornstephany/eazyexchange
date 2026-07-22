@@ -157,3 +157,28 @@ Gate before commit/PR: `pnpm lint`, `pnpm test`, `npx tsc --noEmit`.
 - The hosting question `accept_opposite_sex` (unchanged).
 - Document-upload size limits.
 - Recap access beyond token expiry; PDF export of the recap.
+
+## Amendment (2026-07-22, at merge)
+
+Section 4 (« Read-only recap after submission ») was **dropped and never
+shipped.** Between this spec being written and the branch being merged, the
+application-recap-download feature landed on `main` and deliberately settled the
+opposite way: `getApplicationDraft` returns a **marker only, never the PII**, for
+any non-draft application, and the post-submit page renders an "already
+submitted" notice plus an `ApplicationRecapButton` (PDF download) instead of the
+answers inline.
+
+Bjorn's decision at merge was to keep `main`'s behavior. Rendering the answers
+inline would have made a minor's full submitted PII appear passively on page load
+for anyone holding the resume token, rather than behind a deliberate download —
+and the token's blast radius is already an open question (it never rotates on
+submit and lives for up to 30 days). Everything else in this spec shipped:
+gender/pronoun radio choices, the conditional specify field, browser-side photo
+compression, and option-label rendering in the read view.
+
+`actions/apply.ts` and `app/apply/resume/[token]/page.tsx` therefore carry
+`main`'s versions verbatim. The no-PII guarantee is now pinned by the test
+« returns a submitted marker with NO PII once the application is submitted ».
+Note that `ApplicationReadView`'s label-rendering fix still shipped and still
+matters — that component is used by the **organizer-facing**
+`components/applications/ApplicationDetail.tsx`, independently of the resume page.

@@ -11,6 +11,7 @@ export type Fixtures = {
   templateA: string; fieldA: string; fieldA2: string; slotA: string; slotA2: string
   assignmentA: string; submissionA: string; answerA: string
   applicationA: string; resumeTokenA: string; feedbackA: string
+  infoCardA: string
   docPathA: string; photoPathA: string; tplPathA: string
 }
 
@@ -30,6 +31,7 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
     templateA: id(), fieldA: id(), fieldA2: id(), slotA: id(), slotA2: id(),
     assignmentA: '', submissionA: id(), answerA: id(),
     applicationA: id(), resumeTokenA: `rls-resume-${suffix}`, feedbackA: id(),
+    infoCardA: id(),
     docPathA: '', photoPathA: '', tplPathA: '',
   }
 
@@ -70,6 +72,9 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   await sql`insert into exchange_enrollments (exchange_id, user_id)
     values (${fx.exchangeA}, ${fx.studentA})`
 
+  await sql`insert into exchange_program_details (exchange_id, destination, chaperones, association_name)
+    values (${fx.exchangeA}, 'le Minnesota', array['Polly STEPHANY'], 'AGESSIA')`
+
   await sql`insert into form_templates
       (id, exchange_id, school_id, name, description, type, kind, status, audience, deadline, created_by)
     values (${fx.templateA}, ${fx.exchangeA}, ${fx.schoolA}, ${'Fiche RLS ' + suffix}, null,
@@ -104,6 +109,9 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
 
   await sql`insert into feedback (id, user_id, school_id, type, message)
     values (${fx.feedbackA}, ${fx.orgA}, ${fx.schoolA}, 'suggestion', 'ligne de test RLS')`
+
+  await sql`insert into exchange_info_cards (id, exchange_id, title, body, position)
+    values (${fx.infoCardA}, ${fx.exchangeA}, ${'Point de rendez-vous'}, ${'Gare centrale, quai 3.'}, 0)`
 
   // Shared exchange (school A ↔ school C) — the partner boundary the matrix's
   // partner-boundary block exercises. School B is deliberately NOT the partner:

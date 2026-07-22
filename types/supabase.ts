@@ -26,6 +26,7 @@ export type Database = {
           invite_response_note: string | null
           invite_token: string | null
           invite_token_expires_at: string | null
+          invited_at: string | null
           language: string
           photo_path: string | null
           responded_at: string | null
@@ -51,6 +52,7 @@ export type Database = {
           invite_response_note?: string | null
           invite_token?: string | null
           invite_token_expires_at?: string | null
+          invited_at?: string | null
           language?: string
           photo_path?: string | null
           responded_at?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           invite_response_note?: string | null
           invite_token?: string | null
           invite_token_expires_at?: string | null
+          invited_at?: string | null
           language?: string
           photo_path?: string | null
           responded_at?: string | null
@@ -318,6 +321,48 @@ export type Database = {
           },
         ]
       }
+      error_reports: {
+        Row: {
+          digest: string | null
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          message: string
+          method: string
+          occurrences: number
+          route_path: string
+          stack: string | null
+          status: string
+        }
+        Insert: {
+          digest?: string | null
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message: string
+          method: string
+          occurrences?: number
+          route_path: string
+          stack?: string | null
+          status?: string
+        }
+        Update: {
+          digest?: string | null
+          fingerprint?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message?: string
+          method?: string
+          occurrences?: number
+          route_path?: string
+          stack?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       exchange_enrollments: {
         Row: {
           created_at: string
@@ -354,6 +399,97 @@ export type Database = {
           },
         ]
       }
+      exchange_info_cards: {
+        Row: {
+          body: string
+          created_at: string
+          exchange_id: string
+          id: string
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          exchange_id: string
+          id?: string
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          exchange_id?: string
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_info_cards_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: false
+            referencedRelation: "exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exchange_program_details: {
+        Row: {
+          absence_dates: string[]
+          association_name: string | null
+          chaperones: string[]
+          destination: string | null
+          exchange_id: string
+          proviseur_name: string | null
+          receiving_school_name: string | null
+          sending_city: string | null
+          sending_school_name: string | null
+          travel_end: string | null
+          travel_start: string | null
+          updated_at: string
+        }
+        Insert: {
+          absence_dates?: string[]
+          association_name?: string | null
+          chaperones?: string[]
+          destination?: string | null
+          exchange_id: string
+          proviseur_name?: string | null
+          receiving_school_name?: string | null
+          sending_city?: string | null
+          sending_school_name?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+        }
+        Update: {
+          absence_dates?: string[]
+          association_name?: string | null
+          chaperones?: string[]
+          destination?: string | null
+          exchange_id?: string
+          proviseur_name?: string | null
+          receiving_school_name?: string | null
+          sending_city?: string | null
+          sending_school_name?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_program_details_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: true
+            referencedRelation: "exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchanges: {
         Row: {
           application_deadline: string | null
@@ -361,6 +497,8 @@ export type Database = {
           apply_slug: string | null
           archived_at: string | null
           created_at: string
+          good_news_body: string | null
+          good_news_subject: string | null
           id: string
           name: string
           phase: number
@@ -377,6 +515,8 @@ export type Database = {
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
+          good_news_body?: string | null
+          good_news_subject?: string | null
           id?: string
           name: string
           phase?: number
@@ -393,6 +533,8 @@ export type Database = {
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
+          good_news_body?: string | null
+          good_news_subject?: string | null
           id?: string
           name?: string
           phase?: number
@@ -730,6 +872,8 @@ export type Database = {
         Row: {
           assignment_id: string
           created_at: string
+          fillable_data: Json | null
+          generated_pdf_path: string | null
           id: string
           review_note: string | null
           reviewed_at: string | null
@@ -741,6 +885,8 @@ export type Database = {
         Insert: {
           assignment_id: string
           created_at?: string
+          fillable_data?: Json | null
+          generated_pdf_path?: string | null
           id?: string
           review_note?: string | null
           reviewed_at?: string | null
@@ -752,6 +898,8 @@ export type Database = {
         Update: {
           assignment_id?: string
           created_at?: string
+          fillable_data?: Json | null
+          generated_pdf_path?: string | null
           id?: string
           review_note?: string | null
           reviewed_at?: string | null
@@ -850,6 +998,17 @@ export type Database = {
           resume_token_expires_at: string
           status: string
         }[]
+      }
+      record_error_report: {
+        Args: {
+          p_digest?: string
+          p_fingerprint: string
+          p_message: string
+          p_method: string
+          p_route_path: string
+          p_stack?: string
+        }
+        Returns: undefined
       }
       school_paired_with_mine: {
         Args: { p_school_id: string }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent, within } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 let mockPathname = '/dashboard'
@@ -12,7 +12,10 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
 vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
-vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
+vi.mock('@/actions/exchanges', () => ({
+  createExchange: vi.fn(),
+  getExchangeProgressSummaries: vi.fn().mockResolvedValue({}),
+}))
 vi.mock('@/components/shell/FeedbackModal', () => ({
   FeedbackModal: ({ open }: { open: boolean }) => (open ? <div>feedback-modal-open</div> : null),
 }))
@@ -43,7 +46,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     expect(screen.getByText('Aperçu')).toBeInTheDocument()
-    expect(screen.getByText('Échanges')).toBeInTheDocument()
+    expect(screen.queryByText('Échanges')).toBeNull()
     expect(screen.getByText('Candid.')).toBeInTheDocument()
   })
 
@@ -53,17 +56,17 @@ describe('OrganizerShell', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    expect(screen.getByRole('link', { name: /Échanges/ })).toHaveAttribute('href', '/exchanges')
     expect(screen.getByRole('link', { name: /Candid\./ })).toHaveAttribute('href', '/applications')
   })
 
-  it('Échanges stays visible with zero exchanges', () => {
+  it('only Aperçu stays with zero exchanges', () => {
     renderWithIntl(
       <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
-    expect(screen.getByRole('link', { name: /Échanges/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Aperçu/ })).toBeInTheDocument()
+    expect(screen.queryByText('Échanges')).toBeNull()
     expect(screen.queryByText('Candid.')).toBeNull()
   })
 
@@ -119,7 +122,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     expect(screen.getByText('France–Canada 2026')).toBeInTheDocument()
-    expect(screen.getByText('Échanges')).toBeInTheDocument()
+    expect(screen.getByText('Aperçu')).toBeInTheDocument()
   })
 
   it('dismisses the session selector panel on outside click', () => {
@@ -134,24 +137,26 @@ describe('OrganizerShell', () => {
     expect(screen.queryByText('+ Nouvel échange')).toBeNull()
   })
 
-  it('shows Formul. and Docs rail items when an exchange is active', () => {
+  it('shows one Fichiers rail item pointing at /forms', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByText('Formul.')).toBeInTheDocument()
-    expect(screen.getByText('Docs')).toBeInTheDocument()
-    expect(screen.getByText('Formul.').closest('a')).toHaveAttribute('href', '/forms')
-    expect(screen.getByText('Docs').closest('a')).toHaveAttribute('href', '/documents')
+    expect(screen.getByText('Formulaires / Docs')).toBeInTheDocument()
+    expect(screen.queryByText('Formul.')).toBeNull()
+    expect(screen.queryByText('Docs')).toBeNull()
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveAttribute('href', '/forms')
+  })
+
+  it('Fichiers is active on both /forms and /documents path prefixes', () => {
+    const { unmount } = renderShell({ pathname: '/forms' })
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveClass('bg-white/10')
+    unmount()
+    renderShell({ pathname: '/documents/t1' })
+    expect(screen.getByText('Formulaires / Docs').closest('a')).toHaveClass('bg-white/10')
   })
 
   it('shows no top-bar search or create button on /forms', () => {
     renderShell({ pathname: '/forms' })
     expect(screen.queryByPlaceholderText('Rechercher un formulaire…')).toBeNull()
     expect(screen.queryByRole('button', { name: /Nouveau formulaire/ })).toBeNull()
-  })
-
-  it('shows no top-bar search or create button on /documents', () => {
-    renderShell({ pathname: '/documents' })
-    expect(screen.queryByPlaceholderText('Rechercher un document…')).toBeNull()
-    expect(screen.queryByRole('button', { name: /Demander un document/ })).toBeNull()
   })
 
   it('shows no invite button on /dashboard', () => {
@@ -189,25 +194,30 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('Archivé')).toBeInTheDocument()
   })
 
-  it('rail contains Élèves but not Réglages when an exchange is active', () => {
+  it('rail contains a Réglages gear tab linking to /settings', () => {
     renderShell({ pathname: '/dashboard' })
-    expect(screen.getByRole('link', { name: /Élèves/ })).toHaveAttribute('href', '/students')
-    expect(screen.queryByRole('link', { name: /Réglages/ })).toBeNull()
+    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
   })
 
-  it('Réglages lives in the profile menu and links to /settings', () => {
-    renderShell({ pathname: '/dashboard' })
-    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
-    expect(screen.getByRole('link', { name: 'Réglages' })).toHaveAttribute('href', '/settings')
-    expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
-  })
-
-  it('shows a Feedback rail button that opens the feedback modal', () => {
+  it('Réglages gear tab is visible even with no exchanges', () => {
     renderWithIntl(
-      <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
+      <OrganizerShell exchanges={[]} activeExchangeId={null} organizerName="M B" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
+    expect(screen.getByRole('link', { name: /Réglages/ })).toHaveAttribute('href', '/settings')
+  })
+
+  it('profile menu contains only Se déconnecter, not Réglages', () => {
+    renderShell({ pathname: '/dashboard' })
+    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
+    expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument()
+    const menu = screen.getByRole('button', { name: 'Se déconnecter' }).closest('div') as HTMLElement
+    expect(within(menu).queryByRole('link', { name: 'Réglages' })).toBeNull()
+  })
+
+  it('shows a Feedback button in the header that opens the feedback modal', () => {
+    renderShell({ pathname: '/dashboard' })
     expect(screen.queryByText('feedback-modal-open')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /Feedback/ }))
     expect(screen.getByText('feedback-modal-open')).toBeInTheDocument()

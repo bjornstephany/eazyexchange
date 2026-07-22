@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { InviteByEmailDialog } from '@/components/applications/InviteByEmailDialog'
 
 export function InviteModal({
   exchangeId,
@@ -31,6 +32,7 @@ export function InviteModal({
   const [saving, setSaving] = useState(false)
   const [showCloseWarning, setShowCloseWarning] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   // Reset transient state each time the modal is opened.
   useEffect(() => {
@@ -84,6 +86,7 @@ export function InviteModal({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(next) => { if (!next) requestClose() }}>
       <DialogContent className="max-w-[520px] rounded-card p-[34px] px-[38px] shadow-modal sm:rounded-card">
         {step === 'deadline' ? (
@@ -145,7 +148,10 @@ export function InviteModal({
                 {t('dashboard.inviteModal.closeWarning')}
               </div>
             )}
-            <div className="mt-1.5 flex justify-end">
+            <div className="mt-1.5 flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setInviteOpen(true)} className="h-12 whitespace-nowrap">
+                {t('dashboard.inviteModal.inviteByEmail')}
+              </Button>
               <Button type="button" onClick={requestClose}>
                 {showCloseWarning ? t('dashboard.inviteModal.closeAnyway') : t('dashboard.inviteModal.close')}
               </Button>
@@ -154,5 +160,7 @@ export function InviteModal({
         )}
       </DialogContent>
     </Dialog>
+    <InviteByEmailDialog exchangeId={exchangeId} open={inviteOpen} onOpenChange={setInviteOpen} />
+    </>
   )
 }

@@ -15,6 +15,9 @@ vi.mock('@/actions/settings', () => ({
   restoreExchange: vi.fn().mockResolvedValue(undefined),
   updateLocale: vi.fn().mockResolvedValue(undefined),
 }))
+vi.mock('@/actions/exchanges', () => ({
+  updateReminderSettings: vi.fn().mockResolvedValue(undefined),
+}))
 import { SettingsView } from '@/components/settings/SettingsView'
 
 const render = renderWithIntl
@@ -29,7 +32,9 @@ const baseProps = {
   team: { members: [], pending: [] },
   billing: null,
   program: null,
+  programDetails: null,
   locale: 'fr' as const,
+  subjects: [],
 }
 
 describe('SettingsView — Compte', () => {
@@ -113,6 +118,8 @@ const owner = {
   program: {
     id: 'ex1', name: 'Programme Espagne', year: 2026, archived: false,
     enrolled: 10, applications: 12, earliestDeadline: '2026-10-10',
+    remindersEnabled: true, reminderCadence: 'normale' as const,
+    goodNewsSubject: 'Bonne nouvelle', goodNewsBody: 'Bonjour',
   },
 }
 
@@ -162,7 +169,7 @@ describe('SettingsView — owner sections', () => {
     const { archiveExchange } = await import('@/actions/settings')
     render(<SettingsView {...owner} />)
     fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
-    expect(screen.getByText('10 élèves acceptés · 12 candidatures · échéance dossiers 10 oct')).toBeInTheDocument()
+    expect(screen.getByText('10 élèves acceptés · 12 candidatures · date limite dossiers 10 oct')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme…' }))
     expect(screen.getByText('Archiver ce programme ?')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Archiver le programme' }))
@@ -176,5 +183,29 @@ describe('SettingsView — owner sections', () => {
     expect(screen.getByText('Archivé')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Restaurer' }))
     expect(restoreExchange).toHaveBeenCalledWith('ex1')
+  })
+})
+
+describe('SettingsView — Programme for all organizers', () => {
+  it('admin with an active program sees Programme + reminders, no billing, no danger zone', () => {
+    render(<SettingsView {...baseProps} program={owner.program} />)
+    expect(screen.queryByRole('button', { name: 'Facturation' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
+    expect(screen.getByText('Rappels automatiques')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Normale/ })).toBeChecked()
+    expect(screen.queryByRole('button', { name: 'Archiver le programme…' })).toBeNull()
+  })
+
+  it('owner sees both the reminder card and the archive zone', () => {
+    render(<SettingsView {...owner} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
+    expect(screen.getByText('Rappels automatiques')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Archiver le programme…' })).toBeInTheDocument()
+  })
+
+  it('archived program renders the reminder card read-only', () => {
+    render(<SettingsView {...owner} program={{ ...owner.program, archived: true }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Programme' }))
+    expect(screen.getByText('Programme archivé — lecture seule.')).toBeInTheDocument()
   })
 })

@@ -2,6 +2,11 @@ import { getAssignmentDetails } from '@/actions/submissions'
 import { DataEntryForm } from '@/components/DataEntryForm'
 import { DocumentUploadForm } from '@/components/DocumentUploadForm'
 import { ExternalLinkCard } from '@/components/ExternalLinkCard'
+import { FillableForm } from '@/components/FillableForm'
+import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
+import { resolveVariables, type ResolvedVariables } from '@/lib/forms/fillable/render'
+import type { FillableDefinition } from '@/lib/forms/fillable/types'
+import { getProfile } from '@/lib/supabase/request'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { SUBMISSION_STATUS_BADGE } from '@/lib/submission-status'
@@ -20,6 +25,26 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
       .from('form-templates')
       .createSignedUrl(template.template_file_path, 3600)
     templatePdfUrl = data?.signedUrl ?? null
+  }
+
+  // Fillable templates: resolve program variables + prefill under the
+  // student's own RLS session (enrolled students may read the details row).
+  let fillable: { def: FillableDefinition; values: ResolvedVariables; studentName: string } | null = null
+  if (template.kind === 'fillable' && template.standard_key) {
+    const def = FILLABLE_DEFINITIONS[template.standard_key]
+    if (def) {
+      const supabase = await createClient()
+      const [{ data: exchange }, { data: details }, profile] = await Promise.all([
+        supabase.from('exchanges').select('name').eq('id', template.exchange_id).maybeSingle(),
+        supabase.from('exchange_program_details').select('*').eq('exchange_id', template.exchange_id).maybeSingle(),
+        getProfile(),
+      ])
+      fillable = {
+        def,
+        values: resolveVariables({ exchangeName: exchange?.name ?? '', details }),
+        studentName: profile?.full_name ?? '',
+      }
+    }
   }
 
   const status = submission?.status ?? null
@@ -45,7 +70,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           )}
           {template.deadline && (
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Échéance {new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              Date limite {new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
             </p>
           )}
         </div>
@@ -65,7 +90,18 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
         </p>
       )}
 
-      {template.type === 'data_entry' && (
+      {fillable && (
+        <FillableForm
+          assignmentId={assignmentId}
+          def={fillable.def}
+          values={fillable.values}
+          initialData={submission?.fillable_data ?? null}
+          readOnly={readOnly}
+          studentName={fillable.studentName}
+        />
+      )}
+
+      {template.type === 'data_entry' && template.kind !== 'fillable' && (
         <DataEntryForm
           assignmentId={assignmentId}
           fields={template.form_fields ?? []}

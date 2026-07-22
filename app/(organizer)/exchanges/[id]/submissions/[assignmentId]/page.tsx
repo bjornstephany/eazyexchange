@@ -1,18 +1,58 @@
 import { getTranslations } from 'next-intl/server'
 import { getSubmissionForReview } from '@/actions/submissions'
 import { SubmissionReview } from '@/components/SubmissionReview'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { HistoryBackLink } from '@/components/HistoryBackLink'
 import { Badge } from '@/components/ui/badge'
+import { FillableForm } from '@/components/FillableForm'
+import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
+import { resolveVariables } from '@/lib/forms/fillable/render'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function SubmissionReviewPage({
   params,
 }: {
   params: Promise<{ id: string; assignmentId: string }>
 }) {
-  const { id: exchangeId, assignmentId } = await params
-  const { template, student, submission } = await getSubmissionForReview(assignmentId)
+  const { assignmentId } = await params
+  const { template, student, submission, generatedPdfUrl } = await getSubmissionForReview(assignmentId)
   const t = await getTranslations('organizer')
+
+  // Fillable templates: resolve program variables under the organizer's own
+  // RLS session (they manage the exchange_program_details row) so the review
+  // renders the same document-style text the student saw.
+  let fillableView: React.ReactNode = null
+  if (submission && template.kind === 'fillable' && template.standard_key && submission.fillable_data) {
+    const def = FILLABLE_DEFINITIONS[template.standard_key]
+    if (def) {
+      const supabase = await createClient()
+      const [{ data: exchange }, { data: details }] = await Promise.all([
+        supabase.from('exchanges').select('name').eq('id', template.exchange_id).maybeSingle(),
+        supabase.from('exchange_program_details').select('*').eq('exchange_id', template.exchange_id).maybeSingle(),
+      ])
+      fillableView = (
+        <div className="space-y-4">
+          {generatedPdfUrl && (
+            <a
+              href={generatedPdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-[9px] border bg-card px-4 py-2.5 text-[13px] font-semibold text-navy hover:bg-hoverrow"
+            >
+              ⬇ {t('pages.submissionReview.downloadSignedPdf')}
+            </a>
+          )}
+          <FillableForm
+            assignmentId={assignmentId}
+            def={def}
+            values={resolveVariables({ exchangeName: exchange?.name ?? '', details })}
+            initialData={submission.fillable_data}
+            readOnly={true}
+            studentName={student?.full_name ?? ''}
+          />
+        </div>
+      )
+    }
+  }
 
   const statusConfig: Record<string, { label: string; variant: 'success' | 'info' | 'neutral' | 'danger' }> = {
     approved: { label: t('pages.submissionReview.status.approved'), variant: 'success' },
@@ -26,9 +66,7 @@ export default async function SubmissionReviewPage({
 
   return (
     <div>
-      <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4 text-muted-foreground">
-        <Link href={`/exchanges/${exchangeId}`}>{t('pages.submissionReview.backLink')}</Link>
-      </Button>
+      <HistoryBackLink label={t('pages.submissionReview.backLink')} />
 
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -48,7 +86,7 @@ export default async function SubmissionReviewPage({
         <p className="text-muted-foreground">{t('pages.submissionReview.notStarted')}</p>
       )}
 
-      {submission && template.type === 'data_entry' && (
+      {submission && template.type === 'data_entry' && template.kind !== 'fillable' && (
         <div className="space-y-4">
           {(template.form_fields ?? []).map((field: any) => {
             const answer = submission.field_answers?.find((a: any) => a.field_id === field.id)
@@ -63,6 +101,8 @@ export default async function SubmissionReviewPage({
           })}
         </div>
       )}
+
+      {fillableView}
 
       {submission && template.type === 'document_upload' && (
         <div className="space-y-3">
@@ -94,7 +134,7 @@ export default async function SubmissionReviewPage({
       )}
 
       {canReview && (
-        <SubmissionReview assignmentId={assignmentId} exchangeId={exchangeId} />
+        <SubmissionReview assignmentId={assignmentId} />
       )}
 
       {submission && !canReview && submission.review_note && (

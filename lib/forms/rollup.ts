@@ -2,7 +2,6 @@
 // Supabase. Pill vocabulary and counting rules come from the Phase-3 spec:
 // forms « reçus » = submitted|approved; docs « fournis » = approved only.
 import { type Pill } from '@/lib/dashboard/rollup'
-import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 // Type-only import: used solely for the translator param type below, so it is
 // erased at compile time and this module stays React-free at runtime. Typing the
 // param as a real next-intl translator preserves the type-safe key gate.
@@ -13,7 +12,7 @@ import type { useTranslations } from 'next-intl'
 // keys fail `npx tsc --noEmit`.
 type T = ReturnType<typeof useTranslations<never>>
 
-export type TemplateKind = 'online' | 'pdf' | 'doc'
+export type TemplateKind = 'online' | 'pdf' | 'doc' | 'fillable'
 export type AssigneeRow = {
   assignmentId: string
   studentId: string
@@ -36,21 +35,8 @@ export type TemplateVM = {
   assignees: AssigneeRow[]
 }
 
-// What still blocks activation of a draft — same wording as the action's
-// structured messages, so the pre-click hint and the post-click error match.
-// These messages are NOT localized (Phase 3 sweep will pick them up).
-export function activationHints(
-  t: Pick<TemplateVM, 'status' | 'kind' | 'deadline' | 'template_file_path' | 'fields'>,
-): string[] {
-  if (t.status !== 'draft') return []
-  const hints: string[] = []
-  if (!t.deadline) hints.push(MSG_DEADLINE_REQUIRED)
-  if (t.kind === 'pdf' && !t.template_file_path) hints.push(MSG_PDF_REQUIRED)
-  if (t.kind === 'online' && t.fields.length === 0) hints.push(MSG_QUESTIONS_REQUIRED)
-  return hints
-}
-
 export function typePill(kind: TemplateKind, t: T): Pill {
+  if (kind === 'fillable') return { kind: 'info', label: t('organizer.forms.pills.fillable') }
   return kind === 'online'
     ? { kind: 'info', label: t('organizer.forms.pills.onlineForm') }
     : { kind: 'neutral', label: t('organizer.forms.pills.pdfToSign') }

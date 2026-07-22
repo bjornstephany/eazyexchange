@@ -7,7 +7,7 @@ export function TemplateIcon({ kind, className }: { kind: TemplateKind; classNam
     <div
       className={cn(
         'flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px]',
-        kind === 'online' ? 'bg-brand' : 'bg-rail',
+        (kind === 'online' || kind === 'fillable') ? 'bg-brand' : 'bg-rail',
         className
       )}
     >

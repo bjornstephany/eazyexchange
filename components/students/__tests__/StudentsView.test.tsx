@@ -14,7 +14,7 @@ import { StudentsView } from '@/components/students/StudentsView'
 import type { StudentVM } from '@/lib/students/directory'
 
 const base: StudentVM = {
-  id: 's1', name: 'Camille Laurent', firstName: 'Camille', initials: 'CL', avatarBg: '#2456E6',
+  id: 's1', name: 'Camille Laurent', firstName: 'Camille', initials: 'CL', avatarBg: '#2456E6', photoUrl: null,
   statusKey: 'complet', overall: { kind: 'ok', label: 'Complet' }, summary: 'Dossier complet',
   sub: 'Première · 1re G2 · Français',
   identity: [
@@ -28,12 +28,12 @@ const base: StudentVM = {
   checklist: [
     { assignmentId: 'a1', label: 'Formulaire de santé', group: 'Formulaire', pill: { kind: 'ok', label: 'Fourni' }, reviewable: true },
   ],
-  provided: 1, total: 1, pct: 100, dueLabel: 'Échéance 10 oct',
+  provided: 1, total: 1, pct: 100, dueLabel: 'Date limite 10 oct',
 }
 const second: StudentVM = {
   ...base, id: 's2', name: 'Yanis Benali', firstName: 'Yanis', initials: 'YB',
   statusKey: 'retard', overall: { kind: 'bad', label: 'En retard' },
-  summary: 'Échéance dépassée — 2 pièces attendues', applicationId: null,
+  summary: 'Date limite dépassée — 2 pièces attendues', applicationId: null,
   checklist: [
     { assignmentId: 'a2', label: 'Passeport', group: 'Document', pill: { kind: 'bad', label: 'Manquant' }, reviewable: false },
     { assignmentId: 'a3', label: 'AST — sortie du territoire', group: 'Document', pill: { kind: 'info', label: 'À vérifier' }, reviewable: true },
@@ -100,5 +100,15 @@ describe('StudentsView', () => {
     renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
     expect(screen.queryByRole('link', { name: 'Candidature' })).toBeNull()
     expect(screen.getByText('Candidature introuvable pour cet élève.')).toBeInTheDocument()
+  })
+
+  it('renders the application photo in the row and the detail avatar; initials fall back', () => {
+    const withPhoto = { ...base, photoUrl: 'https://signed.example/app1/photo.jpg' }
+    const { container } = renderWithIntl(<StudentsView exchangeId="ex1" students={[withPhoto, second]} />)
+    // First (selected) student → photo twice: list row + detail header. alt=""
+    // (decorative — the name renders beside it), so query by src, not role.
+    expect(container.querySelectorAll('img[src="https://signed.example/app1/photo.jpg"]')).toHaveLength(2)
+    // Second student has no photo → initials circle remains.
+    expect(screen.getByText('YB')).toBeInTheDocument()
   })
 })

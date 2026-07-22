@@ -284,9 +284,19 @@ export async function getSubmissionForReview(assignmentId: string) {
     )
   }
 
+  // Fillable submissions: sign the generated PDF (documents bucket, same
+  // assignment-scoped policy as uploads) for the organizer download button.
+  let generatedPdfUrl: string | null = null
+  if (submission?.generated_pdf_path) {
+    const { data } = await supabase.storage
+      .from('documents')
+      .createSignedUrl(submission.generated_pdf_path, 3600, { download: true })
+    generatedPdfUrl = data?.signedUrl ?? null
+  }
+
   // template is guaranteed by the assignments.template_id FK — assignment
   // lookup above already succeeded, so the referenced template row exists.
-  return { assignment, template: template!, student, submission }
+  return { assignment, template: template!, student, submission, generatedPdfUrl }
 }
 
 export async function approveSubmission(assignmentId: string) {
@@ -317,10 +327,12 @@ export async function approveSubmission(assignmentId: string) {
     metadata: { assignment_id: assignmentId },
   })
 
-  revalidatePath(`/exchanges`)
-  // Approval status also drives the dashboard grid and the student directory
-  // cellMap (organizer's own browser). The student's /my-forms view is a
-  // different actor — accepted cross-actor staleness per the spec (§1c).
+  // Review returns via history-back to its origin list (Documents drawer on
+  // /forms, or Student detail on /students) — keep both fresh, plus the
+  // dashboard grid. /documents only redirects to /forms, so revalidate /forms
+  // itself (matching actions/forms.ts). The student's /my-forms view is a
+  // different actor — accepted cross-actor staleness.
+  revalidatePath('/forms', 'layout')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }
@@ -383,8 +395,8 @@ export async function rejectSubmission(assignmentId: string, note: string) {
     })
   }
 
-  revalidatePath(`/exchanges`)
   // Same surfaces (and same cross-actor exemption) as approveSubmission above.
+  revalidatePath('/forms', 'layout')
   revalidatePath('/dashboard')
   revalidatePath('/students')
 }

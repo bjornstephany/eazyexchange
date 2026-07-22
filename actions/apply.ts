@@ -1,9 +1,9 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { randomToken, tokenExpired } from '@/lib/tokens'
+import { randomToken, tokenExpired, resumeTokenExpiry } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
-import { missingRequiredApplication, applicantName as buildApplicantName } from '@/lib/application-form'
+import { missingRequiredApplication, overLimitApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
 import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
+import { renderApplicationRecapPdf } from '@/lib/pdf/application-recap'
 
 const APP_URL = getAppUrl()
 
@@ -23,15 +24,6 @@ function applicationsClosed(exchange: { application_open: boolean; application_d
   return false
 }
 
-const RESUME_FALLBACK_MS = 30 * 24 * 60 * 60 * 1000
-
-// When a resume link should die: end of the deadline day (the day after, 00:00
-// UTC — the moment applicationsClosed flips), or 30 days out if no deadline.
-function resumeExpiry(deadline: string | null): string {
-  if (deadline) return new Date(new Date(`${deadline}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000).toISOString()
-  return new Date(Date.now() + RESUME_FALLBACK_MS).toISOString()
-}
-
 // Hard sanity cap, not a product limit: no legitimate exchange approaches this
 // (typical cohorts are 20–60 students). Protects the shared DB/storage from
 // rotating-IP bulk fakes that the per-IP/per-email rate limits can't see.
@@ -39,14 +31,29 @@ function resumeExpiry(deadline: string | null): string {
 // nothing outside this file consumes it (the cap is enforced below).
 const APPLICATION_CAP_PER_EXCHANGE = 2000
 
-export type StartApplicationResult = { token: string } | { existing: 'draft' | 'submitted' } | { closed: true }
+export type StartApplicationResult =
+  | { token: string }
+  | { existing: 'draft' | 'submitted' }
+  | { closed: true }
+  | { invalidEmail: true }
+  | { registered: true }
+
+// Structured result for the two draft-writing actions: expected validation
+// outcomes must be return values, never throws (prod redacts thrown messages).
+export type ApplyWriteResult =
+  | { ok: true }
+  | { ok: false; overLimit: string[] }
+  | { ok: false; registered: true }
 
 export async function startApplication(
   slug: string,
   input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
 ): Promise<StartApplicationResult> {
   const email = normalizeEmail(input.email)
-  if (!isValidEmail(email)) throw new Error('Please enter a valid email address')
+  // Expected validation outcome, not an exception: prod redacts thrown Server
+  // Action messages to an opaque digest, so return a structured result the
+  // client can render as a friendly "use a valid email" message.
+  if (!isValidEmail(email)) return { invalidEmail: true }
 
   // This endpoint is unauthenticated and emails an arbitrary address, so cap it
   // by source IP and by recipient to prevent enumeration / mail-bombing from our
@@ -84,7 +91,7 @@ export async function startApplication(
     // token. The inbox is the only recovery channel — re-send the resume link
     // (already capped by the 3/hr-per-email limit above) and keep it alive.
     await admin.from('applications')
-      .update({ resume_token_expires_at: resumeExpiry(exchange.application_deadline) })
+      .update({ resume_token_expires_at: resumeTokenExpiry(exchange.application_deadline) })
       .eq('id', existing.id)
     void sendApplicationResumeEmail({
       to: email,
@@ -94,6 +101,26 @@ export async function startApplication(
     }).catch(() => {})
     return { existing: 'draft' }
   }
+
+  // One account = one email. If this email is already ENROLLED in another
+  // exchange of this school, an auth account already exists for it — a second
+  // application could never enroll (it would hit email_exists at « Oui »), so
+  // refuse it up front and send them to log in. Non-enrolled prior applicants
+  // (draft/submitted/declined/rejected elsewhere) are deliberately NOT blocked:
+  // the rule is one application per exchange, and they have no account to collide
+  // with. The same-exchange lookup above already returned, so any match here is a
+  // different exchange. Structured result, not a throw (prod redacts thrown
+  // messages); the client shows "already registered — log in".
+  const { data: enrolledElsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', exchange.school_a_id)
+    .eq('email', email)
+    .neq('exchange_id', exchange.id)
+    .not('enrolled_user_id', 'is', null)
+    .limit(1)
+    .maybeSingle()
+  if (enrolledElsewhere) return { registered: true }
 
   // Per-exchange sanity cap — abuse guard only; existing applicants resumed
   // above are never affected. Fail open on a count error: a DB blip must not
@@ -113,7 +140,7 @@ export async function startApplication(
     email,
     resume_token: token,
     invite_token: null,
-    resume_token_expires_at: resumeExpiry(exchange.application_deadline),
+    resume_token_expires_at: resumeTokenExpiry(exchange.application_deadline),
     invite_token_expires_at: null,
     status: 'draft',
     language: input.language,
@@ -162,7 +189,7 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name, apply_slug)')
+    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
@@ -171,24 +198,25 @@ export async function getApplicationDraft(token: string) {
   if (tokenExpired(app.resume_token_expires_at)) {
     return { expired: true as const, submitted: false as const, exchangeName }
   }
-  // Signed URL for the applicant photo (the application-photos bucket is
-  // private; 1 h outlives any editing or reading session). Serves both a
-  // returning draft and the read-only recap below.
+  // Once submitted (or further along) the application is final — the resume link
+  // can no longer reopen it. Return a marker only, never the PII, so the page
+  // shows an "already submitted" notice instead of the form. `language` is the
+  // one non-marker field: it carries no PII and the page needs it to render the
+  // recap-download button in the language the applicant applied in.
+  // 'invited' (organizer-sent, untouched) and 'draft' both render the form.
+  if (app.status !== 'draft' && app.status !== 'invited') {
+    return {
+      expired: false as const, submitted: true as const, exchangeName,
+      language: app.language === 'fr' ? ('fr' as const) : ('en' as const),
+    }
+  }
+  // Signed URL so a returning draft shows its already-uploaded photo (the
+  // application-photos bucket is private; 1 h outlives any editing session).
   let photoUrl: string | null = null
   if (app.photo_path) {
     const { data: signed } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
       .createSignedUrl(app.photo_path, 3600)
     photoUrl = signed?.signedUrl ?? null
-  }
-  // Once submitted (or further along) the application is final — the resume
-  // link can no longer reopen it, but (while the token lives) it shows a
-  // read-only recap of what was sent.
-  if (app.status !== 'draft') {
-    return {
-      expired: false as const, submitted: true as const, exchangeName,
-      data: app.data ?? {}, language: app.language, photoUrl,
-      submittedAt: app.submitted_at,
-    }
   }
   return {
     expired: false as const, submitted: false as const,
@@ -243,22 +271,30 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
   })
 }
 
-export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<void> {
+export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  const overLimit = overLimitApplicationFields(data)
+  if (overLimit.length > 0) return { ok: false, overLimit }
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
   await assertExchangeWritable(admin, app.exchange_id)
+  // First edit of an organizer-invited row marks it "started".
+  const patch: { data: Record<string, string>; status?: 'draft' } =
+    app.status === 'invited' ? { data, status: 'draft' } : { data }
   const { error } = await admin
-    .from('applications').update({ data }).eq('resume_token', token)
+    .from('applications').update(patch).eq('resume_token', token)
   if (error) throw error
+  return { ok: true }
 }
 
-export async function submitApplication(token: string, data: Record<string, string>): Promise<void> {
+export async function submitApplication(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
   if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
+  const overLimit = overLimitApplicationFields(data)
+  if (overLimit.length > 0) return { ok: false, overLimit }
 
   const admin = createAdminClient()
   const { data: app } = await admin
@@ -267,7 +303,7 @@ export async function submitApplication(token: string, data: Record<string, stri
     .eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted')
 
   // Server-side backstop of the client submit gate — same policy, including
   // the photo (which lives on the row, not in `data`).
@@ -284,6 +320,22 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (!exchange) throw new Error('Application not found')
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, app.exchange_id)
+
+  // Race backstop for the start-time guard: if this email became enrolled in
+  // another exchange of the school between starting this draft and submitting
+  // (an account now exists), block here rather than letting the eventual « Oui »
+  // hit email_exists. Same account-based rule as startApplication; the draft's
+  // own exchange is excluded by .neq and it isn't enrolled anyway.
+  const { data: enrolledElsewhere } = await admin
+    .from('applications')
+    .select('id')
+    .eq('school_id', app.school_id)
+    .eq('email', app.email)
+    .neq('exchange_id', app.exchange_id)
+    .not('enrolled_user_id', 'is', null)
+    .limit(1)
+    .maybeSingle()
+  if (enrolledElsewhere) return { ok: false, registered: true }
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
@@ -305,6 +357,7 @@ export async function submitApplication(token: string, data: Record<string, stri
       ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
     }).catch(() => {})
   ))
+  return { ok: true }
 }
 
 export async function uploadApplicationPhoto(token: string, formData: FormData): Promise<{ path: string }> {
@@ -319,7 +372,7 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application is already submitted and locked')
+  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
   await assertExchangeWritable(admin, app.exchange_id)
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
@@ -327,7 +380,107 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
   const { error: upErr } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type })
   if (upErr) throw upErr
-  const { error } = await admin.from('applications').update({ photo_path: path }).eq('id', app.id)
+  // First upload of an organizer-invited row marks it "started".
+  const patch: { photo_path: string; status?: 'draft' } =
+    app.status === 'invited' ? { photo_path: path, status: 'draft' } : { photo_path: path }
+  const { error } = await admin.from('applications').update(patch).eq('id', app.id)
   if (error) throw error
   return { path }
+}
+
+export type RecapResult =
+  | { ok: true; filename: string; pdf: string /* base64 */ }
+  | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' }
+
+// Photos are accepted up to 10 MB (lib/uploads.ts) and are never downscaled
+// before upload, but the recap only ever draws one at 96×120 pt. Holding the
+// full blob + a Uint8Array copy + a Buffer copy inside the JSX + the rendered
+// PDF buffer + its base64 string concurrently for one request can approach
+// ~5x the original photo size in transient memory. This endpoint is public
+// (rate-limited only at 20/hr/IP) and Fluid Compute shares one instance's
+// heap across concurrent invocations, so simultaneous large-photo recaps
+// could OOM the instance. Drop oversized photos rather than risk that — the
+// "render without the photo" path already handles null gracefully.
+// Not exported: a `'use server'` module may only export async functions.
+const MAX_RECAP_PHOTO_BYTES = 2_000_000
+
+// ASCII-folded, lowercase, hyphenated name part for the download filename —
+// « Dupont-Léger » → "dupont-leger". Not exported: a `'use server'` module may
+// only export async functions.
+function slugPart(value: string): string {
+  return (value ?? '')
+    .trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036F]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
+
+function recapFilename(data: Record<string, string>): string {
+  const parts = [slugPart(data.first_name ?? ''), slugPart(data.last_name ?? '')].filter(Boolean)
+  return parts.length > 0 ? `candidature-${parts.join('-')}.pdf` : 'candidature.pdf'
+}
+
+// The applicant's own answers, back to the applicant, as a PDF they can keep.
+//
+// DELIBERATE PII EGRESS — read this next to getApplicationDraft above, which
+// returns NO PII once status !== 'draft'. This action does the opposite on
+// purpose: it returns the answers *because* they are submitted. The trust model
+// is unchanged (the resume token is the applicant's own secret, and the token's
+// expiry still gates it); it is simply a second, narrower door for the same
+// person. It is not a mistake — do not "fix" it to match the branch above.
+export async function downloadApplicationRecap(token: string, language?: 'en' | 'fr'): Promise<RecapResult> {
+  // Same anonymous-token preamble as the other actions in this file.
+  const ip = await clientIp()
+  await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)
+
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name)')
+    .eq('resume_token', token)
+    .maybeSingle()
+  // Structured returns, not throws: prod redacts thrown Server Action messages.
+  if (!app) return { ok: false, reason: 'not_found' }
+  if (tokenExpired(app.resume_token_expires_at)) return { ok: false, reason: 'expired' }
+  // Only a submitted (or further-along) application has a recap.
+  if (app.status === 'draft' || app.status === 'invited') return { ok: false, reason: 'not_submitted' }
+
+  // A broken or unreadable upload must not cost the applicant their recap:
+  // drop the photo and render the rest. Logged without PII.
+  let photoBytes: Uint8Array | null = null
+  if (app.photo_path) {
+    try {
+      const { data: blob, error } = await admin.storage
+        .from(APPLICATION_PHOTO_BUCKET).download(app.photo_path)
+      if (error || !blob) throw new Error('download failed')
+      photoBytes = new Uint8Array(await blob.arrayBuffer())
+    } catch {
+      console.warn('[apply] recap photo unavailable — rendering without it')
+      photoBytes = null
+    }
+    // Never hold an oversized photo through the render pipeline — see the
+    // MAX_RECAP_PHOTO_BYTES comment above.
+    if (photoBytes != null && photoBytes.byteLength > MAX_RECAP_PHOTO_BYTES) {
+      photoBytes = null
+    }
+  }
+
+  const data = (app.data ?? {}) as Record<string, string>
+  // The caller's live language (e.g. the toggle on the confirmation screen)
+  // wins over the row's — but never trust it blindly: normalize exactly the
+  // way the DB-derived fallback is normalized so an unexpected value can
+  // never reach the renderer.
+  const effectiveLanguage: 'en' | 'fr' =
+    language === 'en' || language === 'fr' ? language : app.language === 'fr' ? 'fr' : 'en'
+  const pdf = await renderApplicationRecapPdf({
+    exchangeName: app.exchanges?.name ?? '',
+    applicantName: buildApplicantName(data),
+    submittedAt: app.submitted_at,
+    data,
+    photoBytes,
+    language: effectiveLanguage,
+  })
+
+  return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }
 }

@@ -28,7 +28,7 @@ function TodoCard({ item, showTag }: { item: DossierItem; showTag: boolean }) {
           <p className="mt-1 text-[12.5px] text-danger-text">{item.reviewNote}</p>
         ) : item.deadline ? (
           <p className={`mt-1 text-[12.5px] ${item.overdue ? 'font-medium text-danger-text' : 'text-muted-foreground'}`}>
-            {item.overdue ? 'En retard — ' : 'Échéance '}{formatDate(item.deadline)}
+            {item.overdue ? 'En retard — ' : 'Date limite '}{formatDate(item.deadline)}
           </p>
         ) : null}
       </div>
@@ -104,7 +104,7 @@ export function DossierView({ dossier, firstName }: { dossier: Dossier; firstNam
               <span className="font-mono text-[12px] text-muted-foreground">{sentCount} / {total} envoyés</span>
             </div>
             {nextDeadline && (
-              <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Prochaine échéance · {formatDate(nextDeadline)}</p>
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Prochaine date limite · {formatDate(nextDeadline)}</p>
             )}
           </div>
 

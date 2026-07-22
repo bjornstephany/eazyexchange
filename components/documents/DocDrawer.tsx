@@ -4,31 +4,28 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
-import { reqPill, progressLabel, docDrawerRows, activationHints, type TemplateVM } from '@/lib/forms/rollup'
+import { reqPill, progressLabel, docDrawerRows, type TemplateVM } from '@/lib/forms/rollup'
 import { isSafeExternalUrl } from '@/lib/forms/template-result'
 import { frShortDate } from '@/lib/dashboard/rollup'
-import { activateTemplate, deleteTemplate, remindTemplate } from '@/actions/forms'
+import { deleteTemplate, remindTemplate } from '@/actions/forms'
 
 // Right detail drawer (460px) for a pièce justificative, per handoff.
 export function DocDrawer({
-  vm, exchangeId, enrolledStudents, onClose,
+  vm, exchangeId, onClose,
 }: {
   vm: TemplateVM | null
   exchangeId: string
-  enrolledStudents: { id: string; full_name: string }[]
   onClose: () => void
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [picking, setPicking] = useState(false)
-  const [chosen, setChosen] = useState<string[]>([])
   const [remindResult, setRemindResult] = useState<{ reminded: number; skipped: number; failed: number } | null>(null)
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const tr = useTranslations()
 
   useEffect(() => {
-    setBusy(false); setError(null); setPicking(false); setChosen([]); setRemindResult(null)
+    setBusy(false); setError(null); setRemindResult(null)
   }, [vm?.id])
   useEffect(() => {
     if (!vm) return
@@ -39,9 +36,7 @@ export function DocDrawer({
 
   if (!vm) return null
   const { rows, restCount } = docDrawerRows(vm.assignees, tr)
-  const hints = activationHints(vm)
   const isDraft = vm.status === 'draft'
-  const needsPicker = vm.audience === 'conditional'
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true)
@@ -50,21 +45,6 @@ export function DocDrawer({
       setError(err instanceof Error ? err.message : c('errors.generic'))
     }
     setBusy(false)
-  }
-
-  function handleActivate() {
-    if (needsPicker && !picking) { setPicking(true); return }
-    void (async () => {
-      setBusy(true)
-      setError(null)
-      try {
-        const res = await activateTemplate(vm!.id, needsPicker ? chosen : undefined)
-        if (!res.ok) setError(res.message)
-      } catch {
-        setError(c('errors.generic'))
-      }
-      setBusy(false)
-    })()
   }
 
   async function handleRemind() {
@@ -123,24 +103,9 @@ export function DocDrawer({
 
           <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">{t('documents.drawer.trackingHeading')}</div>
 
-          {isDraft && !picking && (
+          {isDraft && (
             <div className="rounded-xl border border-dashed border-frame bg-hoverrow p-[18px] text-[13px] leading-normal text-muted-foreground">
-              {needsPicker ? t('documents.drawer.draftEmptyConditional') : t('documents.drawer.draftEmptyAll')}
-            </div>
-          )}
-
-          {isDraft && picking && (
-            <div className="flex flex-col overflow-hidden rounded-xl border">
-              {enrolledStudents.map(s => (
-                <label key={s.id} className="flex cursor-pointer items-center gap-2.5 border-b px-3.5 py-[11px] text-[13px] font-medium text-navy last:border-0 hover:bg-hoverrow-soft">
-                  <input type="checkbox" checked={chosen.includes(s.id)} aria-label={s.full_name}
-                    onChange={(e) => setChosen(prev => e.target.checked ? [...prev, s.id] : prev.filter(x => x !== s.id))} />
-                  {s.full_name}
-                </label>
-              ))}
-              {enrolledStudents.length === 0 && (
-                <div className="px-3.5 py-[11px] text-[13px] text-muted-foreground">{t('documents.drawer.noEnrolledStudents')}</div>
-              )}
+              {t('documents.drawer.draftEmptyAll')}
             </div>
           )}
 
@@ -179,32 +144,11 @@ export function DocDrawer({
           {error && <p className="mt-4 text-sm text-danger-text">{error}</p>}
         </div>
 
-        {hints.length > 0 && (
-          <div className="flex-none border-t bg-hoverrow px-[26px] py-3.5">
-            <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-tertiary">Avant d’activer</div>
-            <ul className="flex flex-col gap-1">
-              {hints.map((h) => (
-                <li key={h} className="text-[12.5px] leading-normal text-muted-foreground">
-                  {h}{' '}
-                  <Link href={`/documents/${vm.id}`} className="font-semibold text-brand underline">Modifier le modèle</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
         <div className="flex flex-none gap-2.5 border-t px-[26px] py-4">
-          {isDraft ? (
-            <button type="button" disabled={busy || (picking && chosen.length === 0)} onClick={handleActivate}
-              className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? t('documents.drawer.activating') : picking ? t('documents.drawer.activate') : needsPicker ? t('documents.drawer.chooseAndActivate') : t('documents.drawer.activate')}
-            </button>
-          ) : (
-            <button type="button" disabled={busy} onClick={handleRemind}
-              className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
-              {busy ? t('documents.drawer.sending') : t('documents.drawer.remindFamilies')}
-            </button>
-          )}
+          <button type="button" disabled={busy || isDraft} onClick={handleRemind}
+            className="flex-1 rounded-[9px] bg-brand py-[11px] text-[13px] font-semibold text-white hover:bg-brand-hover disabled:opacity-60">
+            {busy ? t('documents.drawer.sending') : t('documents.drawer.remindFamilies')}
+          </button>
           <Link href={`/documents/${vm.id}`}
             className="flex-1 rounded-[9px] border border-frame-dashed bg-card py-[11px] text-center text-[13px] font-semibold text-navy">
             {t('documents.editButton')}

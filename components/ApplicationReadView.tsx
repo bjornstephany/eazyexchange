@@ -34,7 +34,7 @@ export function ApplicationReadView({
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {section.fields.map(f => (
               <div key={f.id}>
-                <dt className="text-xs text-muted-foreground">{f.label[lang]}</dt>
+                <dt className="text-xs text-foreground">{f.label[lang]}</dt>
                 <dd className="text-sm text-foreground whitespace-pre-wrap">{displayValue(f, data[f.id], lang)}</dd>
               </div>
             ))}

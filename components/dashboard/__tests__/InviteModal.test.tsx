@@ -6,6 +6,7 @@ const refresh = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }) }))
 const setApplicationOpen = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/exchanges', () => ({ setApplicationOpen: (...a: unknown[]) => setApplicationOpen(...a) }))
+vi.mock('@/actions/applications-review', () => ({ sendApplicationInvitations: vi.fn() }))
 
 import { InviteModal } from '@/components/dashboard/InviteModal'
 
@@ -74,5 +75,13 @@ describe('InviteModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fermer' }))
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
     expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('offers invite-by-email after applications are opened', async () => {
+    setup()
+    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2999-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir les candidatures' }))
+    await screen.findByDisplayValue(/\/apply\/france-canada$/)
+    expect(await screen.findByRole('button', { name: 'Inviter par e-mail' })).toBeTruthy()
   })
 })

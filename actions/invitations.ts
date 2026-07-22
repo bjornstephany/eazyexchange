@@ -1,11 +1,13 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { applicantName as buildApplicantName } from '@/lib/application-form'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { tokenExpired } from '@/lib/tokens'
-import { sendChecklistEmail } from '@/lib/email'
+import { sendChecklistEmail, sendStudentSetupEmail } from '@/lib/email'
+import { getAppUrl } from '@/lib/app-url'
 import { inviteError, type InviteActionResult } from '@/lib/invite-response'
+
+const APP_URL = getAppUrl()
 
 // ---- Public invitation response (keyed by invite_token) ----
 
@@ -97,14 +99,11 @@ export async function respondToInvitation(
     const { data: cur } = await admin
       .from('applications').select('status, email').eq('invite_token', token).maybeSingle()
     if (!cur) return inviteError('not_found')
-    // A parallel request already claimed it (enrolling) or finished (enrolled).
-    // Mint the session anyway so a double-click — or a deliberate retry after a
-    // mint failure — still lands the student on /accept-invite instead of the
-    // old silent no-op that stranded them.
-    if (cur.status === 'enrolling' || cur.status === 'enrolled') {
-      const minted = await mintInviteSession(admin, cur.email)
-      return minted ? { ok: true } : inviteError('retry')
-    }
+    // A parallel request / the other parent already claimed (enrolling) or
+    // finished (enrolled). The winning click already created the account and
+    // emailed the student their setup link — this is idempotent success. We do
+    // NOT sign the parent in and do NOT resend the student email.
+    if (cur.status === 'enrolling' || cur.status === 'enrolled') return { ok: true }
     return inviteError('closed')
   }
 
@@ -159,10 +158,12 @@ export async function respondToInvitation(
   const { error: finalErr } = await admin.from('applications')
     .update({ status: 'enrolled', enrolled_user_id: userId }).eq('id', claimed.id)
   if (finalErr) throw finalErr
-  // No revalidatePath: the caller is the unauthenticated invitee, whose browser
-  // never renders organizer tabs — revalidation here would be inert. The
+  // No revalidatePath: the caller is the unauthenticated invitee/parent, whose
+  // browser never renders organizer tabs — revalidation here would be inert. The
   // organizer seeing the enrollment within staleTimes.dynamic is the spec's
   // accepted cross-actor staleness trade-off (§1c).
+
+  const studentName = buildApplicantName(claimed.data as Record<string, string> | null)
 
   // One checklist email at enrollment: the DB trigger
   // (trg_assign_on_enrollment_insert) has just fanned out the assignments,
@@ -170,53 +171,53 @@ export async function respondToInvitation(
   await sendEnrollmentChecklist(admin, {
     userId,
     email: claimed.email,
-    studentName: buildApplicantName(claimed.data as Record<string, string> | null),
+    studentName,
     schoolId: claimed.school_id,
     exchangeId: claimed.exchange_id,
   })
 
-  // Sign the student in right here: the server action may write cookies, so
-  // verifyOtp on the cookie-aware client establishes the session in-page and
-  // the client just router.push()es to /accept-invite. If this rare last step
-  // fails, enrollment stands — the structured retry error tells the student to
-  // click « Oui » again, which lands in the claim-fail branch above.
-  const minted = await mintInviteSession(admin, claimed.email)
-  return minted ? { ok: true } : inviteError('retry')
+  // Parent confirmed on behalf of the family: DO NOT mint a parent session.
+  // Instead email the STUDENT a set-your-password link. Best-effort: a failed
+  // send logs a warning but the confirmation itself already succeeded.
+  await emailStudentSetupLink(admin, {
+    email: claimed.email,
+    schoolId: claimed.school_id,
+    exchangeId: claimed.exchange_id,
+  })
+
+  return { ok: true }
 }
 
-// Abandoned-setup recovery: the invite page shows « Reprendre la configuration »
-// for an enrolled/enrolling invite whose account setup never finished. Token
-// possession + unexpired window is the same trust respondToInvitation relies on.
-export async function resumeInviteSetup(token: string): Promise<InviteActionResult> {
-  const admin = createAdminClient()
-  const { data: app } = await admin
-    .from('applications')
-    .select('status, email, invite_token_expires_at')
-    .eq('invite_token', token).maybeSingle()
-  if (!app) return inviteError('not_found')
-  if (tokenExpired(app.invite_token_expires_at)) return inviteError('expired')
-  if (app.status !== 'enrolled' && app.status !== 'enrolling') return inviteError('closed')
-  const minted = await mintInviteSession(admin, app.email)
-  return minted ? { ok: true } : inviteError('retry')
-}
-
-// generateLink returns the hashed OTP token WITHOUT sending any email; verifying
-// it on the cookie-aware server client is exactly what /auth/confirm does with
-// the emailed link — minus the email. Magiclink (not invite-type) because it
-// also works for existing users, which the retry/recovery paths need.
-async function mintInviteSession(
-  admin: ReturnType<typeof createAdminClient>, email: string,
-): Promise<boolean> {
+// Emails the student a magiclink /auth/confirm setup URL (NOT a session in the
+// parent's browser). generateLink returns a hashed OTP token without sending any
+// email; we deliver it via Resend so app/auth/confirm/route.ts verifies it and
+// lands the student on /accept-invite to set a password. Best-effort.
+async function emailStudentSetupLink(
+  admin: ReturnType<typeof createAdminClient>,
+  opts: { email: string; schoolId: string; exchangeId: string },
+): Promise<void> {
   try {
-    const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email })
-    const tokenHash = data?.properties?.hashed_token
-    if (error || !tokenHash) return false
-    const supabase = await createClient()
-    const { error: otpError } = await supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash })
-    return !otpError
+    const { data: link, error } = await admin.auth.admin.generateLink({
+      type: 'magiclink', email: opts.email,
+    })
+    const tokenHash = link?.properties?.hashed_token
+    if (error || !tokenHash) {
+      console.warn('[invitations] student setup link generation failed — no email sent')
+      return
+    }
+    const setupUrl =
+      `${APP_URL}/auth/confirm?token_hash=${tokenHash}&type=magiclink&next=${encodeURIComponent('/accept-invite')}`
+    const { data: exchange } = await admin
+      .from('exchanges').select('name').eq('id', opts.exchangeId).maybeSingle()
+    await sendStudentSetupEmail({
+      to: opts.email,
+      exchangeName: exchange?.name ?? '',
+      setupUrl,
+      ctx: { schoolId: opts.schoolId, exchangeId: opts.exchangeId },
+    })
   } catch {
-    // Never log the email (PII); the caller surfaces the structured retry error.
-    return false
+    // Never log the student email (PII); the enrollment already succeeded.
+    console.warn('[invitations] student setup email failed — enrollment unaffected')
   }
 }
 

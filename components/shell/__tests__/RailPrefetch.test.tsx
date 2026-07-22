@@ -9,7 +9,10 @@ vi.mock('next/navigation', () => ({
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
 vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
-vi.mock('@/actions/exchanges', () => ({ createExchange: vi.fn() }))
+vi.mock('@/actions/exchanges', () => ({
+  createExchange: vi.fn(),
+  getExchangeProgressSummaries: vi.fn().mockResolvedValue({}),
+}))
 vi.mock('@/components/shell/FeedbackModal', () => ({
   FeedbackModal: () => null,
 }))
@@ -33,7 +36,7 @@ describe('rail prefetch', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    for (const label of ['Aperçu', 'Échanges', 'Candid.', 'Formul.', 'Docs', 'Élèves']) {
+    for (const label of ['Aperçu', 'Candid.', 'Formulaires / Docs', 'Élèves']) {
       expect(screen.getByRole('link', { name: new RegExp(label) })).toHaveAttribute('data-prefetch', 'true')
     }
   })
