@@ -52,4 +52,11 @@ describe('landingContent', () => {
     // Positive pin: proves the walk visits real ’ copy (guard stays honest).
     expect(landingContent.fr.hero.eyebrow).toContain('’')
   })
+
+  it('every locale has a non-empty savings.focus line', () => {
+    for (const [code, content] of Object.entries(landingContent)) {
+      expect(content.savings.focus, `${code}.savings.focus`).toBeTruthy()
+      expect(content.savings.focus.trim().length, `${code}.savings.focus`).toBeGreaterThan(10)
+    }
+  })
 })
