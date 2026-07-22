@@ -73,7 +73,7 @@ import { saveFillable } from '../fillable'
 const completeInput = {
   answers: {
     parent1_name: 'Jean Dupont', parent2_name: 'Marie Dupont', student_name: 'Zoé Dupont',
-    conduct_student_name: 'Zoé Dupont', parents_place: 'Luynes',
+    conduct_student_name: 'Zoé Dupont',
   },
   signatures: [
     { key: 'sig_parent1', full_name: 'Jean Dupont', approved: true },

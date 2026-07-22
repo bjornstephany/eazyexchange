@@ -60,7 +60,7 @@ export const absence: FillableDefinition = {
     { b: 'radio', key: 'regime', label: 'Régime de l’élève', options: ['demi-pensionnaire', 'externe', 'interne'], required: true },
     { b: 'paragraph', runs: [
       { t: 'text', text: 'Fait à ' },
-      { t: 'blank', key: 'place', label: 'Lieu' },
+      { t: 'var', name: 'sending_city' },
       { t: 'text', text: '.' },
     ] },
     { b: 'signature', key: 'sig_parent', roleLabel: 'Parent / responsable légal', required: true },

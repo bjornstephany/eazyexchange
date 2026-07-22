@@ -117,6 +117,13 @@ function answerKeys(def: FillableDefinition): { key: string; required: boolean; 
   return out
 }
 
+// Every key a student can answer — blanks, fields, radios, checks. Signature
+// keys are not answers; see signatureBlocks(). Used by validateFillable() and
+// by the client to drop stale keys from an older saved draft.
+export function declaredAnswerKeys(def: FillableDefinition): Set<string> {
+  return new Set(answerKeys(def).map(k => k.key))
+}
+
 const MSG_INCOMPLETE = 'Complétez tous les champs obligatoires avant d’envoyer.'
 const MSG_SIGNATURES = 'Chaque signature doit comporter le nom complet et la case « Lu et approuvé » cochée.'
 const MSG_TOO_LONG = `Une réponse dépasse la limite de ${MAX_ANSWER_LENGTH} caractères.`
