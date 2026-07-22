@@ -122,7 +122,7 @@ export async function getApplicationForReview(applicationId: string) {
 // single and bulk paths.
 
 type ReviewOp =
-  | { kind: 'accept' }
+  | { kind: 'accept'; personalNote: string | null }
   | { kind: 'reject'; note: string; sendEmail: boolean }
 
 type ReviewOutcome = { ok: true } | { ok: false; error: Error }
@@ -150,9 +150,11 @@ type ReviewExchange = {
 // here. See BACKLOG.md for the same fix owed to getApplicationForReview.
 const REVIEW_COLUMNS = 'id, exchange_id, school_id, status, email, language, data'
 
-// Only a submitted application can be accepted; a rejected one can be
-// un-rejected (undocumented — see BACKLOG.md). Never accept one that was never
-// submitted.
+// Only a submitted application can be accepted — plus a rejected one, which is
+// the organizer deliberately changing their mind (they may attach a personal
+// note; see acceptApplication). `declined` is absent on purpose: once the
+// student has said no, only a fresh application can restart the flow. This is
+// the server-side backstop for the UI lock in ApplicationReviewActions.
 const ACCEPTABLE_STATUSES = ['submitted', 'rejected']
 // Never reject an application that has already enrolled (which would leave the
 // student's account, enrollment and assignments live while showing rejected),
@@ -224,6 +226,7 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
             body: exchange?.good_news_body ?? null,
             respondUrl: `${APP_URL}/invite/${inviteToken}`,
             language: app.language === 'fr' ? 'fr' : 'en',
+            personalNote: op.personalNote,
             ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
           }).catch(() => {})
           return { ok: true }
@@ -269,8 +272,16 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
   return outcomes
 }
 
-export async function acceptApplication(applicationId: string): Promise<void> {
-  const [outcome] = await reviewApplications([applicationId], { kind: 'accept' })
+// `opts.personalNote` is the "change your mind" message an organizer may attach
+// when re-inviting a candidate they had rejected. Empty/whitespace collapses to
+// null so the email renders no note block.
+export async function acceptApplication(
+  applicationId: string,
+  opts?: { personalNote?: string },
+): Promise<void> {
+  const [outcome] = await reviewApplications([applicationId], {
+    kind: 'accept', personalNote: opts?.personalNote?.trim() || null,
+  })
   if (outcome && !outcome.ok) throw outcome.error
 }
 
@@ -291,7 +302,8 @@ function tally(outcomes: ReviewOutcome[]): { succeeded: number; failed: number }
 }
 
 export async function acceptApplications(ids: string[]): Promise<{ succeeded: number; failed: number }> {
-  return tally(await reviewApplications(ids, { kind: 'accept' }))
+  // Bulk accept carries no personal note — one message cannot fit 30 families.
+  return tally(await reviewApplications(ids, { kind: 'accept', personalNote: null }))
 }
 
 export async function rejectApplications(ids: string[], note: string, sendEmail: boolean): Promise<{ succeeded: number; failed: number }> {
