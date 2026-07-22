@@ -8,7 +8,7 @@ export const PLAN_LABEL_FR: Record<PlanKey, string> = {
   starter: 'Essentiel', growth: 'Association', scale: 'Réseau',
 }
 export const PLAN_PRICE_FR: Record<PlanKey, string> = {
-  starter: '199 €', growth: '499 €', scale: '799 €',
+  starter: '199 €', growth: '399 €', scale: '599 €',
 }
 export const PLAN_DESC_FR: Record<PlanKey, string> = {
   starter: 'Pour un organisateur indépendant.',

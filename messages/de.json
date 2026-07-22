@@ -170,8 +170,8 @@
       "usageUnlimited": "{used} {used, plural, one {aktiver Austausch} other {aktive Austausche}} · unbegrenzte Austausche",
       "plans": {
         "starter": { "label": "Starter", "price": "199 €", "desc": "Für einen unabhängigen Organisator." },
-        "growth": { "label": "Wachstum", "price": "499 €", "desc": "Für wachsende Vereine." },
-        "scale": { "label": "Netzwerk", "price": "799 €", "desc": "Für große Austauschnetzwerke." }
+        "growth": { "label": "Wachstum", "price": "399 €", "desc": "Für wachsende Vereine." },
+        "scale": { "label": "Netzwerk", "price": "599 €", "desc": "Für große Austauschnetzwerke." }
       },
       "trial": {
         "label": "Kostenlose Testversion",

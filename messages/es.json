@@ -170,8 +170,8 @@
       "usageUnlimited": "{used} {used, plural, one {intercambio activo} other {intercambios activos}} · intercambios ilimitados",
       "plans": {
         "starter": { "label": "Esencial", "price": "199 €", "desc": "Para un organizador independiente." },
-        "growth": { "label": "Asociación", "price": "499 €", "desc": "Para asociaciones en pleno crecimiento." },
-        "scale": { "label": "Red", "price": "799 €", "desc": "Para grandes redes de intercambio." }
+        "growth": { "label": "Asociación", "price": "399 €", "desc": "Para asociaciones en pleno crecimiento." },
+        "scale": { "label": "Red", "price": "599 €", "desc": "Para grandes redes de intercambio." }
       },
       "trial": {
         "label": "Prueba gratuita",
