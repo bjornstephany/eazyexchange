@@ -102,22 +102,25 @@ export async function startApplication(
     return { existing: 'draft' }
   }
 
-  // One email = one application across this whole school. A prior row in ANY
-  // other exchange of the same school means this person is already in the funnel
-  // (typically already enrolled elsewhere) — refuse the second application up
-  // front instead of letting them fill everything out and only hit email_exists
-  // at « Oui ». At this point the same-exchange lookup above already returned, so
-  // any match here is necessarily a different exchange. Structured result, not a
-  // throw: the client renders a neutral "already registered — log in" message.
-  const { data: elsewhere } = await admin
+  // One account = one email. If this email is already ENROLLED in another
+  // exchange of this school, an auth account already exists for it — a second
+  // application could never enroll (it would hit email_exists at « Oui »), so
+  // refuse it up front and send them to log in. Non-enrolled prior applicants
+  // (draft/submitted/declined/rejected elsewhere) are deliberately NOT blocked:
+  // the rule is one application per exchange, and they have no account to collide
+  // with. The same-exchange lookup above already returned, so any match here is a
+  // different exchange. Structured result, not a throw (prod redacts thrown
+  // messages); the client shows "already registered — log in".
+  const { data: enrolledElsewhere } = await admin
     .from('applications')
     .select('id')
     .eq('school_id', exchange.school_a_id)
     .eq('email', email)
     .neq('exchange_id', exchange.id)
+    .not('enrolled_user_id', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (elsewhere) return { registered: true }
+  if (enrolledElsewhere) return { registered: true }
 
   // Per-exchange sanity cap — abuse guard only; existing applicants resumed
   // above are never affected. Fail open on a count error: a DB blip must not
@@ -318,20 +321,21 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
   await assertExchangeWritable(admin, app.exchange_id)
 
-  // Race backstop for the start-time duplicate guard: if this email started this
-  // draft and THEN entered the funnel in another exchange of the school (a
-  // parallel session), block here rather than letting the eventual « Oui » hit
-  // email_exists. Same per-school rule as startApplication; the same-exchange row
-  // being submitted is excluded by .neq('exchange_id', …).
-  const { data: elsewhere } = await admin
+  // Race backstop for the start-time guard: if this email became enrolled in
+  // another exchange of the school between starting this draft and submitting
+  // (an account now exists), block here rather than letting the eventual « Oui »
+  // hit email_exists. Same account-based rule as startApplication; the draft's
+  // own exchange is excluded by .neq and it isn't enrolled anyway.
+  const { data: enrolledElsewhere } = await admin
     .from('applications')
     .select('id')
     .eq('school_id', app.school_id)
     .eq('email', app.email)
     .neq('exchange_id', app.exchange_id)
+    .not('enrolled_user_id', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (elsewhere) return { ok: false, registered: true }
+  if (enrolledElsewhere) return { ok: false, registered: true }
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
