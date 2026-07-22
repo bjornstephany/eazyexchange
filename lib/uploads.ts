@@ -36,3 +36,7 @@ export function validateUploadFile(file: { type: string; size: number }): string
 // Private bucket for applicant photos (see migration
 // 20260629000002_application_photos_bucket.sql).
 export const APPLICATION_PHOTO_BUCKET = 'application-photos'
+
+// Photo picker accept list — images only. ALLOWED_UPLOAD_ACCEPT above is for
+// document slots and includes PDF, which is wrong for a portrait photo.
+export const ALLOWED_PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp'

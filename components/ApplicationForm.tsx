@@ -149,6 +149,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
   }
 
   const showSeparation = data.family_status === 'separated' || data.family_status === 'step_family'
+  const showGenderOther = data.sex === 'other'
   const parentsInvalid = missing.some(id => PARENT_FIELD_IDS.includes(id))
   const total = APPLICATION_SECTIONS.length
   return (
@@ -195,11 +196,12 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
               )}
               {section.fields.map(f => {
                 if (f.id === 'separation_housing_address' && !showSeparation) return null
+                if (f.id === 'gender_other' && !showGenderOther) return null
                 return (
                   <div key={f.id} id={`field-${f.id}`} className={`flex flex-col gap-1.5 ${f.type === 'textarea' || f.type === 'radio' ? 'sm:col-span-2' : ''}`}>
                     <Label htmlFor={f.id} className="text-[13.5px] font-semibold text-[#42506E]">
                       {f.label[lang]}
-                      {(f.required || f.id === 'separation_housing_address') && <span className="ml-1 text-[#C0392B]">*</span>}
+                      {(f.required || f.id === 'separation_housing_address' || f.id === 'gender_other') && <span className="ml-1 text-[#C0392B]">*</span>}
                     </Label>
                     {renderField(f)}
                   </div>

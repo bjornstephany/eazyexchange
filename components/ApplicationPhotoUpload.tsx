@@ -2,11 +2,12 @@
 import { useRef, useState } from 'react'
 import { uploadApplicationPhoto } from '@/actions/apply'
 import { Button } from '@/components/ui/button'
-import { ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
+import { ALLOWED_PHOTO_ACCEPT } from '@/lib/uploads'
+import { compressImage } from '@/lib/image-compression'
 
 const T = {
-  en: { label: "Recent photo", choose: "Choose a photo", replace: "Replace the photo", hint: "JPEG, PNG or WebP — 10 MB max.", uploading: "Uploading…", failed: "Upload failed. Please try again.", required: "A photo is required to submit your application." },
-  fr: { label: "Photo récente", choose: "Choisir une photo", replace: "Remplacer la photo", hint: "JPEG, PNG ou WebP — 10 Mo max.", uploading: "Envoi…", failed: "L’envoi a échoué. Réessaie.", required: "Une photo est requise pour envoyer ta candidature." },
+  en: { label: "Recent photo", choose: "Choose a photo", replace: "Replace the photo", hint: "Any photo — it will be resized automatically.", uploading: "Uploading…", failed: "Upload failed. Please try again.", tooLarge: "This image can't be processed. Try a smaller photo (JPEG or PNG).", required: "A photo is required to submit your application." },
+  fr: { label: "Photo récente", choose: "Choisir une photo", replace: "Remplacer la photo", hint: "N’importe quelle photo — elle sera redimensionnée automatiquement.", uploading: "Envoi…", failed: "L’envoi a échoué. Réessaie.", tooLarge: "Cette image ne peut pas être traitée. Essaie une photo plus petite (JPEG ou PNG).", required: "Une photo est requise pour envoyer ta candidature." },
 }
 
 interface Props {
@@ -28,14 +29,15 @@ export function ApplicationPhotoUpload({ token, initialPhotoUrl, lang, invalid, 
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true); setError(null)
-    const fd = new FormData()
-    fd.set('photo', file)
     try {
+      const compressed = await compressImage(file)
+      const fd = new FormData()
+      fd.set('photo', compressed)
       await uploadApplicationPhoto(token, fd)
-      setPreview(URL.createObjectURL(file))
+      setPreview(URL.createObjectURL(compressed))
       onUploaded()
-    } catch {
-      setError(t.failed)
+    } catch (err: unknown) {
+      setError(err instanceof Error && err.message === 'image-too-large' ? t.tooLarge : t.failed)
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -60,7 +62,7 @@ export function ApplicationPhotoUpload({ token, initialPhotoUrl, lang, invalid, 
         <Button type="button" variant="outline" disabled={uploading} onClick={() => inputRef.current?.click()} className="h-10 self-start rounded-[10px] border-[#C4CDE0] px-4 text-sm font-semibold text-[#10203F]">
           {uploading ? t.uploading : preview ? t.replace : t.choose}
         </Button>
-        <input ref={inputRef} type="file" accept={ALLOWED_UPLOAD_ACCEPT} aria-label={t.label} onChange={onFile} className="hidden" />
+        <input ref={inputRef} type="file" accept={ALLOWED_PHOTO_ACCEPT} aria-label={t.label} onChange={onFile} className="hidden" />
         <p className="m-0 text-xs text-[#8A97B2]">{t.hint}</p>
         {error && <p className="m-0 text-xs text-[#C0392B]">{error}</p>}
         {invalid && !error && <p className="m-0 text-xs text-[#C0392B]">{t.required}</p>}
