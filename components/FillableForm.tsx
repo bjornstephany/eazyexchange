@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { saveFillable } from '@/actions/fillable'
 import { Button } from '@/components/ui/button'
 import type { FillableDefinition, Run, Block } from '@/lib/forms/fillable/types'
-import type { ResolvedVariables } from '@/lib/forms/fillable/render'
+import { declaredAnswerKeys, type ResolvedVariables } from '@/lib/forms/fillable/render'
 import type { FillableData } from '@/types/db'
 
 type Props = {
@@ -29,9 +29,15 @@ const SIGNED_AT = new Intl.DateTimeFormat('fr-FR', {
 export function FillableForm({ assignmentId, def, values, initialData, readOnly, studentName }: Props) {
   const router = useRouter()
 
-  // Prefill student-name blanks/signatures on first open only.
+  // Load the saved draft, dropping any key the definition no longer declares —
+  // an older draft would otherwise fail validateFillable()'s unknown-key check
+  // on the next save. Prefill student-name blanks on first open only.
   const initialAnswers = (() => {
-    const a: Record<string, string> = { ...(initialData?.answers ?? {}) }
+    const declared = declaredAnswerKeys(def)
+    const a: Record<string, string> = {}
+    for (const [k, v] of Object.entries(initialData?.answers ?? {})) {
+      if (declared.has(k)) a[k] = v
+    }
     if (!initialData) {
       for (const b of def.blocks) {
         if ((b.b === 'heading' || b.b === 'paragraph')) {

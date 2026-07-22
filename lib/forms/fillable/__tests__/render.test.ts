@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   joinNames, travelPeriodFr, travelPeriodEn, resolveVariables,
-  missingDetailLabels, validateFillable, signatureBlocks,
+  missingDetailLabels, validateFillable, signatureBlocks, declaredAnswerKeys,
 } from '../render'
+import { FILLABLE_DEFINITIONS } from '../index'
 import type { FillableDefinition, ProgramDetailsValues } from '../types'
 
 const details: ProgramDetailsValues = {
@@ -137,5 +138,19 @@ describe('validateFillable', () => {
 describe('signatureBlocks', () => {
   it('extracts signature blocks in order', () => {
     expect(signatureBlocks(def).map(s => s.key)).toEqual(['sig_p1', 'sig_p2'])
+  })
+})
+
+describe('declaredAnswerKeys', () => {
+  it('returns every answerable key and no signature keys', () => {
+    expect([...declaredAnswerKeys(def)].sort()).toEqual(['accept', 'parent1', 'parent2', 'regime'])
+  })
+})
+
+describe('décharge activation gate', () => {
+  it('requires the sending city, because the document prints « Fait à … »', () => {
+    const withoutCity: ProgramDetailsValues = { ...details, sending_city: null }
+    expect(missingDetailLabels(FILLABLE_DEFINITIONS.decharge, withoutCity)).toContain('Ville du lycée')
+    expect(missingDetailLabels(FILLABLE_DEFINITIONS.decharge, details)).toEqual([])
   })
 })

@@ -54,6 +54,17 @@ describe('FillableForm', () => {
     expect(input.signatures[0]).toMatchObject({ key: 'sig1', approved: true })
   })
 
+  it('drops saved answer keys the definition no longer declares', async () => {
+    render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
+      initialData={{ answers: { parent1: 'Jean Dupont', retired_key: 'ancienne valeur' }, signatures: [] }}
+      readOnly={false} studentName="Zoé" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }))
+    await waitFor(() => expect(saveMock).toHaveBeenCalled())
+    const [, input] = saveMock.mock.calls[0] as [string, { answers: Record<string, string> }, boolean]
+    expect(input.answers.parent1).toBe('Jean Dupont')
+    expect(input.answers).not.toHaveProperty('retired_key')
+  })
+
   it('shows a structured error without navigating', async () => {
     saveMock.mockResolvedValueOnce({ ok: false, message: 'Complétez tout.' } as never)
     render(<FillableForm assignmentId="a-1" def={def} values={{}} initialData={null} readOnly={false} studentName="Zoé" />)
