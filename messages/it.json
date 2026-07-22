@@ -382,9 +382,14 @@
       "tableHeader": {
         "student": "Studente",
         "level": "Livello 26-27",
-        "nativeLanguage": "Lingua madre",
+        "gender": "Genere",
         "receivedDate": "Ricevuta il",
         "status": "Stato"
+      },
+      "gender": {
+        "male": "Ragazzo",
+        "female": "Ragazza",
+        "other": "Altro"
       },
       "emptyTab": "Nessuna candidatura in questa scheda.",
       "review": {

@@ -63,6 +63,22 @@ export function CandidaturesView({
   const [sendEmail, setSendEmail] = useState(true)
   const [bulkResult, setBulkResult] = useState<{ succeeded: number; failed: number } | null>(null)
 
+  // data.sex holds the radio token from lib/application-form.ts. Legacy
+  // applications predate the choice list and hold free text — render those
+  // verbatim rather than blanking them (same rule as ApplicationReadView).
+  // Lives inside the component so it closes over `tr`: taking the translator
+  // as a parameter widens its key type past what TypeScript can represent.
+  function genderLabel(raw: string | undefined): string {
+    const v = (raw ?? '').trim()
+    switch (v) {
+      case '': return '—'
+      case 'male': return tr('organizer.applications.gender.male')
+      case 'female': return tr('organizer.applications.gender.female')
+      case 'other': return tr('organizer.applications.gender.other')
+      default: return v
+    }
+  }
+
   function tabLabel(key: TabKey): string {
     switch (key) {
       case 'all': return tr('organizer.applications.tabs.all')
@@ -307,7 +323,7 @@ export function CandidaturesView({
           />
           <span>{tr('organizer.applications.tableHeader.student')}</span>
           <span>{tr('organizer.applications.tableHeader.level')}</span>
-          <span>{tr('organizer.applications.tableHeader.nativeLanguage')}</span>
+          <span>{tr('organizer.applications.tableHeader.gender')}</span>
           <span>{tr('organizer.applications.tableHeader.receivedDate')}</span>
           <span>{tr('organizer.applications.tableHeader.status')}</span>
           <span />
@@ -333,7 +349,7 @@ export function CandidaturesView({
                 <span className="truncate text-sm text-navy">{applicantName(a.data) || a.email}</span>
               </span>
               <span className="text-sm text-navy">{a.data.grade ?? '—'}</span>
-              <span className="text-sm text-navy">{a.data.native_language ?? '—'}</span>
+              <span className="text-sm text-navy">{genderLabel(a.data.sex)}</span>
               <span className="text-sm text-navy">{frShortDate(a.submitted_at)}</span>
               <StatusPill pill={applicantStatusPill(a.status, tr)} />
               <span className="text-muted-foreground">›</span>

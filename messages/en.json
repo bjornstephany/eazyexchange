@@ -382,9 +382,14 @@
       "tableHeader": {
         "student": "Student",
         "level": "Grade 26-27",
-        "nativeLanguage": "Native lang.",
+        "gender": "Gender",
         "receivedDate": "Received on",
         "status": "Status"
+      },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
       },
       "emptyTab": "No applications in this tab.",
       "review": {

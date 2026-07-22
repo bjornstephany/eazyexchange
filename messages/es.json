@@ -382,9 +382,14 @@
       "tableHeader": {
         "student": "Alumno",
         "level": "Curso 26-27",
-        "nativeLanguage": "Lengua mat.",
+        "gender": "Género",
         "receivedDate": "Recibida el",
         "status": "Estado"
+      },
+      "gender": {
+        "male": "Chico",
+        "female": "Chica",
+        "other": "Otro"
       },
       "emptyTab": "Ninguna candidatura en esta pestaña.",
       "review": {

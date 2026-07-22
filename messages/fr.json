@@ -382,9 +382,14 @@
       "tableHeader": {
         "student": "Élève",
         "level": "Niveau 26-27",
-        "nativeLanguage": "Langue mat.",
+        "gender": "Genre",
         "receivedDate": "Reçue le",
         "status": "Statut"
+      },
+      "gender": {
+        "male": "Garçon",
+        "female": "Fille",
+        "other": "Autre"
       },
       "emptyTab": "Aucune candidature dans cet onglet.",
       "review": {
