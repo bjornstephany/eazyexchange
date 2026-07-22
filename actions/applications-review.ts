@@ -33,10 +33,18 @@ export type ApplicationListRow = {
   photoUrl?: string | null
 }
 
+// The detail read for one application. Deliberately not `select('*')`: the row
+// carries resume_token / invite_token, which the review screen has no use for
+// and which must never travel further than they have to. Mirrors
+// REVIEW_COLUMNS below. Consumers: getApplicationForReview (photo_path,
+// school_id) and components/applications/ApplicationDetail.tsx.
+const REVIEW_DETAIL_COLUMNS =
+  'id, exchange_id, school_id, status, email, data, photo_path, invite_response, invite_response_note, review_note'
+
 async function assertOrganizerOwnsApplication(supabase: SupabaseClient<Database>, applicationId: string) {
   const { profile } = await requireOrganizer()
   const { data: app } = await supabase
-    .from('applications').select('*').eq('id', applicationId).maybeSingle()
+    .from('applications').select(REVIEW_DETAIL_COLUMNS).eq('id', applicationId).maybeSingle()
   if (!app) throw new Error('Application not found')
   if (app.school_id !== profile.school_id) throw new Error('Unauthorized')
   return app
@@ -147,7 +155,7 @@ type ReviewExchange = {
 
 // Deliberately not `select('*')`: this read is wide (every id in the batch),
 // and the row carries resume_token / invite_token, which have no business
-// here. See BACKLOG.md for the same fix owed to getApplicationForReview.
+// here. Same rule as REVIEW_DETAIL_COLUMNS on the detail read.
 const REVIEW_COLUMNS = 'id, exchange_id, school_id, status, email, language, data'
 
 // Only a submitted application can be accepted — plus a rejected one, which is

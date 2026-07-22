@@ -15,8 +15,6 @@ pick items off the top when starting new work.
 
 Flagged during the 2026-07-14 applications refactor, deliberately not fixed there:
 
-- `getApplicationForReview` selects `*` including resume tokens server-side (not
-  serialized to the browser today, but the select should be narrowed).
 - `sendRejectionEmail` copy is still English while the rest of the product is
   localized.
 
