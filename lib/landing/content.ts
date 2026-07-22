@@ -98,6 +98,7 @@ export interface LandingContent {
     rows: { label: string; value: string; green?: boolean }[]
     totalLabel: string
     totalValue: string
+    focus: string
   }
   closing: { title: string; cta: string; note: string }
   footer: {
@@ -313,6 +314,8 @@ const fr: LandingContent = {
     ],
     totalLabel: 'Votre premier échange sur Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Ces heures, vous les rendez à ce qui compte vraiment : l’expérience et la sécurité de vos élèves — pas la course aux dossiers.',
   },
   closing: {
     title: 'Votre prochain échange, sans la paperasse.',
@@ -530,6 +533,8 @@ const en: LandingContent = {
     ],
     totalLabel: 'Your first exchange on Eazyexchange',
     totalValue: '€0',
+    focus:
+      'Those hours go back to what matters most — your students’ experience and safety, not chasing paperwork.',
   },
   closing: {
     title: 'Your next exchange, without the paperwork.',
@@ -747,6 +752,8 @@ const es: LandingContent = {
     ],
     totalLabel: 'Tu primer intercambio en Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Esas horas vuelven a lo que de verdad importa: la experiencia y la seguridad de tus alumnos, no perseguir documentos.',
   },
   closing: {
     title: 'Tu próximo intercambio, sin papeleo.',
@@ -964,6 +971,8 @@ const it: LandingContent = {
     ],
     totalLabel: 'Il tuo primo scambio su Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Quelle ore tornano a ciò che conta davvero: l’esperienza e la sicurezza dei tuoi studenti, non la rincorsa ai documenti.',
   },
   closing: {
     title: 'Il tuo prossimo scambio, senza scartoffie.',
@@ -1181,6 +1190,8 @@ const de: LandingContent = {
     ],
     totalLabel: 'Ihr erster Austausch auf Eazyexchange',
     totalValue: '0 €',
+    focus:
+      'Diese Stunden fließen zurück in das, was am wichtigsten ist – das Erlebnis und die Sicherheit Ihrer Schüler, nicht das Hinterherjagen von Unterlagen.',
   },
   closing: {
     title: 'Ihr nächster Austausch, ohne Papierkram.',
