@@ -616,6 +616,60 @@
       "signOut": "Sign out",
       "language": "Language",
       "tabs": { "dossier": "My file", "infos": "Info" }
+    },
+    "states": {
+      "approved": "Approved",
+      "submitted": "Under review",
+      "rejected": "To fix",
+      "draft": "Draft"
+    },
+    "dossier": {
+      "greeting": "Hi {name},",
+      "subline": {
+        "empty": "Nothing to fill in yet — your forms and documents will show up here.",
+        "todo": "You have {n, plural, one {# thing} other {# things}} left to complete your file before departure.",
+        "review": "Everything is sent — we\u2019ll let you know as soon as the review is done.",
+        "done": "Your file is ready — all your documents are approved."
+      },
+      "upToDate": {
+        "title": "All up to date",
+        "body": "No form is waiting for you right now. We\u2019ll email you as soon as something new comes up — enjoy your day."
+      },
+      "complete": {
+        "title": "Your file is complete",
+        "body": "All your documents are approved — all that\u2019s left is packing your bag. Have a great trip!"
+      },
+      "allSent": {
+        "title": "Everything is sent",
+        "body": "We\u2019re checking your last documents — nothing else to do for now. You\u2019ll get a message as soon as it\u2019s done."
+      },
+      "progress": "{sent} / {total} sent",
+      "nextDeadline": "Next deadline · {date}",
+      "sections": {
+        "todo": "To do · {n}",
+        "review": "Under review · {n}",
+        "done": "Approved · {n}"
+      },
+      "card": {
+        "overdue": "Overdue — {date}",
+        "deadline": "Due {date}",
+        "reviewNote": "We\u2019re checking it — we\u2019ll let you know as soon as it\u2019s approved.",
+        "approved": "approved"
+      },
+      "actions": { "fix": "Fix", "start": "Start" }
+    },
+    "infos": {
+      "eyebrow": "Practical info",
+      "title": "Good to know",
+      "empty": {
+        "title": "Nothing yet",
+        "body": "Your organizer hasn\u2019t added any information yet. Check back later — it will appear here."
+      }
+    },
+    "assignment": {
+      "deadline": "Due {date}",
+      "submittedNotice": "Your answer is being reviewed. You\u2019ll be notified as soon as it\u2019s approved.",
+      "downloadTemplate": "Download the document to sign"
     }
   }
 }

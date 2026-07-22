@@ -1,7 +1,9 @@
+import { getTranslations } from 'next-intl/server'
 import { Linkified } from '@/lib/student/linkify'
 import type { StudentInfoCard } from '@/actions/student-info'
 
-export function InfoCardsView({ cards }: { cards: StudentInfoCard[] }) {
+export async function InfoCardsView({ cards }: { cards: StudentInfoCard[] }) {
+  const t = await getTranslations('student')
   const multiExchange = new Set(cards.map(c => c.exchangeName)).size > 1
 
   // Preserve the action's ordering while grouping by exchange.
@@ -14,14 +16,14 @@ export function InfoCardsView({ cards }: { cards: StudentInfoCard[] }) {
 
   return (
     <div>
-      <div className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Infos pratiques</div>
-      <h1 className="mb-6 font-display text-[30px] font-bold leading-[1.1] tracking-tight text-navy">Bon à savoir</h1>
+      <div className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t('infos.eyebrow')}</div>
+      <h1 className="mb-6 font-display text-[30px] font-bold leading-[1.1] tracking-tight text-navy">{t('infos.title')}</h1>
 
       {cards.length === 0 && (
         <div className="rounded-[22px] border border-tint-border bg-tint px-[34px] py-[30px]">
-          <div className="font-display text-[18px] font-semibold text-navy">Rien pour l’instant</div>
+          <div className="font-display text-[18px] font-semibold text-navy">{t('infos.empty.title')}</div>
           <p className="mt-1 text-[15px] leading-relaxed text-foreground">
-            Ton organisateur n’a pas encore ajouté d’informations. Reviens plus tard — elles apparaîtront ici.
+            {t('infos.empty.body')}
           </p>
         </div>
       )}

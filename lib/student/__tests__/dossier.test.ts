@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { namespaceTranslator, type AppTranslator } from '@/lib/i18n/messages'
 import {
   bucketStatus, buildDossier, deriveName, dossierSubline,
   type RawAssignment,
@@ -86,25 +87,27 @@ describe('deriveName', () => {
 })
 
 describe('dossierSubline', () => {
+  let t: AppTranslator
+  beforeAll(async () => { t = await namespaceTranslator('fr', 'student') })
   it('nudges toward remaining work with correct pluralization', () => {
-    expect(dossierSubline(buildDossier([raw('a', null, '2026-07-10')], NOW))).toContain('1 chose')
-    expect(dossierSubline(buildDossier([raw('a', null, '2026-07-10'), raw('b', null, '2026-07-11')], NOW))).toContain('2 choses')
+    expect(dossierSubline(buildDossier([raw('a', null, '2026-07-10')], NOW), t)).toContain('1 chose')
+    expect(dossierSubline(buildDossier([raw('a', null, '2026-07-10'), raw('b', null, '2026-07-11')], NOW), t)).toContain('2 choses')
   })
   it('confirms all sent when nothing is left to do but review pending', () => {
-    expect(dossierSubline(buildDossier([raw('d', 'submitted', '2026-07-08')], NOW))).toContain('Tout est envoyé')
+    expect(dossierSubline(buildDossier([raw('d', 'submitted', '2026-07-08')], NOW), t)).toContain('Tout est envoyé')
   })
   it('confirms complete when everything is approved', () => {
-    expect(dossierSubline(buildDossier([raw('e', 'approved', null)], NOW))).toContain('toutes tes pièces sont validées')
+    expect(dossierSubline(buildDossier([raw('e', 'approved', null)], NOW), t)).toContain('toutes tes pièces sont validées')
   })
   it('has a gentle empty-dossier line', () => {
-    expect(dossierSubline(buildDossier([], NOW))).toContain('Rien à remplir')
+    expect(dossierSubline(buildDossier([], NOW), t)).toContain('Rien à remplir')
   })
   it('uses only typographic apostrophes (no ASCII) in every subline', () => {
     const lines = [
-      dossierSubline(buildDossier([raw('a', null, '2026-07-10')], NOW)),
-      dossierSubline(buildDossier([raw('d', 'submitted', '2026-07-08')], NOW)),
-      dossierSubline(buildDossier([raw('e', 'approved', null)], NOW)),
-      dossierSubline(buildDossier([], NOW)),
+      dossierSubline(buildDossier([raw('a', null, '2026-07-10')], NOW), t),
+      dossierSubline(buildDossier([raw('d', 'submitted', '2026-07-08')], NOW), t),
+      dossierSubline(buildDossier([raw('e', 'approved', null)], NOW), t),
+      dossierSubline(buildDossier([], NOW), t),
     ]
     for (const l of lines) expect(l).not.toMatch(/'/)
   })

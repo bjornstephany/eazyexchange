@@ -1,4 +1,5 @@
 import type { SubmissionStatus } from '@/types/db'
+import type { AppTranslator } from '@/lib/i18n/messages'
 
 export type DossierSection = 'todo' | 'review' | 'done'
 
@@ -113,16 +114,11 @@ export function deriveName(fullName: string): { firstName: string; initials: str
 }
 
 // Encouraging subline under the greeting, driven by dossier composition.
-export function dossierSubline(d: Dossier): string {
-  if (d.total === 0) {
-    return 'Rien à remplir pour l’instant — tes formulaires et documents apparaîtront ici.'
-  }
-  if (d.todoCount > 0) {
-    const n = d.todoCount
-    return `Il te reste ${n} ${n > 1 ? 'choses' : 'chose'} à faire pour compléter ton dossier avant le départ.`
-  }
-  if (d.reviewCount > 0) {
-    return 'Tout est envoyé — on te prévient dès que la vérification est terminée.'
-  }
-  return 'Ton dossier est prêt — toutes tes pièces sont validées.'
+// Takes the `student` translator: the bucketing math above stays locale-free.
+export function dossierSubline(d: Dossier, t: AppTranslator): string {
+  if (d.total === 0) return t('dossier.subline.empty')
+  const n = d.todoCount
+  if (n > 0) return t('dossier.subline.todo', { n })
+  if (d.reviewCount > 0) return t('dossier.subline.review')
+  return t('dossier.subline.done')
 }

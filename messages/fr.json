@@ -616,6 +616,60 @@
       "signOut": "Se déconnecter",
       "language": "Langue",
       "tabs": { "dossier": "Mon dossier", "infos": "Infos" }
+    },
+    "states": {
+      "approved": "Validé",
+      "submitted": "En vérification",
+      "rejected": "À corriger",
+      "draft": "Brouillon"
+    },
+    "dossier": {
+      "greeting": "Bonjour {name},",
+      "subline": {
+        "empty": "Rien à remplir pour l’instant — tes formulaires et documents apparaîtront ici.",
+        "todo": "Il te reste {n, plural, one {# chose} other {# choses}} à faire pour compléter ton dossier avant le départ.",
+        "review": "Tout est envoyé — on te prévient dès que la vérification est terminée.",
+        "done": "Ton dossier est prêt — toutes tes pièces sont validées."
+      },
+      "upToDate": {
+        "title": "Tout est à jour",
+        "body": "Aucun formulaire ne t’attend pour l’instant. On te préviendra par e-mail dès qu’il y a du nouveau — profite de ta journée."
+      },
+      "complete": {
+        "title": "Ton dossier est complet",
+        "body": "Toutes tes pièces sont validées — il ne te reste plus qu’à préparer ta valise. Bon voyage !"
+      },
+      "allSent": {
+        "title": "Tout est envoyé",
+        "body": "On vérifie tes dernières pièces — rien d’autre à faire pour l’instant. Tu recevras un message dès que c’est terminé."
+      },
+      "progress": "{sent} / {total} envoyés",
+      "nextDeadline": "Prochaine date limite · {date}",
+      "sections": {
+        "todo": "À faire · {n}",
+        "review": "En vérification · {n}",
+        "done": "Validés · {n}"
+      },
+      "card": {
+        "overdue": "En retard — {date}",
+        "deadline": "Date limite {date}",
+        "reviewNote": "On vérifie — on te prévient dès que c’est validé.",
+        "approved": "validé"
+      },
+      "actions": { "fix": "Corriger", "start": "Commencer" }
+    },
+    "infos": {
+      "eyebrow": "Infos pratiques",
+      "title": "Bon à savoir",
+      "empty": {
+        "title": "Rien pour l’instant",
+        "body": "Ton organisateur n’a pas encore ajouté d’informations. Reviens plus tard — elles apparaîtront ici."
+      }
+    },
+    "assignment": {
+      "deadline": "Date limite {date}",
+      "submittedNotice": "Ta réponse est en cours de vérification. Tu seras prévenu·e dès qu’elle est validée.",
+      "downloadTemplate": "Télécharger le document à signer"
     }
   }
 }

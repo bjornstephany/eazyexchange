@@ -9,12 +9,18 @@ import type { FillableDefinition } from '@/lib/forms/fillable/types'
 import { getProfile } from '@/lib/supabase/request'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { SUBMISSION_STATUS_BADGE } from '@/lib/submission-status'
+import { submissionStatusBadge } from '@/lib/submission-status'
+import type { SubmissionStatus } from '@/types/db'
+import { getTranslations } from 'next-intl/server'
+import { asAppTranslator } from '@/lib/i18n/messages'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function AssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
   const { assignmentId } = await params
-  const { template, submission } = await getAssignmentDetails(assignmentId)
+  const [{ template, submission }, t] = await Promise.all([
+    getAssignmentDetails(assignmentId),
+    getTranslations('student'),
+  ])
 
   // PDF-to-sign templates: the family downloads the organizer’s PDF, prints,
   // signs, and uploads it back into the slot below.
@@ -49,7 +55,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
 
   const status = submission?.status ?? null
   const readOnly = status === 'approved' || status === 'submitted'
-  const cfg = status ? SUBMISSION_STATUS_BADGE[status as keyof typeof SUBMISSION_STATUS_BADGE] : null
+  const cfg = status ? submissionStatusBadge(status as SubmissionStatus, asAppTranslator(t)) : null
 
   const initialAnswers: Record<string, string> = Object.fromEntries(
     (submission?.field_answers ?? []).map((a: { field_id: string; value: string }) => [a.field_id, a.value])
@@ -59,7 +65,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
   return (
     <div>
       <Link href="/my-forms" className="mb-4 inline-flex text-[13px] font-medium text-muted-foreground hover:text-foreground">
-        ← Mon dossier
+        ← {t('shell.tabs.dossier')}
       </Link>
 
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -70,7 +76,9 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           )}
           {template.deadline && (
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Date limite {new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              {t('assignment.deadline', {
+                date: new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+              })}
             </p>
           )}
         </div>
@@ -79,14 +87,14 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
 
       {status === 'rejected' && submission?.review_note && (
         <div className="mb-6 rounded-[12px] border border-[#F0C9C3] bg-danger px-4 py-3">
-          <p className="mb-1 text-sm font-semibold text-danger-text">À corriger</p>
+          <p className="mb-1 text-sm font-semibold text-danger-text">{t('states.rejected')}</p>
           <p className="text-sm text-danger-text">{submission.review_note}</p>
         </div>
       )}
 
       {status === 'submitted' && (
         <p className="mb-6 rounded-[12px] border border-tint-border bg-tint px-4 py-3 text-sm text-tint-text">
-          Ta réponse est en cours de vérification. Tu seras prévenu·e dès qu’elle est validée.
+          {t('assignment.submittedNotice')}
         </p>
       )}
 
@@ -122,7 +130,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-[9px] border border-frame-dashed bg-card px-4 py-2.5 text-[13px] font-semibold text-navy hover:bg-hoverrow"
           >
-            ⬇ Télécharger le document à signer
+            ⬇ {t('assignment.downloadTemplate')}
           </a>
         </p>
       )}
