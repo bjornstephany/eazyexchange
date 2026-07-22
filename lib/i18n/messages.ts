@@ -19,6 +19,18 @@ export type AppTranslator = (
   values?: Record<string, string | number | Date>,
 ) => string
 
+// next-intl's `t` carries a literal key union, so it is NOT assignable to
+// AppTranslator's `(key: string, …)` parameter (contravariance), and typing a
+// helper's param as `ReturnType<typeof useTranslations>` instead explodes into
+// TS2590 "union type too complex" — vitest passes, `tsc` fails. This adapter is
+// the one contained escape hatch: shared helpers take an AppTranslator, and
+// React call sites wrap their `t` here. A wrong key slips past the compiler but
+// is caught by the label tests and the catalog parity gate.
+export function asAppTranslator(t: unknown): AppTranslator {
+  return (key, values) =>
+    (t as (k: string, v?: Record<string, string | number | Date>) => string)(key, values)
+}
+
 // Shallow subset of a catalog. The anonymous apply funnel mounts a provider on
 // public pages; shipping the whole catalog there would push organizer copy into
 // an unauthenticated bundle for no benefit.
