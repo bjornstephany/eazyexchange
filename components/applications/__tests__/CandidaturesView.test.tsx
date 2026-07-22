@@ -14,9 +14,9 @@ import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import type { AppRow } from '@/lib/dashboard/rollup'
 
 const apps: AppRow[] = [
-  { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau', grade: 'Première', native_language: 'Français' }, email: 'l@m.fr' },
-  { id: '2', status: 'submitted', submitted_at: '2026-09-13', data: { first_name: 'Hugo', last_name: 'Petit' }, email: 'h@p.fr' },
-  { id: '3', status: 'rejected', submitted_at: '2026-09-10', data: {}, email: 'r@r.fr' },
+  { id: '1', status: 'submitted', submitted_at: '2026-09-12', responded_at: null, data: { first_name: 'Léa', last_name: 'Moreau', grade: 'Première', native_language: 'Français' }, email: 'l@m.fr' },
+  { id: '2', status: 'submitted', submitted_at: '2026-09-13', responded_at: null, data: { first_name: 'Hugo', last_name: 'Petit' }, email: 'h@p.fr' },
+  { id: '3', status: 'rejected', submitted_at: '2026-09-10', responded_at: null, data: {}, email: 'r@r.fr' },
 ]
 
 describe('CandidaturesView', () => {

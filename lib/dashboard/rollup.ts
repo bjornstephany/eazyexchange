@@ -17,7 +17,7 @@ type T = ReturnType<typeof useTranslations<never>>
 export { frShortDate }
 
 export type Pill = { kind: 'ok' | 'warn' | 'info' | 'bad' | 'neutral'; label: string }
-export type AppRow = { id: string; status: string; submitted_at: string | null; data: Record<string, string>; email: string; photoUrl?: string | null }
+export type AppRow = { id: string; status: string; submitted_at: string | null; responded_at: string | null; data: Record<string, string>; email: string; photoUrl?: string | null }
 export type TemplateInfo = { id: string; type: 'data_entry' | 'document_upload'; name: string; deadline: string }
 export type CellMap = Record<string, { assignmentId: string; status?: string }> // key `${studentId}:${templateId}`
 export type StudentInfo = { id: string; full_name: string }

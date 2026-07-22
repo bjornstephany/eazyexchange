@@ -14,8 +14,8 @@ import { OverviewView } from '@/components/dashboard/OverviewView'
 import type { AppRow, DossierRollup, EnrolledStudent } from '@/lib/dashboard/rollup'
 
 const apps: AppRow[] = [
-  { id: '1', status: 'submitted', submitted_at: '2026-09-12', data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
-  { id: '2', status: 'enrolled', submitted_at: '2026-09-10', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
+  { id: '1', status: 'submitted', submitted_at: '2026-09-12', responded_at: null, data: { first_name: 'Léa', last_name: 'Moreau' }, email: 'l@m.fr' },
+  { id: '2', status: 'enrolled', submitted_at: '2026-09-10', responded_at: '2026-09-18T12:00:00.000+00:00', data: { first_name: 'Camille', last_name: 'Laurent' }, email: 'c@l.fr' },
 ]
 const students: EnrolledStudent[] = [{ id: 's1', full_name: 'Camille Laurent', email: 'c@l.fr' }]
 const rollups: DossierRollup[] = [{
@@ -64,8 +64,8 @@ describe('OverviewView — unified lifecycle table', () => {
   it('hides rejected/declined rows behind the « Afficher » toggle', () => {
     const closedApps: AppRow[] = [
       ...apps,
-      { id: '3', status: 'rejected', submitted_at: '2026-09-01', data: { first_name: 'Nina', last_name: 'Rey' }, email: 'n@r.fr' },
-      { id: '4', status: 'declined', submitted_at: '2026-09-02', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
+      { id: '3', status: 'rejected', submitted_at: '2026-09-01', responded_at: null, data: { first_name: 'Nina', last_name: 'Rey' }, email: 'n@r.fr' },
+      { id: '4', status: 'declined', submitted_at: '2026-09-02', responded_at: '2026-09-05T12:00:00.000+00:00', data: { first_name: 'Tom', last_name: 'Vidal' }, email: 't@v.fr' },
     ]
     renderWithIntl(<OverviewView {...base} apps={closedApps} />)
     expect(screen.queryByText('Nina Rey')).toBeNull()

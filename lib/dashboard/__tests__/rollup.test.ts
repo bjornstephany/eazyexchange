@@ -16,7 +16,7 @@ import {
 const t = createTranslator({ locale: 'fr', messages: fr })
 
 const app = (status: string, over: Partial<AppRow> = {}): AppRow =>
-  ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', data: {}, email: 'x@y.fr', ...over })
+  ({ id: Math.random().toString(), status, submitted_at: '2026-09-12', responded_at: null, data: {}, email: 'x@y.fr', ...over })
 
 const T: TemplateInfo[] = [
   { id: 'f1', type: 'data_entry', name: 'Santé', deadline: '2026-10-10' },
