@@ -609,5 +609,13 @@
         }
       }
     }
+  },
+  "student": {
+    "shell": {
+      "account": "Account",
+      "signOut": "Sign out",
+      "language": "Language",
+      "tabs": { "dossier": "My file", "infos": "Info" }
+    }
   }
 }

@@ -1,6 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
-import { requireOrganizer } from '@/lib/auth/require'
+import { requireOrganizer, requireUser } from '@/lib/auth/require'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -65,11 +65,14 @@ export async function updateProfile(input: {
   revalidatePath('/', 'layout')
 }
 
+// Role-agnostic on purpose: students have no settings page, so the student
+// shell's language menu (components/student/StudentLanguageMenu) calls this too.
+// RLS ("users update themselves") already scopes the write to auth.uid().
 export async function updateLocale(locale: Locale): Promise<void> {
   if (!isLocale(locale)) throw new Error('Unsupported locale')
   const supabase = await createClient()
-  const ctx = await getOrganizerCtx()
-  const { error } = await supabase.from('users').update({ locale }).eq('id', ctx.userId)
+  const user = await requireUser()
+  const { error } = await supabase.from('users').update({ locale }).eq('id', user.id)
   if (error) throw error
   // The active locale drives the whole organizer shell (server-resolved), so
   // bust the layout tree, not just /settings.

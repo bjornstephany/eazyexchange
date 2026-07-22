@@ -1,17 +1,19 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const TABS = [
-  { href: '/my-forms', label: 'Mon dossier' },
-  { href: '/infos', label: 'Infos' },
-]
+import { useTranslations } from 'next-intl'
 
 export function StudentTabs() {
+  const t = useTranslations('student')
   const pathname = usePathname()
+  // Built inside the component: a module-level constant cannot hold t() output.
+  const tabs = [
+    { href: '/my-forms', label: t('shell.tabs.dossier') },
+    { href: '/infos', label: t('shell.tabs.infos') },
+  ]
   return (
     <nav className="sticky top-[66px] z-10 flex gap-1 border-b bg-card px-7">
-      {TABS.map(tab => {
+      {tabs.map(tab => {
         const active = pathname === tab.href || pathname.startsWith(tab.href + '/')
         return (
           <Link

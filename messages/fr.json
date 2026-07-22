@@ -609,5 +609,13 @@
         }
       }
     }
+  },
+  "student": {
+    "shell": {
+      "account": "Compte",
+      "signOut": "Se déconnecter",
+      "language": "Langue",
+      "tabs": { "dossier": "Mon dossier", "infos": "Infos" }
+    }
   }
 }

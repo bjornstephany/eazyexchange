@@ -1,10 +1,16 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/brand/Logo'
+import { StudentLanguageMenu } from '@/components/student/StudentLanguageMenu'
+import type { Locale } from '@/lib/i18n/config'
 
-export function StudentTopBar({ initials, exchangeLabel }: { initials: string; exchangeLabel: string | null }) {
+export function StudentTopBar({ initials, exchangeLabel, locale }: {
+  initials: string; exchangeLabel: string | null; locale: Locale
+}) {
+  const t = useTranslations('student')
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -43,7 +49,7 @@ export function StudentTopBar({ initials, exchangeLabel }: { initials: string; e
           <button
             type="button"
             onClick={() => setMenuOpen(o => !o)}
-            aria-label="Compte"
+            aria-label={t('shell.account')}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-tint font-mono text-[11px] font-semibold text-tint-text"
@@ -51,13 +57,14 @@ export function StudentTopBar({ initials, exchangeLabel }: { initials: string; e
             {initials}
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full z-30 mt-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
+            <div className="absolute right-0 top-full z-30 mt-2 w-52 rounded-[11px] border bg-card p-1 shadow-float">
+              <StudentLanguageMenu current={locale} />
               <button
                 type="button"
                 onClick={handleSignOut}
                 className="w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
               >
-                Se déconnecter
+                {t('shell.signOut')}
               </button>
             </div>
           )}
