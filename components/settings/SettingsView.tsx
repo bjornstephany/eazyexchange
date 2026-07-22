@@ -13,8 +13,6 @@ import { ProgramCard } from './ProgramCard'
 import { ProgramDetailsCard } from './ProgramDetailsCard'
 import { DataPrivacyCard } from './DataPrivacyCard'
 import { LanguageSelect } from './LanguageSelect'
-import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
-import { GoodNewsCard } from './GoodNewsCard'
 
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
@@ -78,19 +76,6 @@ export function SettingsView(props: SettingsProps) {
               <ProgramDetailsCard
                 exchangeId={props.program.id}
                 initial={props.programDetails}
-                readOnly={props.program.archived}
-              />
-              <ReminderSettingsCard
-                exchangeId={props.program.id}
-                initialEnabled={props.program.remindersEnabled}
-                initialCadence={props.program.reminderCadence}
-                readOnly={props.program.archived}
-              />
-              <GoodNewsCard
-                exchangeId={props.program.id}
-                exchangeName={props.program.name}
-                initialSubject={props.program.goodNewsSubject}
-                initialBody={props.program.goodNewsBody}
                 readOnly={props.program.archived}
               />
             </>

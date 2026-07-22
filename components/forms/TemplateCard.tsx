@@ -4,6 +4,11 @@ import { StatusPill } from '@/components/dashboard/StatusPill'
 import { typePill, statusPill, reqPill, type TemplateVM } from '@/lib/forms/rollup'
 import { previewMode, cardCountLabel } from '@/lib/forms/card'
 import { TemplateThumbnail } from './TemplateThumbnail'
+import { DocIllustration } from './DocIllustration'
+import { docIllustrationKey } from '@/lib/forms/doc-illustration'
+import { FillablePaper } from './FillablePaper'
+import { fillablePreviewFor } from '@/lib/forms/fillable-preview'
+import type { ResolvedVariables } from '@/lib/forms/fillable/render'
 
 // Portrait « A4 paper » card (approved mockup option C v2): preview zone on
 // top showing the document itself, then name, type pill and response count.
@@ -11,7 +16,11 @@ import { TemplateThumbnail } from './TemplateThumbnail'
 // anywhere opens the existing detail drawer (Aperçu / Modifier / Supprimer /
 // Télécharger live there). The layout deliberately leaves room for a future
 // « convertir » action.
-export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => void }) {
+export function TemplateCard({ vm, resolvedVars, onOpen }: {
+  vm: TemplateVM
+  resolvedVars?: ResolvedVariables
+  onOpen: () => void
+}) {
   const t = useTranslations('organizer')
   const tr = useTranslations()
   const mode = previewMode(vm)
@@ -35,12 +44,12 @@ export function TemplateCard({ vm, onOpen }: { vm: TemplateVM; onOpen: () => voi
           </div>
         )}
         {mode === 'online-paper' && <PaperFields fields={vm.fields} />}
-        {mode === 'doc-placeholder' && (
+        {mode === 'fillable-paper' && (
+          <FillablePaper blocks={fillablePreviewFor(vm.standard_key, resolvedVars ?? {})} />
+        )}
+        {mode === 'doc-sticker' && (
           <div className="flex h-full flex-col items-center justify-center gap-1.5">
-            <div aria-hidden="true" className="flex h-[60px] w-[46px] flex-none flex-col items-center justify-center gap-1 rounded bg-rail">
-              <div className="h-4 w-4 rounded-full border-2 border-white/60" />
-              <div className="h-[3px] w-6 rounded-sm bg-white/60" />
-            </div>
+            <DocIllustration illustration={docIllustrationKey(vm)} />
             <span className="text-[10px] font-medium text-placeholder">{t('templateCard.docPlaceholder')}</span>
           </div>
         )}
