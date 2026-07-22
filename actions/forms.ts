@@ -11,7 +11,7 @@ import type { TemplateActionResult, CreateTemplateResult } from '@/lib/forms/tem
 import { MSG_DEADLINE_REQUIRED, MSG_PDF_REQUIRED, MSG_QUESTIONS_REQUIRED } from '@/lib/forms/template-result'
 import { STANDARD_TEMPLATES, insertStandardTemplate } from '@/lib/forms/standard-library'
 import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
-import { missingDetailLabels } from '@/lib/forms/fillable/render'
+import { missingDetailLabels, resolveVariables, type ResolvedVariables } from '@/lib/forms/fillable/render'
 import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
 // Throw unless the caller is an organizer. Returns the organizer's school_id.
@@ -417,6 +417,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
   studentCount: number
   enrolledStudents: { id: string; full_name: string }[]
   exchangeName: string
+  resolvedVars: ResolvedVariables
 }> {
   const supabase = await createClient()
   await requireUser()
@@ -428,7 +429,7 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     throw new Error('Unauthorized')
   }
 
-  const [{ data: templates }, { data: enrollments }] = await Promise.all([
+  const [{ data: templates }, { data: enrollments }, { data: details }] = await Promise.all([
     supabase
       .from('form_templates')
       .select('id, kind, status, audience, name, description, deadline, standard_key, condition_label, template_file_path, external_url, form_fields(label, "order")')
@@ -436,6 +437,9 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
       .eq('school_id', schoolId)
       .order('created_at'),
     supabase.from('exchange_enrollments').select('user_id').eq('exchange_id', exchangeId),
+    supabase
+      .from('exchange_program_details').select('*')
+      .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>(),
   ])
 
   const enrolledIds = (enrollments ?? []).map((e) => e.user_id)
@@ -483,5 +487,6 @@ export async function getTemplatesPage(exchangeId: string): Promise<{
     studentCount: enrolledStudents.length,
     enrolledStudents,
     exchangeName: exchange.name,
+    resolvedVars: resolveVariables({ exchangeName: exchange.name, details: details ?? null }),
   }
 }

@@ -7,17 +7,19 @@ import { TemplateCard } from './TemplateCard'
 import { LibraryDrawer } from './LibraryDrawer'
 import { FormDrawer } from './FormDrawer'
 import { DocDrawer } from '@/components/documents/DocDrawer'
+import type { ResolvedVariables } from '@/lib/forms/fillable/render'
 
 // Merged « Fichiers » page (replaces FormsView + DocsView): one « + Ajouter »
 // button, two sections — Formulaires (online+pdf) then Documents demandés
 // (doc) — over the shared grid/cards. The detail drawer opens by kind:
 // FormDrawer for online/pdf, DocDrawer for doc.
 export function FichiersView({
-  exchangeId, templates, enrolledStudents,
+  exchangeId, templates, enrolledStudents, resolvedVars,
 }: {
   exchangeId: string
   templates: TemplateVM[]
   enrolledStudents: { id: string; full_name: string }[]
+  resolvedVars?: ResolvedVariables
 }) {
   const [showLibrary, setShowLibrary] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
@@ -49,7 +51,7 @@ export function FichiersView({
       ) : (
         <TemplateGrid>
           {forms.map(tpl => (
-            <TemplateCard key={tpl.id} vm={tpl} onOpen={() => setOpenId(tpl.id)} />
+            <TemplateCard key={tpl.id} vm={tpl} resolvedVars={resolvedVars} onOpen={() => setOpenId(tpl.id)} />
           ))}
         </TemplateGrid>
       )}
@@ -62,7 +64,7 @@ export function FichiersView({
       ) : (
         <TemplateGrid>
           {docs.map(tpl => (
-            <TemplateCard key={tpl.id} vm={tpl} onOpen={() => setOpenId(tpl.id)} />
+            <TemplateCard key={tpl.id} vm={tpl} resolvedVars={resolvedVars} onOpen={() => setOpenId(tpl.id)} />
           ))}
         </TemplateGrid>
       )}

@@ -168,6 +168,19 @@ describe('FichiersView', () => {
     for (const l of editLinks) expect(l).toHaveAttribute('href', '/forms/f9')
   })
 
+  it('forwards resolved program variables to fillable cards', () => {
+    renderWithIntl(<FichiersView
+      exchangeId="ex-1"
+      templates={[form({
+        id: 'f1', kind: 'fillable', standard_key: 'decharge',
+        name: 'Décharge de responsabilité', template_file_path: null,
+      })]}
+      enrolledStudents={[]}
+      resolvedVars={{ exchange_name: 'France–Canada 2026' }}
+    />)
+    expect(screen.getByText('ÉCHANGE : France–Canada 2026')).toBeInTheDocument()
+  })
+
   it('doc drawer shows the external link when present', () => {
     renderView([doc({ external_url: 'https://esta.cbp.dhs.gov' })])
     fireEvent.click(screen.getByRole('button', { name: /Passeport/ }))
