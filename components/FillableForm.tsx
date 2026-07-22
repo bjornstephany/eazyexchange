@@ -4,6 +4,7 @@
 // apart from the save/submit calls.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { saveFillable } from '@/actions/fillable'
 import { Button } from '@/components/ui/button'
 import type { FillableDefinition, Run, Block } from '@/lib/forms/fillable/types'
@@ -27,6 +28,10 @@ const SIGNED_AT = new Intl.DateTimeFormat('fr-FR', {
 })
 
 export function FillableForm({ assignmentId, def, values, initialData, readOnly, studentName }: Props) {
+  // Only this component's own chrome is translated. Everything coming out of the
+  // FillableDefinition (headings, paragraphs, field labels, role labels) is
+  // organizer-owned French legal copy and renders verbatim.
+  const t = useTranslations('student')
   const router = useRouter()
 
   // Load the saved draft, dropping any key the definition no longer declares —
@@ -82,7 +87,7 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
       if (!res.ok) setError(res.message)
       else if (submit) router.push('/my-forms')
     } catch {
-      setError('Échec de l’enregistrement. Réessaie dans un instant.')
+      setError(t('forms.fillable.saveError'))
     } finally {
       setLoading(null)
     }
@@ -208,28 +213,35 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
           <p className="mb-2 text-[12px] font-semibold text-muted-foreground">{b.roleLabel}</p>
           {readOnly ? (
             s.full_name.trim() === '' ? (
-              <p className="text-[13px] italic text-muted-foreground">Non signé</p>
+              <p className="text-[13px] italic text-muted-foreground">{t('forms.fillable.notSigned')}</p>
             ) : (
               <p className="text-[13.5px]">
-                Signé électroniquement par <strong>{s.full_name}</strong>
-                {signedAt && <> le {SIGNED_AT.format(new Date(signedAt))}</>} — « Lu et approuvé »
+                {signedAt
+                  ? t.rich('forms.fillable.signedByOn', {
+                      name: s.full_name, date: SIGNED_AT.format(new Date(signedAt)),
+                      b: (chunks) => <strong>{chunks}</strong>,
+                    })
+                  : t.rich('forms.fillable.signedBy', {
+                      name: s.full_name,
+                      b: (chunks) => <strong>{chunks}</strong>,
+                    })}
               </p>
             )
           ) : (
             <>
               <input
-                aria-label={`Nom complet — ${b.roleLabel}`}
-                placeholder="Nom complet"
+                aria-label={t('forms.fillable.fullNameFor', { role: b.roleLabel })}
+                placeholder={t('forms.fillable.fullName')}
                 value={s.full_name}
                 onChange={e => setSig(b.key, { full_name: e.target.value })}
                 className="mb-2 h-10 w-full max-w-[340px] rounded-[9px] border px-3 text-[13px] focus-visible:border-brand focus-visible:outline-none"
               />
               <label className="flex cursor-pointer items-center gap-2 text-[13px]">
                 <input type="checkbox" checked={s.approved}
-                  aria-label={`Lu et approuvé — ${b.roleLabel}`}
+                  aria-label={t('forms.fillable.approvedFor', { role: b.roleLabel })}
                   onChange={e => setSig(b.key, { approved: e.target.checked })}
                   className="h-4 w-4 rounded border-border" />
-                « Lu et approuvé »
+                {t('forms.fillable.approved')}
               </label>
             </>
           )}
@@ -248,17 +260,15 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
       {!readOnly && (
         <>
           <p className="pt-3 text-[12px] leading-relaxed text-muted-foreground">
-            En cochant « Lu et approuvé » puis en envoyant ce formulaire, chaque signataire
-            appose une signature électronique : son nom complet ainsi que la date et l’heure
-            d’envoi sont enregistrés et figurent sur le document PDF final.
+            {t('forms.fillable.signatureNotice')}
           </p>
           {error && <p className="pt-1 text-sm text-danger-text">{error}</p>}
           <div className="flex gap-3 pt-3">
             <Button variant="outline" onClick={() => handleSave(false)} disabled={loading !== null}>
-              {loading === 'draft' ? 'Enregistrement…' : 'Enregistrer le brouillon'}
+              {loading === 'draft' ? t('forms.saving') : t('forms.saveDraft')}
             </Button>
             <Button onClick={() => handleSave(true)} disabled={loading !== null} className="bg-brand hover:bg-brand-hover">
-              {loading === 'submit' ? 'Envoi…' : 'Signer et envoyer'}
+              {loading === 'submit' ? t('forms.sending') : t('forms.fillable.submit')}
             </Button>
           </div>
         </>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 vi.mock('@/actions/submissions', () => ({ saveFormAnswers: vi.fn().mockResolvedValue(undefined) }))
 import { DataEntryForm } from '@/components/DataEntryForm'
@@ -11,13 +12,13 @@ const fields: FormField[] = [
 
 describe('DataEntryForm (French)', () => {
   it('renders French submit + draft labels and the confidentiality note', () => {
-    render(<DataEntryForm assignmentId="a1" fields={fields} initialAnswers={{}} readOnly={false} />)
+    renderWithIntl(<DataEntryForm assignmentId="a1" fields={fields} initialAnswers={{}} readOnly={false} />)
     expect(screen.getByText('Envoyer')).toBeTruthy()
     expect(screen.getByText('Enregistrer le brouillon')).toBeTruthy()
     expect(screen.getByText(/Tes réponses restent confidentielles/)).toBeTruthy()
   })
   it('hides the action buttons when read-only', () => {
-    render(<DataEntryForm assignmentId="a1" fields={fields} initialAnswers={{}} readOnly={true} />)
+    renderWithIntl(<DataEntryForm assignmentId="a1" fields={fields} initialAnswers={{}} readOnly={true} />)
     expect(screen.queryByText('Envoyer')).toBeNull()
   })
 })

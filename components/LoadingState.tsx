@@ -1,6 +1,9 @@
+import { getTranslations } from 'next-intl/server'
+
 // 2a system state: content-area loader (renders inside the resolved shell, so it
 // fills its container via min-h, not the full viewport — approved deviation).
-export function LoadingState() {
+export async function LoadingState() {
+  const c = await getTranslations('common')
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-[30px] bg-background">
       <div className="relative h-[60px] w-20">
@@ -12,7 +15,7 @@ export function LoadingState() {
         <div className="ee-indeterminate h-full w-20 rounded-pill bg-brand" />
       </div>
       <span className="font-mono text-[14px] text-placeholder">
-        CHARGEMENT DE VOTRE ESPACE…
+        {c('states.loadingSpace')}
       </span>
     </div>
   )

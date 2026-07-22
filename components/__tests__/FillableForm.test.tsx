@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import { FillableForm } from '../FillableForm'
 import type { FillableDefinition } from '@/lib/forms/fillable/types'
 
@@ -32,13 +33,13 @@ describe('FillableForm', () => {
   beforeEach(() => { saveMock.mockClear(); routerPush.mockClear() })
 
   it('substitutes variables into the text', () => {
-    render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'le Minnesota, USA' }}
+    renderWithIntl(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'le Minnesota, USA' }}
       initialData={null} readOnly={false} studentName="Zoé" />)
     expect(screen.getByText(/le Minnesota, USA/)).toBeInTheDocument()
   })
 
   it('sends answers and signatures on submit', async () => {
-    render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
+    renderWithIntl(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
       initialData={null} readOnly={false} studentName="Zoé" />)
     fireEvent.change(screen.getByLabelText('Nom du représentant légal 1'), { target: { value: 'Jean Dupont' } })
     fireEvent.click(screen.getByLabelText('J’accepte.'))
@@ -55,7 +56,7 @@ describe('FillableForm', () => {
   })
 
   it('drops saved answer keys the definition no longer declares', async () => {
-    render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
+    renderWithIntl(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
       initialData={{ answers: { parent1: 'Jean Dupont', retired_key: 'ancienne valeur' }, signatures: [] }}
       readOnly={false} studentName="Zoé" />)
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }))
@@ -67,14 +68,14 @@ describe('FillableForm', () => {
 
   it('shows a structured error without navigating', async () => {
     saveMock.mockResolvedValueOnce({ ok: false, message: 'Complétez tout.' } as never)
-    render(<FillableForm assignmentId="a-1" def={def} values={{}} initialData={null} readOnly={false} studentName="Zoé" />)
+    renderWithIntl(<FillableForm assignmentId="a-1" def={def} values={{}} initialData={null} readOnly={false} studentName="Zoé" />)
     fireEvent.click(screen.getByRole('button', { name: 'Signer et envoyer' }))
     await waitFor(() => expect(screen.getByText('Complétez tout.')).toBeInTheDocument())
     expect(routerPush).not.toHaveBeenCalled()
   })
 
   it('readOnly renders values as text without buttons', () => {
-    render(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
+    renderWithIntl(<FillableForm assignmentId="a-1" def={def} values={{ destination: 'X' }}
       initialData={{ answers: { parent1: 'Jean Dupont', mother_phone: '6 12 34 56 78', regime: 'externe', ok: 'true' }, signatures: [{ key: 'sig1', role_label: 'Représentant légal 1', full_name: 'Jean Dupont', signed_at: '2026-07-19T10:00:00Z' }] }}
       readOnly={true} studentName="Zoé" />)
     expect(screen.queryByRole('button', { name: 'Signer et envoyer' })).toBeNull()

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { recordDocumentUpload, submitDocumentAssignment } from '@/actions/submissions'
 import { validateUploadFile, ALLOWED_UPLOAD_ACCEPT } from '@/lib/uploads'
@@ -24,6 +25,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
   const [uploading, setUploading] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('student')
   const router = useRouter()
   const supabase = createClient()
 
@@ -46,7 +48,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
       await recordDocumentUpload(assignmentId, slot.id, path, file.name)
       setUploads(prev => ({ ...prev, [slot.id]: { slot_id: slot.id, file_name: file.name, storage_path: path } }))
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Échec du téléversement')
+      setError(err instanceof Error ? err.message : t('forms.upload.error'))
     } finally {
       setUploading(null)
     }
@@ -59,7 +61,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
       await submitDocumentAssignment(assignmentId)
       router.push('/my-forms')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Échec de l’envoi')
+      setError(err instanceof Error ? err.message : t('forms.sendError'))
       setSubmitting(false)
     }
   }
@@ -85,7 +87,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
                   <p className="mt-0.5 text-[12.5px] text-muted-foreground">{slot.description}</p>
                 )}
               </div>
-              {upload && <Badge variant="info">Envoyé</Badge>}
+              {upload && <Badge variant="info">{t('forms.upload.sent')}</Badge>}
             </div>
 
             {upload && (
@@ -108,13 +110,13 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
                 />
                 {upload ? (
                   <span className="inline-flex items-center gap-1.5 rounded-[9px] border px-3.5 py-2 text-[12.5px] font-semibold text-foreground hover:bg-hoverrow">
-                    {isUploading ? 'Téléversement…' : 'Remplacer le fichier'}
+                    {isUploading ? t('forms.upload.uploading') : t('forms.upload.replace')}
                   </span>
                 ) : (
                   <span className="flex flex-col items-center gap-2 rounded-[14px] border border-dashed border-frame-dashed bg-hoverrow px-5 py-8 text-center hover:border-brand">
                     <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-tint text-xl font-bold text-tint-text" aria-hidden>↑</span>
-                    <span className="text-[14px] font-semibold text-navy">{isUploading ? 'Téléversement…' : 'Clique pour choisir un fichier'}</span>
-                    <span className="font-mono text-[11.5px] text-placeholder">PDF · JPG · PNG — 10 Mo max</span>
+                    <span className="text-[14px] font-semibold text-navy">{isUploading ? t('forms.upload.uploading') : t('forms.upload.choose')}</span>
+                    <span className="font-mono text-[11.5px] text-placeholder">{t('forms.upload.hint')}</span>
                   </span>
                 )}
               </label>
@@ -125,7 +127,7 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
 
       {!readOnly && (
         <p className="text-[11.5px] leading-relaxed text-placeholder">
-          Ta pièce sera vérifiée par l’équipe du programme avant validation.
+          {t('forms.upload.verifyNotice')}
         </p>
       )}
 
@@ -137,11 +139,11 @@ export function DocumentUploadForm({ assignmentId, slots, initialUploads, readOn
           disabled={!allRequiredUploaded || submitting}
           className="mt-2 bg-brand hover:bg-brand-hover"
         >
-          {submitting ? 'Envoi…' : 'Envoyer'}
+          {submitting ? t('forms.sending') : t('forms.send')}
         </Button>
       )}
       {!readOnly && !allRequiredUploaded && (
-        <p className="text-[12.5px] text-muted-foreground">Ajoute toutes les pièces requises pour envoyer.</p>
+        <p className="text-[12.5px] text-muted-foreground">{t('forms.upload.missingRequired')}</p>
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ storage: { from: () => ({ upload: vi.fn() }) } }) }))
 vi.mock('@/actions/submissions', () => ({ recordDocumentUpload: vi.fn(), submitDocumentAssignment: vi.fn() }))
@@ -12,7 +13,7 @@ const slots: DocumentSlot[] = [
 
 describe('DocumentUploadForm (French)', () => {
   it('renders the French upload zone, verification note, and disabled submit + hint', () => {
-    render(<DocumentUploadForm assignmentId="a1" slots={slots} initialUploads={[]} readOnly={false} />)
+    renderWithIntl(<DocumentUploadForm assignmentId="a1" slots={slots} initialUploads={[]} readOnly={false} />)
     expect(screen.getByText('Clique pour choisir un fichier')).toBeTruthy()
     expect(screen.getByText(/vérifiée par l’équipe du programme/)).toBeTruthy()
     expect(screen.getByText('Ajoute toutes les pièces requises pour envoyer.')).toBeTruthy()

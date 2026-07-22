@@ -6,17 +6,24 @@
       "delete": "Delete",
       "newExchange": "+ New exchange",
       "add": "Add",
-      "continue": "Continue"
+      "continue": "Continue",
+      "retry": "Try again"
     },
     "states": {
       "saved": "✓ Changes saved",
       "loading": "Loading…",
-      "loadingLabel": "Loading"
+      "loadingLabel": "Loading",
+      "loadingSpace": "LOADING YOUR SPACE…"
     },
     "errors": {
       "generic": "Something went wrong.",
       "invalidEmail": "Invalid email address.",
-      "retry": "Something went wrong. Please try again."
+      "retry": "Something went wrong. Please try again.",
+      "heading": "The thread snapped.",
+      "unauthorized": "You don\u2019t have access to this page.",
+      "sessionExpired": "Your session has expired. Please sign in again.",
+      "notFound": "We couldn\u2019t find what you were looking for.",
+      "crash": "Something went wrong on our side — your data is safe. Try again, or head back to safe ground."
     },
     "status": {
       "received": "Received",
@@ -622,6 +629,39 @@
       "submitted": "Under review",
       "rejected": "To fix",
       "draft": "Draft"
+    },
+    "forms": {
+      "confidentialNotice": "Your answers stay confidential — they are only shared with your host family if needed.",
+      "selectPlaceholder": "Choose an option",
+      "saveDraft": "Save draft",
+      "saving": "Saving\u2026",
+      "send": "Send",
+      "sending": "Sending\u2026",
+      "saveError": "Could not save",
+      "sendError": "Could not send",
+      "upload": {
+        "sent": "Sent",
+        "uploading": "Uploading\u2026",
+        "replace": "Replace file",
+        "choose": "Click to choose a file",
+        "hint": "PDF · JPG · PNG — 10 MB max",
+        "verifyNotice": "Your document will be checked by the programme team before approval.",
+        "missingRequired": "Add every required document before sending.",
+        "error": "Upload failed"
+      },
+      "external": { "cta": "Apply — {name}" },
+      "fillable": {
+        "saveError": "Could not save. Try again in a moment.",
+        "submit": "Sign and send",
+        "notSigned": "Not signed",
+        "signedBy": "Electronically signed by <b>{name}</b> — \u201cRead and approved\u201d",
+        "signedByOn": "Electronically signed by <b>{name}</b> on {date} — \u201cRead and approved\u201d",
+        "fullName": "Full name",
+        "fullNameFor": "Full name — {role}",
+        "approved": "\u201cRead and approved\u201d",
+        "approvedFor": "Read and approved — {role}",
+        "signatureNotice": "By ticking \u201cRead and approved\u201d and sending this form, each signatory affixes an electronic signature: their full name plus the date and time of sending are recorded and appear on the final PDF document."
+      }
     },
     "dossier": {
       "greeting": "Hi {name},",

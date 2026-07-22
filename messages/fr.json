@@ -6,17 +6,24 @@
       "delete": "Supprimer",
       "newExchange": "+ Nouvel échange",
       "add": "Ajouter",
-      "continue": "Continuer"
+      "continue": "Continuer",
+      "retry": "Réessayer"
     },
     "states": {
       "saved": "✓ Modifications enregistrées",
       "loading": "Chargement…",
-      "loadingLabel": "Chargement"
+      "loadingLabel": "Chargement",
+      "loadingSpace": "CHARGEMENT DE VOTRE ESPACE…"
     },
     "errors": {
       "generic": "Une erreur est survenue.",
       "invalidEmail": "Adresse e-mail invalide.",
-      "retry": "Une erreur est survenue. Veuillez réessayer."
+      "retry": "Une erreur est survenue. Veuillez réessayer.",
+      "heading": "Le fil s’est rompu.",
+      "unauthorized": "Vous n’avez pas accès à cette page.",
+      "sessionExpired": "Votre session a expiré. Reconnectez-vous.",
+      "notFound": "Nous n’avons pas trouvé ce que vous cherchiez.",
+      "crash": "Une erreur est survenue de notre côté — vos données sont en sécurité. Réessayez, ou revenez en lieu sûr."
     },
     "status": {
       "received": "Reçu",
@@ -622,6 +629,39 @@
       "submitted": "En vérification",
       "rejected": "À corriger",
       "draft": "Brouillon"
+    },
+    "forms": {
+      "confidentialNotice": "Tes réponses restent confidentielles — elles ne sont partagées qu’avec ta famille d’accueil si nécessaire.",
+      "selectPlaceholder": "Choisis une option",
+      "saveDraft": "Enregistrer le brouillon",
+      "saving": "Enregistrement…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "saveError": "Échec de l’enregistrement",
+      "sendError": "Échec de l’envoi",
+      "upload": {
+        "sent": "Envoyé",
+        "uploading": "Téléversement…",
+        "replace": "Remplacer le fichier",
+        "choose": "Clique pour choisir un fichier",
+        "hint": "PDF · JPG · PNG — 10 Mo max",
+        "verifyNotice": "Ta pièce sera vérifiée par l’équipe du programme avant validation.",
+        "missingRequired": "Ajoute toutes les pièces requises pour envoyer.",
+        "error": "Échec du téléversement"
+      },
+      "external": { "cta": "Faire la demande — {name}" },
+      "fillable": {
+        "saveError": "Échec de l’enregistrement. Réessaie dans un instant.",
+        "submit": "Signer et envoyer",
+        "notSigned": "Non signé",
+        "signedBy": "Signé électroniquement par <b>{name}</b> — « Lu et approuvé »",
+        "signedByOn": "Signé électroniquement par <b>{name}</b> le {date} — « Lu et approuvé »",
+        "fullName": "Nom complet",
+        "fullNameFor": "Nom complet — {role}",
+        "approved": "« Lu et approuvé »",
+        "approvedFor": "Lu et approuvé — {role}",
+        "signatureNotice": "En cochant « Lu et approuvé » puis en envoyant ce formulaire, chaque signataire appose une signature électronique : son nom complet ainsi que la date et l’heure d’envoi sont enregistrés et figurent sur le document PDF final."
+      }
     },
     "dossier": {
       "greeting": "Bonjour {name},",

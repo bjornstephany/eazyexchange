@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { saveFormAnswers } from '@/actions/submissions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers)
   const [loading, setLoading] = useState<'draft' | 'submit' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('student')
   const router = useRouter()
 
   function setValue(fieldId: string, value: string) {
@@ -33,7 +35,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
       await saveFormAnswers(assignmentId, answers, submit)
       if (submit) router.push('/my-forms')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Échec de l’enregistrement')
+      setError(err instanceof Error ? err.message : t('forms.saveError'))
     } finally {
       setLoading(null)
     }
@@ -45,7 +47,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
     <div className="space-y-6">
       {!readOnly && (
         <p className="rounded-[10px] bg-hoverrow px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
-          Tes réponses restent confidentielles — elles ne sont partagées qu’avec ta famille d’accueil si nécessaire.
+          {t('forms.confidentialNotice')}
         </p>
       )}
 
@@ -95,7 +97,7 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
               disabled={readOnly}
             >
               <SelectTrigger id={field.id}>
-                <SelectValue placeholder="Choisis une option" />
+                <SelectValue placeholder={t('forms.selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {field.options.map(opt => (
@@ -112,10 +114,10 @@ export function DataEntryForm({ assignmentId, fields, initialAnswers, readOnly }
       {!readOnly && (
         <div className="flex gap-3 pt-2">
           <Button variant="outline" onClick={() => handleSave(false)} disabled={loading !== null}>
-            {loading === 'draft' ? 'Enregistrement…' : 'Enregistrer le brouillon'}
+            {loading === 'draft' ? t('forms.saving') : t('forms.saveDraft')}
           </Button>
           <Button onClick={() => handleSave(true)} disabled={loading !== null} className="bg-brand hover:bg-brand-hover">
-            {loading === 'submit' ? 'Envoi…' : 'Envoyer'}
+            {loading === 'submit' ? t('forms.sending') : t('forms.send')}
           </Button>
         </div>
       )}
