@@ -133,6 +133,7 @@ export async function renderApplicationRecapPdf(input: {
         </View>
 
         {photoBytes && format ? (
+          // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's Image is not a DOM img
           <Image style={styles.photo} src={{ data: Buffer.from(photoBytes), format }} />
         ) : null}
 
