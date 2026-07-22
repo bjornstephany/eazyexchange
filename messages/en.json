@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Overview",
         "applications": "Apps.",
-        "files": "Files",
+        "files": "Forms / Docs",
         "students": "Students",
         "feedback": "Feedback",
         "communication": "Comms"
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Files",
+      "title": "Forms / Docs",
       "formsHeading": "Forms · {count}",
       "docsHeading": "Requested documents · {count}",
       "formsEmpty": "No forms yet.",

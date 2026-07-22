@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Übersicht",
         "applications": "Bewerb.",
-        "files": "Dateien",
+        "files": "Formulare / Docs",
         "students": "Schüler",
         "feedback": "Feedback",
         "communication": "Komm."
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Dateien",
+      "title": "Formulare / Docs",
       "formsHeading": "Formulare · {count}",
       "docsHeading": "Angeforderte Unterlagen · {count}",
       "formsEmpty": "Noch keine Formulare.",

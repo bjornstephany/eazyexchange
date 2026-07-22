@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Resumen",
         "applications": "Candid.",
-        "files": "Archivos",
+        "files": "Formularios / Docs",
         "students": "Alumnos",
         "feedback": "Comentarios",
         "communication": "Coms"
@@ -426,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Archivos",
+      "title": "Formularios / Docs",
       "formsHeading": "Formularios · {count}",
       "docsHeading": "Documentos solicitados · {count}",
       "formsEmpty": "Aún no hay formularios.",

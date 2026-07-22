@@ -62,7 +62,7 @@ beforeEach(() => {
 describe('FichiersView', () => {
   it('renders the Fichiers title and both sections with counts and the right cards', () => {
     renderView([form({}), doc({})])
-    expect(screen.getByRole('heading', { name: 'Fichiers' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Formulaires / Docs' })).toBeInTheDocument()
     expect(screen.getByText('Formulaires · 1')).toBeInTheDocument()
     expect(screen.getByText('Documents demandés · 1')).toBeInTheDocument()
     expect(screen.getByText('Formulaire de santé')).toBeInTheDocument()
