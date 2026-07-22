@@ -19,3 +19,12 @@ export function applySlug(name: string): string {
 export function tokenExpired(expiresAt: string | null): boolean {
   return expiresAt != null && new Date(expiresAt).getTime() < Date.now()
 }
+
+const RESUME_FALLBACK_MS = 30 * 24 * 60 * 60 * 1000
+
+// When a resume/invite link should die: end of the deadline day (the day after,
+// 00:00 UTC — the moment applications close), or 30 days out if no deadline.
+export function resumeTokenExpiry(deadline: string | null): string {
+  if (deadline) return new Date(new Date(`${deadline}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000).toISOString()
+  return new Date(Date.now() + RESUME_FALLBACK_MS).toISOString()
+}

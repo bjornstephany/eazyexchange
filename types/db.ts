@@ -28,7 +28,7 @@ export type FillableData = {
 }
 export type FieldType = 'text' | 'textarea' | 'date' | 'checkbox' | 'select'
 export type ApplicationStatus =
-  | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolling' | 'enrolled'
+  | 'invited' | 'draft' | 'submitted' | 'rejected' | 'accepted' | 'declined' | 'maybe' | 'enrolling' | 'enrolled'
 
 export type SubscriptionStatus =
   | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete'

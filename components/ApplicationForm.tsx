@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { APPLICATION_SECTIONS, missingRequiredApplication, overLimitApplicationFields, parentGroupFields, type AppField } from '@/lib/application-form'
 import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/apply'
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
+import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
 import { Logo } from '@/components/brand/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -96,7 +97,12 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
     catch (err: unknown) { setError(err instanceof Error ? err.message : t.unexpected); setSubmitting(false) }
   }
 
-  if (done) return <p className="py-16 text-center text-[15px] text-[#10203F]">{t.done}</p>
+  if (done) return (
+    <div className="flex flex-col items-center gap-5 py-16 text-center">
+      <p className="m-0 text-[15px] text-[#10203F]">{t.done}</p>
+      <ApplicationRecapButton token={token} language={lang} />
+    </div>
+  )
 
   function renderField(f: AppField) {
     const invalid = missing.includes(f.id)

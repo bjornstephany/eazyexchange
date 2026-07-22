@@ -17,7 +17,7 @@ type T = ReturnType<typeof useTranslations<never>>
 export { frShortDate }
 
 export type Pill = { kind: 'ok' | 'warn' | 'info' | 'bad' | 'neutral'; label: string }
-export type AppRow = { id: string; status: string; submitted_at: string | null; data: Record<string, string>; email: string; photoUrl?: string | null }
+export type AppRow = { id: string; status: string; submitted_at: string | null; responded_at: string | null; data: Record<string, string>; email: string; photoUrl?: string | null }
 export type TemplateInfo = { id: string; type: 'data_entry' | 'document_upload'; name: string; deadline: string }
 export type CellMap = Record<string, { assignmentId: string; status?: string }> // key `${studentId}:${templateId}`
 export type StudentInfo = { id: string; full_name: string }
@@ -153,8 +153,13 @@ export function nextDeadline(rollups: DossierRollup[]): string | null {
 export type EnrolledStudent = { id: string; full_name: string; email: string }
 
 export type LifecycleRow =
-  | { kind: 'applicant'; key: string; name: string; candidature: Pill; statut: Pill; closed: boolean; app: AppRow }
-  | { kind: 'enrolled'; key: string; name: string; candidature: Pill; rollup: DossierRollup }
+  // `respondedAt` is the date the invitee replied to their invitation — yes, no,
+  // or maybe alike. `respondToInvitation` is its only writer, so a set value
+  // always means the person themselves answered; it stays null while the
+  // organizer's decision is the only thing that has happened (`submitted`,
+  // `accepted`, `rejected`).
+  | { kind: 'applicant'; key: string; name: string; candidature: Pill; statut: Pill; closed: boolean; respondedAt: string | null; app: AppRow }
+  | { kind: 'enrolled'; key: string; name: string; candidature: Pill; respondedAt: string | null; rollup: DossierRollup }
 
 const CLOSED_STATUSES = ['rejected', 'declined']
 
@@ -170,6 +175,8 @@ export function candidaturePill(status: string | null, t: T): Pill {
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.maybe') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    case 'invited': return { kind: 'neutral', label: t('organizer.dashboard.pills.invited') }
+    case 'draft': return { kind: 'neutral', label: t('organizer.dashboard.pills.started') }
     default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
@@ -184,6 +191,8 @@ export function applicantStatusPill(status: string, t: T): Pill {
     case 'maybe': return { kind: 'warn', label: t('organizer.dashboard.pills.hesitates') }
     case 'declined': return { kind: 'bad', label: t('organizer.dashboard.pills.declined') }
     case 'rejected': return { kind: 'bad', label: t('organizer.dashboard.pills.rejected') }
+    case 'invited': return { kind: 'neutral', label: t('organizer.dashboard.pills.invited') }
+    case 'draft': return { kind: 'neutral', label: t('organizer.dashboard.pills.started') }
     default: return { kind: 'neutral', label: t('organizer.dashboard.pills.dash') }
   }
 }
@@ -210,23 +219,32 @@ export function buildLifecycleRows(apps: AppRow[], students: EnrolledStudent[], 
       candidature: candidaturePill(a.status, t),
       statut: applicantStatusPill(a.status, t),
       closed: CLOSED_STATUSES.includes(a.status),
+      respondedAt: a.responded_at,
       app: a,
     }))
 
   const enrolledRows: LifecycleRow[] = students.flatMap(s => {
     const rollup = rollupByStudent.get(s.id)
     if (!rollup) return []
+    // Single lookup, shared by the name fallback and the response date below.
+    const match = apps.find(a => CONFIRMED_STATUSES.includes(a.status) && normEmail(a.email) === normEmail(s.email))
     // A student who replied yes but hasn't finished account setup has an empty
-    // profile full_name. Reuse the merge's email match to borrow the applicant
-    // name from their confirmed application, else show the email. The row's
-    // rollup copy carries the resolved name so the drawer header shows it too.
+    // profile full_name. Borrow the applicant name from their confirmed
+    // application, else show the email. The row's rollup copy carries the
+    // resolved name so the drawer header shows it too.
     let name = rollup.name.trim()
-    if (!name) {
-      const match = apps.find(a => CONFIRMED_STATUSES.includes(a.status) && normEmail(a.email) === normEmail(s.email))
-      name = (match ? applicantName(match.data) : '') || s.email
-    }
+    if (!name) name = (match ? applicantName(match.data) : '') || s.email
     const resolved = name === rollup.name ? rollup : { ...rollup, name }
-    return [{ kind: 'enrolled' as const, key: `stu:${s.id}`, name, candidature: candidaturePill(null, t), rollup: resolved }]
+    return [{
+      kind: 'enrolled' as const,
+      key: `stu:${s.id}`,
+      name,
+      candidature: candidaturePill(null, t),
+      // A directly-invited student with no application row has no funnel
+      // response event to date.
+      respondedAt: match?.responded_at ?? null,
+      rollup: resolved,
+    }]
   })
 
   return [...applicantRows, ...enrolledRows]

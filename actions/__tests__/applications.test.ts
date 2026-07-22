@@ -158,7 +158,7 @@ vi.mock('@/lib/email', () => ({
 }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
-import { respondToInvitation, resumeInviteSetup, getInvitation } from '../invitations'
+import { respondToInvitation, getInvitation } from '../invitations'
 import { sendApplicationResumeEmail, sendStudentSetupEmail } from '@/lib/email'
 import { allApplicationFields } from '@/lib/application-form'
 
@@ -513,47 +513,6 @@ describe('respondToInvitation', () => {
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
     await respondToInvitation('inv-1', 'maybe', '')
     expect(scenario.updated.row.terms_acknowledged_at).toBeUndefined()
-  })
-})
-
-describe('resumeInviteSetup', () => {
-  beforeEach(() => {
-    scenario.application = {
-      id: 'app-1', status: 'enrolled', email: 'a@b.co',
-      invite_token: 'inv-1', invite_token_expires_at: null, enrolled_user_id: 'stu-1',
-    }
-  })
-  it('mints a session for an enrolled invite', async () => {
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toEqual({ ok: true })
-    expect(scenario.generateLinkAttrs).toMatchObject({ type: 'magiclink', email: 'a@b.co' })
-    expect(scenario.verifyOtpAttrs).toMatchObject({ type: 'magiclink', token_hash: 'hash-1' })
-  })
-  it('also works mid-enrollment (status enrolling)', async () => {
-    scenario.application.status = 'enrolling'
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toEqual({ ok: true })
-  })
-  it('returns expired for an expired token', async () => {
-    scenario.application.invite_token_expires_at = PAST
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'expired' })
-    expect(scenario.generateLinkAttrs).toBeNull()
-  })
-  it('returns closed when the invitation was never accepted', async () => {
-    scenario.application.status = 'accepted'
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'closed' })
-  })
-  it('returns not_found for an unknown token', async () => {
-    scenario.application = null
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'not_found' })
-  })
-  it('returns retry when the magiclink cannot be generated', async () => {
-    scenario.generateLinkResult = { data: null, error: { message: 'boom' } }
-    const res = await resumeInviteSetup('inv-1')
-    expect(res).toMatchObject({ ok: false, error: 'retry' })
   })
 })
 

@@ -17,6 +17,18 @@ export function LandingFooter({ footer }: { footer: LandingContent['footer'] }) 
           <Link href="/login" className="text-[13px] font-medium text-[#8595B8] hover:text-white">
             {footer.login}
           </Link>
+          <Link href="/legal/mentions-legales" className="text-[13px] font-medium text-[#8595B8] hover:text-white">
+            {footer.legal.mentions}
+          </Link>
+          <Link href="/legal/cgu" className="text-[13px] font-medium text-[#8595B8] hover:text-white">
+            {footer.legal.cgu}
+          </Link>
+          <Link href="/legal/cgv" className="text-[13px] font-medium text-[#8595B8] hover:text-white">
+            {footer.legal.cgv}
+          </Link>
+          <Link href="/legal/confidentialite" className="text-[13px] font-medium text-[#8595B8] hover:text-white">
+            {footer.legal.confidentialite}
+          </Link>
         </span>
         <span className="font-mono text-[12px] text-[#5B6B8C]">{footer.copyright}</span>
       </div>

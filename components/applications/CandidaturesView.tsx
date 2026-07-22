@@ -9,17 +9,24 @@ import { acceptApplications, rejectApplications } from '@/actions/applications-r
 import { setApplicationOpen } from '@/actions/exchanges'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
+import { InviteByEmailDialog } from '@/components/applications/InviteByEmailDialog'
+import { Button } from '@/components/ui/button'
 
-type TabKey = 'all' | 'toreview' | 'accepted' | 'rejected'
+type TabKey = 'all' | 'invited' | 'toreview' | 'accepted' | 'rejected'
 
-const TAB_KEYS: TabKey[] = ['all', 'toreview', 'accepted', 'rejected']
+const TAB_KEYS: TabKey[] = ['all', 'invited', 'toreview', 'accepted', 'rejected']
 
 const ACCEPTED_STATUSES = ['accepted', 'maybe', 'enrolling', 'enrolled']
 const REJECTED_STATUSES = ['rejected', 'declined']
 
+// Invited/started rows are organizer-sent invitations still in the funnel; they
+// are shown for tracking but never bulk-selectable for accept/reject.
+const SELECTABLE = (a: AppRow) => a.status !== 'invited' && a.status !== 'draft'
+
 function matchesTab(a: AppRow, key: TabKey): boolean {
   switch (key) {
     case 'all': return true
+    case 'invited': return a.status === 'invited' || a.status === 'draft'
     case 'toreview': return a.status === 'submitted'
     case 'accepted': return ACCEPTED_STATUSES.includes(a.status)
     case 'rejected': return REJECTED_STATUSES.includes(a.status)
@@ -48,6 +55,7 @@ export function CandidaturesView({
   const [deadline, setDeadline] = useState(applicationDeadline ?? '')
   const [savingState, setSavingState] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [rejecting, setRejecting] = useState(false)
@@ -58,6 +66,7 @@ export function CandidaturesView({
   function tabLabel(key: TabKey): string {
     switch (key) {
       case 'all': return tr('organizer.applications.tabs.all')
+      case 'invited': return tr('organizer.applications.tabs.invited')
       case 'toreview': return tr('organizer.applications.tabs.toReview')
       case 'accepted': return tr('organizer.applications.tabs.accepted')
       case 'rejected': return tr('organizer.applications.tabs.rejected')
@@ -86,8 +95,9 @@ export function CandidaturesView({
   }
 
   function toggleAll() {
-    const allSelected = filtered.length > 0 && filtered.every(a => selected.includes(a.id))
-    setSelected(allSelected ? [] : filtered.map(a => a.id))
+    const selectable = filtered.filter(SELECTABLE)
+    const allSelected = selectable.length > 0 && selectable.every(a => selected.includes(a.id))
+    setSelected(allSelected ? [] : selectable.map(a => a.id))
   }
 
   function resetBulkUi() {
@@ -192,6 +202,9 @@ export function CandidaturesView({
           >
             {copied ? tr('organizer.applications.copiedCta') : tr('organizer.applications.copyCta')}
           </button>
+          <Button type="button" variant="outline" onClick={() => setInviteOpen(true)} className="h-[34px] whitespace-nowrap text-[12.5px]">
+            {tr('organizer.applications.invite.openCta')}
+          </Button>
         </div>
       </div>
 
@@ -289,7 +302,7 @@ export function CandidaturesView({
         <div className="grid grid-cols-[28px_1.7fr_1fr_1fr_.9fr_1.1fr_22px] gap-2 items-center px-4 py-2 font-mono text-[10px] uppercase text-tertiary border-b">
           <input
             type="checkbox"
-            checked={filtered.length > 0 && filtered.every(a => selected.includes(a.id))}
+            checked={filtered.filter(SELECTABLE).length > 0 && filtered.filter(SELECTABLE).every(a => selected.includes(a.id))}
             onChange={toggleAll}
           />
           <span>{tr('organizer.applications.tableHeader.student')}</span>
@@ -311,6 +324,7 @@ export function CandidaturesView({
               <input
                 type="checkbox"
                 checked={selected.includes(a.id)}
+                disabled={!SELECTABLE(a)}
                 onChange={() => toggleOne(a.id)}
                 onClick={e => e.stopPropagation()}
               />
@@ -327,6 +341,8 @@ export function CandidaturesView({
           ))
         )}
       </div>
+
+      <InviteByEmailDialog exchangeId={exchangeId} open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   )
 }

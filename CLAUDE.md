@@ -77,18 +77,41 @@ exists, record the advisory and the accepted-risk rationale in
 - Vercel deploys `main` to production. **Never push broken code to `main`** — run the Verifying Changes commands before any push.
 - **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
 
-## Autopilot (autonomous backlog loop)
+## Parallel Sessions
 
-`/loop /autopilot` (playbook: `.claude/skills/autopilot/SKILL.md`) works
-`BACKLOG.md` items through brainstorm → spec → plan → build → review → PR,
-one at a time. Autonomy stops at the PR: the loop never pushes or merges
-`main` and never touches prod (no prod migrations, edge-function deploys,
-Vercel config, or real email). Bjorn's touchpoints: append one-liners to the
-**Queue** section of `BACKLOG.md`, answer **Blocked** questions inline
-(`- A: …`), read `docs/autopilot/status.md`, merge PRs **with a merge
-commit** and run their listed merge-time steps. Any session asked to « add X
-to the backlog » just appends one line to Queue. All hard guardrails live in
-the skill file and bind every session and subagent.
+Multiple Claude sessions run at once. **One session = one worktree = one branch — no
+exceptions, including one-line copy fixes.** Two sessions sharing a directory entangle
+each other's branches and commits; recovery means reflog archaeology. This overrides the
+"commit straight to `main`" shortcut above: small changes still get their own worktree,
+they just merge the same day.
+
+```bash
+pnpm wt <slug>          # -> ../eazyexchange-<slug> on feature/<slug>
+pnpm wt <slug> fix      # -> fix/<slug>
+```
+
+`pnpm wt` branches off fresh `origin/main`, links `.env.local` / `.env.staging` from the
+main checkout, installs deps, and pins a deterministic dev port in `.wtport` (`pnpm dev`
+reads it) so no two worktrees race for 3000. Then start a **new** session in that
+directory — never continue in the session that created it.
+
+- **Before every commit, confirm the branch** (`git branch --show-current`). A session
+  that finds itself on a branch it did not create must stop and report, not commit.
+- **Never `git add -A` / `git add .`** — stage only the files you touched. A sibling
+  session's half-finished work is often untracked in the same tree.
+- **Test failures can be another session's race.** An import that resolves nowhere, or a
+  suite that fails once and passes on re-run, usually means a neighbour was mid-write.
+  Re-run the single file before debugging it.
+- **`supabase/migrations/` is single-writer.** Worktrees isolate files, not the shared
+  Supabase projects: the prod migration ledger and staging DB are global. Only one
+  session at a time may add or apply a migration; if another is mid-migration, wait.
+- When a branch is merged: `git worktree remove ../eazyexchange-<slug>`.
+
+## Backlog
+
+`BACKLOG.md` holds deferred work as one-liners, highest priority at the top.
+Any session asked to « add X to the backlog » just appends one line to the
+**Queue** section.
 
 ## Session & Token Hygiene (multi-stage features)
 
@@ -125,7 +148,7 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 
 - **RLS is the most error-prone area.** Avoid self-referential/recursive policies (see `20260625000005_fix_rls_recursion.sql`). New access needs a migration, never a client-side service-role workaround.
 - **RLS is the isolation layer; the service role is walled in.** `lib/supabase/admin` (bypasses RLS) may only be imported by the files allowlisted in `lib/supabase/__tests__/admin-allowlist.test.ts` — the anonymous funnel, auth/provisioning, billing/Stripe, the rate limiter, and audit logging. Any new import is a design decision, not a convenience: prefer a scoped RLS policy; if the service role is genuinely required, extend the allowlist deliberately in the same change.
-- **Organizer email confirmation goes through `app/auth/confirm/route.ts`.** Session cookies must be persisted via `redirect()` from that route — don't bypass it. Student invite acceptance no longer sends any Supabase auth email: `respondToInvitation` mints the session in-action (`generateLink` magiclink + `verifyOtp` on the cookie-aware server client) and the client redirects to `/accept-invite`.
+- **Organizer email confirmation goes through `app/auth/confirm/route.ts`.** Session cookies must be persisted via `redirect()` from that route — don't bypass it. Student invite acceptance is **parent-facing**, so `respondToInvitation` deliberately mints **no** session in the confirming browser: it enrolls the student, sends the enrollment checklist, then emails the *student* a `/auth/confirm` set-your-password link (`generateLink` magiclink delivered via Resend, not a Supabase auth email). The student lands on `/accept-invite` from that emailed link.
 - **Google OAuth goes through `app/auth/callback/route.ts`** (the `?code=` PKCE exchange), separate from `/auth/confirm` (email OTP `?token_hash=`). Invite-only is enforced *in the callback*: a Google user with no invited profile and no `intent=organizer_signup` is signed out and their orphan auth row deleted. Provider config is a manual dashboard step (not code): create a Google Cloud OAuth client whose redirect URI is Supabase's `https://<ref>.supabase.co/auth/v1/callback`, enable the Google provider in Supabase with that client's ID/secret, and add each app origin's `/auth/callback` under Supabase → Authentication → URL Configuration → Redirect URLs. Consent-screen branding (« pour continuer vers <ref>.supabase.co ») is fixed in Google Cloud → OAuth consent screen, not Supabase: set App name, add eazyexchange.com as an Authorized domain (verified in Search Console), publish the app; a logo upload triggers Google brand review (days). No Supabase custom domain needed for this. The invited-student Google path relies on Supabase's automatic same-email identity linking, which is default-on — there is no toggle to enable (the only linking toggle in the dashboard is for *manual* linking, which this app does not use).
 - **Always escape user-supplied content in email HTML** (Resend) to prevent injection.
 - **Never log student/parent PII** — no student emails, names, or submission contents in logs, error messages, or analytics. This data belongs to minors; treat it as sensitive.

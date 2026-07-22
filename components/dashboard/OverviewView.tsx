@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { fullDate } from '@/lib/dates'
 import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent } from '@/lib/dashboard/rollup'
 import {
   buildLifecycleRows,
@@ -207,8 +208,16 @@ export function OverviewView(props: OverviewProps) {
                 className={`grid ${GRID} px-5 py-3 text-sm border-b last:border-0 hover:bg-hoverrow-soft cursor-pointer`}
               >
                 <span className="font-medium text-navy">{row.name}</span>
-                <span>
+                <span className="flex items-center gap-2">
                   <StatusPill pill={row.candidature} />
+                  {row.respondedAt && (
+                    <span
+                      className="whitespace-nowrap text-[11.5px] text-muted-foreground"
+                      title={fullDate(row.respondedAt)}
+                    >
+                      {frShortDate(row.respondedAt, { year: true })}
+                    </span>
+                  )}
                 </span>
                 <span>
                   {row.kind === 'enrolled' ? <StatusPill pill={formsPill(row.rollup.forms, tr)} /> : <span className="text-placeholder">—</span>}

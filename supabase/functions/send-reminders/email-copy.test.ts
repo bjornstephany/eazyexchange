@@ -52,7 +52,7 @@ describe('buildEmail', () => {
 
   it('flags overdue forms', () => {
     const html = buildEmail('Yanis', ['Espagne 2026'], [form({ overdue: true })], APP_URL)
-    expect(html).toContain('en retard — échéance')
+    expect(html).toContain('en retard — date limite')
   })
 
   it('keeps the typographic apostrophe in the footer', () => {

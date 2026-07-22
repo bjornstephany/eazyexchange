@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Übersicht",
         "applications": "Bewerb.",
-        "files": "Dateien",
+        "files": "Formulare / Docs",
         "students": "Schüler",
         "feedback": "Feedback",
         "communication": "Komm."
@@ -270,6 +270,7 @@
         "copy": "Kopieren",
         "closeWarning": "Sie werden diesen Link nicht wiedersehen — kopieren Sie ihn, bevor Sie schließen.",
         "closeAnyway": "Trotzdem schließen",
+        "inviteByEmail": "Per E-Mail einladen",
         "close": "Schließen"
       },
       "filterLabelMaybe": "Unentschlossen",
@@ -304,6 +305,8 @@
         "declined": "Hat abgelehnt",
         "rejected": "Abgelehnt",
         "dash": "—",
+        "invited": "Eingeladen",
+        "started": "Begonnen",
         "waiting": "Wartet",
         "hesitates": "Unentschlossen"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
+      "invite": {
+        "openCta": "Per E-Mail einladen",
+        "title": "Per E-Mail einladen",
+        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "placeholder": "marie@schule.de\nleo@schule.de",
+        "sendCta": "Einladungen senden",
+        "sending": "Senden…",
+        "close": "Schließen",
+        "notOpenError": "Öffne zuerst die Bewerbungen und lege eine Frist fest.",
+        "tooManyError": "Zu viele Adressen (max. 200 pro Versand).",
+        "result": "{sent} gesendet · {skipped} bereits in der Liste · {invalid} ungültig"
+      },
       "tabs": {
         "all": "Alle",
+        "invited": "Eingeladen",
         "toReview": "Zu prüfen",
         "accepted": "Angenommen",
         "rejected": "Abgelehnt"
@@ -410,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Dateien",
+      "title": "Formulare / Docs",
       "formsHeading": "Formulare · {count}",
       "docsHeading": "Angeforderte Unterlagen · {count}",
       "formsEmpty": "Noch keine Formulare.",
@@ -423,20 +439,19 @@
         "nameLabel": "Name des Formulars",
         "namePlaceholderPdf": "Elterliche Genehmigung",
         "namePlaceholderOnline": "Familienfragebogen",
-        "deadlineLabel": "Frist (optional)",
+        "deadlineLabel": "Frist",
         "fileLabel": "Zu unterzeichnendes PDF",
         "back": "Zurück",
-        "createDraft": "Entwurf erstellen",
+        "createDraft": "Hinzufügen",
+        "createAndEdit": "Erstellen und Fragen hinzufügen",
         "creating": "Wird erstellt…"
       },
       "drawer": {
         "pdfPreviewLabel": "PDF-Vorlage · Dokumentvorschau",
         "fieldsHeadingPdf": "Auszufüllende Felder",
         "fieldsHeadingOnline": "Fragen des Formulars",
-        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre Fragen hinzu und aktivieren Sie es dann, um es an die Familien zu senden.",
+        "emptyFields": "Dieses Formular hat noch keine Felder. Fügen Sie Ihre erste Frage hinzu, um es an die Familien zu senden.",
         "fillableNote": "Gebrauchsfertiges Formular: von der Familie online ausgefüllt und unterschrieben, mit automatisch eingefügten Programmdetails.",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
         "editTemplate": "Vorlage bearbeiten",
         "download": "Herunterladen"
       },
@@ -490,11 +505,13 @@
         },
         "nameLabel": "Name der Unterlage",
         "namePlaceholder": "Europäische Krankenversicherungskarte",
-        "deadlineLabel": "Frist (optional)",
+        "deadlineLabel": "Frist",
         "conditionLabel": "Bedingung (optional)",
         "conditionPlaceholder": "falls Eltern geschieden sind",
+        "studentsLabel": "Betroffene Schüler",
+        "noStudents": "Noch keine eingeschriebenen Schüler.",
         "back": "Zurück",
-        "createDraft": "Entwurf erstellen",
+        "createDraft": "Hinzufügen",
         "creating": "Wird erstellt…"
       },
       "drawer": {
@@ -502,16 +519,11 @@
         "maxSize": "Max. 10 MB",
         "deadlineChip": "Frist {date}",
         "trackingHeading": "Nachverfolgung pro Schüler",
-        "draftEmptyConditional": "Diese Unterlage wurde noch nicht angefordert. Wählen Sie die betroffenen Schüler aus und aktivieren Sie sie dann, um die Anfragen zu senden.",
-        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert. Aktivieren Sie sie, um die Anfragen zu senden.",
-        "noEnrolledStudents": "Noch keine eingeschriebenen Schüler.",
+        "draftEmptyAll": "Diese Unterlage wurde noch nicht angefordert.",
         "restCount": "+ {count, plural, one {# Schüler} other {# Schüler}} — Unterlage bereitgestellt und validiert",
         "remindedCount": "{count, plural, one {# erinnert} other {# erinnert}}",
         "skippedRecently": " · {count, plural, one {# bereits kürzlich erinnert} other {# bereits kürzlich erinnert}}",
         "failedCount": " · {count} fehlgeschlagen",
-        "activate": "Aktivieren",
-        "activating": "Wird aktiviert…",
-        "chooseAndActivate": "Schüler auswählen & aktivieren",
         "sending": "Wird gesendet…",
         "remindFamilies": "Familien erinnern"
       }
@@ -523,6 +535,9 @@
       "searchPlaceholder": "Suchen…",
       "alreadyAdded": "Bereits hinzugefügt ✓",
       "adding": "Wird hinzugefügt…",
+      "deadlineLabel": "Frist",
+      "detailsHint": "Diese Angaben werden automatisch in das Dokument eingesetzt.",
+      "confirmAdd": "Zum Programm hinzufügen",
       "customHeading": "Oder",
       "uploadPdfTile": "PDF hochladen",
       "createOnlineTile": "Online-Formular erstellen",

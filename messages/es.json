@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Resumen",
         "applications": "Candid.",
-        "files": "Archivos",
+        "files": "Formularios / Docs",
         "students": "Alumnos",
         "feedback": "Comentarios",
         "communication": "Coms"
@@ -270,6 +270,7 @@
         "copy": "Copiar",
         "closeWarning": "No volverá a ver este enlace — cópielo antes de cerrar.",
         "closeAnyway": "Cerrar de todos modos",
+        "inviteByEmail": "Invitar por correo",
         "close": "Cerrar"
       },
       "filterLabelMaybe": "Indecisos",
@@ -304,6 +305,8 @@
         "declined": "Ha declinado",
         "rejected": "Rechazado",
         "dash": "—",
+        "invited": "Invitado",
+        "started": "Empezado",
         "waiting": "En espera",
         "hesitates": "Indeciso"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Enlace de candidatura",
       "copyCta": "Copiar",
       "copiedCta": "Copiado ✓",
+      "invite": {
+        "openCta": "Invitar por correo",
+        "title": "Invitar por correo",
+        "description": "Pega los correos de los alumnos — uno por línea o separados por comas.",
+        "placeholder": "marie@escuela.es\nleo@escuela.es",
+        "sendCta": "Enviar invitaciones",
+        "sending": "Enviando…",
+        "close": "Cerrar",
+        "notOpenError": "Primero abre las candidaturas y fija una fecha límite.",
+        "tooManyError": "Demasiadas direcciones (máx. 200 por envío).",
+        "result": "{sent} enviadas · {skipped} ya en la lista · {invalid} no válidas"
+      },
       "tabs": {
         "all": "Todas",
+        "invited": "Invitados",
         "toReview": "Por examinar",
         "accepted": "Aceptadas",
         "rejected": "Rechazadas"
@@ -410,7 +426,7 @@
       }
     },
     "files": {
-      "title": "Archivos",
+      "title": "Formularios / Docs",
       "formsHeading": "Formularios · {count}",
       "docsHeading": "Documentos solicitados · {count}",
       "formsEmpty": "Aún no hay formularios.",
@@ -423,20 +439,19 @@
         "nameLabel": "Nombre del formulario",
         "namePlaceholderPdf": "Autorización parental",
         "namePlaceholderOnline": "Cuestionario familiar",
-        "deadlineLabel": "Fecha límite (opcional)",
+        "deadlineLabel": "Fecha límite",
         "fileLabel": "PDF a firmar",
         "back": "Volver",
-        "createDraft": "Crear el borrador",
+        "createDraft": "Añadir",
+        "createAndEdit": "Crear y añadir preguntas",
         "creating": "Creando…"
       },
       "drawer": {
         "pdfPreviewLabel": "plantilla PDF · vista previa del documento",
         "fieldsHeadingPdf": "Campos a cumplimentar",
         "fieldsHeadingOnline": "Preguntas del formulario",
-        "emptyFields": "Este formulario todavía no tiene campos. Añada sus preguntas y luego actívelo para enviarlo a las familias.",
+        "emptyFields": "Este formulario todavía no tiene campos. Añada su primera pregunta para enviarlo a las familias.",
         "fillableNote": "Formulario listo para usar: la familia lo rellena y firma en línea, con los detalles del programa insertados automáticamente.",
-        "activate": "Activar",
-        "activating": "Activando…",
         "editTemplate": "Modificar la plantilla",
         "download": "Descargar"
       },
@@ -490,11 +505,13 @@
         },
         "nameLabel": "Nombre del documento",
         "namePlaceholder": "Tarjeta sanitaria europea",
-        "deadlineLabel": "Fecha límite (opcional)",
+        "deadlineLabel": "Fecha límite",
         "conditionLabel": "Condición (opcional)",
         "conditionPlaceholder": "si los padres están divorciados",
+        "studentsLabel": "Alumnos afectados",
+        "noStudents": "Aún no hay alumnos inscritos.",
         "back": "Volver",
-        "createDraft": "Crear el borrador",
+        "createDraft": "Añadir",
         "creating": "Creando…"
       },
       "drawer": {
@@ -502,16 +519,11 @@
         "maxSize": "10 MB máx.",
         "deadlineChip": "Fecha límite {date}",
         "trackingHeading": "Seguimiento por alumno",
-        "draftEmptyConditional": "Este documento aún no se ha solicitado. Elija a los alumnos afectados y luego actívelo para lanzar las solicitudes.",
-        "draftEmptyAll": "Este documento aún no se ha solicitado. Actívelo para lanzar las solicitudes.",
-        "noEnrolledStudents": "Ningún alumno inscrito por el momento.",
+        "draftEmptyAll": "Este documento aún no se ha solicitado.",
         "restCount": "+ {count, plural, one {# alumno} other {# alumnos}} — documento proporcionado y validado",
         "remindedCount": "{count, plural, one {# recordado} other {# recordados}}",
         "skippedRecently": " · {count, plural, one {# ya recordado recientemente} other {# ya recordados recientemente}}",
         "failedCount": " · {count} fallidos",
-        "activate": "Activar",
-        "activating": "Activando…",
-        "chooseAndActivate": "Elegir alumnos y activar",
         "sending": "Enviando…",
         "remindFamilies": "Recordar a las familias"
       }
@@ -523,6 +535,9 @@
       "searchPlaceholder": "Buscar…",
       "alreadyAdded": "Ya añadido ✓",
       "adding": "Añadiendo…",
+      "deadlineLabel": "Fecha límite",
+      "detailsHint": "Estos datos se insertan automáticamente en el documento.",
+      "confirmAdd": "Añadir al programa",
       "customHeading": "O",
       "uploadPdfTile": "Subir un PDF",
       "createOnlineTile": "Crear un formulario en línea",

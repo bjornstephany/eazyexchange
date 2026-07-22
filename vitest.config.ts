@@ -8,7 +8,15 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
-    exclude: [...configDefaults.exclude, 'tests/rls/**'],
+    exclude: [
+      ...configDefaults.exclude,
+      'tests/rls/**',
+      // Never sweep sibling worktrees' or plugin-provided tests: vitest walks
+      // out of the project root via symlinks and picks up unrelated suites,
+      // which used to force `push --no-verify`.
+      '**/.claude/**',
+      '**/eazyexchange-*/**',
+    ],
   },
   resolve: {
     alias: { '@': path.resolve(__dirname, '.') },

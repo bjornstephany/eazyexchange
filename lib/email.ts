@@ -128,6 +128,16 @@ export async function sendApplicationResumeEmail(opts: { to: string; exchangeNam
   await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email', opts.ctx)
 }
 
+export async function sendApplicationInviteEmail(opts: { to: string; exchangeName: string; applyUrl: string; ctx?: EmailLogContext }): Promise<void> {
+  const html = layout(`
+    <p>Hi,</p>
+    <p>You've been invited to apply for <strong>${esc(opts.exchangeName)}</strong>. It only takes a few minutes — you can save and finish later on any device.</p>
+    <p><a href="${opts.applyUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Start my application</a></p>
+    <p style="font-size:12px;color:#5C7268;">Keep this email — it's your private link back to your application.</p>
+  `, APP_FOOTER)
+  await send(opts.to, `You're invited to apply — ${opts.exchangeName}`, html, 'application invite email', opts.ctx)
+}
+
 export async function sendApplicationConfirmationEmail(opts: { to: string; applicantName: string; exchangeName: string; ctx?: EmailLogContext }): Promise<void> {
   const greeting = opts.applicantName ? `Hi ${esc(opts.applicantName)},` : 'Hi,'
   const html = layout(`
@@ -239,7 +249,7 @@ export async function sendStudentReminderEmail(opts: {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const n = opts.items.length
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>
@@ -256,7 +266,7 @@ export async function sendChecklistEmail(opts: {
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — échéance ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>

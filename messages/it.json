@@ -189,7 +189,7 @@
       "nav": {
         "dashboard": "Panoramica",
         "applications": "Candid.",
-        "files": "File",
+        "files": "Moduli / Docs",
         "students": "Studenti",
         "feedback": "Feedback",
         "communication": "Comun."
@@ -270,6 +270,7 @@
         "copy": "Copia",
         "closeWarning": "Non vedrai più questo link — copialo prima di chiudere.",
         "closeAnyway": "Chiudi comunque",
+        "inviteByEmail": "Invita via e-mail",
         "close": "Chiudi"
       },
       "filterLabelMaybe": "Indecisi",
@@ -304,6 +305,8 @@
         "declined": "Ha rinunciato",
         "rejected": "Rifiutato",
         "dash": "—",
+        "invited": "Invitato",
+        "started": "Iniziato",
         "waiting": "In attesa",
         "hesitates": "Indeciso"
       },
@@ -351,8 +354,21 @@
       "linkLabel": "Link di candidatura",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
+      "invite": {
+        "openCta": "Invita via e-mail",
+        "title": "Invita via e-mail",
+        "description": "Incolla le e-mail degli studenti — una per riga o separate da virgole.",
+        "placeholder": "marie@scuola.it\nleo@scuola.it",
+        "sendCta": "Invia inviti",
+        "sending": "Invio…",
+        "close": "Chiudi",
+        "notOpenError": "Apri prima le candidature e imposta una scadenza.",
+        "tooManyError": "Troppi indirizzi (max 200 per invio).",
+        "result": "{sent} inviate · {skipped} già nell'elenco · {invalid} non valide"
+      },
       "tabs": {
         "all": "Tutte",
+        "invited": "Invitati",
         "toReview": "Da esaminare",
         "accepted": "Accettate",
         "rejected": "Rifiutate"
@@ -410,7 +426,7 @@
       }
     },
     "files": {
-      "title": "File",
+      "title": "Moduli / Docs",
       "formsHeading": "Moduli · {count}",
       "docsHeading": "Documenti richiesti · {count}",
       "formsEmpty": "Ancora nessun modulo.",
@@ -423,20 +439,19 @@
         "nameLabel": "Nome del modulo",
         "namePlaceholderPdf": "Autorizzazione dei genitori",
         "namePlaceholderOnline": "Questionario famiglia",
-        "deadlineLabel": "Scadenza (facoltativo)",
+        "deadlineLabel": "Scadenza",
         "fileLabel": "PDF da far firmare",
         "back": "Indietro",
-        "createDraft": "Crea la bozza",
+        "createDraft": "Aggiungi",
+        "createAndEdit": "Crea e aggiungi le domande",
         "creating": "Creazione…"
       },
       "drawer": {
         "pdfPreviewLabel": "modello PDF · anteprima del documento",
         "fieldsHeadingPdf": "Campi da compilare",
         "fieldsHeadingOnline": "Domande del modulo",
-        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi le tue domande, poi attivalo per inviarlo alle famiglie.",
+        "emptyFields": "Questo modulo non ha ancora campi. Aggiungi la tua prima domanda per inviarlo alle famiglie.",
         "fillableNote": "Modulo pronto all’uso: compilato e firmato online dalla famiglia, con i dettagli del programma inseriti automaticamente.",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
         "editTemplate": "Modifica il modello",
         "download": "Scarica"
       },
@@ -490,11 +505,13 @@
         },
         "nameLabel": "Nome del documento",
         "namePlaceholder": "Tessera europea di assicurazione malattia",
-        "deadlineLabel": "Scadenza (facoltativo)",
+        "deadlineLabel": "Scadenza",
         "conditionLabel": "Condizione (facoltativo)",
         "conditionPlaceholder": "se genitori divorziati",
+        "studentsLabel": "Studenti interessati",
+        "noStudents": "Nessuno studente iscritto per ora.",
         "back": "Indietro",
-        "createDraft": "Crea la bozza",
+        "createDraft": "Aggiungi",
         "creating": "Creazione…"
       },
       "drawer": {
@@ -502,16 +519,11 @@
         "maxSize": "10 MB max",
         "deadlineChip": "Scadenza {date}",
         "trackingHeading": "Monitoraggio per studente",
-        "draftEmptyConditional": "Questo documento non è ancora stato richiesto. Scegli gli studenti interessati, poi attivalo per avviare le richieste.",
-        "draftEmptyAll": "Questo documento non è ancora stato richiesto. Attivalo per avviare le richieste.",
-        "noEnrolledStudents": "Nessuno studente iscritto per il momento.",
+        "draftEmptyAll": "Questo documento non è ancora stato richiesto.",
         "restCount": "+ {count, plural, one {# studente} other {# studenti}} — documento fornito e convalidato",
         "remindedCount": "{count, plural, one {# sollecitato} other {# sollecitati}}",
         "skippedRecently": " · {count, plural, one {# già sollecitato di recente} other {# già sollecitati di recente}}",
         "failedCount": " · {count} non riusciti",
-        "activate": "Attiva",
-        "activating": "Attivazione…",
-        "chooseAndActivate": "Scegli gli studenti e attiva",
         "sending": "Invio…",
         "remindFamilies": "Sollecita le famiglie"
       }
@@ -523,6 +535,9 @@
       "searchPlaceholder": "Cerca…",
       "alreadyAdded": "Già aggiunto ✓",
       "adding": "Aggiunta…",
+      "deadlineLabel": "Scadenza",
+      "detailsHint": "Queste informazioni vengono inserite automaticamente nel documento.",
+      "confirmAdd": "Aggiungi al programma",
       "customHeading": "Oppure",
       "uploadPdfTile": "Carica un PDF",
       "createOnlineTile": "Crea un modulo online",
