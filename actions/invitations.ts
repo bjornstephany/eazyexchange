@@ -6,6 +6,7 @@ import { tokenExpired } from '@/lib/tokens'
 import { sendChecklistEmail, sendStudentSetupEmail } from '@/lib/email'
 import { getAppUrl } from '@/lib/app-url'
 import { inviteError, type InviteActionResult } from '@/lib/invite-response'
+import { DEFAULT_LOCALE, isLocale } from '@/lib/i18n/config'
 
 const APP_URL = getAppUrl()
 
@@ -94,7 +95,7 @@ export async function respondToInvitation(
     // it with the newer click.
     .update({ ...base, status: 'enrolling', terms_acknowledged_at: new Date().toISOString() })
     .eq('invite_token', token).in('status', ['accepted', 'maybe'])
-    .select('id, email, school_id, exchange_id, data').maybeSingle()
+    .select('id, email, school_id, exchange_id, data, language').maybeSingle()
   if (!claimed) {
     const { data: cur } = await admin
       .from('applications').select('status, email').eq('invite_token', token).maybeSingle()
@@ -124,9 +125,13 @@ export async function respondToInvitation(
     // Empty full_name: middleware infers "setup
     // complete" from a non-empty full_name, so pre-filling it would bounce the
     // student past /accept-invite before they set a password.
+    // The funnel language is the family's demonstrated language preference —
+    // seed it so the student's first login is already in the right language.
+    // A row predating the widened CHECK, or any junk, degrades to 'en'.
+    const seededLocale = isLocale(claimed.language ?? '') ? claimed.language : DEFAULT_LOCALE
     const { error: profileError } = await admin.from('users').insert({
       id: userId, school_id: claimed.school_id, role: 'student' as const,
-      email: claimed.email, full_name: '',
+      email: claimed.email, full_name: '', locale: seededLocale,
     })
     if (profileError) {
       await admin.auth.admin.deleteUser(userId).catch(() => {})

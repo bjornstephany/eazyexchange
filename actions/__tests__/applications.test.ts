@@ -5,6 +5,7 @@ let scenario: {
   application: any | null
   applicationQueue: any[]          // consumed first by applications maybeSingle (for race tests)
   inserted: any
+  inserts: any[]                   // every insert in call order (inserted = last)
   insertError: any | null          // injected error for applications inserts
   updated: any
   updates: any[]                   // every update in call order (updated = last)
@@ -39,6 +40,7 @@ function builder(table: string) {
     order: () => b,
     insert: (row: any) => {
       scenario.inserted = { table, row }
+      scenario.inserts.push({ table, row })
       const error = table === 'exchange_enrollments' ? (scenario.enrollError ?? null)
         : table === 'applications' ? (scenario.insertError ?? null)
         : table === 'users' ? (scenario.profileInsertError ?? null) : null
@@ -177,7 +179,7 @@ beforeEach(() => {
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_a_id: 's-1', application_open: true, application_deadline: null },
     application: { id: 'app-1', exchange_id: 'ex-1', school_id: 's-1', status: 'draft', email: 'a@b.co', data: {} },
-    inserted: null, updated: null, updates: [], insertError: null, applicationQueue: [],
+    inserted: null, inserts: [], updated: null, updates: [], insertError: null, applicationQueue: [],
     enrollError: null, deletedProfileUserId: null, deletedAuthUserId: null,
     rateLimitAllowed: true, applicationCount: 0,
     profileInsertError: null,
@@ -519,6 +521,18 @@ describe('respondToInvitation', () => {
     await respondToInvitation('inv-1', 'yes', '')
     const claim = scenario.updates.find(u => u.table === 'applications' && u.row.status === 'enrolling')
     expect(claim?.row.terms_acknowledged_at).toBeTruthy()
+  })
+  it('seeds users.locale from the application language', async () => {
+    scenario.application.language = 'de'
+    await respondToInvitation('inv-1', 'yes', '')
+    const profile = scenario.inserts.find(i => i.table === 'users')
+    expect(profile?.row).toMatchObject({ role: 'student', locale: 'de' })
+  })
+  it('falls back to the default locale when the row carries an unsupported code', async () => {
+    scenario.application.language = 'pt'
+    await respondToInvitation('inv-1', 'yes', '')
+    const profile = scenario.inserts.find(i => i.table === 'users')
+    expect(profile?.row).toMatchObject({ locale: 'en' })
   })
   it('No and Maybe never set terms_acknowledged_at', async () => {
     await respondToInvitation('inv-1', 'no', '')
