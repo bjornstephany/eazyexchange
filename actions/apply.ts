@@ -11,6 +11,7 @@ import {
 } from '@/lib/email'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
+import { renderApplicationRecapPdf } from '@/lib/pdf/application-recap'
 
 const APP_URL = getAppUrl()
 
@@ -196,10 +197,15 @@ export async function getApplicationDraft(token: string) {
   }
   // Once submitted (or further along) the application is final — the resume link
   // can no longer reopen it. Return a marker only, never the PII, so the page
-  // shows an "already submitted" notice instead of the form.
+  // shows an "already submitted" notice instead of the form. `language` is the
+  // one non-marker field: it carries no PII and the page needs it to render the
+  // recap-download button in the language the applicant applied in.
   // 'invited' (organizer-sent, untouched) and 'draft' both render the form.
   if (app.status !== 'draft' && app.status !== 'invited') {
-    return { expired: false as const, submitted: true as const, exchangeName }
+    return {
+      expired: false as const, submitted: true as const, exchangeName,
+      language: app.language === 'fr' ? ('fr' as const) : ('en' as const),
+    }
   }
   // Signed URL so a returning draft shows its already-uploaded photo (the
   // application-photos bucket is private; 1 h outlives any editing session).
@@ -376,4 +382,78 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
   const { error } = await admin.from('applications').update(patch).eq('id', app.id)
   if (error) throw error
   return { path }
+}
+
+export type RecapResult =
+  | { ok: true; filename: string; pdf: string /* base64 */ }
+  | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' }
+
+// ASCII-folded, lowercase, hyphenated name part for the download filename —
+// « Dupont-Léger » → "dupont-leger". Not exported: a `'use server'` module may
+// only export async functions.
+function slugPart(value: string): string {
+  return (value ?? '')
+    .trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036F]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
+
+function recapFilename(data: Record<string, string>): string {
+  const parts = [slugPart(data.first_name ?? ''), slugPart(data.last_name ?? '')].filter(Boolean)
+  return parts.length > 0 ? `candidature-${parts.join('-')}.pdf` : 'candidature.pdf'
+}
+
+// The applicant's own answers, back to the applicant, as a PDF they can keep.
+//
+// DELIBERATE PII EGRESS — read this next to getApplicationDraft above, which
+// returns NO PII once status !== 'draft'. This action does the opposite on
+// purpose: it returns the answers *because* they are submitted. The trust model
+// is unchanged (the resume token is the applicant's own secret, and the token's
+// expiry still gates it); it is simply a second, narrower door for the same
+// person. It is not a mistake — do not "fix" it to match the branch above.
+export async function downloadApplicationRecap(token: string): Promise<RecapResult> {
+  // Same anonymous-token preamble as the other actions in this file.
+  const ip = await clientIp()
+  await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)
+
+  const admin = createAdminClient()
+  const { data: app } = await admin
+    .from('applications')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name)')
+    .eq('resume_token', token)
+    .maybeSingle()
+  // Structured returns, not throws: prod redacts thrown Server Action messages.
+  if (!app) return { ok: false, reason: 'not_found' }
+  if (tokenExpired(app.resume_token_expires_at)) return { ok: false, reason: 'expired' }
+  // Only a submitted (or further-along) application has a recap.
+  if (app.status === 'draft' || app.status === 'invited') return { ok: false, reason: 'not_submitted' }
+
+  // A broken or unreadable upload must not cost the applicant their recap:
+  // drop the photo and render the rest. Logged without PII.
+  let photoBytes: Uint8Array | null = null
+  if (app.photo_path) {
+    try {
+      const { data: blob, error } = await admin.storage
+        .from(APPLICATION_PHOTO_BUCKET).download(app.photo_path)
+      if (error || !blob) throw new Error('download failed')
+      photoBytes = new Uint8Array(await blob.arrayBuffer())
+    } catch {
+      console.warn('[apply] recap photo unavailable — rendering without it')
+      photoBytes = null
+    }
+  }
+
+  const data = (app.data ?? {}) as Record<string, string>
+  const pdf = await renderApplicationRecapPdf({
+    exchangeName: app.exchanges?.name ?? '',
+    applicantName: buildApplicantName(data),
+    submittedAt: app.submitted_at,
+    data,
+    photoBytes,
+    language: app.language === 'fr' ? 'fr' : 'en',
+  })
+
+  return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }
 }
