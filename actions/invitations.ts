@@ -16,7 +16,7 @@ export async function getInvitation(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, invite_token_expires_at, enrolled_user_id, exchanges(name)')
+    .select('status, data, language, invite_token_expires_at, enrolled_user_id, exchanges(name)')
     .eq('invite_token', token).maybeSingle()
   if (!app) return null
   const applicantName = buildApplicantName(app.data)
@@ -34,7 +34,7 @@ export async function getInvitation(token: string) {
   }
   return {
     exchangeName: app.exchanges?.name ?? '', applicantName, status: app.status,
-    expired: tokenExpired(app.invite_token_expires_at),
+    language: app.language, expired: tokenExpired(app.invite_token_expires_at),
     setupComplete,
   }
 }
