@@ -6,17 +6,24 @@
       "delete": "Elimina",
       "newExchange": "+ Nuovo scambio",
       "add": "Aggiungi",
-      "continue": "Continua"
+      "continue": "Continua",
+      "retry": "Riprova"
     },
     "states": {
       "saved": "✓ Modifiche salvate",
       "loading": "Caricamento…",
-      "loadingLabel": "Caricamento"
+      "loadingLabel": "Caricamento",
+      "loadingSpace": "CARICAMENTO DEL TUO SPAZIO…"
     },
     "errors": {
       "generic": "Si è verificato un errore.",
       "invalidEmail": "Indirizzo e-mail non valido.",
-      "retry": "Si è verificato un errore. Riprova."
+      "retry": "Si è verificato un errore. Riprova.",
+      "heading": "Il filo si è spezzato.",
+      "unauthorized": "Non ha accesso a questa pagina.",
+      "sessionExpired": "La sua sessione è scaduta. Acceda di nuovo.",
+      "notFound": "Non abbiamo trovato ciò che cercava.",
+      "crash": "Si è verificato un errore dalla nostra parte — i suoi dati sono al sicuro. Riprovi, oppure torni in un luogo sicuro."
     },
     "status": {
       "received": "Ricevuto",
@@ -169,9 +176,21 @@
       "usage": "{used} / {cap} {cap, plural, one {scambio} other {scambi}} {used, plural, one {utilizzato} other {utilizzati}}",
       "usageUnlimited": "{used} {used, plural, one {scambio attivo} other {scambi attivi}} · scambi illimitati",
       "plans": {
-        "starter": { "label": "Essenziale", "price": "199 €", "desc": "Per un organizzatore indipendente." },
-        "growth": { "label": "Associazione", "price": "499 €", "desc": "Per le associazioni in piena crescita." },
-        "scale": { "label": "Rete", "price": "799 €", "desc": "Per le grandi reti di scambio." }
+        "starter": {
+          "label": "Essenziale",
+          "price": "199 €",
+          "desc": "Per un organizzatore indipendente."
+        },
+        "growth": {
+          "label": "Associazione",
+          "price": "499 €",
+          "desc": "Per le associazioni in piena crescita."
+        },
+        "scale": {
+          "label": "Rete",
+          "price": "799 €",
+          "desc": "Per le grandi reti di scambio."
+        }
       },
       "trial": {
         "label": "Prova gratuita",
@@ -607,6 +626,405 @@
           "rejected": "Rifiutato",
           "draft": "Bozza"
         }
+      }
+    }
+  },
+  "student": {
+    "shell": {
+      "account": "Account",
+      "signOut": "Esci",
+      "language": "Lingua",
+      "tabs": {
+        "dossier": "Il mio dossier",
+        "infos": "Info"
+      }
+    },
+    "states": {
+      "approved": "Approvato",
+      "submitted": "In verifica",
+      "rejected": "Da correggere",
+      "draft": "Bozza"
+    },
+    "forms": {
+      "confidentialNotice": "Le tue risposte restano riservate — vengono condivise solo con la tua famiglia ospitante se necessario.",
+      "selectPlaceholder": "Scegli un'opzione",
+      "saveDraft": "Salva bozza",
+      "saving": "Salvataggio…",
+      "send": "Invia",
+      "sending": "Invio…",
+      "saveError": "Salvataggio non riuscito",
+      "sendError": "Invio non riuscito",
+      "upload": {
+        "sent": "Inviato",
+        "uploading": "Caricamento…",
+        "replace": "Sostituisci il file",
+        "choose": "Clicca per scegliere un file",
+        "hint": "PDF · JPG · PNG — max 10 MB",
+        "verifyNotice": "Il tuo documento sarà verificato dal team del programma prima dell'approvazione.",
+        "missingRequired": "Aggiungi tutti i documenti richiesti per inviare.",
+        "error": "Caricamento non riuscito"
+      },
+      "external": {
+        "cta": "Fai la richiesta — {name}"
+      },
+      "fillable": {
+        "saveError": "Salvataggio non riuscito. Riprova tra un istante.",
+        "submit": "Firma e invia",
+        "notSigned": "Non firmato",
+        "signedBy": "Firmato elettronicamente da <b>{name}</b> — «Letto e approvato»",
+        "signedByOn": "Firmato elettronicamente da <b>{name}</b> il {date} — «Letto e approvato»",
+        "fullName": "Nome completo",
+        "fullNameFor": "Nome completo — {role}",
+        "approved": "«Letto e approvato»",
+        "approvedFor": "Letto e approvato — {role}",
+        "signatureNotice": "Selezionando «Letto e approvato» e inviando questo modulo, ogni firmatario appone una firma elettronica: il suo nome completo, così come la data e l'ora di invio, vengono registrati e compaiono nel documento PDF finale."
+      }
+    },
+    "dossier": {
+      "greeting": "Ciao {name},",
+      "subline": {
+        "empty": "Niente da compilare per ora — i tuoi moduli e documenti appariranno qui.",
+        "todo": "Ti {n, plural, one {resta # cosa} other {restano # cose}} da fare per completare il tuo dossier prima della partenza.",
+        "review": "Tutto è stato inviato — ti avvisiamo appena la verifica è completata.",
+        "done": "Il tuo dossier è pronto — tutti i tuoi documenti sono approvati."
+      },
+      "upToDate": {
+        "title": "Tutto è aggiornato",
+        "body": "Nessun modulo ti aspetta per ora. Ti avviseremo via e-mail non appena ci saranno novità — goditi la giornata."
+      },
+      "complete": {
+        "title": "Il tuo dossier è completo",
+        "body": "Tutti i tuoi documenti sono approvati — non ti resta che preparare la valigia. Buon viaggio!"
+      },
+      "allSent": {
+        "title": "Tutto è stato inviato",
+        "body": "Stiamo verificando i tuoi ultimi documenti — nient'altro da fare per ora. Riceverai un messaggio appena è tutto pronto."
+      },
+      "progress": "{sent} / {total} inviati",
+      "nextDeadline": "Prossima scadenza · {date}",
+      "sections": {
+        "todo": "Da fare · {n}",
+        "review": "In verifica · {n}",
+        "done": "Approvati · {n}"
+      },
+      "card": {
+        "overdue": "In ritardo — {date}",
+        "deadline": "Scadenza {date}",
+        "reviewNote": "Stiamo verificando — ti avvisiamo appena è approvato.",
+        "approved": "approvato"
+      },
+      "actions": {
+        "fix": "Correggi",
+        "start": "Inizia"
+      }
+    },
+    "infos": {
+      "eyebrow": "Informazioni utili",
+      "title": "Buono a sapersi",
+      "empty": {
+        "title": "Niente per ora",
+        "body": "Il tuo organizzatore non ha ancora aggiunto informazioni. Torna più tardi — appariranno qui."
+      }
+    },
+    "assignment": {
+      "deadline": "Scadenza {date}",
+      "submittedNotice": "La tua risposta è in fase di verifica. Ti avviseremo appena sarà approvata.",
+      "downloadTemplate": "Scarica il documento da firmare"
+    }
+  },
+  "apply": {
+    "form": {
+      "yes": "Sì",
+      "no": "No",
+      "languageLabel": "Lingua",
+      "intro": "Compila il modulo qui sotto — le tue risposte vengono salvate automaticamente man mano.",
+      "noneHint": "Tutti i campi sono obbligatori — se una domanda non ti riguarda, indica «nessuno».",
+      "saved": "SALVATO ✓",
+      "saving": "SALVATAGGIO…",
+      "badge": "Candidatura",
+      "submit": "Invia la mia candidatura",
+      "resend": "Invia di nuovo il link",
+      "reassure": "Progressi salvati automaticamente. Ti abbiamo inviato un link via e-mail nel caso cambi dispositivo.",
+      "submitting": "Invio…",
+      "missing": "Compila tutti i campi obbligatori.",
+      "tooLong": "Alcune risposte superano il limite di caratteri.",
+      "unexpected": "Si è verificato un errore.",
+      "registered": "Questo indirizzo e-mail è già associato a una candidatura. Accedi al tuo account.",
+      "done": "Grazie! La tua candidatura è stata inviata.",
+      "remind": "Ti abbiamo inviato un'e-mail con un link per riprendere la tua candidatura.",
+      "parentHelper": "Compila almeno un genitore per intero."
+    },
+    "recap": {
+      "title": "Riepilogo della mia candidatura",
+      "submitted": "Inviata il",
+      "footer": "Le tue risposte, così come inviate tramite EazyExchange.",
+      "photoAlt": "Foto del candidato",
+      "label": "Scarica le mie risposte (PDF)",
+      "preparing": "Preparazione…",
+      "errors": {
+        "not_found": "Questo link non è più valido — chiedi un nuovo link al tuo organizzatore.",
+        "expired": "Questo link è scaduto — chiedi un nuovo link al tuo organizzatore.",
+        "not_submitted": "La tua candidatura non è ancora stata inviata.",
+        "unexpected": "Il download non è riuscito. Riprova."
+      }
+    },
+    "page": {
+      "badge": "Candidatura",
+      "closed": "Le candidature sono attualmente chiuse per questo scambio.",
+      "invalidTitle": "Questo link non è più valido",
+      "invalidBody": "Potrebbe essere scaduto — è normale, i link scadono per proteggere il tuo dossier. Controlla l'indirizzo nella tua e-mail, oppure chiedi al tuo organizzatore di inviartene uno nuovo.",
+      "expiredTitle": "Questo link è scaduto",
+      "expiredBody": "I link di candidatura scadono dopo un po' per proteggere il tuo dossier. Chiedi al tuo organizzatore di inviartene uno nuovo.",
+      "submittedNotice": "La tua candidatura è già stata inviata. Non può più essere modificata — l'organizzatore ti ricontatterà."
+    },
+    "welcome": {
+      "title": "Bentornato/a{name}!",
+      "body": "Riprendi la tua candidatura da dove l'hai lasciata.",
+      "continue": "Continua la mia candidatura",
+      "notYou": "Non sei tu? Inizia una nuova candidatura"
+    },
+    "start": {
+      "languageLabel": "Lingua",
+      "intro": "Candidati a questo scambio scolastico. Inizia inserendo i tuoi dati qui sotto.",
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "email": "E-mail",
+      "emailHint": "Puoi completare la tua candidatura ora — ti invieremo anche un link privato via e-mail per riprenderla su qualsiasi dispositivo.",
+      "invalidEmail": "Usa un indirizzo e-mail valido, per favore.",
+      "genericError": "Si è verificato un errore.",
+      "submit": "Inizia la mia candidatura",
+      "login": "Accedi",
+      "notices": {
+        "draft": "C'è già una candidatura in corso con questo indirizzo — ti abbiamo rinviato il link per continuare via e-mail.",
+        "submitted": "È già stata inviata una candidatura con questo indirizzo e-mail.",
+        "closed": "Le candidature sono chiuse per questo scambio.",
+        "registered": "Questo indirizzo e-mail è già associato a una candidatura. Se hai già un account, accedi per continuare."
+      }
+    },
+    "photo": {
+      "label": "Foto recente",
+      "choose": "Scegli una foto",
+      "replace": "Sostituisci la foto",
+      "hint": "Qualsiasi foto — verrà ridimensionata automaticamente.",
+      "uploading": "Invio…",
+      "failed": "L'invio non è riuscito. Riprova.",
+      "tooLarge": "Questa immagine non può essere elaborata. Prova con una foto più piccola (JPEG o PNG).",
+      "required": "È richiesta una foto per inviare la tua candidatura."
+    },
+    "invite": {
+      "resultYes": "Grazie — vostro figlio/a riceverà un link per creare il suo accesso.",
+      "resultNo": "Grazie per averci avvisati. Auguriamo il meglio a vostro figlio/a.",
+      "resultMaybe": "Grazie — abbiamo annotato le vostre domande, l'organizzatore vi ricontatterà.",
+      "badge": "Candidatura accettata 🎉",
+      "heading": "{name} è invitato/a allo scambio {exchange}!",
+      "yourChild": "Vostro figlio/a",
+      "confirmQuestion": "Confermate la partecipazione di vostro figlio/a?",
+      "confirmYes": "Sì, confermiamo",
+      "terms": "Confermando la partecipazione di vostro figlio/a, riconoscete di aver preso visione delle condizioni dello scambio comunicate dall'istituto (partecipazione alle spese, accoglienza del corrispondente, regole di convivenza durante il soggiorno).",
+      "no": "No",
+      "questionsPlaceholder": "Le vostre domande per l'organizzatore…",
+      "sendQuestions": "Invia le mie domande",
+      "haveQuestions": "Sì, ma abbiamo delle domande…",
+      "error": "Si è verificato un errore. Riprovate.",
+      "invalidTitle": "Questo link non è più valido",
+      "invalidBody": "Potrebbe essere scaduto — è normale, i link scadono per proteggere il dossier. Controllate l'indirizzo nella vostra e-mail, oppure chiedete all'organizzatore di inviarvene uno nuovo.",
+      "expiredTitle": "Questo invito è scaduto",
+      "expiredBody": "Contattate l'organizzatore per ricevere un nuovo invito.",
+      "alreadyConfirmedTitle": "Partecipazione già confermata",
+      "alreadyConfirmedBody": "Grazie — la partecipazione allo scambio {exchange} è confermata. Vostro figlio/a riceve un link via e-mail per creare il suo accesso.",
+      "answeredTitle": "Questo invito ha già ricevuto una risposta",
+      "answeredBody": "Una risposta è già stata registrata. Se si tratta di un errore, contattate l'organizzatore."
+    },
+    "sections": {
+      "student": {
+        "title": "Studente"
+      },
+      "parents": {
+        "title": "Genitori"
+      },
+      "hosting": {
+        "title": "Condizioni di accoglienza"
+      },
+      "profile": {
+        "title": "Profilo dello studente"
+      }
+    },
+    "fields": {
+      "last_name": {
+        "label": "Cognome"
+      },
+      "first_name": {
+        "label": "Nome"
+      },
+      "native_language": {
+        "label": "Lingua madre"
+      },
+      "nationality": {
+        "label": "Nazionalità"
+      },
+      "date_of_birth": {
+        "label": "Data di nascita"
+      },
+      "sex": {
+        "label": "Genere",
+        "options": {
+          "male": "Maschio",
+          "female": "Femmina",
+          "other": "Altro"
+        }
+      },
+      "gender_other": {
+        "label": "Specificare (es. maschio → femmina)"
+      },
+      "pronouns": {
+        "label": "Pronomi",
+        "options": {
+          "he_him": "Lui",
+          "she_her": "Lei"
+        }
+      },
+      "grade": {
+        "label": "Classe 26-27"
+      },
+      "french_class": {
+        "label": "Classe di francese 26-27"
+      },
+      "email": {
+        "label": "E-mail"
+      },
+      "cell_phone": {
+        "label": "Cellulare"
+      },
+      "father_last_name": {
+        "label": "Padre — Cognome"
+      },
+      "father_first_name": {
+        "label": "Padre — Nome"
+      },
+      "father_nationality": {
+        "label": "Padre — Nazionalità"
+      },
+      "father_native_language": {
+        "label": "Padre — Lingua madre"
+      },
+      "father_cell_phone": {
+        "label": "Padre — Cellulare"
+      },
+      "father_email": {
+        "label": "Padre — Email"
+      },
+      "father_address": {
+        "label": "Padre — Indirizzo"
+      },
+      "father_occupation": {
+        "label": "Padre — Professione"
+      },
+      "mother_last_name": {
+        "label": "Madre — Cognome"
+      },
+      "mother_first_name": {
+        "label": "Madre — Nome"
+      },
+      "mother_nationality": {
+        "label": "Madre — Nazionalità"
+      },
+      "mother_native_language": {
+        "label": "Madre — Lingua madre"
+      },
+      "mother_cell_phone": {
+        "label": "Madre — Cellulare"
+      },
+      "mother_email": {
+        "label": "Madre — Email"
+      },
+      "mother_address": {
+        "label": "Madre — Indirizzo"
+      },
+      "mother_occupation": {
+        "label": "Madre — Professione"
+      },
+      "family_status": {
+        "label": "Situazione familiare",
+        "options": {
+          "married": "Sposati",
+          "separated": "Separati",
+          "step_family": "Famiglia ricostituita"
+        }
+      },
+      "separation_housing_address": {
+        "label": "In caso di separazione, indirizzo dove sarà ospitato il corrispondente"
+      },
+      "brothers_at_home": {
+        "label": "# fratelli in casa (indicare le età)"
+      },
+      "sisters_at_home": {
+        "label": "# sorelle in casa (indicare le età)"
+      },
+      "pets": {
+        "label": "Animali domestici"
+      },
+      "food_requirements": {
+        "label": "Esigenze alimentari"
+      },
+      "other_allergies": {
+        "label": "Altre allergie"
+      },
+      "main_language_home": {
+        "label": "Lingua principale parlata in famiglia"
+      },
+      "other_languages_home": {
+        "label": "Altre lingue parlate in famiglia"
+      },
+      "smoking_home": {
+        "label": "Si fuma in casa?"
+      },
+      "own_room": {
+        "label": "Camera individuale per il corrispondente?"
+      },
+      "accept_opposite_sex": {
+        "label": "Accettereste uno scambio misto?"
+      },
+      "lived_abroad": {
+        "label": "Se avete già vissuto all'estero, descrivete dove e quando"
+      },
+      "countries_with_parents": {
+        "label": "Quali paesi avete visitato con i vostri genitori?"
+      },
+      "countries_without_parents": {
+        "label": "Quali paesi avete visitato senza i vostri genitori, e per quanto tempo?"
+      },
+      "sports": {
+        "label": "Sport praticati e ore a settimana"
+      },
+      "activities": {
+        "label": "Attività, club o hobby e ore a settimana"
+      },
+      "instruments": {
+        "label": "Suonate uno strumento o cantate?"
+      },
+      "family_activities": {
+        "label": "Attività familiari nel weekend / durante le vacanze"
+      },
+      "spare_time": {
+        "label": "Cosa preferite fare nel vostro tempo libero?"
+      },
+      "adjectives": {
+        "label": "Tre aggettivi che un amico stretto userebbe per descrivervi"
+      },
+      "recharge": {
+        "label": "Come vi ricaricate — in compagnia o da soli? Spiegate"
+      },
+      "todo_list": {
+        "label": "Tre cose nella vostra lista di cose da fare nella vita"
+      },
+      "ideal_partner": {
+        "label": "Come sarebbe il vostro corrispondente ideale?"
+      },
+      "share_when_hosting": {
+        "label": "Cosa vorreste condividere con il vostro corrispondente ospitandolo?"
+      },
+      "anything_else": {
+        "label": "Volete aggiungere altro?"
       }
     }
   }

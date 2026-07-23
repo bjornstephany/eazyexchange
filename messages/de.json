@@ -6,17 +6,24 @@
       "delete": "Löschen",
       "newExchange": "+ Neuer Austausch",
       "add": "Hinzufügen",
-      "continue": "Weiter"
+      "continue": "Weiter",
+      "retry": "Erneut versuchen"
     },
     "states": {
       "saved": "✓ Änderungen gespeichert",
       "loading": "Wird geladen…",
-      "loadingLabel": "Wird geladen"
+      "loadingLabel": "Wird geladen",
+      "loadingSpace": "DEIN BEREICH WIRD GELADEN…"
     },
     "errors": {
       "generic": "Ein Fehler ist aufgetreten.",
       "invalidEmail": "Ungültige E-Mail-Adresse.",
-      "retry": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+      "retry": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      "heading": "Der Faden ist gerissen.",
+      "unauthorized": "Sie haben keinen Zugriff auf diese Seite.",
+      "sessionExpired": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an.",
+      "notFound": "Wir haben nicht gefunden, wonach Sie gesucht haben.",
+      "crash": "Auf unserer Seite ist ein Fehler aufgetreten — Ihre Daten sind sicher. Versuchen Sie es erneut oder kehren Sie in Sicherheit zurück."
     },
     "status": {
       "received": "Erhalten",
@@ -169,9 +176,21 @@
       "usage": "{used} / {cap} {cap, plural, one {Austausch} other {Austausche}} {used, plural, one {genutzt} other {genutzt}}",
       "usageUnlimited": "{used} {used, plural, one {aktiver Austausch} other {aktive Austausche}} · unbegrenzte Austausche",
       "plans": {
-        "starter": { "label": "Starter", "price": "199 €", "desc": "Für einen unabhängigen Organisator." },
-        "growth": { "label": "Wachstum", "price": "499 €", "desc": "Für wachsende Vereine." },
-        "scale": { "label": "Netzwerk", "price": "799 €", "desc": "Für große Austauschnetzwerke." }
+        "starter": {
+          "label": "Starter",
+          "price": "199 €",
+          "desc": "Für einen unabhängigen Organisator."
+        },
+        "growth": {
+          "label": "Wachstum",
+          "price": "499 €",
+          "desc": "Für wachsende Vereine."
+        },
+        "scale": {
+          "label": "Netzwerk",
+          "price": "799 €",
+          "desc": "Für große Austauschnetzwerke."
+        }
       },
       "trial": {
         "label": "Kostenlose Testversion",
@@ -607,6 +626,405 @@
           "rejected": "Abgelehnt",
           "draft": "Entwurf"
         }
+      }
+    }
+  },
+  "student": {
+    "shell": {
+      "account": "Konto",
+      "signOut": "Abmelden",
+      "language": "Sprache",
+      "tabs": {
+        "dossier": "Meine Unterlagen",
+        "infos": "Infos"
+      }
+    },
+    "states": {
+      "approved": "Bestätigt",
+      "submitted": "In Prüfung",
+      "rejected": "Zu korrigieren",
+      "draft": "Entwurf"
+    },
+    "forms": {
+      "confidentialNotice": "Deine Antworten bleiben vertraulich — sie werden nur bei Bedarf mit deiner Gastfamilie geteilt.",
+      "selectPlaceholder": "Wähle eine Option",
+      "saveDraft": "Entwurf speichern",
+      "saving": "Wird gespeichert…",
+      "send": "Senden",
+      "sending": "Wird gesendet…",
+      "saveError": "Speichern fehlgeschlagen",
+      "sendError": "Senden fehlgeschlagen",
+      "upload": {
+        "sent": "Gesendet",
+        "uploading": "Wird hochgeladen…",
+        "replace": "Datei ersetzen",
+        "choose": "Klicke, um eine Datei auszuwählen",
+        "hint": "PDF · JPG · PNG — max. 10 MB",
+        "verifyNotice": "Dein Dokument wird vom Programmteam geprüft, bevor es bestätigt wird.",
+        "missingRequired": "Füge alle erforderlichen Dokumente hinzu, um zu senden.",
+        "error": "Hochladen fehlgeschlagen"
+      },
+      "external": {
+        "cta": "Antrag stellen — {name}"
+      },
+      "fillable": {
+        "saveError": "Speichern fehlgeschlagen. Versuche es gleich noch einmal.",
+        "submit": "Unterschreiben und senden",
+        "notSigned": "Nicht unterschrieben",
+        "signedBy": "Elektronisch unterschrieben von <b>{name}</b> — „Gelesen und genehmigt“",
+        "signedByOn": "Elektronisch unterschrieben von <b>{name}</b> am {date} — „Gelesen und genehmigt“",
+        "fullName": "Vollständiger Name",
+        "fullNameFor": "Vollständiger Name — {role}",
+        "approved": "„Gelesen und genehmigt“",
+        "approvedFor": "Gelesen und genehmigt — {role}",
+        "signatureNotice": "Wenn du „Gelesen und genehmigt“ ankreuzt und dieses Formular absendest, leistet jeder Unterzeichner eine elektronische Unterschrift: sein vollständiger Name sowie Datum und Uhrzeit des Absendens werden gespeichert und erscheinen im finalen PDF-Dokument."
+      }
+    },
+    "dossier": {
+      "greeting": "Hallo {name},",
+      "subline": {
+        "empty": "Im Moment gibt es nichts auszufüllen — deine Formulare und Dokumente erscheinen hier.",
+        "todo": "Dir {n, plural, one {bleibt noch # Sache} other {bleiben noch # Sachen}} zu erledigen, um deine Unterlagen vor der Abreise zu vervollständigen.",
+        "review": "Alles ist gesendet — wir benachrichtigen dich, sobald die Prüfung abgeschlossen ist.",
+        "done": "Deine Unterlagen sind fertig — alle deine Dokumente sind bestätigt."
+      },
+      "upToDate": {
+        "title": "Alles ist aktuell",
+        "body": "Im Moment wartet kein Formular auf dich. Wir benachrichtigen dich per E-Mail, sobald es etwas Neues gibt — genieße deinen Tag."
+      },
+      "complete": {
+        "title": "Deine Unterlagen sind vollständig",
+        "body": "Alle deine Dokumente sind bestätigt — jetzt musst du nur noch deinen Koffer packen. Gute Reise!"
+      },
+      "allSent": {
+        "title": "Alles ist gesendet",
+        "body": "Wir prüfen deine letzten Dokumente — im Moment gibt es nichts weiter zu tun. Du erhältst eine Nachricht, sobald alles fertig ist."
+      },
+      "progress": "{sent} / {total} gesendet",
+      "nextDeadline": "Nächste Frist · {date}",
+      "sections": {
+        "todo": "Zu erledigen · {n}",
+        "review": "In Prüfung · {n}",
+        "done": "Bestätigt · {n}"
+      },
+      "card": {
+        "overdue": "Überfällig — {date}",
+        "deadline": "Frist {date}",
+        "reviewNote": "Wir prüfen — wir benachrichtigen dich, sobald es bestätigt ist.",
+        "approved": "bestätigt"
+      },
+      "actions": {
+        "fix": "Korrigieren",
+        "start": "Starten"
+      }
+    },
+    "infos": {
+      "eyebrow": "Praktische Infos",
+      "title": "Gut zu wissen",
+      "empty": {
+        "title": "Noch nichts",
+        "body": "Dein Organisator hat noch keine Informationen hinzugefügt. Schau später wieder vorbei — sie erscheinen hier."
+      }
+    },
+    "assignment": {
+      "deadline": "Frist {date}",
+      "submittedNotice": "Deine Antwort wird gerade geprüft. Du wirst benachrichtigt, sobald sie bestätigt ist.",
+      "downloadTemplate": "Das zu unterschreibende Dokument herunterladen"
+    }
+  },
+  "apply": {
+    "form": {
+      "yes": "Ja",
+      "no": "Nein",
+      "languageLabel": "Sprache",
+      "intro": "Fülle das untenstehende Formular aus — deine Antworten werden automatisch gespeichert, während du weitermachst.",
+      "noneHint": "Alle Felder sind Pflichtfelder — wenn eine Frage nicht auf dich zutrifft, gib „keine“ an.",
+      "saved": "GESPEICHERT ✓",
+      "saving": "WIRD GESPEICHERT…",
+      "badge": "Bewerbung",
+      "submit": "Meine Bewerbung senden",
+      "resend": "Link erneut senden",
+      "reassure": "Fortschritt wird automatisch gespeichert. Wir haben dir einen Link per E-Mail geschickt, falls du das Gerät wechselst.",
+      "submitting": "Wird gesendet…",
+      "missing": "Bitte fülle alle Pflichtfelder aus.",
+      "tooLong": "Einige Antworten überschreiten die Zeichengrenze.",
+      "unexpected": "Ein Fehler ist aufgetreten.",
+      "registered": "Diese E-Mail-Adresse ist bereits mit einer Bewerbung verknüpft. Melde dich bei deinem Konto an.",
+      "done": "Danke! Deine Bewerbung wurde gesendet.",
+      "remind": "Wir haben dir eine E-Mail mit einem Link geschickt, um deine Bewerbung fortzusetzen.",
+      "parentHelper": "Fülle mindestens einen Elternteil vollständig aus."
+    },
+    "recap": {
+      "title": "Zusammenfassung meiner Bewerbung",
+      "submitted": "Gesendet am",
+      "footer": "Deine Antworten, wie über EazyExchange gesendet.",
+      "photoAlt": "Foto des Bewerbers",
+      "label": "Meine Antworten herunterladen (PDF)",
+      "preparing": "Wird vorbereitet…",
+      "errors": {
+        "not_found": "Dieser Link ist nicht mehr gültig — bitte deinen Organisator um einen neuen Link.",
+        "expired": "Dieser Link ist abgelaufen — bitte deinen Organisator um einen neuen Link.",
+        "not_submitted": "Deine Bewerbung wurde noch nicht gesendet.",
+        "unexpected": "Der Download ist fehlgeschlagen. Versuche es erneut."
+      }
+    },
+    "page": {
+      "badge": "Bewerbung",
+      "closed": "Die Bewerbungen für diesen Austausch sind derzeit geschlossen.",
+      "invalidTitle": "Dieser Link ist nicht mehr gültig",
+      "invalidBody": "Er ist vielleicht abgelaufen — das ist normal, Links laufen ab, um deine Unterlagen zu schützen. Überprüfe die Adresse in deiner E-Mail oder bitte deinen Organisator, dir einen neuen zu schicken.",
+      "expiredTitle": "Dieser Link ist abgelaufen",
+      "expiredBody": "Bewerbungslinks laufen nach einiger Zeit ab, um deine Unterlagen zu schützen. Bitte deinen Organisator, dir einen neuen zu schicken.",
+      "submittedNotice": "Deine Bewerbung wurde bereits gesendet. Sie kann nicht mehr geändert werden — der Organisator wird sich bei dir melden."
+    },
+    "welcome": {
+      "title": "Willkommen zurück{name}!",
+      "body": "Setze deine Bewerbung dort fort, wo du aufgehört hast.",
+      "continue": "Meine Bewerbung fortsetzen",
+      "notYou": "Nicht du? Neue Bewerbung starten"
+    },
+    "start": {
+      "languageLabel": "Sprache",
+      "intro": "Bewirb dich für diesen Schüleraustausch. Gib zunächst unten deine Daten an.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "emailHint": "Du kannst deine Bewerbung jetzt ausfüllen — wir schicken dir außerdem einen privaten Link per E-Mail, um sie auf jedem Gerät fortzusetzen.",
+      "invalidEmail": "Bitte verwende eine gültige E-Mail-Adresse.",
+      "genericError": "Ein Fehler ist aufgetreten.",
+      "submit": "Meine Bewerbung starten",
+      "login": "Anmelden",
+      "notices": {
+        "draft": "Mit dieser Adresse läuft bereits eine Bewerbung — wir haben dir den Link zum Fortsetzen erneut per E-Mail geschickt.",
+        "submitted": "Mit dieser E-Mail-Adresse wurde bereits eine Bewerbung gesendet.",
+        "closed": "Die Bewerbungen für diesen Austausch sind geschlossen.",
+        "registered": "Diese E-Mail-Adresse ist bereits mit einer Bewerbung verknüpft. Wenn du bereits ein Konto hast, melde dich an, um fortzufahren."
+      }
+    },
+    "photo": {
+      "label": "Aktuelles Foto",
+      "choose": "Foto auswählen",
+      "replace": "Foto ersetzen",
+      "hint": "Ein beliebiges Foto — es wird automatisch angepasst.",
+      "uploading": "Wird gesendet…",
+      "failed": "Das Senden ist fehlgeschlagen. Versuche es erneut.",
+      "tooLarge": "Dieses Bild kann nicht verarbeitet werden. Versuche ein kleineres Foto (JPEG oder PNG).",
+      "required": "Für das Absenden deiner Bewerbung ist ein Foto erforderlich."
+    },
+    "invite": {
+      "resultYes": "Danke — Ihr Kind erhält einen Link, um seinen Zugang einzurichten.",
+      "resultNo": "Danke für Ihre Nachricht. Wir wünschen Ihrem Kind alles Gute.",
+      "resultMaybe": "Danke — wir haben Ihre Fragen notiert, der Organisator meldet sich bei Ihnen.",
+      "badge": "Bewerbung angenommen 🎉",
+      "heading": "{name} ist zum Austausch {exchange} eingeladen!",
+      "yourChild": "Ihr Kind",
+      "confirmQuestion": "Bestätigen Sie die Teilnahme Ihres Kindes?",
+      "confirmYes": "Ja, wir bestätigen",
+      "terms": "Mit der Bestätigung der Teilnahme Ihres Kindes erkennen Sie an, die von der Schule mitgeteilten Bedingungen des Austauschs zur Kenntnis genommen zu haben (Kostenbeteiligung, Aufnahme des Austauschpartners, Verhaltensregeln während des Aufenthalts).",
+      "no": "Nein",
+      "questionsPlaceholder": "Ihre Fragen an den Organisator…",
+      "sendQuestions": "Meine Fragen senden",
+      "haveQuestions": "Ja, aber wir haben Fragen…",
+      "error": "Ein Fehler ist aufgetreten. Versuchen Sie es erneut.",
+      "invalidTitle": "Dieser Link ist nicht mehr gültig",
+      "invalidBody": "Er ist vielleicht abgelaufen — das ist normal, Links laufen ab, um die Unterlagen zu schützen. Überprüfen Sie die Adresse in Ihrer E-Mail oder bitten Sie den Organisator, Ihnen einen neuen zu schicken.",
+      "expiredTitle": "Diese Einladung ist abgelaufen",
+      "expiredBody": "Wenden Sie sich an den Organisator, um eine neue Einladung zu erhalten.",
+      "alreadyConfirmedTitle": "Teilnahme bereits bestätigt",
+      "alreadyConfirmedBody": "Danke — die Teilnahme am Austausch {exchange} ist bestätigt. Ihr Kind erhält einen Link per E-Mail, um seinen Zugang einzurichten.",
+      "answeredTitle": "Diese Einladung wurde bereits beantwortet",
+      "answeredBody": "Eine Antwort wurde bereits erfasst. Falls dies ein Fehler ist, wenden Sie sich an den Organisator."
+    },
+    "sections": {
+      "student": {
+        "title": "Schüler"
+      },
+      "parents": {
+        "title": "Eltern"
+      },
+      "hosting": {
+        "title": "Aufnahmebedingungen"
+      },
+      "profile": {
+        "title": "Profil des Schülers"
+      }
+    },
+    "fields": {
+      "last_name": {
+        "label": "Nachname"
+      },
+      "first_name": {
+        "label": "Vorname"
+      },
+      "native_language": {
+        "label": "Muttersprache"
+      },
+      "nationality": {
+        "label": "Staatsangehörigkeit(en)"
+      },
+      "date_of_birth": {
+        "label": "Geburtsdatum"
+      },
+      "sex": {
+        "label": "Geschlecht",
+        "options": {
+          "male": "Junge",
+          "female": "Mädchen",
+          "other": "Andere"
+        }
+      },
+      "gender_other": {
+        "label": "Bitte angeben (z. B. Junge → Mädchen)"
+      },
+      "pronouns": {
+        "label": "Pronomen",
+        "options": {
+          "he_him": "Er",
+          "she_her": "Sie"
+        }
+      },
+      "grade": {
+        "label": "Klassenstufe 26-27"
+      },
+      "french_class": {
+        "label": "Französischkurs 26-27"
+      },
+      "email": {
+        "label": "E-Mail"
+      },
+      "cell_phone": {
+        "label": "Handynummer"
+      },
+      "father_last_name": {
+        "label": "Vater — Nachname"
+      },
+      "father_first_name": {
+        "label": "Vater — Vorname"
+      },
+      "father_nationality": {
+        "label": "Vater — Staatsangehörigkeit(en)"
+      },
+      "father_native_language": {
+        "label": "Vater — Muttersprache"
+      },
+      "father_cell_phone": {
+        "label": "Vater — Handynummer"
+      },
+      "father_email": {
+        "label": "Vater — E-Mail"
+      },
+      "father_address": {
+        "label": "Vater — Adresse"
+      },
+      "father_occupation": {
+        "label": "Vater — Beruf"
+      },
+      "mother_last_name": {
+        "label": "Mutter — Nachname"
+      },
+      "mother_first_name": {
+        "label": "Mutter — Vorname"
+      },
+      "mother_nationality": {
+        "label": "Mutter — Staatsangehörigkeit(en)"
+      },
+      "mother_native_language": {
+        "label": "Mutter — Muttersprache"
+      },
+      "mother_cell_phone": {
+        "label": "Mutter — Handynummer"
+      },
+      "mother_email": {
+        "label": "Mutter — E-Mail"
+      },
+      "mother_address": {
+        "label": "Mutter — Adresse"
+      },
+      "mother_occupation": {
+        "label": "Mutter — Beruf"
+      },
+      "family_status": {
+        "label": "Familienstand",
+        "options": {
+          "married": "Verheiratet",
+          "separated": "Getrennt",
+          "step_family": "Patchworkfamilie"
+        }
+      },
+      "separation_housing_address": {
+        "label": "Bei Trennung: Adresse, an der der Austauschpartner untergebracht wird"
+      },
+      "brothers_at_home": {
+        "label": "# Brüder zu Hause (Alter angeben)"
+      },
+      "sisters_at_home": {
+        "label": "# Schwestern zu Hause (Alter angeben)"
+      },
+      "pets": {
+        "label": "Haustiere"
+      },
+      "food_requirements": {
+        "label": "Ernährungsbesonderheiten"
+      },
+      "other_allergies": {
+        "label": "Andere Allergien"
+      },
+      "main_language_home": {
+        "label": "Hauptsprache in der Familie"
+      },
+      "other_languages_home": {
+        "label": "Weitere Sprachen in der Familie"
+      },
+      "smoking_home": {
+        "label": "Wird zu Hause geraucht?"
+      },
+      "own_room": {
+        "label": "Eigenes Zimmer für den Austauschpartner?"
+      },
+      "accept_opposite_sex": {
+        "label": "Würden Sie einen gemischten Austausch akzeptieren?"
+      },
+      "lived_abroad": {
+        "label": "Falls Sie schon einmal im Ausland gelebt haben, beschreiben Sie wo und wann"
+      },
+      "countries_with_parents": {
+        "label": "Welche Länder haben Sie mit Ihren Eltern besucht?"
+      },
+      "countries_without_parents": {
+        "label": "Welche Länder haben Sie ohne Ihre Eltern besucht, und wie lange?"
+      },
+      "sports": {
+        "label": "Sportarten und Stunden pro Woche"
+      },
+      "activities": {
+        "label": "Aktivitäten, Vereine oder Hobbys und Stunden pro Woche"
+      },
+      "instruments": {
+        "label": "Spielen Sie ein Instrument oder singen Sie?"
+      },
+      "family_activities": {
+        "label": "Familienaktivitäten am Wochenende / in den Ferien"
+      },
+      "spare_time": {
+        "label": "Was machen Sie in Ihrer Freizeit am liebsten?"
+      },
+      "adjectives": {
+        "label": "Drei Adjektive, mit denen ein enger Freund Sie beschreiben würde"
+      },
+      "recharge": {
+        "label": "Wie tanken Sie auf — in Gesellschaft oder allein? Erklären Sie"
+      },
+      "todo_list": {
+        "label": "Drei Dinge auf Ihrer „Bucket List“"
+      },
+      "ideal_partner": {
+        "label": "Wie wäre Ihr idealer Austauschpartner?"
+      },
+      "share_when_hosting": {
+        "label": "Was möchten Sie mit Ihrem Austauschpartner teilen, wenn Sie ihn aufnehmen?"
+      },
+      "anything_else": {
+        "label": "Möchten Sie noch etwas hinzufügen?"
       }
     }
   }
