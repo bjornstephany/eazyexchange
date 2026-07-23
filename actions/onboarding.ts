@@ -17,6 +17,44 @@ import {
   type FirstExchangeDetails,
   type CompleteFirstExchangeResult,
 } from '@/lib/onboarding/first-exchange'
+import {
+  normalizeText, isSearchable, rankSchoolOptions, MAX_RESULTS,
+  type SchoolOption,
+} from '@/lib/schools/registry'
+
+const REGISTRY_COLUMNS = 'id, uai, name, type, status, commune, postal_code'
+
+// Establishment autocomplete for /onboarding step 1. Two indexed queries —
+// name-prefix (btree text_pattern_ops on search_name) and contains-anywhere
+// (GIN trigram on search_text) — merged so the best matches come first.
+//
+// No rate limiter on purpose: the registry is public open government data, the
+// caller is an authenticated organizer, and lib/rate-limit fails CLOSED — a
+// limiter outage would lock real customers out of onboarding.
+export async function searchSchools(query: string): Promise<SchoolOption[]> {
+  await requireOrganizer()
+
+  const q = normalizeText(query ?? '')
+  if (!isSearchable(q)) return []
+
+  // normalizeText leaves only [a-z0-9 ], so % is safe to concatenate and no
+  // LIKE escaping is needed.
+  const supabase = await createClient()
+  const run = async (column: 'search_name' | 'search_text', pattern: string) => {
+    const { data, error } = await supabase
+      .from('school_registry')
+      .select(REGISTRY_COLUMNS)
+      .like(column, pattern)
+      .order('name')
+      .limit(MAX_RESULTS)
+    if (error) throw error
+    return (data ?? []) as SchoolOption[]
+  }
+
+  const prefixHits = await run('search_name', `${q}%`)
+  const containsHits = await run('search_text', `%${q}%`)
+  return rankSchoolOptions(prefixHits, containsHits)
+}
 
 // Persists the organizer's school name from the /onboarding page. Mirrors
 // createExchange's guards. Uses the cookie (RLS) client — the organizer
