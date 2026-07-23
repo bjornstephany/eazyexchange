@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
+vi.mock('next-intl/server', async () =>
+  (await import('@/lib/test/serverTranslations')).serverTranslationsMock)
+
 const getInvitationMock = vi.fn()
 vi.mock('@/actions/invitations', () => ({
   getInvitation: (...a: unknown[]) => getInvitationMock(...a),
@@ -9,9 +12,11 @@ vi.mock('@/actions/invitations', () => ({
 
 import InvitePage from '@/app/invite/[token]/page'
 
+// `language: 'fr'` on the fixture keeps the page on the stored-locale path so it
+// never falls back to resolveLocale() (which needs a real request context).
 const BASE = {
   exchangeName: 'Espagne · Automne 2026', applicantName: 'Léa Martin',
-  status: 'accepted', expired: false, setupComplete: null as boolean | null,
+  status: 'accepted', language: 'fr', expired: false, setupComplete: null as boolean | null,
 }
 
 async function renderPage(r?: string) {
