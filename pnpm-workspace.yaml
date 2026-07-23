@@ -1,3 +1,17 @@
+overrides:
+  # next 15.5.21 still declares sharp ^0.34.3, but sharp <0.35.0 carries four
+  # high libvips CVEs (GHSA-f88m-g3jw-g9cj) that fail the dependency-audit gate.
+  # We don't import sharp ourselves and Vercel optimizes images on the platform,
+  # so forcing the patched line is safe. Drop this once next ships sharp ^0.35.
+  sharp: ^0.35.3
+
+  # next 15.5.21 hard-pins postcss 8.4.31, but <=8.5.11 carries a high advisory
+  # (GHSA-6g55-p6wh-862q: arbitrary file read via attacker-controlled
+  # sourceMappingURL in CSS comments). 8.4.31 -> 8.5.x is a same-major bump of a
+  # semver-stable package used by both next and tailwind. Drop this once next
+  # pins postcss >=8.5.12.
+  postcss: ^8.5.12
+
 allowBuilds:
   # sharp = next 15's image optimizer; its install step fetches prebuilt binaries.
   '@parcel/watcher': true

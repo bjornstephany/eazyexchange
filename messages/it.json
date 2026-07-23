@@ -247,7 +247,14 @@
       "exchangeGroup": {
         "title": "I miei scambi",
         "add": "+ Aggiungi",
-        "empty": "Nessuno scambio"
+        "empty": "Nessuno scambio",
+        "reorder": "Riordina {name}",
+        "dnd": {
+          "picked": "{name} selezionato. Usa le frecce per spostarlo, Spazio per rilasciarlo, Esc per annullare.",
+          "moved": "{name} spostato in posizione {position} di {total}.",
+          "dropped": "{name} rilasciato in posizione {position} di {total}.",
+          "cancelled": "Riordino di {name} annullato."
+        }
       },
       "sidebar": {
         "collapse": "Riduci",

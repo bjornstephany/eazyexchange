@@ -247,7 +247,14 @@
       "exchangeGroup": {
         "title": "Meine Austausche",
         "add": "+ Hinzufügen",
-        "empty": "Kein Austausch"
+        "empty": "Kein Austausch",
+        "reorder": "{name} neu anordnen",
+        "dnd": {
+          "picked": "{name} aufgenommen. Mit den Pfeiltasten verschieben, Leertaste zum Ablegen, Escape zum Abbrechen.",
+          "moved": "{name} an Position {position} von {total} verschoben.",
+          "dropped": "{name} an Position {position} von {total} abgelegt.",
+          "cancelled": "Neuanordnung von {name} abgebrochen."
+        }
       },
       "sidebar": {
         "collapse": "Einklappen",

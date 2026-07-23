@@ -231,7 +231,9 @@ describe('OrganizerShell', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    fireEvent.click(screen.getByRole('button', { name: /Espagne 2026/ }))
+    // Anchored: each row now has a sibling grip labelled "Réordonner <name>",
+    // which an unanchored /name/ would match too.
+    fireEvent.click(screen.getByRole('button', { name: /^Espagne 2026/ }))
     await waitFor(() => expect(setActiveExchange).toHaveBeenCalledWith('ex2'))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'))
   })
@@ -240,7 +242,7 @@ describe('OrganizerShell', () => {
     push.mockClear()
     vi.mocked(setActiveExchange).mockClear()
     renderShell({ pathname: '/dashboard' })
-    fireEvent.click(screen.getByRole('button', { name: /France–Canada 2026/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^France–Canada 2026/ }))
     expect(setActiveExchange).not.toHaveBeenCalled()
     expect(push).not.toHaveBeenCalled()
   })
