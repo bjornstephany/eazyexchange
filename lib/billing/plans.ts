@@ -30,6 +30,17 @@ export function hasPriceForPlan(plan: PlanKey): boolean {
   return Boolean(process.env[PRICE_ENV[plan]])
 }
 
+// Server-only inverse of `priceIdForPlan`. The Stripe customer portal changes a
+// subscription's PRICE without rewriting its metadata, so the webhook has to be
+// able to name the plan from the price alone.
+export function planForPriceId(id: string): PlanKey | null {
+  if (!id) return null
+  for (const key of PLAN_KEYS) {
+    if (process.env[PRICE_ENV[key]] === id) return key
+  }
+  return null
+}
+
 // Precedence: explicit ?plan= query → school's stored plan → signup metadata → default.
 export function resolveCheckoutPlan(input: {
   query?: string | null

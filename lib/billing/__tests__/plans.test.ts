@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import {
   PLAN_KEYS, DEFAULT_PLAN, isPlanKey, coercePlan, resolveCheckoutPlan,
-  hasPriceForPlan, priceIdForPlan,
+  hasPriceForPlan, priceIdForPlan, planForPriceId,
 } from '@/lib/billing/plans'
 
 describe('plans', () => {
@@ -47,6 +47,37 @@ describe('plans', () => {
       process.env[KEY] = 'price_test_123'
       expect(hasPriceForPlan('starter')).toBe(true)
       expect(priceIdForPlan('starter')).toBe('price_test_123')
+    })
+  })
+
+  describe('planForPriceId', () => {
+    const KEYS = ['STRIPE_PRICE_STARTER', 'STRIPE_PRICE_GROWTH', 'STRIPE_PRICE_SCALE'] as const
+    const originals = KEYS.map((k) => [k, process.env[k]] as const)
+    afterEach(() => {
+      for (const [k, v] of originals) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
+    })
+
+    it('round-trips with priceIdForPlan', () => {
+      process.env.STRIPE_PRICE_STARTER = 'price_s'
+      process.env.STRIPE_PRICE_GROWTH = 'price_g'
+      process.env.STRIPE_PRICE_SCALE = 'price_x'
+      expect(planForPriceId(priceIdForPlan('starter'))).toBe('starter')
+      expect(planForPriceId(priceIdForPlan('growth'))).toBe('growth')
+      expect(planForPriceId(priceIdForPlan('scale'))).toBe('scale')
+    })
+
+    it('returns null for an unknown or empty price id', () => {
+      process.env.STRIPE_PRICE_STARTER = 'price_s'
+      expect(planForPriceId('price_nope')).toBeNull()
+      expect(planForPriceId('')).toBeNull()
+    })
+
+    it('does not match a plan whose price env is unset', () => {
+      delete process.env.STRIPE_PRICE_GROWTH
+      expect(planForPriceId('price_g')).toBeNull()
     })
   })
 })

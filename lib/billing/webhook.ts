@@ -1,6 +1,6 @@
 import type Stripe from 'stripe'
 import type { School, SubscriptionStatus } from '@/types/db'
-import { coercePlan, isPlanKey } from './plans'
+import { coercePlan, isPlanKey, planForPriceId } from './plans'
 
 export type SchoolBillingPatch = Partial<Pick<School,
   | 'stripe_customer_id'
@@ -46,7 +46,14 @@ export function resolveBillingUpdate(event: Stripe.Event): BillingUpdate | null 
           : null,
       }
       if (sub.status === 'active') patch.grace_until = null
-      if (isPlanKey(sub.metadata?.plan)) patch.plan = sub.metadata.plan
+      // A customer-portal price change does NOT rewrite subscription metadata,
+      // so metadata.plan stays at whatever the original checkout wrote. The
+      // price actually on the subscription is the truth; metadata is only the
+      // fallback for events that predate a configured price env.
+      const priceId = sub.items?.data?.[0]?.price?.id
+      const fromPrice = priceId ? planForPriceId(priceId) : null
+      if (fromPrice) patch.plan = fromPrice
+      else if (isPlanKey(sub.metadata?.plan)) patch.plan = sub.metadata.plan
       return { customerId: String(sub.customer), patch }
     }
     case 'invoice.payment_failed': {
