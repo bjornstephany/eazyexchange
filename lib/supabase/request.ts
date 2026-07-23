@@ -16,6 +16,9 @@ export type Profile = {
   email: string
   org_role: string | null
   locale: Locale
+  // Personal sidebar order for exchanges (ids the organizer dragged into
+  // place). Display-only: unknown ids are ignored at sort time.
+  exchange_order: string[] | null
   schools: {
     name: string
     subscription_status: string | null
@@ -39,7 +42,7 @@ export const getProfile = requestCache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('users')
-    .select('id, role, school_id, full_name, email, org_role, locale, schools(name, subscription_status, plan, grace_until)')
+    .select('id, role, school_id, full_name, email, org_role, locale, exchange_order, schools(name, subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<Profile>()
   return data ?? null
