@@ -11,7 +11,7 @@ import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
 import { isPlanKey, type PlanKey } from '@/lib/billing/plans'
 import { getStripe } from '@/lib/billing/stripe'
 import { getAppUrl } from '@/lib/app-url'
-import { usageLine } from '@/lib/billing/display'
+import { usagePct } from '@/lib/billing/display'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
 import { logAudit } from '@/lib/audit'
 import { isLocale, type Locale } from '@/lib/i18n/config'
@@ -132,7 +132,6 @@ export async function getBillingOverview(): Promise<BillingOverview> {
   const active = hasActivePlan(school)
   const planKey = active && isPlanKey(school.plan) ? school.plan : null
   const cap = exchangeCap(school)
-  const usage = usageLine(used, cap)
   const usageLabel = cap === Infinity
     ? t('billing.usageUnlimited', { used })
     : t('billing.usage', { used, cap })
@@ -171,11 +170,11 @@ export async function getBillingOverview(): Promise<BillingOverview> {
   return planKey
     ? {
         planLabel: planCatalog[planKey].label, price: planCatalog[planKey].price, per: t('billing.per'),
-        desc: planCatalog[planKey].desc, usageLabel, usagePct: usage.pct, payment,
+        desc: planCatalog[planKey].desc, usageLabel, usagePct: usagePct(used, cap), payment,
       }
     : {
         planLabel: t('billing.trial.label'), price: t('billing.trial.price'), per: '',
-        desc: t('billing.trial.desc'), usageLabel, usagePct: usage.pct, payment,
+        desc: t('billing.trial.desc'), usageLabel, usagePct: usagePct(used, cap), payment,
       }
 }
 

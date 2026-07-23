@@ -173,6 +173,49 @@
     },
     "billing": {
       "per": "/ Jahr",
+      "heading": "Tarife & Abrechnung",
+      "leadActive": "Sie nutzen den Tarif {plan}.",
+      "leadTrial": "Sie befinden sich in der kostenlosen Testphase. Wählen Sie einen Tarif, um weitere Austausche anzulegen.",
+      "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Bitte versuchen Sie es später erneut.",
+      "backToDashboard": "Zurück zum Dashboard",
+      "managePortal": "Abrechnung verwalten",
+      "capLine": "{cap, plural, one {# Austausch} other {# Austausche}}",
+      "capUnlimited": "Unbegrenzte Austausche",
+      "popularBadge": "BELIEBT",
+      "selectorLegend": "Tarifauswahl",
+      "continueCta": "Weiter mit {plan}",
+      "upgradeCta": "Wechseln zu {plan}",
+      "currentPlanBadge": "Aktueller Tarif",
+      "cgv": "Mit dem Abonnement akzeptieren Sie unsere <cgv>Allgemeinen Verkaufsbedingungen</cgv>.",
+      "audience": {
+        "starter": "Für eine einzelne Partnerschaft",
+        "growth": "Für mehrere Programme parallel",
+        "scale": "Für große Einrichtungen"
+      },
+      "features": {
+        "f1": "Unbegrenzt Schüler und Familien",
+        "f2": "Unbegrenzt Formulare und Dokumente",
+        "f3": "Automatische E-Mail-Erinnerungen",
+        "f4": "Aktenverfolgung in Echtzeit"
+      },
+      "delta": {
+        "more": "+{n, plural, one {# Austausch} other {# Austausche}}",
+        "unlimited": "Unbegrenzte Austausche"
+      },
+      "capReached": {
+        "heading": "Ihr Tarif {plan} ist ausgeschöpft",
+        "body": "Sie nutzen alle {cap, plural, one {# Austausch} other {# Austausche}}. Wechseln Sie in einen höheren Tarif, um weitere anzulegen.",
+        "blockedLead": "Anlegen eines Austauschs blockiert: Ihr aktueller Tarif hat sein Limit erreicht."
+      },
+      "trialCapReached": {
+        "heading": "Ihre kostenlose Testphase ist ausgeschöpft",
+        "body": "Ihr kostenloser Austausch wird bereits genutzt. Wählen Sie einen Tarif, um weitere anzulegen."
+      },
+      "grace": {
+        "heading": "Ihre letzte Zahlung ist fehlgeschlagen",
+        "body": "Aktualisieren Sie Ihre Karte, um den Zugang zu Ihren Austauschen zu behalten.",
+        "cta": "Karte aktualisieren"
+      },
       "usage": "{used} / {cap} {cap, plural, one {Austausch} other {Austausche}} {used, plural, one {genutzt} other {genutzt}}",
       "usageUnlimited": "{used} {used, plural, one {aktiver Austausch} other {aktive Austausche}} · unbegrenzte Austausche",
       "plans": {

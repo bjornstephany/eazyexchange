@@ -1,25 +1,32 @@
 import { describe, it, expect } from 'vitest'
-import {
-  PLAN_LABEL_FR, PLAN_PRICE_FR, planCapLabel, usageLine,
-} from '@/lib/billing/display'
+import { usagePct } from '@/lib/billing/display'
 
-describe('plan display', () => {
-  it('French labels and € prices (user decision 2026-07-04)', () => {
-    expect(PLAN_LABEL_FR).toEqual({ starter: 'Essentiel', growth: 'Association', scale: 'Réseau' })
-    expect(PLAN_PRICE_FR).toEqual({ starter: '199 €', growth: '399 €', scale: '599 €' })
+// Plan copy now lives in the `organizer.billing` message namespace — see
+// lib/billing/__tests__/plan-copy.test.ts. Only the math is left here.
+describe('usagePct', () => {
+  it('is the rounded percentage of the cap', () => {
+    expect(usagePct(1, 2)).toBe(50)
+    expect(usagePct(2, 2)).toBe(100)
+    expect(usagePct(0, 1)).toBe(0)
+    expect(usagePct(2, 6)).toBe(33)
   })
-  it('cap labels', () => {
-    expect(planCapLabel('starter')).toBe('2 échanges')
-    expect(planCapLabel('scale')).toBe('Échanges illimités')
+  it('clamps above the cap', () => {
+    expect(usagePct(3, 2)).toBe(100)
   })
-  it('usage line: bounded plans', () => {
-    expect(usageLine(1, 2)).toEqual({ label: '1 / 2 échanges utilisé', pct: 50 })
-    expect(usageLine(2, 2)).toEqual({ label: '2 / 2 échanges utilisés', pct: 100 })
-    expect(usageLine(3, 2).pct).toBe(100) // clamped
-    expect(usageLine(0, 1)).toEqual({ label: '0 / 1 échange utilisé', pct: 0 })
+  it('shows a token sliver for unlimited plans', () => {
+    expect(usagePct(0, Infinity)).toBe(6)
+    expect(usagePct(99, Infinity)).toBe(6)
   })
-  it('usage line: unlimited', () => {
-    expect(usageLine(1, Infinity)).toEqual({ label: '1 échange actif · échanges illimités', pct: 6 })
-    expect(usageLine(3, Infinity).label).toBe('3 échanges actifs · échanges illimités')
+  it('is zero for a zero cap rather than NaN', () => {
+    expect(usagePct(3, 0)).toBe(0)
+  })
+})
+
+describe('the module surface', () => {
+  // The retirement itself is the deliverable: nothing customer-facing may live
+  // in this file any more, or /billing and Settings can drift back apart.
+  it('exports only the math', async () => {
+    const mod = await import('@/lib/billing/display')
+    expect(Object.keys(mod).sort()).toEqual(['usagePct'])
   })
 })

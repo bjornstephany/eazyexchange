@@ -18,6 +18,10 @@ const ALLOWLIST = [
   'app/auth/callback/route.ts',
   'app/billing/checkout/route.ts',
   'app/billing/portal/route.ts',
+  // Sibling of checkout/portal: resolves the caller's school billing row to
+  // decide whether the requested plan is a real upgrade, before handing off to
+  // the Stripe-hosted confirmation flow. Same trust model as those two.
+  'app/billing/upgrade/route.ts',
   'lib/application-photos.ts',
   'lib/audit.ts',
   'lib/auth/provision.ts',
