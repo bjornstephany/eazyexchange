@@ -21,6 +21,7 @@ import {
   normalizeText, isSearchable, rankSchoolOptions, MAX_RESULTS,
   type SchoolOption,
 } from '@/lib/schools/registry'
+import { sendUnverifiedSchoolEmail } from '@/lib/email'
 
 const REGISTRY_COLUMNS = 'id, uai, name, type, status, commune, postal_code'
 
@@ -56,21 +57,85 @@ export async function searchSchools(query: string): Promise<SchoolOption[]> {
   return rankSchoolOptions(prefixHits, containsHits)
 }
 
-// Persists the organizer's school name from the /onboarding page. Mirrors
-// createExchange's guards. Uses the cookie (RLS) client — the organizer
-// updating their own school's name is the only client-permitted schools UPDATE.
-export async function completeOnboarding(formData: FormData): Promise<void> {
+export type CompleteOnboardingInput = {
+  /** 'FR' for France, otherwise the country's display name. */
+  country: string
+  /** The picked registry establishment's UAI. Required when country === 'FR'. */
+  uai: string | null
+  /** Free-typed school name. Required when country !== 'FR'; IGNORED for FR. */
+  name: string
+}
+
+export type CompleteOnboardingResult =
+  | { ok: true; schoolName: string }
+  | { ok: false; error: 'invalid' | 'unknown_school'; message: string }
+
+// Module-local, NOT exported: a 'use server' file may only export async
+// functions. Nothing outside needs them — the UI renders result.message.
+const COUNTRY_REQUIRED_MESSAGE = 'Veuillez indiquer le pays de votre établissement.'
+const SCHOOL_REQUIRED_MESSAGE = 'Veuillez sélectionner votre établissement.'
+const SCHOOL_NAME_REQUIRED_MESSAGE = 'Veuillez renseigner le nom de votre établissement.'
+const UNKNOWN_SCHOOL_MESSAGE =
+  'Cet établissement est introuvable dans l’annuaire officiel. Sélectionnez-le dans la liste.'
+
+// Records which establishment the organizer's school IS (/onboarding step 1).
+//
+// For France the school must be picked from `school_registry`; the write goes
+// through the claim_school() RPC, which re-derives the name from the registry
+// row, so a crafted request cannot spoof a name. Neither schools.uai nor
+// schools.country is client-updatable — the RPC is their only writer.
+//
+// Any other country skips the registry (no equivalent open dataset), stores
+// uai = null, and pings ops so an unverified tenant is actually seen.
+//
+// Structured returns: production redacts thrown Server Action messages, and
+// every outcome below is an expected one.
+export async function completeOnboarding(
+  input: CompleteOnboardingInput,
+): Promise<CompleteOnboardingResult> {
   const supabase = await createClient()
   const { profile } = await requireOrganizer()
 
-  const name = ((formData.get('name') as string) ?? '').trim()
-  if (!name) throw new Error('Veuillez renseigner le nom de votre établissement')
+  const country = (input.country ?? '').trim()
+  if (!country) return { ok: false, error: 'invalid', message: COUNTRY_REQUIRED_MESSAGE }
 
-  const { error } = await supabase
-    .from('schools').update({ name }).eq('id', profile.school_id)
+  const isFrance = country === 'FR'
+  const uai = isFrance ? ((input.uai ?? '').trim() || null) : null
+  const typedName = isFrance ? null : ((input.name ?? '').trim() || null)
+
+  if (isFrance && !uai) {
+    return { ok: false, error: 'invalid', message: SCHOOL_REQUIRED_MESSAGE }
+  }
+  if (!isFrance && !typedName) {
+    return { ok: false, error: 'invalid', message: SCHOOL_NAME_REQUIRED_MESSAGE }
+  }
+
+  // The generated Args type says `string` for p_uai/p_name because a Postgres
+  // signature carries no nullability — claim_school explicitly accepts null for
+  // both (and returns null to reject). Cast rather than hand-edit the generated
+  // types; the SQL is the contract.
+  const { data: schoolName, error } = await supabase.rpc('claim_school', {
+    p_country: country, p_uai: uai, p_name: typedName,
+  } as unknown as { p_country: string; p_uai: string; p_name: string })
   if (error) throw error
+  // null = the RPC rejected the claim (unknown UAI is the only way to get here
+  // after the guards above).
+  if (!schoolName) return { ok: false, error: 'unknown_school', message: UNKNOWN_SCHOOL_MESSAGE }
+
+  if (!isFrance) {
+    // Best effort: the schools row is the source of truth, a Resend outage must
+    // not fail onboarding.
+    try {
+      await sendUnverifiedSchoolEmail({
+        schoolName, country, organizerName: profile.full_name ?? '',
+      })
+    } catch {
+      console.error('[onboarding] unverified-school notification failed')
+    }
+  }
 
   revalidatePath('/dashboard')
+  return { ok: true, schoolName }
 }
 
 // The forced onboarding step: create the school's first exchange together with

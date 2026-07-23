@@ -320,3 +320,33 @@ export async function sendFeedbackNotificationEmail(opts: {
   `, ORG_FOOTER)
   await send(to, `Nouveau feedback (${opts.type}) — ${opts.schoolName}`, html, 'feedback notification email')
 }
+
+// A school claimed with country != 'FR' skips the registry check, so it needs a
+// pair of human eyes. Same posture as the feedback widget: best-effort, the row
+// in `schools` is the source of truth, and FEEDBACK_EMAIL is optional.
+// Triage: select id, name, country, created_at from schools where uai is null;
+export async function sendUnverifiedSchoolEmail(opts: {
+  schoolName: string
+  country: string
+  organizerName: string
+}): Promise<void> {
+  const to = process.env.FEEDBACK_EMAIL
+  if (!to) return
+
+  const html = layout(`
+    <p><strong>Nouvel établissement non vérifié</strong></p>
+    <p style="font-size:13px;color:#5C7268;">
+      Pays déclaré : ${esc(opts.country)} — hors annuaire, aucune vérification automatique.
+    </p>
+    <p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">
+      ${esc(opts.schoolName)}<br>
+      <span style="font-size:13px;color:#5C7268;">Déclaré par ${esc(opts.organizerName)}</span>
+    </p>
+  `, ORG_FOOTER)
+  await send(
+    to,
+    `Établissement à vérifier — ${opts.schoolName} (${opts.country})`,
+    html,
+    'unverified school notification',
+  )
+}
