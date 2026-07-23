@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('@/actions/apply', () => ({
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
@@ -20,8 +21,8 @@ beforeEach(() => {
 })
 
 function renderCard(over: Partial<Parameters<typeof ApplicationPhotoUpload>[0]> = {}) {
-  return render(
-    <ApplicationPhotoUpload token="t" initialPhotoUrl={null} lang="fr" invalid={false} onUploaded={() => {}} {...over} />,
+  return renderWithIntl(
+    <ApplicationPhotoUpload token="t" initialPhotoUrl={null} invalid={false} onUploaded={() => {}} {...over} />,
   )
 }
 

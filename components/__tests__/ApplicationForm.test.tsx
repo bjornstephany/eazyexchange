@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh }) }))
 vi.mock('@/actions/apply', () => ({
   saveApplicationDraft: vi.fn(async () => ({ ok: true as const })),
   submitApplication: vi.fn(async () => ({ ok: true as const })),
   uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
   sendApplicationResumeLink: vi.fn(async () => {}),
+  setApplicationLanguage: vi.fn(async () => {}),
   downloadApplicationRecap: vi.fn(async () => ({ ok: true as const, filename: 'c.pdf', pdf: '' })),
 }))
 // Route the validation through a controllable mock so tests don't have to
@@ -24,23 +28,21 @@ import { storeResumeToken, readResumeToken } from '@/lib/apply-storage'
 beforeEach(() => { vi.clearAllMocks(); missingMock.mockReturnValue([]); localStorage.clear() })
 
 function renderForm(over: Partial<Parameters<typeof ApplicationForm>[0]> = {}) {
-  return render(
-    <ApplicationForm token="t" slug="s" exchangeName="Échange Espagne" initialData={{}} initialLanguage="fr" initialPhotoUrl={null} {...over} />,
+  return renderWithIntl(
+    <ApplicationForm token="t" slug="s" exchangeName="Échange Espagne" initialData={{}} locale="fr" initialPhotoUrl={null} {...over} />,
   )
 }
 
 describe('ApplicationForm', () => {
-  it('renders header + submit, has no "Finish later" button, and shows the reassurance line', async () => {
-    const user = userEvent.setup()
+  it('renders header + submit, has no "Finish later" button, shows the reassurance line and the language switcher', () => {
     renderForm()
     expect(screen.getByText('Échange Espagne')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /envoyer ma candidature/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /terminer plus tard/i })).not.toBeInTheDocument()
     expect(screen.getByText(/lien par e-mail/i)).toBeInTheDocument()
     expect(screen.getByText('ENREGISTRÉ ✓')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'EN' }))
-    expect(screen.getByText('Application')).toBeInTheDocument()
+    // The EN/FR two-button toggle became the shared combobox control.
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('fr')
   })
 
   it('"Resend link" re-emails the resume link', async () => {

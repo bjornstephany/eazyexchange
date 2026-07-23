@@ -718,7 +718,79 @@
       "title": "Application summary",
       "submitted": "Submitted on",
       "footer": "Your answers, as submitted via EazyExchange.",
-      "photoAlt": "Applicant photo"
+      "photoAlt": "Applicant photo",
+      "label": "Download my answers (PDF)",
+      "preparing": "Preparing…",
+      "errors": {
+        "not_found": "This link is no longer valid — ask your organizer for a new one.",
+        "expired": "This link has expired — ask your organizer for a new one.",
+        "not_submitted": "Your application has not been submitted yet.",
+        "unexpected": "The download failed. Please try again."
+      }
+    },
+    "page": {
+      "badge": "Application",
+      "closed": "Applications are currently closed for this exchange.",
+      "invalidTitle": "This link is no longer valid",
+      "invalidBody": "It may have expired — that’s normal, links expire to protect your file. Check the address in your email, or ask your organizer to send you a new one.",
+      "expiredTitle": "This link has expired",
+      "expiredBody": "Application links expire after a while to protect your file. Ask your organizer to send you a new one.",
+      "submittedNotice": "Your application has already been submitted. It can no longer be edited — the organizer will get back to you."
+    },
+    "welcome": {
+      "title": "Welcome back{name}!",
+      "body": "Pick up your application where you left off.",
+      "continue": "Continue my application",
+      "notYou": "Not you? Start a new application"
+    },
+    "start": {
+      "languageLabel": "Language",
+      "intro": "To begin your application for this exchange, enter your details below.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "E-mail",
+      "emailHint": "You can complete your application now — we’ll also email you a private link so you can pick up where you left off on any device.",
+      "invalidEmail": "Please use a valid email address.",
+      "genericError": "Something went wrong.",
+      "submit": "Start my application",
+      "login": "Log in",
+      "notices": {
+        "draft": "An application is already in progress with this email address — we’ve re-sent you the link by email so you can continue.",
+        "submitted": "An application has already been submitted with this email address.",
+        "closed": "Applications are closed for this exchange.",
+        "registered": "This email is already registered for an exchange. If you already have an account, log in to continue."
+      }
+    },
+    "form": {
+      "yes": "Yes",
+      "no": "No",
+      "languageLabel": "Language",
+      "intro": "Fill out the form below — your answers are saved automatically as you go.",
+      "noneHint": "Every field is required — if a question doesn’t apply to you, answer “none”.",
+      "saved": "SAVED ✓",
+      "saving": "SAVING…",
+      "badge": "Application",
+      "submit": "Submit my application",
+      "resend": "Resend link",
+      "reassure": "Progress saved automatically. We emailed you a link in case you switch devices.",
+      "submitting": "Sending…",
+      "missing": "Please complete all required fields.",
+      "tooLong": "Some answers exceed the character limit.",
+      "unexpected": "An unexpected error occurred.",
+      "registered": "This email is already registered for an exchange. Please log in to your account instead.",
+      "done": "Thank you! Your application has been submitted.",
+      "remind": "We’ve emailed you a link to continue your application anytime.",
+      "parentHelper": "Fill in at least one parent completely."
+    },
+    "photo": {
+      "label": "Recent photo",
+      "choose": "Choose a photo",
+      "replace": "Replace the photo",
+      "hint": "Any photo — it will be resized automatically.",
+      "uploading": "Uploading…",
+      "failed": "Upload failed. Please try again.",
+      "tooLarge": "This image can’t be processed. Try a smaller photo (JPEG or PNG).",
+      "required": "A photo is required to submit your application."
     },
     "sections": {
       "student": { "title": "Student" },

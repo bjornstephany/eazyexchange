@@ -718,7 +718,79 @@
       "title": "Récapitulatif de ma candidature",
       "submitted": "Envoyée le",
       "footer": "Tes réponses, telles qu’envoyées via EazyExchange.",
-      "photoAlt": "Photo du candidat"
+      "photoAlt": "Photo du candidat",
+      "label": "Télécharger mes réponses (PDF)",
+      "preparing": "Préparation…",
+      "errors": {
+        "not_found": "Ce lien n’est plus valide — demande un nouveau lien à ton organisateur.",
+        "expired": "Ce lien a expiré — demande un nouveau lien à ton organisateur.",
+        "not_submitted": "Ta candidature n’a pas encore été envoyée.",
+        "unexpected": "Le téléchargement a échoué. Réessaie."
+      }
+    },
+    "page": {
+      "badge": "Candidature",
+      "closed": "Les candidatures sont actuellement fermées pour cet échange.",
+      "invalidTitle": "Ce lien n’est plus valide",
+      "invalidBody": "Il a peut-être expiré — c’est normal, les liens expirent pour protéger ton dossier. Vérifie l’adresse dans ton e-mail, ou demande à ton organisateur de t’en renvoyer un nouveau.",
+      "expiredTitle": "Ce lien a expiré",
+      "expiredBody": "Les liens de candidature expirent au bout d’un moment pour protéger ton dossier. Demande à ton organisateur de t’en renvoyer un nouveau.",
+      "submittedNotice": "Ta candidature a déjà été envoyée. Elle ne peut plus être modifiée — l’organisateur reviendra vers toi."
+    },
+    "welcome": {
+      "title": "Bon retour{name} !",
+      "body": "Reprends ta candidature là où tu t’es arrêté·e.",
+      "continue": "Continuer ma candidature",
+      "notYou": "Ce n’est pas toi ? Commencer une nouvelle candidature"
+    },
+    "start": {
+      "languageLabel": "Langue",
+      "intro": "Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "E-mail",
+      "emailHint": "Tu peux compléter ta candidature maintenant — nous t’enverrons aussi un lien privé par e-mail pour la reprendre sur n’importe quel appareil.",
+      "invalidEmail": "Merci d’utiliser une adresse e-mail valide.",
+      "genericError": "Une erreur est survenue.",
+      "submit": "Commencer ma candidature",
+      "login": "Se connecter",
+      "notices": {
+        "draft": "Une candidature est déjà en cours avec cette adresse — nous t’avons renvoyé le lien pour continuer par e-mail.",
+        "submitted": "Une candidature a déjà été envoyée avec cette adresse e-mail.",
+        "closed": "Les candidatures sont fermées pour cet échange.",
+        "registered": "Cette adresse e-mail est déjà associée à une candidature. Si tu as déjà un compte, connecte-toi pour continuer."
+      }
+    },
+    "form": {
+      "yes": "Oui",
+      "no": "Non",
+      "languageLabel": "Langue",
+      "intro": "Remplis le formulaire ci-dessous — tes réponses sont enregistrées automatiquement au fur et à mesure.",
+      "noneHint": "Tous les champs sont obligatoires — si une question ne te concerne pas, indique « aucun ».",
+      "saved": "ENREGISTRÉ ✓",
+      "saving": "ENREGISTREMENT…",
+      "badge": "Candidature",
+      "submit": "Envoyer ma candidature",
+      "resend": "Renvoyer le lien",
+      "reassure": "Progression enregistrée automatiquement. Nous t’avons envoyé un lien par e-mail au cas où tu changes d’appareil.",
+      "submitting": "Envoi…",
+      "missing": "Veuillez remplir tous les champs obligatoires.",
+      "tooLong": "Certaines réponses dépassent la limite de caractères.",
+      "unexpected": "Une erreur est survenue.",
+      "registered": "Cette adresse e-mail est déjà associée à une candidature. Connecte-toi à ton compte.",
+      "done": "Merci ! Ta candidature a été envoyée.",
+      "remind": "Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.",
+      "parentHelper": "Remplissez au moins un parent en entier."
+    },
+    "photo": {
+      "label": "Photo récente",
+      "choose": "Choisir une photo",
+      "replace": "Remplacer la photo",
+      "hint": "N’importe quelle photo — elle sera redimensionnée automatiquement.",
+      "uploading": "Envoi…",
+      "failed": "L’envoi a échoué. Réessaie.",
+      "tooLarge": "Cette image ne peut pas être traitée. Essaie une photo plus petite (JPEG ou PNG).",
+      "required": "Une photo est requise pour envoyer ta candidature."
     },
     "sections": {
       "student": { "title": "Élève" },

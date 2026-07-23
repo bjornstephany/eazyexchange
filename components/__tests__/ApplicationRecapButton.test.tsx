@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { screen, waitFor, fireEvent } from '@testing-library/react'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import en from '@/messages/en.json'
 
-const downloadApplicationRecap = vi.fn(async (_token: string, _language?: 'en' | 'fr') => ({
+const downloadApplicationRecap = vi.fn(async (_token: string, _language?: string) => ({
   ok: true as const, filename: 'candidature-zoe-dupont.pdf', pdf: Buffer.from('%PDF-x').toString('base64'),
 }))
 vi.mock('@/actions/apply', () => ({
-  downloadApplicationRecap: (token: string, language?: 'en' | 'fr') => downloadApplicationRecap(token, language),
+  downloadApplicationRecap: (token: string, language?: string) => downloadApplicationRecap(token, language),
 }))
 
 import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
@@ -39,17 +41,17 @@ afterEach(() => {
 
 describe('ApplicationRecapButton', () => {
   it('renders the French label by default', () => {
-    render(<ApplicationRecapButton token="t" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     expect(screen.getByRole('button', { name: /télécharger mes réponses/i })).toBeInTheDocument()
   })
 
   it('renders the English label', () => {
-    render(<ApplicationRecapButton token="t" language="en" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="en" />, { locale: 'en', messages: en })
     expect(screen.getByRole('button', { name: /download my answers/i })).toBeInTheDocument()
   })
 
   it('downloads the PDF with the server-supplied filename', async () => {
-    render(<ApplicationRecapButton token="tok-1" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="tok-1" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
     await waitFor(() => expect(downloadApplicationRecap).toHaveBeenCalledWith('tok-1', 'fr'))
     await waitFor(() => expect(clickSpy).toHaveBeenCalled())
@@ -59,7 +61,7 @@ describe('ApplicationRecapButton', () => {
   it('disables the button and shows a preparing label while in flight', async () => {
     let resolve!: (v: any) => void
     downloadApplicationRecap.mockImplementationOnce(() => new Promise(r => { resolve = r }))
-    render(<ApplicationRecapButton token="t" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
     expect(await screen.findByRole('button', { name: /préparation…/i })).toBeDisabled()
     resolve({ ok: true, filename: 'a.pdf', pdf: '' })
@@ -68,7 +70,7 @@ describe('ApplicationRecapButton', () => {
 
   it('renders an inline message for an expired link instead of downloading', async () => {
     downloadApplicationRecap.mockResolvedValueOnce({ ok: false, reason: 'expired' } as any)
-    render(<ApplicationRecapButton token="t" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/ce lien a expiré/i)
     expect(clickSpy).not.toHaveBeenCalled()
@@ -76,14 +78,14 @@ describe('ApplicationRecapButton', () => {
 
   it('renders an inline message for an unknown link', async () => {
     downloadApplicationRecap.mockResolvedValueOnce({ ok: false, reason: 'not_found' } as any)
-    render(<ApplicationRecapButton token="t" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
     expect(await screen.findByText(/n’est plus valide/i)).toBeInTheDocument()
   })
 
   it('renders a generic retry line when the action throws', async () => {
     downloadApplicationRecap.mockRejectedValueOnce(new Error('digest-abc123'))
-    render(<ApplicationRecapButton token="t" language="fr" />)
+    renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
     expect(await screen.findByText(/le téléchargement a échoué/i)).toBeInTheDocument()
     // Never surface the raw (redacted) error text.

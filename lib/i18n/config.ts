@@ -11,8 +11,8 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   de: 'Deutsch',
 }
 
-export function isLocale(x: string): x is Locale {
-  return (LOCALES as readonly string[]).includes(x)
+export function isLocale(x: string | null | undefined): x is Locale {
+  return x != null && (LOCALES as readonly string[]).includes(x)
 }
 
 /**

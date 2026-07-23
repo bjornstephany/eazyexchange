@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import en from '@/messages/en.json'
 
 const push = vi.fn()
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }))
 vi.mock('@/actions/apply', () => ({
   startApplication: vi.fn(async () => ({ token: 'tok-xyz' })),
 }))
@@ -11,6 +14,11 @@ vi.mock('@/actions/apply', () => ({
 import { ApplicationStartForm } from '@/components/ApplicationStartForm'
 import { startApplication } from '@/actions/apply'
 import { readResumeToken } from '@/lib/apply-storage'
+
+// English-default funnel: render under the en catalog so the English assertions
+// below read the real strings.
+const renderEn = () =>
+  renderWithIntl(<ApplicationStartForm slug="france-canada" locale="en" />, { locale: 'en', messages: en })
 
 describe('ApplicationStartForm', () => {
   beforeEach(() => { vi.clearAllMocks(); localStorage.clear() })
@@ -22,17 +30,17 @@ describe('ApplicationStartForm', () => {
     await user.click(screen.getByRole('button', { name: /start my application/i }))
   }
 
-  it('starts in EN and switches the CTA to French', async () => {
-    const user = userEvent.setup()
-    render(<ApplicationStartForm slug="france-canada" />)
+  it('shows the English CTA and offers the shared language switcher', () => {
+    renderEn()
     expect(screen.getByRole('button', { name: /start my application/i })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'FR' }))
-    expect(screen.getByRole('button', { name: /commencer ma candidature/i })).toBeInTheDocument()
+    // The EN/FR two-button toggle became the shared combobox control.
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('en')
+    expect(screen.getByRole('option', { name: 'Français' })).toBeInTheDocument()
   })
 
   it('stores the resume token for the slug and navigates on start', async () => {
     const user = userEvent.setup()
-    render(<ApplicationStartForm slug="france-canada" />)
+    renderEn()
     await user.type(screen.getByLabelText(/first name/i), 'Léa')
     await user.type(screen.getByLabelText(/last name/i), 'Martin')
     await user.type(screen.getByLabelText(/e-mail/i), 'lea@example.com')
@@ -45,7 +53,7 @@ describe('ApplicationStartForm', () => {
   it('shows the "draft in progress" notice, stores nothing, does not navigate', async () => {
     vi.mocked(startApplication).mockResolvedValueOnce({ existing: 'draft' })
     const user = userEvent.setup()
-    render(<ApplicationStartForm slug="france-canada" />)
+    renderEn()
     await fillAndStart(user)
     expect(await screen.findByText(/already in progress with this email/i)).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()
@@ -55,7 +63,7 @@ describe('ApplicationStartForm', () => {
   it('shows the "already submitted" notice', async () => {
     vi.mocked(startApplication).mockResolvedValueOnce({ existing: 'submitted' })
     const user = userEvent.setup()
-    render(<ApplicationStartForm slug="france-canada" />)
+    renderEn()
     await fillAndStart(user)
     expect(await screen.findByText(/already been submitted with this email/i)).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()
@@ -64,7 +72,7 @@ describe('ApplicationStartForm', () => {
   it('shows the closed notice when the cap refuses new applications', async () => {
     vi.mocked(startApplication).mockResolvedValueOnce({ closed: true })
     const user = userEvent.setup()
-    render(<ApplicationStartForm slug="france-canada" />)
+    renderEn()
     await fillAndStart(user)
     expect(await screen.findByText(/applications are closed for this exchange/i)).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()

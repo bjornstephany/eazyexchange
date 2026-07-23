@@ -1,44 +1,28 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { startApplication } from '@/actions/apply'
 import { storeResumeToken } from '@/lib/apply-storage'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { writeLocaleCookie } from '@/lib/i18n/cookie'
+import type { Locale } from '@/lib/i18n/config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const NOTICE = {
-  draft: {
-    en: 'An application is already in progress with this email address — we’ve re-sent you the link by email so you can continue.',
-    fr: 'Une candidature est déjà en cours avec cette adresse — nous t’avons renvoyé le lien pour continuer par e-mail.',
-  },
-  submitted: {
-    en: 'An application has already been submitted with this email address.',
-    fr: 'Une candidature a déjà été envoyée avec cette adresse e-mail.',
-  },
-  closed: {
-    en: 'Applications are closed for this exchange.',
-    fr: 'Les candidatures sont fermées pour cet échange.',
-  },
-  registered: {
-    en: 'This email is already registered for an exchange. If you already have an account, log in to continue.',
-    fr: 'Cette adresse e-mail est déjà associée à une candidature. Si tu as déjà un compte, connecte-toi pour continuer.',
-  },
-} as const
-
-export function ApplicationStartForm({ slug }: { slug: string }) {
-  const [lang, setLang] = useState<'en' | 'fr'>('en')
+export function ApplicationStartForm({ slug, locale }: { slug: string; locale: Locale }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<'draft' | 'submitted' | 'closed' | 'registered' | null>(null)
+  const t = useTranslations('apply')
   const router = useRouter()
-  const fr = lang === 'fr'
 
   async function start() {
     setLoading(true); setError(null); setNotice(null)
     try {
-      const res = await startApplication(slug, { ...form, language: lang })
+      const res = await startApplication(slug, { ...form, language: locale })
       if ('token' in res) {
         storeResumeToken(slug, res.token)
         router.push(`/apply/resume/${res.token}`)
@@ -50,7 +34,7 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
         return
       }
       if ('invalidEmail' in res) {
-        setError(fr ? 'Merci d’utiliser une adresse e-mail valide.' : 'Please use a valid email address.')
+        setError(t('start.invalidEmail'))
         setLoading(false)
         return
       }
@@ -62,46 +46,47 @@ export function ApplicationStartForm({ slug }: { slug: string }) {
       setNotice(res.existing)
       setLoading(false)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : (fr ? 'Une erreur est survenue.' : 'Something went wrong')); setLoading(false)
+      setError(e instanceof Error ? e.message : t('start.genericError')); setLoading(false)
     }
   }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex justify-end">
-        <div className="flex overflow-hidden rounded-[9px] border border-[#C4CDE0]">
-          <button type="button" onClick={() => setLang('en')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'en' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>EN</button>
-          <button type="button" onClick={() => setLang('fr')} className={`px-3.5 py-[7px] text-[13px] font-semibold ${lang === 'fr' ? 'bg-[#10203F] text-white' : 'text-[#5B6B8C]'}`}>FR</button>
-        </div>
+        <LanguageSwitcher
+          current={locale}
+          ariaLabel={t('start.languageLabel')}
+          onSelect={(next) => { writeLocaleCookie(next); router.refresh() }}
+        />
       </div>
-      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{fr ? 'Candidate à cet échange scolaire. Commence par renseigner tes informations ci-dessous.' : 'To begin your application for this exchange, enter your details below'}</p>
+      <p className="m-0 text-base leading-relaxed text-[#5B6B8C]">{t('start.intro')}</p>
       <div className="flex flex-col gap-4 rounded-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="first_name" className="text-[13.5px] font-semibold text-[#42506E]">{fr ? 'Prénom' : 'First name'}</Label>
+            <Label htmlFor="first_name" className="text-[13.5px] font-semibold text-[#42506E]">{t('start.firstName')}</Label>
             <Input id="first_name" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="last_name" className="text-[13.5px] font-semibold text-[#42506E]">{fr ? 'Nom' : 'Last name'}</Label>
+            <Label htmlFor="last_name" className="text-[13.5px] font-semibold text-[#42506E]">{t('start.lastName')}</Label>
             <Input id="last_name" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email" className="text-[13.5px] font-semibold text-[#42506E]">E-mail</Label>
+          <Label htmlFor="email" className="text-[13.5px] font-semibold text-[#42506E]">{t('start.email')}</Label>
           <Input id="email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-[46px] rounded-[10px] border-[#C4CDE0]" />
-          <p className="m-0 text-xs text-[#8A97B2]">{fr ? 'Tu peux compléter ta candidature maintenant — nous t’enverrons aussi un lien privé par e-mail pour la reprendre sur n’importe quel appareil.' : 'You can complete your application now — we’ll also email you a private link so you can pick up where you left off on any device.'}</p>
+          <p className="m-0 text-xs text-[#8A97B2]">{t('start.emailHint')}</p>
         </div>
         {notice && (
           <div className="rounded-[10px] bg-[#E6ECFD] px-4 py-3 text-sm leading-relaxed text-[#1D48C7]">
-            <p className="m-0">{NOTICE[notice][lang]}</p>
+            <p className="m-0">{t(`start.notices.${notice}`)}</p>
             {notice === 'registered' && (
-              <a href="/login" className="mt-1 inline-block font-semibold underline">{fr ? 'Se connecter' : 'Log in'}</a>
+              <a href="/login" className="mt-1 inline-block font-semibold underline">{t('start.login')}</a>
             )}
           </div>
         )}
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
         <Button onClick={start} disabled={loading || !form.email || !form.first_name || !form.last_name} className="h-12 self-start rounded-[11px] bg-[#2456E6] px-6 text-base font-semibold hover:bg-[#1D48C7]">
-          {loading ? '…' : (fr ? 'Commencer ma candidature' : 'Start my application')}
+          {loading ? '…' : t('start.submit')}
         </Button>
       </div>
     </div>

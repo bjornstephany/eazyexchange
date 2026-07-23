@@ -49,7 +49,7 @@ export type ApplyWriteResult =
 
 export async function startApplication(
   slug: string,
-  input: { email: string; first_name: string; last_name: string; language: 'en' | 'fr' },
+  input: { email: string; first_name: string; last_name: string; language: Locale },
 ): Promise<StartApplicationResult> {
   const email = normalizeEmail(input.email)
   // Expected validation outcome, not an exception: prod redacts thrown Server
@@ -209,7 +209,7 @@ export async function getApplicationDraft(token: string) {
   if (app.status !== 'draft' && app.status !== 'invited') {
     return {
       expired: false as const, submitted: true as const, exchangeName,
-      language: app.language === 'fr' ? ('fr' as const) : ('en' as const),
+      language: isLocale(app.language) ? app.language : DEFAULT_LOCALE,
     }
   }
   // Signed URL so a returning draft shows its already-uploaded photo (the
@@ -234,13 +234,13 @@ export async function getApplicationDraft(token: string) {
 // (it was in their own localStorage); nothing is emailed or enumerable.
 export async function peekApplicationDraft(
   token: string,
-): Promise<{ live: boolean; firstName: string | null; language: 'en' | 'fr' }> {
+): Promise<{ live: boolean; firstName: string | null; language: Locale }> {
   // Anon-key RPC (not the service role): returns status + first name only.
   const anon = createAnonClient()
   const { data: app } = await anon
     .rpc('peek_application_draft', { p_token: token })
     .maybeSingle()
-  const language: 'en' | 'fr' = app?.language === 'fr' ? 'fr' : 'en'
+  const language: Locale = isLocale(app?.language) ? app.language : DEFAULT_LOCALE
   if (!app || tokenExpired(app.resume_token_expires_at) || app.status !== 'draft') {
     return { live: false, firstName: null, language }
   }
@@ -291,6 +291,19 @@ export async function saveApplicationDraft(token: string, data: Record<string, s
     .from('applications').update(patch).eq('resume_token', token)
   if (error) throw error
   return { ok: true }
+}
+
+// The applicant switched language mid-funnel. Persist it on the row so the
+// choice survives a device change, and so the enrolment step (and Phase 4's
+// emails) inherit the right locale. Silent no-op on a dead token: a language
+// toggle must never surface a token error.
+export async function setApplicationLanguage(token: string, locale: Locale): Promise<void> {
+  if (!isLocale(locale)) return
+  const admin = createAdminClient()
+  await admin.from('applications')
+    .update({ language: locale })
+    .eq('resume_token', token)
+    .in('status', ['draft', 'invited'])
 }
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
@@ -431,7 +444,7 @@ function recapFilename(data: Record<string, string>): string {
 // is unchanged (the resume token is the applicant's own secret, and the token's
 // expiry still gates it); it is simply a second, narrower door for the same
 // person. It is not a mistake — do not "fix" it to match the branch above.
-export async function downloadApplicationRecap(token: string, language?: 'en' | 'fr'): Promise<RecapResult> {
+export async function downloadApplicationRecap(token: string, language?: Locale): Promise<RecapResult> {
   // Same anonymous-token preamble as the other actions in this file.
   const ip = await clientIp()
   await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)

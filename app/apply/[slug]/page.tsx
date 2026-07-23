@@ -1,4 +1,8 @@
+import { NextIntlClientProvider } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { createAnonClient } from '@/lib/supabase/anon'
+import { resolveLocale } from '@/lib/i18n/resolve'
+import { loadMessages, pickNamespaces } from '@/lib/i18n/messages'
 import { ApplyEntry } from '@/components/ApplyEntry'
 import { Logo } from '@/components/brand/Logo'
 import { InvalidLinkState } from '@/components/InvalidLinkState'
@@ -18,24 +22,36 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
   const closed = !exchange || !exchange.application_open ||
     (exchange.application_deadline != null && new Date().toISOString().slice(0, 10) > exchange.application_deadline)
 
+  // Anonymous locale: cookie → Accept-Language → en. Both trees below are
+  // already force-dynamic, so the provider mount never touches the static
+  // landing. The funnel ships only common + apply — no organizer copy.
+  const locale = await resolveLocale()
+  const messages = pickNamespaces(await loadMessages(locale), ['common', 'apply'])
+  const t = await getTranslations('apply')
+
   if (!exchange) return (
-    <InvalidLinkState
-      title="Ce lien n’est plus valide"
-      body="Il a peut-être expiré — c’est normal, les liens expirent pour protéger ton dossier. Vérifie l’adresse dans ton e-mail, ou demande à ton organisateur de t’en renvoyer un nouveau."
-    />
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <div lang={locale}>
+        <InvalidLinkState title={t('page.invalidTitle')} body={t('page.invalidBody')} />
+      </div>
+    </NextIntlClientProvider>
   )
   if (closed) return (
-    <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
-      <h1 className="mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{exchange.name}</h1>
-      <p className="text-[15px] text-[#5B6B8C]">Les candidatures sont actuellement fermées pour cet échange.</p>
-    </main>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <main lang={locale} className="mx-auto max-w-[720px] px-4 pt-[52px]">
+        <h1 className="mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{exchange.name}</h1>
+        <p className="text-[15px] text-[#5B6B8C]">{t('page.closed')}</p>
+      </main>
+    </NextIntlClientProvider>
   )
   return (
-    <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
-      <div className="mb-[26px]"><Logo href={null} /></div>
-      <span className="mb-3 inline-flex rounded-full bg-[#E6ECFD] px-3 py-1 text-[13px] font-semibold text-[#1D48C7]">Candidature</span>
-      <h1 className="m-0 mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{exchange.name}</h1>
-      <ApplyEntry slug={slug} />
-    </main>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <main lang={locale} className="mx-auto max-w-[720px] px-4 pt-[52px]">
+        <div className="mb-[26px]"><Logo href={null} /></div>
+        <span className="mb-3 inline-flex rounded-full bg-[#E6ECFD] px-3 py-1 text-[13px] font-semibold text-[#1D48C7]">{t('page.badge')}</span>
+        <h1 className="m-0 mb-2 font-display text-[30px] font-bold tracking-[-0.02em] text-[#10203F]">{exchange.name}</h1>
+        <ApplyEntry slug={slug} locale={locale} />
+      </main>
+    </NextIntlClientProvider>
   )
 }
