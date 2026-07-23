@@ -1,6 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { APPLICATION_SECTIONS, missingRequiredApplication, overLimitApplicationFields, parentGroupFields, type AppField } from '@/lib/application-form'
+import { missingRequiredApplication, overLimitApplicationFields, parentGroupFields } from '@/lib/application-form'
+import { localizedApplicationSections, type LocalizedField } from '@/lib/application-form.labels'
+import { asAppTranslator } from '@/lib/i18n/messages'
+import { useTranslations } from 'next-intl'
 import { saveApplicationDraft, submitApplication, sendApplicationResumeLink } from '@/actions/apply'
 import { ApplicationPhotoUpload } from '@/components/ApplicationPhotoUpload'
 import { ApplicationRecapButton } from '@/components/ApplicationRecapButton'
@@ -40,6 +43,9 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
   const [done, setDone] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const t = T[lang]
+  // Field labels come from the `apply` catalog (one source for the funnel form,
+  // the organizer read view and the PDF recap).
+  const sections = localizedApplicationSections(asAppTranslator(useTranslations('apply')))
 
   function set(id: string, value: string) {
     setMissing(prev => (prev.includes(id) ? prev.filter(m => m !== id) : prev))
@@ -104,7 +110,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
     </div>
   )
 
-  function renderField(f: AppField) {
+  function renderField(f: LocalizedField) {
     const invalid = missing.includes(f.id)
     const inputBorder = invalid ? 'border-[#C0392B]' : 'border-[#C4CDE0]'
     if (f.type === 'textarea') {
@@ -138,7 +144,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
           {f.options!.map(o => (
             <label key={o.value} className="flex items-center gap-1.5">
               <input type="radio" name={f.id} checked={data[f.id] === o.value} onChange={() => set(f.id, o.value)} />
-              {o.label[lang]}
+              {o.label}
             </label>
           ))}
         </div>
@@ -151,7 +157,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
   const showSeparation = data.family_status === 'separated' || data.family_status === 'step_family'
   const showGenderOther = data.sex === 'other'
   const parentsInvalid = missing.some(id => PARENT_FIELD_IDS.includes(id))
-  const total = APPLICATION_SECTIONS.length
+  const total = sections.length
   return (
     <div className="pb-28">
       <header className="mb-[26px] flex items-center justify-between">
@@ -171,12 +177,12 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
       <p className="m-0 mb-7 text-[13px] leading-relaxed text-[#8A97B2]">{t.noneHint}</p>
 
       <div className="flex flex-col gap-6 rounded-t-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
-        {APPLICATION_SECTIONS.map((section, i) => (
+        {sections.map((section, i) => (
           <section key={section.id} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1 border-b border-[#E4E9F2] pb-3">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-xs font-semibold text-[#2456E6]">{i + 1}/{total}</span>
-                <span className="font-display text-[19px] font-bold tracking-[-0.02em] text-[#10203F]">{section.title[lang]}</span>
+                <span className="font-display text-[19px] font-bold tracking-[-0.02em] text-[#10203F]">{section.title}</span>
               </div>
               {section.id === 'parents' && (
                 <p className={`m-0 text-[13px] ${parentsInvalid ? 'font-semibold text-[#C0392B]' : 'text-[#8A97B2]'}`}>{t.parentHelper}</p>
@@ -200,7 +206,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, initia
                 return (
                   <div key={f.id} id={`field-${f.id}`} className={`flex flex-col gap-1.5 ${f.type === 'textarea' || f.type === 'radio' ? 'sm:col-span-2' : ''}`}>
                     <Label htmlFor={f.id} className="text-[13.5px] font-semibold text-[#42506E]">
-                      {f.label[lang]}
+                      {f.label}
                       {(f.required || f.id === 'separation_housing_address' || f.id === 'gender_other') && <span className="ml-1 text-[#C0392B]">*</span>}
                     </Label>
                     {renderField(f)}

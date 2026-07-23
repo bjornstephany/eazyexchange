@@ -12,6 +12,8 @@ import {
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
 import { renderApplicationRecapPdf } from '@/lib/pdf/application-recap'
+import { namespaceTranslator } from '@/lib/i18n/messages'
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@/lib/i18n/config'
 
 const APP_URL = getAppUrl()
 
@@ -471,15 +473,17 @@ export async function downloadApplicationRecap(token: string, language?: 'en' | 
   // wins over the row's — but never trust it blindly: normalize exactly the
   // way the DB-derived fallback is normalized so an unexpected value can
   // never reach the renderer.
-  const effectiveLanguage: 'en' | 'fr' =
-    language === 'en' || language === 'fr' ? language : app.language === 'fr' ? 'fr' : 'en'
+  const effectiveLocale: Locale = language && isLocale(language)
+    ? language
+    : isLocale(app.language) ? app.language : DEFAULT_LOCALE
   const pdf = await renderApplicationRecapPdf({
     exchangeName: app.exchanges?.name ?? '',
     applicantName: buildApplicantName(data),
     submittedAt: app.submitted_at,
     data,
     photoBytes,
-    language: effectiveLanguage,
+    locale: effectiveLocale,
+    t: await namespaceTranslator(effectiveLocale, 'apply'),
   })
 
   return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }

@@ -9,7 +9,9 @@
 // answers map.
 import React from 'react'
 import { Document, Page, Text, View, Image, Font, StyleSheet, renderToBuffer } from '@react-pdf/renderer'
-import { APPLICATION_SECTIONS, type AppField } from '@/lib/application-form'
+import { localizedApplicationSections, type LocalizedField } from '@/lib/application-form.labels'
+import type { AppTranslator } from '@/lib/i18n/messages'
+import type { Locale } from '@/lib/i18n/config'
 import { notoSansRegular, notoSansBold, notoSansItalic } from './fonts'
 
 // Same family/sources as fillable-pdf.tsx. Font.register is idempotent per
@@ -24,23 +26,6 @@ Font.register({
 })
 // French words must not be hyphen-broken mid-word.
 Font.registerHyphenationCallback((word) => [word])
-
-const T = {
-  en: {
-    title: 'Application summary',
-    submitted: 'Submitted on',
-    yes: 'Yes',
-    no: 'No',
-    footer: 'Your answers, as submitted via EazyExchange.',
-  },
-  fr: {
-    title: 'Récapitulatif de ma candidature',
-    submitted: 'Envoyée le',
-    yes: 'Oui',
-    no: 'Non',
-    footer: 'Tes réponses, telles qu’envoyées via EazyExchange.',
-  },
-}
 
 const styles = StyleSheet.create({
   page: { fontFamily: 'NotoSans', fontSize: 10.5, lineHeight: 1.45, paddingTop: 48, paddingBottom: 64, paddingHorizontal: 56, color: '#111' },
@@ -61,16 +46,16 @@ export type RecapSection = { title: string; rows: RecapRow[] }
 
 // Resolves one field's stored value into display text. Empty (or
 // whitespace-only) answers return '' and are dropped by the caller.
-function answerText(field: AppField, raw: string | undefined, language: 'en' | 'fr'): string {
+function answerText(field: LocalizedField, raw: string | undefined, t: AppTranslator): string {
   const v = (raw ?? '').trim()
   if (v === '') return ''
   if (field.type === 'yesno') {
-    if (v === 'yes') return T[language].yes
-    if (v === 'no') return T[language].no
+    if (v === 'yes') return t('form.yes')
+    if (v === 'no') return t('form.no')
     return v
   }
   if (field.type === 'radio') {
-    return field.options?.find(o => o.value === v)?.label[language] ?? v
+    return field.options?.find(o => o.value === v)?.label ?? v
   }
   return v
 }
@@ -81,13 +66,13 @@ function answerText(field: AppField, raw: string | undefined, language: 'en' | '
 // ignored — the sections are the single source of truth for what a recap shows.
 export function recapSections(
   data: Record<string, string>,
-  language: 'en' | 'fr',
+  t: AppTranslator,
 ): RecapSection[] {
-  return APPLICATION_SECTIONS
+  return localizedApplicationSections(t)
     .map(section => ({
-      title: section.title[language],
+      title: section.title,
       rows: section.fields
-        .map(f => ({ label: f.label[language], value: answerText(f, data[f.id], language) }))
+        .map(f => ({ label: f.label, value: answerText(f, data[f.id], t) }))
         .filter(r => r.value !== ''),
     }))
     .filter(s => s.rows.length > 0)
@@ -102,8 +87,8 @@ function imageFormat(bytes: Uint8Array): 'png' | 'jpg' | null {
   return null
 }
 
-function formatSubmittedAt(iso: string, language: 'en' | 'fr'): string {
-  return new Intl.DateTimeFormat(language === 'fr' ? 'fr-FR' : 'en-GB', {
+function formatSubmittedAt(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : locale, {
     day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Europe/Paris',
   }).format(new Date(iso))
 }
@@ -114,21 +99,21 @@ export async function renderApplicationRecapPdf(input: {
   submittedAt: string | null
   data: Record<string, string>
   photoBytes: Uint8Array | null
-  language: 'en' | 'fr'
+  locale: Locale
+  t: AppTranslator
 }): Promise<Buffer> {
-  const { exchangeName, applicantName, submittedAt, data, photoBytes, language } = input
-  const t = T[language]
-  const sections = recapSections(data, language)
+  const { exchangeName, applicantName, submittedAt, data, photoBytes, locale, t } = input
+  const sections = recapSections(data, t)
   const format = photoBytes ? imageFormat(photoBytes) : null
 
   const doc = (
-    <Document title={t.title} author="EazyExchange">
+    <Document title={t('recap.title')} author="EazyExchange">
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>{t.title}</Text>
+          <Text style={styles.title}>{t('recap.title')}</Text>
           <Text style={styles.subtitle}>{exchangeName}{applicantName ? ` — ${applicantName}` : ''}</Text>
           {submittedAt ? (
-            <Text style={styles.meta}>{t.submitted} {formatSubmittedAt(submittedAt, language)}</Text>
+            <Text style={styles.meta}>{t('recap.submitted')} {formatSubmittedAt(submittedAt, locale)}</Text>
           ) : null}
         </View>
 
@@ -149,7 +134,7 @@ export async function renderApplicationRecapPdf(input: {
           </View>
         ))}
 
-        <Text style={styles.footer} fixed>{t.footer}</Text>
+        <Text style={styles.footer} fixed>{t('recap.footer')}</Text>
       </Page>
     </Document>
   )

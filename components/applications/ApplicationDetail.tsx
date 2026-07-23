@@ -41,7 +41,7 @@ export async function ApplicationDetail({
       </div>
 
       <div className="bg-card border rounded-card p-8">
-        <ApplicationReadView data={application.data} photoUrl={photoUrl} lang="fr" />
+        <ApplicationReadView data={application.data} photoUrl={photoUrl} />
       </div>
 
       {application.status === 'maybe' && application.invite_response_note && (

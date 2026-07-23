@@ -85,16 +85,23 @@ describe('downloadApplicationRecap', () => {
     expect(enforceRateLimit).toHaveBeenCalledWith('recap_ip:1.2.3.4', 20, 3600)
   })
 
-  it('passes the row through to the renderer, normalizing the language', async () => {
+  it('passes the row through to the renderer, honoring the stored locale', async () => {
+    // 'de' is a supported locale since the CHECK was widened — it survives now.
     appRow.language = 'de'
     await downloadApplicationRecap('tok')
     expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({
       exchangeName: 'France-Minnesota 2026',
       applicantName: 'Zoé Dupont-Léger',
       submittedAt: '2026-07-19T10:00:00Z',
-      language: 'en',
+      locale: 'de',
       photoBytes: null,
     }))
+  })
+
+  it('normalizes an unsupported stored language to the default locale', async () => {
+    appRow.language = 'pt'
+    await downloadApplicationRecap('tok')
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ locale: 'en' }))
   })
 
   it('downloads the photo when photo_path is set and forwards the bytes', async () => {
@@ -135,12 +142,12 @@ describe('downloadApplicationRecap', () => {
   it("honors the caller's explicit language over the row's language", async () => {
     appRow.language = 'fr'
     await downloadApplicationRecap('tok', 'en')
-    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ language: 'en' }))
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ locale: 'en' }))
   })
 
   it('falls back to the DB-derived language when the caller value is invalid', async () => {
     appRow.language = 'fr'
-    await downloadApplicationRecap('tok', 'de' as any)
-    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ language: 'fr' }))
+    await downloadApplicationRecap('tok', 'pt' as never)
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({ locale: 'fr' }))
   })
 })

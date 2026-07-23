@@ -711,5 +711,96 @@
       "submittedNotice": "Ta réponse est en cours de vérification. Tu seras prévenu·e dès qu’elle est validée.",
       "downloadTemplate": "Télécharger le document à signer"
     }
+  },
+  "apply": {
+    "form": { "yes": "Oui", "no": "Non" },
+    "recap": {
+      "title": "Récapitulatif de ma candidature",
+      "submitted": "Envoyée le",
+      "footer": "Tes réponses, telles qu’envoyées via EazyExchange.",
+      "photoAlt": "Photo du candidat"
+    },
+    "sections": {
+      "student": { "title": "Élève" },
+      "parents": { "title": "Parents" },
+      "hosting": { "title": "Conditions d'accueil" },
+      "profile": { "title": "Profil de l'élève" }
+    },
+    "fields": {
+      "last_name": { "label": "Nom" },
+      "first_name": { "label": "Prénom" },
+      "native_language": { "label": "Langue maternelle" },
+      "nationality": { "label": "Nationalité(s)" },
+      "date_of_birth": { "label": "Date de naissance" },
+      "sex": {
+        "label": "Genre",
+        "options": {
+          "male": "Garçon",
+          "female": "Fille",
+          "other": "Autre"
+        }
+      },
+      "gender_other": { "label": "Précisez (ex. garçon → fille)" },
+      "pronouns": {
+        "label": "Pronoms",
+        "options": {
+          "he_him": "Il",
+          "she_her": "Elle"
+        }
+      },
+      "grade": { "label": "Niveau 26-27" },
+      "french_class": { "label": "Classe de français 26-27" },
+      "email": { "label": "E-mail" },
+      "cell_phone": { "label": "Téléphone portable" },
+      "father_last_name": { "label": "Père — Nom" },
+      "father_first_name": { "label": "Père — Prénom" },
+      "father_nationality": { "label": "Père — Nationalité(s)" },
+      "father_native_language": { "label": "Père — Langue maternelle" },
+      "father_cell_phone": { "label": "Père — Téléphone portable" },
+      "father_email": { "label": "Père — Email" },
+      "father_address": { "label": "Père — Adresse" },
+      "father_occupation": { "label": "Père — Profession" },
+      "mother_last_name": { "label": "Mère — Nom" },
+      "mother_first_name": { "label": "Mère — Prénom" },
+      "mother_nationality": { "label": "Mère — Nationalité(s)" },
+      "mother_native_language": { "label": "Mère — Langue maternelle" },
+      "mother_cell_phone": { "label": "Mère — Téléphone portable" },
+      "mother_email": { "label": "Mère — Email" },
+      "mother_address": { "label": "Mère — Adresse" },
+      "mother_occupation": { "label": "Mère — Profession" },
+      "family_status": {
+        "label": "Situation familiale",
+        "options": {
+          "married": "Marié",
+          "separated": "Séparé",
+          "step_family": "Famille recomposée"
+        }
+      },
+      "separation_housing_address": { "label": "En cas de séparation, adresse où sera accueilli le correspondant" },
+      "brothers_at_home": { "label": "# frères à la maison (précisez âge)" },
+      "sisters_at_home": { "label": "# sœurs à la maison (précisez âge)" },
+      "pets": { "label": "Animaux domestiques" },
+      "food_requirements": { "label": "Spécificités alimentaires" },
+      "other_allergies": { "label": "Autres allergies" },
+      "main_language_home": { "label": "Langue principale parlée en famille" },
+      "other_languages_home": { "label": "Autres langues parlées en famille" },
+      "smoking_home": { "label": "Fume-t-on à la maison ?" },
+      "own_room": { "label": "Chambre individuelle pour le correspondant ?" },
+      "accept_opposite_sex": { "label": "Accepteriez-vous un échange mixte ?" },
+      "lived_abroad": { "label": "Si vous avez déjà vécu à l'étranger, décrivez où et quand" },
+      "countries_with_parents": { "label": "Quels pays avez-vous visités avec vos parents ?" },
+      "countries_without_parents": { "label": "Quels pays avez-vous visités sans vos parents, et combien de temps ?" },
+      "sports": { "label": "Sports pratiqués et heures par semaine" },
+      "activities": { "label": "Activités, clubs ou loisirs et heures par semaine" },
+      "instruments": { "label": "Jouez-vous d'un instrument ou chantez-vous ?" },
+      "family_activities": { "label": "Activités familiales le week-end / pendant les vacances" },
+      "spare_time": { "label": "Que préférez-vous faire pendant votre temps libre ?" },
+      "adjectives": { "label": "Trois adjectifs qu'un ami proche utiliserait pour vous décrire" },
+      "recharge": { "label": "Comment vous ressourcez-vous — entouré ou seul ? Expliquez" },
+      "todo_list": { "label": "Trois choses sur votre liste de choses à faire dans la vie" },
+      "ideal_partner": { "label": "Comment serait votre correspondant idéal ?" },
+      "share_when_hosting": { "label": "Que souhaiteriez-vous partager avec votre correspondant en l'accueillant ?" },
+      "anything_else": { "label": "Souhaitez-vous ajouter autre chose ?" }
+    }
   }
 }

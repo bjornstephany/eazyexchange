@@ -711,5 +711,96 @@
       "submittedNotice": "Your answer is being reviewed. You\u2019ll be notified as soon as it\u2019s approved.",
       "downloadTemplate": "Download the document to sign"
     }
+  },
+  "apply": {
+    "form": { "yes": "Yes", "no": "No" },
+    "recap": {
+      "title": "Application summary",
+      "submitted": "Submitted on",
+      "footer": "Your answers, as submitted via EazyExchange.",
+      "photoAlt": "Applicant photo"
+    },
+    "sections": {
+      "student": { "title": "Student" },
+      "parents": { "title": "Parents" },
+      "hosting": { "title": "Hosting conditions" },
+      "profile": { "title": "Student profile" }
+    },
+    "fields": {
+      "last_name": { "label": "Last name" },
+      "first_name": { "label": "First name" },
+      "native_language": { "label": "Native language" },
+      "nationality": { "label": "Nationality(ies)" },
+      "date_of_birth": { "label": "Date of birth" },
+      "sex": {
+        "label": "Gender",
+        "options": {
+          "male": "Male",
+          "female": "Female",
+          "other": "Other"
+        }
+      },
+      "gender_other": { "label": "Please specify (e.g. male → female)" },
+      "pronouns": {
+        "label": "Pronouns",
+        "options": {
+          "he_him": "He/him",
+          "she_her": "She/her"
+        }
+      },
+      "grade": { "label": "Grade in 26-27" },
+      "french_class": { "label": "French class in 26-27" },
+      "email": { "label": "E-mail" },
+      "cell_phone": { "label": "Cell phone" },
+      "father_last_name": { "label": "Father — Last name" },
+      "father_first_name": { "label": "Father — First name" },
+      "father_nationality": { "label": "Father — Nationality(ies)" },
+      "father_native_language": { "label": "Father — Native language" },
+      "father_cell_phone": { "label": "Father — Cell phone" },
+      "father_email": { "label": "Father — Email" },
+      "father_address": { "label": "Father — Address" },
+      "father_occupation": { "label": "Father — Occupation" },
+      "mother_last_name": { "label": "Mother — Last name" },
+      "mother_first_name": { "label": "Mother — First name" },
+      "mother_nationality": { "label": "Mother — Nationality(ies)" },
+      "mother_native_language": { "label": "Mother — Native language" },
+      "mother_cell_phone": { "label": "Mother — Cell phone" },
+      "mother_email": { "label": "Mother — Email" },
+      "mother_address": { "label": "Mother — Address" },
+      "mother_occupation": { "label": "Mother — Occupation" },
+      "family_status": {
+        "label": "Family status",
+        "options": {
+          "married": "Married",
+          "separated": "Separated",
+          "step_family": "Step-family"
+        }
+      },
+      "separation_housing_address": { "label": "If separated, address where the exchange student will be housed" },
+      "brothers_at_home": { "label": "# brothers at home (list ages)" },
+      "sisters_at_home": { "label": "# sisters at home (list ages)" },
+      "pets": { "label": "Animals in the home" },
+      "food_requirements": { "label": "Food allergies or requirements" },
+      "other_allergies": { "label": "Other allergies" },
+      "main_language_home": { "label": "Main language spoken at home" },
+      "other_languages_home": { "label": "Other languages spoken at home" },
+      "smoking_home": { "label": "Does anyone smoke in the home?" },
+      "own_room": { "label": "Will the exchange student have their own room?" },
+      "accept_opposite_sex": { "label": "Would you accept an exchange student of the opposite sex?" },
+      "lived_abroad": { "label": "If you have ever lived abroad, describe where and when" },
+      "countries_with_parents": { "label": "Which countries have you visited with your parents?" },
+      "countries_without_parents": { "label": "Which countries have you visited without your parents, and for how long?" },
+      "sports": { "label": "Sports you do and hours per week" },
+      "activities": { "label": "After-school activities, clubs, or hobbies and hours per week" },
+      "instruments": { "label": "Do you play any instrument or sing?" },
+      "family_activities": { "label": "Weekend/holiday family activities" },
+      "spare_time": { "label": "What do you like to do most in your spare time?" },
+      "adjectives": { "label": "Three adjectives a close friend would use to describe you" },
+      "recharge": { "label": "How do you recharge — around people or solo? Explain" },
+      "todo_list": { "label": "Three items on your life \"to-do\" list" },
+      "ideal_partner": { "label": "What would your ideal exchange partner be like?" },
+      "share_when_hosting": { "label": "What would you like to share with your partner when hosting?" },
+      "anything_else": { "label": "Anything else you would like to add?" }
+    }
   }
 }

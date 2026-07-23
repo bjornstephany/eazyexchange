@@ -11,13 +11,11 @@ describe('application catalog', () => {
       'student', 'parents', 'hosting', 'profile',
     ])
   })
-  it('every field has unique id and both labels', () => {
+  it('every field has a unique id', () => {
+    // Labels moved to the `apply` catalog (lib/application-form.labels.ts) —
+    // their completeness is covered there and by the catalog parity gate.
     const ids = allApplicationFields().map(f => f.id)
     expect(new Set(ids).size).toBe(ids.length)
-    for (const f of allApplicationFields()) {
-      expect(f.label.en.length).toBeGreaterThan(0)
-      expect(f.label.fr.length).toBeGreaterThan(0)
-    }
   })
   it('includes the applicant email + photo-adjacent core fields as required', () => {
     expect(requiredApplicationFieldIds()).toEqual(
@@ -28,7 +26,6 @@ describe('application catalog', () => {
     const byId = Object.fromEntries(allApplicationFields().map(f => [f.id, f]))
     expect(byId.sex.type).toBe('radio')
     expect(byId.sex.options!.map(o => o.value)).toEqual(['male', 'female', 'other'])
-    expect(byId.sex.label.fr).toBe('Genre')
     expect(byId.pronouns.type).toBe('radio')
     expect(byId.pronouns.options!.map(o => o.value)).toEqual(['he_him', 'she_her'])
     expect(byId.gender_other.type).toBe('text')
