@@ -18,6 +18,7 @@ export type Profile = {
   locale: Locale
   schools: {
     name: string
+    country: string
     subscription_status: string | null
     plan: string | null
     grace_until: string | null
@@ -39,7 +40,7 @@ export const getProfile = requestCache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('users')
-    .select('id, role, school_id, full_name, email, org_role, locale, schools(name, subscription_status, plan, grace_until)')
+    .select('id, role, school_id, full_name, email, org_role, locale, schools(name, country, subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<Profile>()
   return data ?? null

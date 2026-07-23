@@ -21,7 +21,10 @@ import { DEFAULT_GOOD_NEWS_SUBJECT, DEFAULT_GOOD_NEWS_BODY } from '@/lib/good-ne
 import type Stripe from 'stripe'
 import type { ReminderCadence } from './exchanges'
 
-type OrganizerCtx = { userId: string; schoolId: string; orgRole: 'owner' | 'admin'; email: string; fullName: string }
+type OrganizerCtx = {
+  userId: string; schoolId: string; orgRole: 'owner' | 'admin'
+  email: string; fullName: string; schoolCountry: string
+}
 
 async function getOrganizerCtx(opts?: { orgRole?: 'owner' }): Promise<OrganizerCtx> {
   const { user, profile } = await requireOrganizer(opts)
@@ -29,6 +32,7 @@ async function getOrganizerCtx(opts?: { orgRole?: 'owner' }): Promise<OrganizerC
     userId: user.id, schoolId: profile.school_id,
     orgRole: (profile.org_role ?? 'admin') as 'owner' | 'admin',
     email: profile.email, fullName: profile.full_name,
+    schoolCountry: profile.schools?.country ?? 'FR',
   }
 }
 
@@ -47,11 +51,17 @@ export async function updateProfile(input: {
   }).eq('id', ctx.userId)
   if (userError) throw userError
 
-  // Only the owner may rename the school. schools.name is the only
-  // client-updatable school column (column grant from 20260701000001) — RLS
-  // scopes the row to the caller's school. Admins can edit their own profile
-  // fields above but their submitted schoolName is ignored here.
-  if (ctx.orgRole === 'owner') {
+  // Only the owner may rename the school, and only when the school is NOT
+  // registry-verified. schools.name is the one client-updatable school column
+  // (column grant from 20260701000001) — left open it would undo the signup
+  // gate one screen later: pick a real lycée to get in, then rename to
+  // anything. FR names come from school_registry via claim_school() and change
+  // only through support. Non-FR schools legitimately rename through here, so
+  // the grant stays. Ignored rather than rejected, mirroring the admin case
+  // below and avoiding a redacted-error dead end in production; the field is
+  // read-only in the UI.
+  const schoolIsVerified = ctx.schoolCountry === 'FR'
+  if (ctx.orgRole === 'owner' && !schoolIsVerified) {
     const schoolName = input.schoolName.trim()
     if (!schoolName) throw new Error(t('settings.errors.schoolNameEmpty'))
     const { error: schoolError } = await supabase.from('schools')

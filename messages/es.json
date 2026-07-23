@@ -53,7 +53,8 @@
         "emailLabel": "Dirección de correo electrónico",
         "emailHint": "Contacte con el soporte para cambiar su dirección.",
         "schoolNameLabel": "Centro educativo",
-        "schoolNameHint": "Solo el propietario puede modificar el nombre del centro educativo."
+        "schoolNameHint": "Solo el propietario puede modificar el nombre del centro educativo.",
+        "schoolNameLockedHint": "Centro verificado en el registro nacional de educación francés. Contacte con el soporte para cambiarlo."
       },
       "security": {
         "heading": "Seguridad",
