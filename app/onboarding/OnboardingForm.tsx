@@ -11,6 +11,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { SchoolCombobox } from './SchoolCombobox'
+import type { SchoolOption } from '@/lib/schools/registry'
+
+// The five locales the app ships in, plus an escape hatch so a legitimate
+// Canadian or American organizer is not turned away. 'FR' is the only value
+// that unlocks the registry picker.
+const COUNTRIES: { value: string; label: string }[] = [
+  { value: 'FR', label: 'France' },
+  { value: 'Allemagne', label: 'Allemagne' },
+  { value: 'Espagne', label: 'Espagne' },
+  { value: 'Italie', label: 'Italie' },
+  { value: 'Royaume-Uni', label: 'Royaume-Uni' },
+  { value: 'other', label: 'Autre pays' },
+]
 
 export function OnboardingForm({
   initialStep = 1, initialSchoolName = '',
@@ -20,7 +34,13 @@ export function OnboardingForm({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const [schoolName, setSchoolName] = useState(initialSchoolName)
+  // Step 1: which establishment this school IS. The claimed name is not kept in
+  // its own state — step 1 renders the picker, and step 2 reads it from
+  // details.sending_school_name.
+  const [country, setCountry] = useState('FR')
+  const [otherCountry, setOtherCountry] = useState('')
+  const [school, setSchool] = useState<SchoolOption | null>(null)
+  const [foreignName, setForeignName] = useState('')
 
   // Step 2: exchange + structured details + guided info cards
   const [exchangeName, setExchangeName] = useState('')
@@ -48,18 +68,32 @@ export function OnboardingForm({
     setDetails(prev => ({ ...prev, [key]: value }))
   }
 
+  const resolvedCountry = country === 'other' ? otherCountry.trim() : country
+  const canSubmitStep1 = country === 'FR'
+    ? school !== null
+    : resolvedCountry !== '' && foreignName.trim() !== ''
+
   async function handleName(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      await completeOnboarding(new FormData(e.currentTarget))
-      setDetails(prev => ({ ...prev, sending_school_name: prev.sending_school_name || schoolName.trim() }))
+      const result = await completeOnboarding({
+        country: resolvedCountry,
+        uai: country === 'FR' ? school?.uai ?? null : null,
+        name: country === 'FR' ? '' : foreignName.trim(),
+      })
+      if (!result.ok) { setError(result.message); return }
+      setDetails(prev => ({
+        ...prev,
+        sending_school_name: prev.sending_school_name || result.schoolName,
+      }))
       setStep(2)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
+    } catch {
+      setError('Une erreur est survenue. Réessayez.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function handleExchange(e: React.FormEvent<HTMLFormElement>) {
@@ -93,11 +127,49 @@ export function OnboardingForm({
     return (
       <form onSubmit={handleName} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="name" className="text-[13px] font-semibold text-[#42506E]">Votre établissement</Label>
-          <Input id="name" name="name" required value={schoolName} onChange={e => setSchoolName(e.target.value)} className="h-11 rounded-[10px] border-[#C4CDE0]" />
+          <Label htmlFor="country" className="text-[13px] font-semibold text-[#42506E]">Pays</Label>
+          <select
+            id="country"
+            value={country}
+            onChange={e => { setCountry(e.target.value); setSchool(null); setError(null) }}
+            className="h-11 rounded-[10px] border border-[#C4CDE0] bg-white px-3 text-[14px] text-[#10203F] focus:border-[#2456E6] focus:outline-none"
+          >
+            {COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
         </div>
+
+        {country === 'other' && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="other-country" className="text-[13px] font-semibold text-[#42506E]">Précisez le pays</Label>
+            <Input
+              id="other-country" required value={otherCountry}
+              onChange={e => setOtherCountry(e.target.value)}
+              className="h-11 rounded-[10px] border-[#C4CDE0]"
+            />
+          </div>
+        )}
+
+        {country === 'FR' ? (
+          <SchoolCombobox value={school} onSelect={setSchool} />
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="foreign-school" className="text-[13px] font-semibold text-[#42506E]">Nom de l’établissement</Label>
+            <Input
+              id="foreign-school" required value={foreignName}
+              onChange={e => setForeignName(e.target.value)}
+              className="h-11 rounded-[10px] border-[#C4CDE0]"
+            />
+            <p className="m-0 text-[12.5px] text-[#8A97B1]">
+              Hors de France, nous vérifions votre établissement manuellement.
+            </p>
+          </div>
+        )}
+
         {error && <p className="text-sm text-[#C0392B]">{error}</p>}
-        <Button type="submit" disabled={loading} className="h-11 w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">
+        <Button
+          type="submit" disabled={loading || !canSubmitStep1}
+          className="h-11 w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7] disabled:opacity-50"
+        >
           {loading ? 'Enregistrement…' : 'Continuer'}
         </Button>
       </form>
