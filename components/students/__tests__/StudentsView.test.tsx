@@ -2,12 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-let listSearch = ''
-vi.mock('@/components/shell/ShellUiContext', () => ({
-  useShellUi: () => ({
-    listSearch, setListSearch: vi.fn(), openNewExchange: vi.fn(),
-  }),
-}))
 const remind = vi.fn().mockResolvedValue({ reminded: true, skipped: false })
 vi.mock('@/actions/students', () => ({ remindStudent: (...a: unknown[]) => remind(...a) }))
 import { StudentsView } from '@/components/students/StudentsView'
@@ -42,7 +36,7 @@ const second: StudentVM = {
 }
 
 describe('StudentsView', () => {
-  beforeEach(() => { listSearch = ''; remind.mockClear() })
+  beforeEach(() => { remind.mockClear() })
 
   it('renders subline, chips with counts, and selects the first student', () => {
     renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
@@ -59,9 +53,11 @@ describe('StudentsView', () => {
     expect(screen.getByText('Aucun élève ne correspond au filtre.')).toBeInTheDocument()
   })
 
-  it('search filters accent-insensitively via the shell field', () => {
-    listSearch = 'yanis'
+  it('search filters accent-insensitively via the page toolbar field', () => {
     renderWithIntl(<StudentsView exchangeId="ex1" students={[second, base]} />)
+    fireEvent.change(screen.getByPlaceholderText('Rechercher un élève…'), {
+      target: { value: 'yanis' },
+    })
     expect(screen.queryAllByText('Camille Laurent')).toHaveLength(0)
     expect(screen.getAllByText('Yanis Benali').length).toBeGreaterThan(0)
   })

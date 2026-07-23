@@ -1,13 +1,15 @@
 'use client'
-import Link from 'next/link'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Mark } from '@/components/brand/Mark'
 import { IconOverview, IconApplications, IconForms, IconStudents, IconSettings, IconFeedbackLight, IconCommunication } from './RailIcons'
-import { SessionSelector } from './SessionSelector'
+import { SidebarNav, type SidebarNavItem } from './SidebarNav'
+import { ExchangeList } from './ExchangeList'
+import { useSidebarCollapsed } from './useSidebarCollapsed'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
@@ -35,32 +37,6 @@ function NewExchangeAutoOpen({ onOpen }: { onOpen: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
   return null
-}
-
-function RailItem({
-  href,
-  label,
-  active,
-  children,
-}: {
-  href: string
-  label: string
-  active: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <Link
-      href={href}
-      prefetch={true}
-      className={cn(
-        'flex w-[62px] flex-col items-center gap-1.5 rounded-[11px] py-[9px] font-mono text-[9px] font-medium',
-        active ? 'bg-white/10 text-white' : 'text-rail-inactive hover:bg-white/5 hover:text-white'
-      )}
-    >
-      {children}
-      <span>{label}</span>
-    </Link>
-  )
 }
 
 export function OrganizerShell({
@@ -93,12 +69,8 @@ export function OrganizerShell({
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
   const menuRef = useRef<HTMLDivElement>(null)
-  const [listSearch, setListSearch] = useState('')
+  const { collapsed, toggle } = useSidebarCollapsed()
 
-  // Contextual search is page-scoped: leaving the page clears it.
-  useEffect(() => { setListSearch('') }, [pathname])
-
-  const isStudents = pathname.startsWith('/students')
   const isSettings = pathname.startsWith('/settings')
 
   // Every "+ Nouvel échange" affordance routes through this. At the plan's
@@ -114,9 +86,24 @@ export function OrganizerShell({
 
   const shellUi = useMemo<ShellUi>(() => ({
     openNewExchange: handleNewExchange,
-    listSearch,
-    setListSearch,
-  }), [handleNewExchange, listSearch])
+  }), [handleNewExchange])
+
+  // Session-scoped tabs only exist once there is an exchange to scope them to.
+  const navItems: SidebarNavItem[] = [
+    { href: '/dashboard', label: t('shell.nav.dashboard'), active: pathname === '/dashboard', icon: <IconOverview /> },
+    ...(active
+      ? [
+          { href: '/applications', label: t('shell.nav.applications'), active: pathname.startsWith('/applications'), icon: <IconApplications /> },
+          { href: '/forms', label: t('shell.nav.files'), active: pathname.startsWith('/forms') || pathname.startsWith('/documents'), icon: <IconForms /> },
+          { href: '/students', label: t('shell.nav.students'), active: pathname.startsWith('/students'), icon: <IconStudents /> },
+          { href: '/communication', label: t('shell.nav.communication'), active: pathname.startsWith('/communication'), icon: <IconCommunication /> },
+        ]
+      : []),
+  ]
+
+  const settingsItem: SidebarNavItem[] = [
+    { href: '/settings', label: t('shell.accountMenu.settings'), active: isSettings, icon: <IconSettings /> },
+  ]
 
   useEffect(() => {
     if (!menuOpen) return
@@ -148,57 +135,54 @@ export function OrganizerShell({
       <Suspense fallback={null}>
         <NewExchangeAutoOpen onOpen={handleNewExchange} />
       </Suspense>
-      <nav data-noprint className="flex w-[82px] flex-none flex-col items-center bg-rail py-[18px]">
-        <div className="mb-[26px]">
-          <Mark variant="dark" className="h-[19px] w-[26px]" />
-        </div>
-        <div className="flex w-full flex-col items-center gap-1.5">
-          <RailItem href="/dashboard" label={t('shell.nav.dashboard')} active={pathname === '/dashboard'}>
-            <IconOverview />
-          </RailItem>
-          {active && (
-            <>
-              <RailItem href="/applications" label={t('shell.nav.applications')} active={pathname.startsWith('/applications')}>
-                <IconApplications />
-              </RailItem>
-              <RailItem href="/forms" label={t('shell.nav.files')} active={pathname.startsWith('/forms') || pathname.startsWith('/documents')}>
-                <IconForms />
-              </RailItem>
-              <RailItem href="/students" label={t('shell.nav.students')} active={pathname.startsWith('/students')}>
-                <IconStudents />
-              </RailItem>
-              <RailItem href="/communication" label={t('shell.nav.communication')} active={pathname.startsWith('/communication')}>
-                <IconCommunication />
-              </RailItem>
-            </>
+
+      <nav
+        data-noprint
+        className={cn(
+          'flex flex-none flex-col overflow-y-auto border-r bg-card py-4 transition-[width] duration-200',
+          collapsed ? 'w-[68px]' : 'w-[250px]'
+        )}
+      >
+        <div className={cn('mb-5 flex items-center gap-2', collapsed ? 'justify-center px-3' : 'px-6')}>
+          <Mark className="h-[19px] w-[26px] flex-none" />
+          {!collapsed && (
+            <span className="font-display text-[15px] font-bold tracking-tight text-navy">
+              EazyExchange
+            </span>
           )}
         </div>
-        <div className="mt-auto">
-          <RailItem href="/settings" label={t('shell.accountMenu.settings')} active={isSettings}>
-            <IconSettings />
-          </RailItem>
+
+        <SidebarNav items={navItems} collapsed={collapsed} />
+
+        <div className="mt-4">
+          <ExchangeList
+            exchanges={exchanges}
+            activeId={active?.id ?? null}
+            collapsed={collapsed}
+            onNewExchange={handleNewExchange}
+          />
         </div>
-        <div ref={menuRef} className="relative mt-2.5">
-          {menuOpen && (
-            <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
-              >
-                {t('shell.accountMenu.signOut')}
-              </button>
-            </div>
-          )}
+
+        <div className="flex-1" />
+
+        <div className="border-t pt-3">
+          <SidebarNav items={settingsItem} collapsed={collapsed} />
           <button
             type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label={t('shell.accountMenu.trigger')}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-mono text-[11px] text-white"
+            onClick={toggle}
+            aria-label={collapsed ? t('shell.sidebar.expand') : t('shell.sidebar.collapse')}
+            title={collapsed ? t('shell.sidebar.expand') : t('shell.sidebar.collapse')}
+            className={cn(
+              'mt-0.5 flex items-center rounded-[10px] text-[13.5px] text-muted-foreground hover:bg-hoverrow hover:text-foreground',
+              collapsed ? 'mx-auto h-10 w-10 justify-center' : 'mx-3 gap-3 px-3 py-2.5'
+            )}
           >
-            {initials(organizerName)}
+            <span className="flex h-[18px] w-[18px] flex-none items-center justify-center">
+              {collapsed
+                ? <ChevronsRightIcon aria-hidden size={18} strokeWidth={1.75} />
+                : <ChevronsLeftIcon aria-hidden size={18} strokeWidth={1.75} />}
+            </span>
+            {!collapsed && <span>{t('shell.sidebar.collapse')}</span>}
           </button>
         </div>
       </nav>
@@ -210,11 +194,7 @@ export function OrganizerShell({
               <span className="font-display text-base font-semibold text-navy">{schoolName}</span>
             ) : active ? (
               <>
-                <SessionSelector
-                  exchanges={exchanges}
-                  active={active}
-                  onNewExchange={handleNewExchange}
-                />
+                <span className="font-display text-base font-semibold text-navy">{active.name}</span>
                 {active.archived && (
                   <span className="rounded-pill bg-subtle px-3 py-1 font-mono text-[11px] font-semibold text-muted-foreground">
                     {t('shell.archivedBadge')}
@@ -232,15 +212,6 @@ export function OrganizerShell({
             )}
           </div>
           <div className="flex items-center gap-3">
-            {!isSettings && active && isStudents && (
-              <input
-                type="search"
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                placeholder={t('shell.studentSearch.placeholder')}
-                className="h-[38px] w-[220px] rounded-[9px] border bg-hoverrow px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
-              />
-            )}
             <button
               type="button"
               onClick={() => setFeedbackOpen(true)}
@@ -249,6 +220,29 @@ export function OrganizerShell({
               <IconFeedbackLight />
               <span>{t('shell.nav.feedback')}</span>
             </button>
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={t('shell.accountMenu.trigger')}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-subtle font-mono text-[11px] font-semibold text-navy hover:bg-hoverrow"
+              >
+                {initials(organizerName)}
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-full z-30 mt-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full rounded-[8px] px-3 py-2 text-left text-sm text-foreground hover:bg-hoverrow"
+                  >
+                    {t('shell.accountMenu.signOut')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">

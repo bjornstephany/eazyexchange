@@ -188,11 +188,20 @@
     "shell": {
       "nav": {
         "dashboard": "Übersicht",
-        "applications": "Bewerb.",
-        "files": "Formulare / Docs",
+        "applications": "Bewerbungen",
+        "files": "Dateien",
         "students": "Schüler",
         "feedback": "Feedback",
-        "communication": "Komm."
+        "communication": "Kommunikation"
+      },
+      "exchangeGroup": {
+        "title": "Meine Austausche",
+        "add": "+ Hinzufügen",
+        "empty": "Kein Austausch"
+      },
+      "sidebar": {
+        "collapse": "Einklappen",
+        "expand": "Ausklappen"
       },
       "accountMenu": {
         "trigger": "Konto",

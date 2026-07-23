@@ -188,11 +188,20 @@
     "shell": {
       "nav": {
         "dashboard": "Overview",
-        "applications": "Apps.",
-        "files": "Forms / Docs",
+        "applications": "Applications",
+        "files": "Files",
         "students": "Students",
         "feedback": "Feedback",
-        "communication": "Comms"
+        "communication": "Communication"
+      },
+      "exchangeGroup": {
+        "title": "My exchanges",
+        "add": "+ Add",
+        "empty": "No exchanges"
+      },
+      "sidebar": {
+        "collapse": "Collapse",
+        "expand": "Expand"
       },
       "accountMenu": {
         "trigger": "Account",
