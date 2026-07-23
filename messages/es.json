@@ -204,7 +204,14 @@
       "exchangeGroup": {
         "title": "Mis intercambios",
         "add": "+ Añadir",
-        "empty": "Ningún intercambio"
+        "empty": "Ningún intercambio",
+        "reorder": "Reordenar {name}",
+        "dnd": {
+          "picked": "{name} seleccionado. Usa las flechas para moverlo, Espacio para soltarlo, Escape para cancelar.",
+          "moved": "{name} movido a la posición {position} de {total}.",
+          "dropped": "{name} soltado en la posición {position} de {total}.",
+          "cancelled": "Reordenación de {name} cancelada."
+        }
       },
       "sidebar": {
         "collapse": "Contraer",

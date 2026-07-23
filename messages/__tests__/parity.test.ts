@@ -22,8 +22,11 @@ function keyPaths(obj: unknown, prefix = ''): string[] {
 // locale (e.g. `one {échange}` → `one {Austausch}`), so strip those bodies
 // first; we only want to verify the real interpolation args weren't dropped or
 // renamed. (Arm bodies here are single-level with no nested braces.)
+// The lookbehind matters: an arm keyword is a standalone token, never a word
+// ending. Without it, Italian "in posizione {position}" has its `{position}`
+// swallowed as if `one {…}` were a plural arm, and the arg looks dropped.
 function placeholders(s: string): string[] {
-  const argsOnly = s.replace(/(?:=\d+|zero|one|two|few|many|other)\s*\{[^{}]*\}/g, '')
+  const argsOnly = s.replace(/(?<![\w])(?:=\d+|zero|one|two|few|many|other)\s*\{[^{}]*\}/g, '')
   return [...argsOnly.matchAll(/\{\s*(\w+)/g)].map((m) => m[1]).sort()
 }
 function leaves(obj: unknown, prefix = ''): Record<string, string> {
