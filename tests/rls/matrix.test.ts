@@ -60,6 +60,11 @@ describe.each([
       tx`update users set locale = 'de' where id = ${fx.studentA}`))
   })
 
+  it('users: cannot change a school A organizer exchange_order', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update users set exchange_order = array[${fx.exchangeA}]::uuid[] where id = ${fx.orgA}`))
+  })
+
   it('exchanges: cannot read exchange A', async () => {
     expect(await readRows(uid(), (tx) => tx`select id from exchanges where id = ${fx.exchangeA}`)).toHaveLength(0)
   })
@@ -309,6 +314,11 @@ describe('own-school allow', () => {
   it('student A can set their own locale', async () => {
     expect(await writeOutcome(sql, fx.studentA, (tx) =>
       tx`update users set locale = 'es' where id = ${fx.studentA}`)).toBe(1)
+  })
+
+  it('organizer A can set their own exchange_order', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update users set exchange_order = array[${fx.exchangeA}]::uuid[] where id = ${fx.orgA}`)).toBe(1)
   })
 
   // Constraint (not RLS) coverage for the i18n Phase 3 widening: the funnel
