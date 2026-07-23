@@ -204,7 +204,14 @@
       "exchangeGroup": {
         "title": "My exchanges",
         "add": "+ Add",
-        "empty": "No exchanges"
+        "empty": "No exchanges",
+        "reorder": "Reorder {name}",
+        "dnd": {
+          "picked": "{name} picked up. Use the arrow keys to move it, Space to drop, Escape to cancel.",
+          "moved": "{name} moved to position {position} of {total}.",
+          "dropped": "{name} dropped at position {position} of {total}.",
+          "cancelled": "Reordering of {name} cancelled."
+        }
       },
       "sidebar": {
         "collapse": "Collapse",
