@@ -75,4 +75,17 @@ describe('message catalog parity', () => {
     expect(fl['organizer.shell.sidebar.collapse']).toBe('Réduire')
     expect(fl['organizer.shell.sidebar.expand']).toBe('Développer')
   })
+
+  it('the billing upgrade keys exist in French with their ICU arguments', () => {
+    const fl = leaves(fr)
+    expect(fl['organizer.billing.capReached.heading']).toBe('Votre offre {plan} est complète')
+    expect(fl['organizer.billing.capReached.blockedLead'])
+      .toBe('Création d’échange bloquée : votre offre actuelle a atteint sa limite.')
+    expect(fl['organizer.billing.upgradeCta']).toBe('Passer à {plan}')
+    expect(fl['organizer.billing.currentPlanBadge']).toBe('Offre actuelle')
+    expect(fl['organizer.billing.delta.more']).toBe('+{n, plural, one {# échange} other {# échanges}}')
+    expect(fl['organizer.billing.delta.unlimited']).toBe('Échanges illimités')
+    expect(fl['organizer.billing.grace.cta']).toBe('Mettre à jour ma carte')
+    expect(fl['organizer.billing.cgv']).toContain('<cgv>')
+  })
 })
