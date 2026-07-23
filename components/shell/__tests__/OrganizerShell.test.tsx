@@ -94,7 +94,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
-    expect(push).toHaveBeenCalledWith('/billing')
+    expect(push).toHaveBeenCalledWith('/billing?reason=limit')
     // The creation dialog must not open.
     expect(screen.queryByText('Donnez un nom à votre échange pour commencer.')).toBeNull()
   })
@@ -107,7 +107,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
-    expect(push).not.toHaveBeenCalledWith('/billing')
+    expect(push).not.toHaveBeenCalledWith('/billing?reason=limit')
     expect(screen.getByText('Donnez un nom à votre échange pour commencer.')).toBeInTheDocument()
   })
 

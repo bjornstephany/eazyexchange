@@ -85,7 +85,7 @@ export function NewExchangeModal({
       }
       if (result.error === 'limit') {
         onOpenChange(false)
-        router.push('/billing')
+        router.push('/billing?reason=limit')
         return
       }
       setError(result.message)
