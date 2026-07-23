@@ -48,3 +48,10 @@ export function usageLine(used: number, cap: number): { label: string; pct: numb
     pct: cap > 0 ? Math.min(100, Math.round((used / cap) * 100)) : 0,
   }
 }
+
+// Width of the usage bar. Unlimited plans get a token sliver rather than a
+// meaningless 0% or 100%.
+export function usagePct(used: number, cap: number): number {
+  if (cap === Infinity) return 6
+  return cap > 0 ? Math.min(100, Math.round((used / cap) * 100)) : 0
+}
