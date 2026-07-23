@@ -2,6 +2,12 @@
 // no Supabase: the server sorts with sortExchanges before rendering, and the
 // client's drop handler computes the next order with reorderIds.
 
+// Upper bound on the stored order so a buggy or hostile client cannot grow the
+// row without limit. Far above any realistic school's exchange count. Lives
+// here rather than beside setExchangeOrder because a 'use server' module may
+// only export async functions.
+export const EXCHANGE_ORDER_CAP = 200
+
 /**
  * Apply an organizer's personal order to a list of exchanges.
  *
