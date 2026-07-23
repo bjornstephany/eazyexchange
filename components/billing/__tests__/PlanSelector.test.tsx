@@ -1,23 +1,24 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import { PlanSelector } from '@/components/billing/PlanSelector'
 
 describe('PlanSelector', () => {
   it('pre-selects growth (Association) with a POPULAIRE pill', () => {
-    render(<PlanSelector />)
+    renderWithIntl(<PlanSelector />)
     expect(screen.getByText('POPULAIRE')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /continuer avec Association/i })).toBeInTheDocument()
   })
   it('updates the CTA when another plan is picked', async () => {
     const user = userEvent.setup()
-    render(<PlanSelector />)
+    renderWithIntl(<PlanSelector />)
     await user.click(screen.getByText('Essentiel'))
     expect(screen.getByRole('link', { name: /continuer avec Essentiel/i })).toBeInTheDocument()
   })
   it('exposes the cards as a keyboard-operable radiogroup', async () => {
     const user = userEvent.setup()
-    render(<PlanSelector />)
+    renderWithIntl(<PlanSelector />)
     expect(screen.getByRole('radiogroup')).toBeInTheDocument()
     // Growth pre-selected → it is the checked radio and the sole tab stop.
     const growth = screen.getByRole('radio', { checked: true })
@@ -27,13 +28,13 @@ describe('PlanSelector', () => {
     expect(screen.getByRole('link', { name: /continuer avec Réseau/i })).toBeInTheDocument()
   })
   it('shows the yearly price for each tier', () => {
-    render(<PlanSelector />)
+    renderWithIntl(<PlanSelector />)
     expect(screen.getByText('199 €')).toBeInTheDocument()
     expect(screen.getByText('399 €')).toBeInTheDocument()
     expect(screen.getByText('599 €')).toBeInTheDocument()
   })
   it('shows an audience line for each plan and the shared feature bullets', () => {
-    render(<PlanSelector />)
+    renderWithIntl(<PlanSelector />)
     expect(screen.getByText('Pour un jumelage unique')).toBeInTheDocument()
     expect(screen.getByText('Pour plusieurs programmes en parallèle')).toBeInTheDocument()
     expect(screen.getByText('Pour les grands établissements')).toBeInTheDocument()
