@@ -85,6 +85,7 @@ const revalidatePath = vi.fn()
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }))
 
 import { addStandardTemplate } from '../forms'
+import { TRAVEL_ORDER_MESSAGE } from '@/lib/exchange/travel-dates'
 
 const fullDetails = {
   destination: 'le Minnesota', travel_start: '2026-10-17', travel_end: '2026-11-02',
@@ -165,6 +166,30 @@ describe('addStandardTemplate', () => {
       exchange_id: 'ex1', association_name: 'AGESSIA', sending_school_name: 'Lycée Georges Duby',
     })
     expect(updates).toContainEqual({ status: 'active' })
+  })
+
+  it('refuses add-time travel dates in the wrong order, before creating anything', async () => {
+    scenario.details = null
+    const res = await addStandardTemplate('ex1', 'medical', {
+      deadline: '2026-09-30',
+      details: { travel_start: '2026-11-02', travel_end: '2026-10-17', chaperones: ['Polly STEPHANY'] },
+    })
+    expect(res).toEqual({ ok: false, message: TRAVEL_ORDER_MESSAGE })
+    expect(upserted).toHaveLength(0)
+    expect(inserted.templates).toHaveLength(0)
+  })
+
+  it('refuses an add-time return that lands before the départ already on file', async () => {
+    // Only the retour is prompted; the départ comes from the saved row, so the
+    // order check has to run against the MERGED pair, not the patch alone.
+    scenario.details = { ...fullDetails, travel_end: null }
+    const res = await addStandardTemplate('ex1', 'medical', {
+      deadline: '2026-09-30',
+      details: { travel_end: '2026-10-01' },
+    })
+    expect(res).toEqual({ ok: false, message: TRAVEL_ORDER_MESSAGE })
+    expect(upserted).toHaveLength(0)
+    expect(inserted.templates).toHaveLength(0)
   })
 
   it('leaves the template draft (not deleted) when details are still incomplete', async () => {

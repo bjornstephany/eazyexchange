@@ -38,6 +38,7 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient()
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { saveProgramDetails, getProgramDetails } from '../fillable'
+import { TRAVEL_ORDER_MESSAGE } from '@/lib/exchange/travel-dates'
 
 const validInput = {
   destination: 'le Minnesota, USA',
@@ -78,6 +79,11 @@ describe('program details actions', () => {
   it('rejects retour before départ as a structured message', async () => {
     const r = await saveProgramDetails('ex-1', { ...validInput, travel_start: '2026-11-02', travel_end: '2026-10-17' })
     expect(r.ok).toBe(false)
+  })
+
+  it('rejects retour on the same day as départ as a structured message', async () => {
+    const r = await saveProgramDetails('ex-1', { ...validInput, travel_end: '2026-10-17' })
+    expect(r).toEqual({ ok: false, message: TRAVEL_ORDER_MESSAGE })
   })
 
   it('rejects an overlong field as a structured message', async () => {

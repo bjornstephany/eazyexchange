@@ -13,6 +13,7 @@ import { STANDARD_TEMPLATES } from '@/lib/forms/standard-library'
 import { insertStandardTemplate } from '@/lib/forms/insert-standard-template'
 import { activateTemplateRecord } from '@/lib/forms/activate'
 import { mergeProgramDetails, type ProgramDetailPatch } from '@/lib/forms/add-requirements'
+import { travelOrderProblem } from '@/lib/exchange/travel-dates'
 import { resolveVariables, type ResolvedVariables } from '@/lib/forms/fillable/render'
 import type { ProgramDetailsValues } from '@/lib/forms/fillable/types'
 
@@ -255,6 +256,11 @@ export async function addStandardTemplate(
       .from('exchange_program_details').select('*')
       .eq('exchange_id', exchangeId).maybeSingle<ProgramDetailsValues>()
     const merged = mergeProgramDetails(existing ?? null, input.details)
+    // Check the merged pair, not the patch: the drawer only prompts for the
+    // detail keys still missing, so a lone retour has to be compared against
+    // the départ already on file.
+    const orderProblem = travelOrderProblem(merged.travel_start, merged.travel_end)
+    if (orderProblem) return { ok: false, message: orderProblem }
     const { error: detailsError } = await supabase.from('exchange_program_details').upsert({
       exchange_id: exchangeId, ...merged, updated_at: new Date().toISOString(),
     }, { onConflict: 'exchange_id' })
