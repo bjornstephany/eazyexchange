@@ -65,62 +65,49 @@ matrix cases in the same PR.
 `.github/workflows/dependency-audit.yml` runs `pnpm audit --prod --audit-level high`
 weekly (Monday 06:00 UTC) and on every push to `main`; it fails on any high/critical
 advisory in production dependencies. Triage rule when it goes red: bump to the patched
-release within the week (patch/minor bump → straight to `main` after the Verifying
-Changes commands; major bump → branch + full gate + auth-flow regression). If no patch
+release within the week (patch/minor bump → worktree branch + the Verifying Changes
+commands, merged same-day; major bump → branch + full gate + auth-flow regression). If no patch
 exists, record the advisory and the accepted-risk rationale in
 `docs/security/audit-decisions.md` and re-check weekly.
 
-## Git Workflow (solo project)
+## Git Workflow
 
-- Small, safe, self-contained changes (docs, copy, confident bug fixes) → commit straight to `main`.
-- Multi-step, risky, or multi-turn work (new features, schema migrations, refactors) → use a branch so half-finished work never sits on `main`.
+**All work happens on a branch in a worktree. Nothing commits directly to `main`; `main`
+is merge-only.** (Worktree procedure below, in Parallel Sessions.)
+
 - Vercel deploys `main` to production. **Never push broken code to `main`** — run the Verifying Changes commands before any push.
-- **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Pushing to `main` / merging (which deploys to production) still requires the Verifying Changes commands to pass and, for branches, user confirmation.
+- **Commit automatically once a feature/fix is finished and tested** (lint + tests pass) — no need to wait for an explicit ask. Merging a branch to `main` (which deploys to production) still requires the Verifying Changes commands to pass **and** user confirmation.
+- **Confirm the branch before every commit** (`git branch --show-current`). A session that finds itself on a branch it did not create must stop and report, not commit.
+
+Rationale — why `main` is sacred, why even one-liners branch, when to merge: `docs/WORKFLOW.md#git--main`.
 
 ## Parallel Sessions
 
 Multiple Claude sessions run at once. **One session = one worktree = one branch — no
-exceptions, including one-line copy fixes.** Two sessions sharing a directory entangle
-each other's branches and commits; recovery means reflog archaeology. This overrides the
-"commit straight to `main`" shortcut above: small changes still get their own worktree,
-they just merge the same day.
+exceptions, including one-line copy fixes.** The session that starts the work does the
+work — don't hand off to a fresh session; move the current one into its own worktree:
 
-**The session that starts the work does the work.** Do not hand off to a fresh session —
-move the current one into its own worktree and keep going:
-
-1. **`EnterWorktree`** with `name` = `feature/<slug>` (or `fix/<slug>`). It creates
-   `.claude/worktrees/<name>` and switches this session's working directory into it.
-   Isolation comes from the worktree, not from a new session. Two warts to fix on
-   arrival, both one-liners:
-   - it names the branch `worktree-feature+<slug>`, not `feature/<slug>` →
-     `git branch -m feature/<slug>`;
-   - it branches off **`origin/main`**, so anything committed to local `main` but not
-     yet pushed is missing → `git merge --ff-only main`.
+1. **`EnterWorktree`** with `name` = `feature/<slug>` (or `fix/<slug>`). Then fix two
+   warts, both one-liners:
+   - it names the branch `worktree-feature+<slug>` → `git branch -m feature/<slug>`;
+   - it branches off `origin/main`, missing anything on local `main` not yet pushed →
+     `git merge --ff-only main`.
 2. **`pnpm wt`** (no arguments, from inside the worktree) — links `.env.local` /
-   `.env.staging` from the main checkout, pins a deterministic dev port in `.wtport`
-   (`pnpm dev` reads it) so no two worktrees race for 3000, and installs deps.
-   Skipping it means placeholder-env 500s and a dev server on the wrong branch.
+   `.env.staging`, pins a dev port in `.wtport`, installs deps. Skipping it means
+   placeholder-env 500s and a dev server on the wrong branch.
 3. Work, commit, verify, merge — all in this session.
 4. **`ExitWorktree`** (`remove` once merged, `keep` to come back later) returns the
-   session to the main checkout.
+   session to the main checkout — use it, not `git worktree remove`.
 
-Worktrees live under `.claude/worktrees/`, which is gitignored and excluded from
-`tsconfig.json` and `vitest.config.ts` — a sibling worktree can never be staged by
-accident or swept into another worktree's test run. `EnterWorktree` refuses to nest, so
-a session physically cannot end up two worktrees deep.
+- **Never `git add -A` / `git add .`** — stage only the files you touched.
+- **Test failures can be another session's race.** A suite that fails once and passes on
+  re-run (or an import that resolves nowhere) usually means a neighbour was mid-write —
+  re-run the single file before debugging it.
+- **`supabase/migrations/` is single-writer.** Only one session at a time may add or apply
+  a migration; if another is mid-migration, wait.
 
-- **Before every commit, confirm the branch** (`git branch --show-current`). A session
-  that finds itself on a branch it did not create must stop and report, not commit.
-- **Never `git add -A` / `git add .`** — stage only the files you touched. Untracked
-  half-finished work turns up in the tree more often than you would expect.
-- **Test failures can be another session's race.** An import that resolves nowhere, or a
-  suite that fails once and passes on re-run, usually means a neighbour was mid-write.
-  Re-run the single file before debugging it.
-- **`supabase/migrations/` is single-writer.** Worktrees isolate files, not the shared
-  Supabase projects: the prod migration ledger and staging DB are global. Only one
-  session at a time may add or apply a migration; if another is mid-migration, wait.
-- When a branch is merged, leave via `ExitWorktree` (`remove`) rather than
-  `git worktree remove` — the tool also restores this session's working directory.
+Rationale — what a worktree protects against, the N-sessions-N-dirs picture, why the two
+warts, why `.claude/worktrees/` is gitignored/excluded: `docs/WORKFLOW.md#parallel-sessions--worktrees`.
 
 ## Backlog
 
@@ -138,15 +125,17 @@ Large features run in stages: brainstorm → spec → plan → execution → mer
 
 ## Database
 
-Migrations live in `supabase/migrations/`, but **prod's migration ledger is the source of truth for versions** (MCP `apply_migration` stamps its own timestamps). Never run `supabase db push` against prod — it would try to re-apply already-applied migrations under drifted versions. Canonical workflow for any schema change:
+**Never run `supabase db push` against prod.** Prod's migration ledger is the source of truth for versions. Canonical workflow for any schema change:
 
 1. Write the migration locally: `supabase/migrations/<YYYYMMDDHHMMSS>_<slug>.sql`.
-2. Apply it with the Supabase MCP `apply_migration` tool (`name` = the slug).
+2. Apply to **staging first** (see Staging & Previews for the command), then to prod with the Supabase MCP `apply_migration` tool (`name` = the slug).
 3. Check MCP `list_migrations`: if the ledger stamped a different version than the filename, `git mv` the local file to the stamped version.
 4. Regenerate DB types: MCP `generate_typescript_types` → overwrite `types/supabase.ts` verbatim → `npx tsc --noEmit` (`types/db.ts` narrows the generated rows; schema drift fails compile there — fix the alias, never hand-edit `types/supabase.ts`).
 5. Routine drift check: every filename version in `supabase/migrations/` appears in `list_migrations` and vice versa.
 
 All tables use Row Level Security (RLS). Organizers can only access data for their own school. Students can only access their own assignments and submissions.
+
+Rationale — why the ledger is the source of truth, why staging-first, the two-project model: `docs/WORKFLOW.md#migrations--staging`.
 
 ## Staging & Previews
 
