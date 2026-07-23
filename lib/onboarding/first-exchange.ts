@@ -3,6 +3,7 @@
 // imported by both the action and the client form (a 'use server' file may
 // export only async functions).
 import { travelPeriodFr } from '@/lib/forms/fillable/render'
+import { travelOrderProblem, TRAVEL_ORDER_MESSAGE } from '@/lib/exchange/travel-dates'
 
 export type FirstExchangeCard = { title: string; body: string }
 
@@ -49,14 +50,13 @@ export const CARD_INVALID_MESSAGE =
 export const DETAILS_REQUIRED_MESSAGE =
   'Renseignez la destination et les deux dates du voyage.'
 
-export const TRAVEL_ORDER_MESSAGE =
-  'La date de retour doit être après la date de départ.'
+// Re-exported so the onboarding form and its tests keep one import site.
+export { TRAVEL_ORDER_MESSAGE }
 
 export function detailsProblem(d: FirstExchangeDetails): string | null {
   if (!d.destination.trim()) return DETAILS_REQUIRED_MESSAGE
   if (!d.travel_start.trim() || !d.travel_end.trim()) return DETAILS_REQUIRED_MESSAGE
-  if (d.travel_end < d.travel_start) return TRAVEL_ORDER_MESSAGE
-  return null
+  return travelOrderProblem(d.travel_start.trim(), d.travel_end.trim())
 }
 
 // The two Info cards students see, derived from the structured values rather

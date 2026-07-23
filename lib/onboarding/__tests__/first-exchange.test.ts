@@ -25,6 +25,9 @@ describe('detailsProblem', () => {
   it('rejects a return before the departure', () => {
     expect(detailsProblem({ ...good, travel_end: '2026-10-01' })).toBe(TRAVEL_ORDER_MESSAGE)
   })
+  it('rejects a return on the same day as the departure', () => {
+    expect(detailsProblem({ ...good, travel_end: '2026-10-17' })).toBe(TRAVEL_ORDER_MESSAGE)
+  })
 })
 
 describe('generatedCards', () => {

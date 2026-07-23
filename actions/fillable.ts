@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ExchangeProgramDetails, FillableData, FillableSignature } from '@/types/db'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
+import { travelOrderProblem } from '@/lib/exchange/travel-dates'
 import { hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
 import { FILLABLE_DEFINITIONS } from '@/lib/forms/fillable'
 import { validateFillable, signatureBlocks, resolveVariables } from '@/lib/forms/fillable/render'
@@ -87,9 +88,8 @@ export async function saveProgramDetails(
   if ((start && !end) || (!start && end)) {
     return { ok: false, message: 'Renseignez les deux dates du voyage (départ et retour).' }
   }
-  if (start && end && end < start) {
-    return { ok: false, message: 'La date de retour doit être après la date de départ.' }
-  }
+  const orderProblem = travelOrderProblem(start, end)
+  if (orderProblem) return { ok: false, message: orderProblem }
 
   const { error } = await supabase.from('exchange_program_details').upsert({
     exchange_id: exchangeId,
