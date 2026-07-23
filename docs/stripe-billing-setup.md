@@ -28,23 +28,28 @@ Stripe.js; Checkout is a server-side redirect. Skip it.
 
 Each plan needs one **recurring, yearly** Price. Amounts match the landing page.
 
+Plan keys stay `starter` / `growth` / `scale`; the customer-facing names are
+French (`lib/billing/display.ts`). Create the Prices **twice — once in test mode,
+once in live mode**: they are separate objects with different ids.
+
 ### Option A — Stripe Dashboard
-For each of Starter / Growth / Scale:
-1. **Products → Add product.** Name it `Starter` (then `Growth`, `Scale`).
+For each of Essentiel / Association / Réseau:
+1. **Products → Add product.** Name it `Essentiel` (then `Association`, `Réseau`).
 2. Pricing model: **Standard pricing**, **Recurring**, **Yearly**.
-3. Amount: **$299** (Starter), **$499** (Growth), **$599** (Scale). Currency USD.
+3. Amount: **199 €** (Essentiel/starter), **399 €** (Association/growth),
+   **599 €** (Réseau/scale). Currency **EUR**.
 4. Save, then copy the **Price ID** (`price_…`) from the price row — that's what
    goes in the env var, *not* the product id (`prod_…`).
 
 ### Option B — Stripe CLI (faster, scriptable)
 ```bash
-# Starter $299/yr
-stripe products create --name "Starter"
+# Essentiel 199 €/yr → STRIPE_PRICE_STARTER
+stripe products create --name "Essentiel"
 stripe prices create --product <prod_id_from_above> \
-  --unit-amount 29900 --currency usd -d "recurring[interval]=year"
-# Repeat for Growth (49900) and Scale (59900)
+  --unit-amount 19900 --currency eur -d "recurring[interval]=year"
+# Repeat for Association (39900 → GROWTH) and Réseau (59900 → SCALE)
 ```
-Amounts are in **cents** (29900 = $299.00). Copy each returned `price_…`.
+Amounts are in **cents** (19900 = 199,00 €). Copy each returned `price_…`.
 
 > The three price ids map to `STRIPE_PRICE_STARTER/GROWTH/SCALE`. If a plan's env
 > var is missing at runtime, clicking that plan throws

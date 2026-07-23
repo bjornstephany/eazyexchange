@@ -6,7 +6,7 @@ import {
 describe('plan display', () => {
   it('French labels and € prices (user decision 2026-07-04)', () => {
     expect(PLAN_LABEL_FR).toEqual({ starter: 'Essentiel', growth: 'Association', scale: 'Réseau' })
-    expect(PLAN_PRICE_FR).toEqual({ starter: '199 €', growth: '499 €', scale: '799 €' })
+    expect(PLAN_PRICE_FR).toEqual({ starter: '199 €', growth: '399 €', scale: '599 €' })
   })
   it('cap labels', () => {
     expect(planCapLabel('starter')).toBe('2 échanges')

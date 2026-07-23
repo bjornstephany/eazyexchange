@@ -176,21 +176,9 @@
       "usage": "{used} / {cap} {cap, plural, one {intercambio} other {intercambios}} {used, plural, one {utilizado} other {utilizados}}",
       "usageUnlimited": "{used} {used, plural, one {intercambio activo} other {intercambios activos}} · intercambios ilimitados",
       "plans": {
-        "starter": {
-          "label": "Esencial",
-          "price": "199 €",
-          "desc": "Para un organizador independiente."
-        },
-        "growth": {
-          "label": "Asociación",
-          "price": "499 €",
-          "desc": "Para asociaciones en pleno crecimiento."
-        },
-        "scale": {
-          "label": "Red",
-          "price": "799 €",
-          "desc": "Para grandes redes de intercambio."
-        }
+        "starter": { "label": "Esencial", "price": "199 €", "desc": "Para un organizador independiente." },
+        "growth": { "label": "Asociación", "price": "399 €", "desc": "Para asociaciones en pleno crecimiento." },
+        "scale": { "label": "Red", "price": "599 €", "desc": "Para grandes redes de intercambio." }
       },
       "trial": {
         "label": "Prueba gratuita",
@@ -207,11 +195,20 @@
     "shell": {
       "nav": {
         "dashboard": "Resumen",
-        "applications": "Candid.",
-        "files": "Formularios / Docs",
+        "applications": "Candidaturas",
+        "files": "Archivos",
         "students": "Alumnos",
         "feedback": "Comentarios",
-        "communication": "Coms"
+        "communication": "Comunicación"
+      },
+      "exchangeGroup": {
+        "title": "Mis intercambios",
+        "add": "+ Añadir",
+        "empty": "Ningún intercambio"
+      },
+      "sidebar": {
+        "collapse": "Contraer",
+        "expand": "Expandir"
       },
       "accountMenu": {
         "trigger": "Cuenta",
@@ -387,8 +384,10 @@
         "all": "Todas",
         "invited": "Invitados",
         "toReview": "Por examinar",
+        "awaiting": "En espera",
         "accepted": "Aceptadas",
-        "rejected": "Rechazadas"
+        "rejected": "Rechazadas",
+        "declined": "Han declinado"
       },
       "selectedCount": "{n, plural, one {# seleccionada} other {# seleccionadas}}",
       "acceptCta": "Aceptar e invitar",
@@ -401,9 +400,14 @@
       "tableHeader": {
         "student": "Alumno",
         "level": "Curso 26-27",
-        "nativeLanguage": "Lengua mat.",
+        "gender": "Género",
         "receivedDate": "Recibida el",
         "status": "Estado"
+      },
+      "gender": {
+        "male": "Chico",
+        "female": "Chica",
+        "other": "Otro"
       },
       "emptyTab": "Ninguna candidatura en esta pestaña.",
       "review": {
@@ -411,9 +415,15 @@
         "statusEnrolled": "Inscrito(a) (ha respondido Sí)",
         "statusDeclined": "Ha declinado la invitación",
         "statusMaybe": "Ha respondido Quizás",
+        "statusNotSubmitted": "Este alumno todavía no ha enviado su candidatura.",
         "responseLabel": "Respuesta:",
         "noteLabel": "Nota:",
-        "currentlyRejected": "Actualmente rechazada. Aún puede aceptarla.",
+        "currentlyRejected": "Actualmente rechazada.",
+        "declinedLocked": "El alumno ha declinado: ya no se le puede volver a invitar desde esta página.",
+        "changeMind": "Cambiar de opinión e invitar",
+        "personalNoteLabel": "Mensaje para la familia (opcional)",
+        "personalNotePlaceholder": "Mensaje opcional añadido al correo de invitación",
+        "confirmInvite": "Invitar",
         "accept": "Aceptar",
         "notePlaceholder": "Nota opcional para el candidato",
         "sendRejectionEmail": "Enviar un correo de rechazo al candidato"

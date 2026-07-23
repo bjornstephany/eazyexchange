@@ -67,7 +67,7 @@ const config: Config = {
         // Redesign tokens (design handoff, 2026-07)
         navy: "#10203F",
         rail: { DEFAULT: "#0E1B38", inactive: "#8595B8" },
-        brand: { DEFAULT: "#2456E6", hover: "#1D48C7", accent: "#3B6EF6" },
+        brand: { DEFAULT: "#2456E6", hover: "#1D48C7", accent: "#3B6EF6", soft: "#EDF2FE" },
         tint: { DEFAULT: "#E6ECFD", border: "#C8D6FA", text: "#1D48C7" },
         success: { DEFAULT: "#DCF3E6", text: "#0F7A3D" },
         warn: { DEFAULT: "#FCF0DB", text: "#9A6B15" },

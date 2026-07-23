@@ -35,6 +35,28 @@ describe('sendGoodNewsEmail', () => {
     expect(call.html).toContain('Oui, mais nous avons des questions')
   })
 
+  it('renders an escaped personal note block when one is supplied', async () => {
+    await sendGoodNewsEmail({
+      to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',
+      subject: null, body: null,
+      respondUrl: 'https://app.test/invite/t', language: 'fr',
+      personalNote: 'Une place s’est libérée <b>enfin</b>',
+    })
+    const { html } = sendMock.mock.calls[0][0]
+    expect(html).toContain('Une place s’est libérée')
+    expect(html).toContain('&lt;b&gt;enfin&lt;/b&gt;')
+  })
+
+  it('renders no note block when none is supplied', async () => {
+    await sendGoodNewsEmail({
+      to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',
+      subject: null, body: null,
+      respondUrl: 'https://app.test/invite/t', language: 'fr',
+    })
+    const { html } = sendMock.mock.calls[0][0]
+    expect(html).not.toContain('#EAF7F0')
+  })
+
   it('escapes organizer body content', async () => {
     await sendGoodNewsEmail({
       to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',

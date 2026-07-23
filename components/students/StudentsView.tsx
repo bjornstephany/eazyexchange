@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useShellUi } from '@/components/shell/ShellUiContext'
 import {
   chipDefs, filterStudents, listSummary,
   type StudentVM, type StatusKey,
@@ -11,7 +10,7 @@ import { StudentDetail } from './StudentDetail'
 export function StudentsView({ exchangeId, students }: { exchangeId: string; students: StudentVM[] }) {
   const t = useTranslations('organizer')
   const tr = useTranslations()
-  const { listSearch } = useShellUi()
+  const [listSearch, setListSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusKey | null>(null)
   const [selId, setSelId] = useState<string | null>(null)
 
@@ -27,6 +26,15 @@ export function StudentsView({ exchangeId, students }: { exchangeId: string; stu
           <div className="mb-[13px]">
             <h1 className="mb-1 font-display text-[25px] font-bold leading-[1.1] tracking-[-.02em]">{t('students.title')}</h1>
             <p className="text-[13px] text-muted-foreground">{listSummary(students, tr)}</p>
+          </div>
+          <div className="mb-[13px]">
+            <input
+              type="search"
+              value={listSearch}
+              onChange={(e) => setListSearch(e.target.value)}
+              placeholder={t('shell.studentSearch.placeholder')}
+              className="h-[38px] w-full rounded-[9px] border bg-card px-3.5 text-[13px] placeholder:text-placeholder focus:border-brand focus:outline-none"
+            />
           </div>
           <div className="mb-[13px] flex flex-wrap gap-1.5">
             {chips.map(c => {

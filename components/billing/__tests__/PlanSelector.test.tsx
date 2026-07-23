@@ -29,8 +29,8 @@ describe('PlanSelector', () => {
   it('shows the yearly price for each tier', () => {
     render(<PlanSelector />)
     expect(screen.getByText('199 €')).toBeInTheDocument()
-    expect(screen.getByText('499 €')).toBeInTheDocument()
-    expect(screen.getByText('799 €')).toBeInTheDocument()
+    expect(screen.getByText('399 €')).toBeInTheDocument()
+    expect(screen.getByText('599 €')).toBeInTheDocument()
   })
   it('shows an audience line for each plan and the shared feature bullets', () => {
     render(<PlanSelector />)

@@ -63,4 +63,16 @@ describe('message catalog parity', () => {
       }
     })
   }
+
+  it('the organizer sidebar keys exist and are not abbreviated', () => {
+    const fl = leaves(fr)
+    expect(fl['organizer.shell.nav.applications']).toBe('Candidatures')
+    expect(fl['organizer.shell.nav.files']).toBe('Fichiers')
+    expect(fl['organizer.shell.nav.communication']).toBe('Communication')
+    expect(fl['organizer.shell.exchangeGroup.title']).toBe('Mes échanges')
+    expect(fl['organizer.shell.exchangeGroup.add']).toBe('+ Ajouter')
+    expect(fl['organizer.shell.exchangeGroup.empty']).toBe('Aucun échange')
+    expect(fl['organizer.shell.sidebar.collapse']).toBe('Réduire')
+    expect(fl['organizer.shell.sidebar.expand']).toBe('Développer')
+  })
 })

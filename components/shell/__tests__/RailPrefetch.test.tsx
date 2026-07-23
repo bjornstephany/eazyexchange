@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
@@ -30,13 +30,18 @@ import { OrganizerShell } from '@/components/shell/OrganizerShell'
 const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: false }]
 
 describe('rail prefetch', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    Object.defineProperty(window, 'innerWidth', { value: 1440, configurable: true, writable: true })
+  })
+
   it('every rail tab prefetches its full payload', () => {
     renderWithIntl(
       <OrganizerShell exchanges={exchanges} activeExchangeId="ex1" organizerName="Marie Bernard" schoolName="Lycée Mistral">
         <p>page</p>
       </OrganizerShell>
     )
-    for (const label of ['Aperçu', 'Candid.', 'Formulaires / Docs', 'Élèves']) {
+    for (const label of ['Aperçu', 'Candidatures', 'Fichiers', 'Élèves']) {
       expect(screen.getByRole('link', { name: new RegExp(label) })).toHaveAttribute('data-prefetch', 'true')
     }
   })

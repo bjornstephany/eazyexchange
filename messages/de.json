@@ -176,21 +176,9 @@
       "usage": "{used} / {cap} {cap, plural, one {Austausch} other {Austausche}} {used, plural, one {genutzt} other {genutzt}}",
       "usageUnlimited": "{used} {used, plural, one {aktiver Austausch} other {aktive Austausche}} · unbegrenzte Austausche",
       "plans": {
-        "starter": {
-          "label": "Starter",
-          "price": "199 €",
-          "desc": "Für einen unabhängigen Organisator."
-        },
-        "growth": {
-          "label": "Wachstum",
-          "price": "499 €",
-          "desc": "Für wachsende Vereine."
-        },
-        "scale": {
-          "label": "Netzwerk",
-          "price": "799 €",
-          "desc": "Für große Austauschnetzwerke."
-        }
+        "starter": { "label": "Starter", "price": "199 €", "desc": "Für einen unabhängigen Organisator." },
+        "growth": { "label": "Wachstum", "price": "399 €", "desc": "Für wachsende Vereine." },
+        "scale": { "label": "Netzwerk", "price": "599 €", "desc": "Für große Austauschnetzwerke." }
       },
       "trial": {
         "label": "Kostenlose Testversion",
@@ -207,11 +195,20 @@
     "shell": {
       "nav": {
         "dashboard": "Übersicht",
-        "applications": "Bewerb.",
-        "files": "Formulare / Docs",
+        "applications": "Bewerbungen",
+        "files": "Dateien",
         "students": "Schüler",
         "feedback": "Feedback",
-        "communication": "Komm."
+        "communication": "Kommunikation"
+      },
+      "exchangeGroup": {
+        "title": "Meine Austausche",
+        "add": "+ Hinzufügen",
+        "empty": "Kein Austausch"
+      },
+      "sidebar": {
+        "collapse": "Einklappen",
+        "expand": "Ausklappen"
       },
       "accountMenu": {
         "trigger": "Konto",
@@ -387,8 +384,10 @@
         "all": "Alle",
         "invited": "Eingeladen",
         "toReview": "Zu prüfen",
+        "awaiting": "Wartet",
         "accepted": "Angenommen",
-        "rejected": "Abgelehnt"
+        "rejected": "Abgelehnt",
+        "declined": "Abgesagt"
       },
       "selectedCount": "{n, plural, one {# ausgewählt} other {# ausgewählt}}",
       "acceptCta": "Annehmen & einladen",
@@ -401,9 +400,14 @@
       "tableHeader": {
         "student": "Schüler",
         "level": "Klasse 26-27",
-        "nativeLanguage": "Mutterspr.",
+        "gender": "Geschlecht",
         "receivedDate": "Erhalten am",
         "status": "Status"
+      },
+      "gender": {
+        "male": "Junge",
+        "female": "Mädchen",
+        "other": "Divers"
       },
       "emptyTab": "Keine Bewerbungen in diesem Tab.",
       "review": {
@@ -411,9 +415,15 @@
         "statusEnrolled": "Eingeschrieben (hat Ja geantwortet)",
         "statusDeclined": "Hat die Einladung abgelehnt",
         "statusMaybe": "Hat mit Vielleicht geantwortet",
+        "statusNotSubmitted": "Dieser Schüler hat seine Bewerbung noch nicht abgeschickt.",
         "responseLabel": "Antwort:",
         "noteLabel": "Notiz:",
-        "currentlyRejected": "Derzeit abgelehnt. Sie können trotzdem annehmen.",
+        "currentlyRejected": "Derzeit abgelehnt.",
+        "declinedLocked": "Der Schüler hat abgesagt: Eine erneute Einladung ist auf dieser Seite nicht mehr möglich.",
+        "changeMind": "Meinung ändern und einladen",
+        "personalNoteLabel": "Nachricht an die Familie (optional)",
+        "personalNotePlaceholder": "Optionale Nachricht in der Einladungs-E-Mail",
+        "confirmInvite": "Einladen",
         "accept": "Annehmen",
         "notePlaceholder": "Optionale Notiz an den Bewerber",
         "sendRejectionEmail": "Eine Ablehnungs-E-Mail an den Bewerber senden"

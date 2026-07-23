@@ -176,21 +176,9 @@
       "usage": "{used} / {cap} {cap, plural, one {scambio} other {scambi}} {used, plural, one {utilizzato} other {utilizzati}}",
       "usageUnlimited": "{used} {used, plural, one {scambio attivo} other {scambi attivi}} · scambi illimitati",
       "plans": {
-        "starter": {
-          "label": "Essenziale",
-          "price": "199 €",
-          "desc": "Per un organizzatore indipendente."
-        },
-        "growth": {
-          "label": "Associazione",
-          "price": "499 €",
-          "desc": "Per le associazioni in piena crescita."
-        },
-        "scale": {
-          "label": "Rete",
-          "price": "799 €",
-          "desc": "Per le grandi reti di scambio."
-        }
+        "starter": { "label": "Essenziale", "price": "199 €", "desc": "Per un organizzatore indipendente." },
+        "growth": { "label": "Associazione", "price": "399 €", "desc": "Per le associazioni in piena crescita." },
+        "scale": { "label": "Rete", "price": "599 €", "desc": "Per le grandi reti di scambio." }
       },
       "trial": {
         "label": "Prova gratuita",
@@ -207,11 +195,20 @@
     "shell": {
       "nav": {
         "dashboard": "Panoramica",
-        "applications": "Candid.",
-        "files": "Moduli / Docs",
+        "applications": "Candidature",
+        "files": "File",
         "students": "Studenti",
         "feedback": "Feedback",
-        "communication": "Comun."
+        "communication": "Comunicazione"
+      },
+      "exchangeGroup": {
+        "title": "I miei scambi",
+        "add": "+ Aggiungi",
+        "empty": "Nessuno scambio"
+      },
+      "sidebar": {
+        "collapse": "Riduci",
+        "expand": "Espandi"
       },
       "accountMenu": {
         "trigger": "Account",
@@ -387,8 +384,10 @@
         "all": "Tutte",
         "invited": "Invitati",
         "toReview": "Da esaminare",
+        "awaiting": "In attesa",
         "accepted": "Accettate",
-        "rejected": "Rifiutate"
+        "rejected": "Rifiutate",
+        "declined": "Rinunce"
       },
       "selectedCount": "{n, plural, one {# selezionata} other {# selezionate}}",
       "acceptCta": "Accetta e invita",
@@ -401,9 +400,14 @@
       "tableHeader": {
         "student": "Studente",
         "level": "Livello 26-27",
-        "nativeLanguage": "Lingua madre",
+        "gender": "Genere",
         "receivedDate": "Ricevuta il",
         "status": "Stato"
+      },
+      "gender": {
+        "male": "Ragazzo",
+        "female": "Ragazza",
+        "other": "Altro"
       },
       "emptyTab": "Nessuna candidatura in questa scheda.",
       "review": {
@@ -411,9 +415,15 @@
         "statusEnrolled": "Iscritto/a (ha risposto Sì)",
         "statusDeclined": "Ha rifiutato l’invito",
         "statusMaybe": "Ha risposto Forse",
+        "statusNotSubmitted": "Questo studente non ha ancora inviato la sua candidatura.",
         "responseLabel": "Risposta:",
         "noteLabel": "Nota:",
-        "currentlyRejected": "Attualmente rifiutata. Puoi comunque accettarla.",
+        "currentlyRejected": "Attualmente rifiutata.",
+        "declinedLocked": "Lo studente ha rinunciato: non può più essere invitato da questa pagina.",
+        "changeMind": "Cambia idea e invita",
+        "personalNoteLabel": "Messaggio per la famiglia (facoltativo)",
+        "personalNotePlaceholder": "Messaggio facoltativo aggiunto all’e-mail di invito",
+        "confirmInvite": "Invita",
         "accept": "Accetta",
         "notePlaceholder": "Nota facoltativa per il candidato",
         "sendRejectionEmail": "Invia un’e-mail di rifiuto al candidato"

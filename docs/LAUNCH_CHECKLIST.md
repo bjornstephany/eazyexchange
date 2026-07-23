@@ -28,8 +28,8 @@ Billing code is deployed and inert; migration `20260701000002` is applied. Nothi
 - [ ] Stripe account verified (business details, able to accept live payments)
 - [ ] Create **3 yearly Prices in EUR** (must be EUR at go-live):
   - [ ] Starter — **199 €/an** → cap **2 exchanges**
-  - [ ] Growth — **499 €/an** → cap **6 exchanges** (marked POPULAIRE in UI)
-  - [ ] Scale — **799 €/an** → **unlimited exchanges**
+  - [ ] Growth — **399 €/an** → cap **6 exchanges** (marked POPULAIRE in UI)
+  - [ ] Scale — **599 €/an** → **unlimited exchanges**
 - [ ] Set env vars in Vercel (Production): `STRIPE_SECRET_KEY`, `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, `STRIPE_PRICE_SCALE`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - [ ] Register the prod webhook → endpoint `https://eazyexchange.vercel.app/api/stripe/webhook`, subscribed to: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
 - [ ] Set `STRIPE_WEBHOOK_SECRET` (from the created webhook) in Vercel
