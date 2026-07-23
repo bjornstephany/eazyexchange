@@ -146,6 +146,47 @@ The default template (`{{ .ConfirmationURL }}` → `GET /auth/v1/verify`) bypass
 - **Diagnose:** Supabase auth logs — `GET /verify` entries = default template (broken); `POST /verify` = the app's `verifyOtp` route (correct).
 - **Free-tier prerequisite:** template editing requires custom SMTP first (Resend: host `smtp.resend.com`, port 465, user `resend`, password = Resend API key). Set both via the dashboard or `PATCH https://api.supabase.com/v1/projects/<ref>/config/auth`.
 
+### Confirm signup email template (6-digit code, single-tab flow)
+
+Organizer signup confirmation is a **6-digit code entered in the original tab**
+(`app/(auth)/signup/page.tsx` → `confirmSignupCode`), not a link that opens a new
+tab. The **Confirm signup** template MUST surface `{{ .Token }}` as the dominant
+CTA, keeping the `/auth/confirm` link only as a small fallback for anyone who
+closes the signup tab:
+
+```html
+<h2>Confirmez votre inscription</h2>
+<p>Votre code de confirmation :</p>
+<p style="font-size:32px;font-weight:700;letter-spacing:6px;margin:16px 0;">{{ .Token }}</p>
+<p>Saisissez ce code dans l’onglet où vous vous êtes inscrit·e.</p>
+<hr style="border:none;border-top:1px solid #E4E9F2;margin:24px 0;">
+<p style="font-size:13px;color:#8A97B2;">
+  Vous avez fermé cet onglet ?
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard">Confirmez ici</a>.
+</p>
+```
+
+Apply via the Management API (Supabase PAT in `$SUPABASE_PAT`; Cloudflare blocks
+the python-urllib UA, so force a curl UA). The confirmation template field is
+`mailer_templates_confirmation_content`:
+
+```bash
+curl -A curl/8.0 -X PATCH \
+  "https://api.supabase.com/v1/projects/rgisrqlbcjdoetoybaqd/config/auth" \
+  -H "Authorization: Bearer $SUPABASE_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"mailer_templates_confirmation_content": "<the HTML above, JSON-escaped>"}'
+```
+
+- **Prod-only, manually verified:** staging uses Supabase default templates and
+  sends no email, so this change cannot be exercised on previews.
+- **Fallback stays load-bearing:** the `/auth/confirm?...&type=signup` link must
+  remain in the template — it is the escape hatch for a closed signup tab, and it
+  is exercised by `app/auth/confirm/route.ts` (unchanged).
+- **`type: 'signup'` caveat:** if `confirmSignupCode`'s `verifyOtp({ type: 'signup' })`
+  is rejected for a plain 6-digit token on the live project, switch it to
+  `type: 'email'` (see the note in `app/(auth)/signup/actions.ts`).
+
 ### Other manual dashboard steps (pointers)
 
 - **Google OAuth provider** — full setup steps in `CLAUDE.md` → Gotchas (Google Cloud client, Supabase provider config, redirect URLs).
