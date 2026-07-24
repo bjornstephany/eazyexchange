@@ -221,6 +221,61 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string | null
+          created_at: string
+          exchange_id: string
+          id: string
+          kind: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id?: string | null
+          created_at?: string
+          exchange_id: string
+          id?: string
+          kind: string
+          status?: string
+          subject?: string
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string | null
+          created_at?: string
+          exchange_id?: string
+          id?: string
+          kind?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_events_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: false
+            referencedRelation: "exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_slots: {
         Row: {
           description: string | null
