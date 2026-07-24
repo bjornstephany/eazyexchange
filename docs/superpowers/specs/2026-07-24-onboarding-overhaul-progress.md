@@ -14,7 +14,7 @@
 | 2 | Migration — three acceptance-email columns | **done** (`782d542`) |
 | 3 | `good-news-fields` pure module | **done** (`60dfaa6`) |
 | 4 | `saveProgramDetails` persists the three columns | **done** (`4428cf1`) |
-| 5 | Réglages → Programme edits the acceptance-email values | not started |
+| 5 | Réglages → Programme edits the acceptance-email values | **done** (`adec011`) |
 | 6 | Onboarding draft module | not started |
 | 7 | Shrink `first-exchange` to the required fields | not started |
 | 8 | `completeFirstExchange` derives, then redirects | not started |
@@ -77,6 +77,24 @@ Two plan corrections found while implementing Task 4:
 
 Gate after Task 4: lint clean, `npx tsc --noEmit` clean, 1492 tests / 207 files
 green (run with `--exclude '**/.claude/**'`).
+
+## Task 5 notes
+
+- Same "create" wart: `components/settings/__tests__/ProgramDetailsCard.test.tsx`
+  already existed with six tests. The new cases went in as a second `describe`,
+  in the file's house style (`renderWithIntl` + `fireEvent`, not the plan's
+  `NextIntlClientProvider` + `userEvent`).
+- The plan's Task 5 test list does not cover the bridge removal, so one extra
+  test was added: an untouched `participation_cost` must still round-trip
+  through save. It passed before and after the swap — that is the point.
+- Message keys were inserted as **text** at the `absenceDatesHint` anchor in all
+  five locales, not via `json.load`/`dump`, which would have reformatted the
+  whole file. Diff is exactly +7 lines per locale.
+- Apostrophe guard: no straight apostrophes in any added line; `fr.json` still
+  holds exactly its 14 known pre-existing ones (now logged in `BACKLOG.md`).
+
+Gate after Task 5: lint clean, `tsc --noEmit` clean, 1497 tests / 207 files
+green, `pnpm build` green.
 
 ## Blocked on Bjorn
 
