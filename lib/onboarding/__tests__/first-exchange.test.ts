@@ -1,16 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import {
-  detailsProblem, generatedCards, filledCards,
+  detailsProblem, generatedCards,
   EMPTY_FIRST_EXCHANGE_DETAILS, DETAILS_REQUIRED_MESSAGE, TRAVEL_ORDER_MESSAGE,
-  ONBOARDING_CARD_PROMPTS,
 } from '@/lib/onboarding/first-exchange'
 
 const good = {
-  ...EMPTY_FIRST_EXCHANGE_DETAILS,
   destination: 'le Minnesota, USA',
   travel_start: '2026-10-17',
   travel_end: '2026-11-02',
 }
+
+describe('EMPTY_FIRST_EXCHANGE_DETAILS', () => {
+  it('carries only the three required fields', () => {
+    expect(Object.keys(EMPTY_FIRST_EXCHANGE_DETAILS).sort())
+      .toEqual(['destination', 'travel_end', 'travel_start'])
+  })
+})
 
 describe('detailsProblem', () => {
   it('accepts destination + both dates', () => {
@@ -36,18 +41,5 @@ describe('generatedCards', () => {
       { title: 'Destination', body: 'le Minnesota, USA' },
       { title: 'Dates clés', body: 'Le voyage se déroulera du 17 octobre au 2 novembre 2026.' },
     ])
-  })
-})
-
-describe('ONBOARDING_CARD_PROMPTS', () => {
-  it('no longer prompts for the two generated cards', () => {
-    expect(ONBOARDING_CARD_PROMPTS).toEqual(['Hébergement', 'Contact organisateur', 'À prévoir'])
-  })
-})
-
-describe('filledCards', () => {
-  it('still drops cards with an empty body', () => {
-    expect(filledCards([{ title: 'A', body: '  ' }, { title: ' B ', body: ' x ' }]))
-      .toEqual([{ title: 'B', body: 'x' }])
   })
 })

@@ -54,9 +54,9 @@ describe('auth entry ordering', () => {
   // app/auth/callback/route.ts signs out and deletes the orphan auth row of a
   // Google user with neither an invited profile nor intent=organizer_signup.
   // Reordering the card must not drop that prop.
-  it('keeps intent=organizer_signup and next=/dashboard on the signup Google button', () => {
+  it('keeps intent=organizer_signup and next=/onboarding on the signup Google button', () => {
     render(<SignupPage />)
-    expect(googleProps[0]).toMatchObject({ intent: 'organizer_signup', next: '/dashboard' })
+    expect(googleProps[0]).toMatchObject({ intent: 'organizer_signup', next: '/onboarding' })
   })
 
   it('keeps the legal consent line at the foot of the signup card, below Google', () => {

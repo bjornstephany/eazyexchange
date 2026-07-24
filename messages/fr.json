@@ -134,7 +134,7 @@
       },
       "programDetails": {
         "heading": "Détails du programme",
-        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale). Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
+        "subtitle": "Ces informations remplissent automatiquement les formulaires à signer en ligne (décharge, demande d’absence, engagement de famille, autorisation médicale) et l’e-mail d’acceptation. Modifiez-les ici : tous les formulaires non encore signés se mettent à jour.",
         "destination": "Destination",
         "destinationHint": "Telle qu’elle apparaîtra dans les formulaires, ex. « le Minnesota, USA »",
         "travelStart": "Date de départ",
@@ -148,6 +148,13 @@
         "sendingCity": "Ville du lycée",
         "absenceDates": "Jours d’absence à excuser",
         "absenceDatesHint": "Un jour par ligne, ex. « le jeudi 19 octobre 2026 »",
+        "acceptanceHeading": "Pour l’e-mail d’acceptation",
+        "acceptanceSubtitle": "Ces valeurs remplacent les mentions « à compléter » de l’e-mail « Bonne nouvelle » envoyé aux familles retenues.",
+        "participationCost": "Participation aux frais",
+        "participationCostHint": "Ex. « 850 € par élève, vol et hébergement inclus »",
+        "paymentDetails": "Adhésion / paiement",
+        "paymentDetailsHint": "Lien de paiement ou modalités, ex. « chèque à l’ordre de l’association »",
+        "confirmationDeadline": "Date limite de confirmation",
         "save": "Enregistrer",
         "saved": "Enregistré."
       },

@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { draftKey } from '@/lib/onboarding/draft'
 
-const push = vi.fn()
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 const completeOnboarding = vi.fn()
 const completeFirstExchange = vi.fn()
 const searchSchools = vi.fn()
@@ -12,17 +11,15 @@ vi.mock('@/actions/onboarding', () => ({
   completeFirstExchange: (...a: unknown[]) => completeFirstExchange(...a),
   searchSchools: (...a: unknown[]) => searchSchools(...a),
 }))
-const inviteOrganizer = vi.fn()
-vi.mock('@/actions/settings', () => ({ inviteOrganizer: (...a: unknown[]) => inviteOrganizer(...a) }))
 
 import { OnboardingForm } from '@/app/onboarding/OnboardingForm'
 
 // Step 2's Destination and both travel dates are required HTML5 fields; fill
 // them before submitting so the browser lets the submit event through.
-function fillProgramDetails() {
+function fillProgramDetails(end = '2026-11-02') {
   fireEvent.change(screen.getByLabelText('Destination'), { target: { value: 'le Minnesota, USA' } })
   fireEvent.change(screen.getByLabelText('Date de départ'), { target: { value: '2026-10-17' } })
-  fireEvent.change(screen.getByLabelText('Date de retour'), { target: { value: '2026-11-02' } })
+  fireEvent.change(screen.getByLabelText('Date de retour'), { target: { value: end } })
 }
 
 const CHEVREUL = {
@@ -31,50 +28,52 @@ const CHEVREUL = {
 }
 
 beforeEach(() => {
-  push.mockReset()
+  window.localStorage.clear()
   completeOnboarding.mockReset().mockResolvedValue({ ok: true, schoolName: 'Lycée Chevreul Lestonnac' })
-  completeFirstExchange.mockReset().mockResolvedValue({ ok: true })
+  // Success redirects server-side; the client promise resolves to undefined.
+  completeFirstExchange.mockReset().mockResolvedValue(undefined)
   searchSchools.mockReset().mockResolvedValue([CHEVREUL])
-  inviteOrganizer.mockReset().mockResolvedValue(undefined)
 })
 
 describe('OnboardingForm', () => {
-  it('walks school -> exchange -> invite, then reaches the dashboard', async () => {
-    render(<OnboardingForm />)
+  it('walks school -> exchange and submits the two required arguments', async () => {
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
 
-    // Step 1: pick a real French establishment from the registry
     await user.type(screen.getByLabelText('Votre établissement'), 'chevreul')
     await user.click(await screen.findByRole('option', { name: /Lycée Chevreul Lestonnac/ }))
     await user.click(screen.getByRole('button', { name: 'Continuer' }))
 
-    // The picked row's name rides along so a UAI shared by several campuses
-    // resolves to the one shown in the picker.
     await waitFor(() => expect(completeOnboarding).toHaveBeenCalledWith({
       country: 'FR', uai: '0690574Z', name: 'Lycée Chevreul Lestonnac',
     }))
 
-    // Step 2: exchange name + required destination/dates; free-text cards optional
     await user.type(await screen.findByLabelText('Nom du programme'), 'Espagne 2026')
     fillProgramDetails()
     await user.click(screen.getByRole('button', { name: 'Continuer' }))
 
     await waitFor(() => expect(completeFirstExchange).toHaveBeenCalledOnce())
+    expect(completeFirstExchange.mock.calls[0]).toHaveLength(2)
     expect(completeFirstExchange.mock.calls[0][0]).toBe('Espagne 2026')
-    expect(completeFirstExchange.mock.calls[0][1]).toMatchObject({
+    expect(completeFirstExchange.mock.calls[0][1]).toEqual({
       destination: 'le Minnesota, USA', travel_start: '2026-10-17', travel_end: '2026-11-02',
-      sending_school_name: 'Lycée Chevreul Lestonnac',
     })
-
-    // Step 3: invite step (optional)
-    expect(await screen.findByText(/Invitez vos collègues/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Passer' }))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'))
   })
 
-  it('shows the server error and stays on the exchange step when the details are rejected', async () => {
-    completeFirstExchange.mockResolvedValue({ ok: false, error: 'invalid', message: 'Renseignez la destination et les deux dates du voyage.' })
-    render(<OnboardingForm initialStep={2} />)
+  it('has no invite-a-colleague step and no optional fields', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    expect(screen.queryByText(/Invitez vos collègues/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Informations complémentaires/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Nom de l’association')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Ville du lycée')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Titre 1')).not.toBeInTheDocument()
+  })
+
+  it('shows the server error and stays on the exchange step when rejected', async () => {
+    completeFirstExchange.mockResolvedValue({
+      error: 'invalid', message: 'Renseignez la destination et les deux dates du voyage.',
+    })
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
     const user = userEvent.setup()
 
     await user.type(screen.getByLabelText('Nom du programme'), 'Espagne 2026')
@@ -82,38 +81,108 @@ describe('OnboardingForm', () => {
     await user.click(screen.getByRole('button', { name: 'Continuer' }))
 
     expect(await screen.findByText('Renseignez la destination et les deux dates du voyage.')).toBeInTheDocument()
-    expect(screen.queryByText(/Invitez vos collègues/)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Nom du programme')).toBeInTheDocument()
   })
 
   it('starts on the exchange step when initialStep is 2', async () => {
-    render(<OnboardingForm initialStep={2} />)
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
     expect(screen.getByLabelText('Nom du programme')).toBeInTheDocument()
     expect(screen.queryByLabelText('Votre établissement')).not.toBeInTheDocument()
   })
+})
 
-  it('sends an invite from the final step and lists it as sent', async () => {
-    render(<OnboardingForm initialStep={2} />)
+describe('OnboardingForm — travel date order', () => {
+  it('shows the ordering error on selection, before any submit', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fillProgramDetails('2026-10-01')
+    expect(await screen.findByText('La date de retour doit être après la date de départ.')).toBeInTheDocument()
+    expect(completeFirstExchange).not.toHaveBeenCalled()
+  })
+
+  it('rejects a return on the same day as the departure', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fillProgramDetails('2026-10-17')
+    expect(await screen.findByText('La date de retour doit être après la date de départ.')).toBeInTheDocument()
+  })
+
+  it('disables Continuer while the dates are out of order', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fillProgramDetails('2026-10-01')
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled())
+  })
+
+  it('clears the error and re-enables Continuer once the dates are fixed', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fillProgramDetails('2026-10-01')
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled())
+    fireEvent.change(screen.getByLabelText('Date de retour'), { target: { value: '2026-11-02' } })
+    await waitFor(() =>
+      expect(screen.queryByText('La date de retour doit être après la date de départ.')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Continuer' })).toBeEnabled()
+  })
+
+  it('shows nothing while only one date is set', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fireEvent.change(screen.getByLabelText('Date de départ'), { target: { value: '2026-10-17' } })
+    expect(screen.queryByText('La date de retour doit être après la date de départ.')).not.toBeInTheDocument()
+  })
+})
+
+describe('OnboardingForm — abandoned tab', () => {
+  it('restores what was typed in step 2', async () => {
+    window.localStorage.setItem(draftKey('s1'), JSON.stringify({
+      v: 1, exchangeName: 'Espagne 2026', destination: 'le Minnesota, USA',
+      travel_start: '2026-10-17', travel_end: '2026-11-02',
+    }))
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    await waitFor(() =>
+      expect(screen.getByLabelText('Nom du programme')).toHaveValue('Espagne 2026'))
+    expect(screen.getByLabelText('Destination')).toHaveValue('le Minnesota, USA')
+    expect(screen.getByLabelText('Date de retour')).toHaveValue('2026-11-02')
+  })
+
+  it('ignores a draft belonging to another school', async () => {
+    window.localStorage.setItem(draftKey('s2'), JSON.stringify({
+      v: 1, exchangeName: 'Autre', destination: '', travel_start: '', travel_end: '',
+    }))
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    await waitFor(() => expect(screen.getByLabelText('Nom du programme')).toHaveValue(''))
+  })
+
+  it('saves as the organizer types', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    fireEvent.change(screen.getByLabelText('Nom du programme'), { target: { value: 'Espagne 2026' } })
+    await waitFor(() => {
+      const raw = window.localStorage.getItem(draftKey('s1'))
+      expect(raw && JSON.parse(raw).exchangeName).toBe('Espagne 2026')
+    })
+  })
+
+  it('keeps the draft when the submit is rejected', async () => {
+    completeFirstExchange.mockResolvedValue({ error: 'limit', message: 'Limite atteinte.' })
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Nom du programme'), 'Espagne 2026')
     fillProgramDetails()
     await user.click(screen.getByRole('button', { name: 'Continuer' }))
-    await user.type(await screen.findByPlaceholderText('adresse@etablissement.fr'), 'c@x.fr')
-    await user.click(screen.getByRole('button', { name: 'Inviter' }))
-    await waitFor(() => expect(inviteOrganizer).toHaveBeenCalledWith('c@x.fr'))
-    expect(await screen.findByText('c@x.fr')).toBeInTheDocument()
+    await screen.findByText('Limite atteinte.')
+    const raw = window.localStorage.getItem(draftKey('s1'))
+    expect(raw && JSON.parse(raw).exchangeName).toBe('Espagne 2026')
   })
 })
 
 describe('OnboardingForm — step 1 establishment gate', () => {
   it('defaults to France and shows the registry combobox, not a free-text name field', () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     expect(screen.getByLabelText('Pays')).toHaveValue('FR')
     expect(screen.getByLabelText('Votre établissement')).toHaveAttribute('role', 'combobox')
     expect(screen.queryByLabelText('Nom de l’établissement')).not.toBeInTheDocument()
   })
 
   it('searches only from two characters up, debounced', async () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Votre établissement'), 'c')
     await waitFor(() => expect(searchSchools).not.toHaveBeenCalled())
@@ -122,7 +191,7 @@ describe('OnboardingForm — step 1 establishment gate', () => {
   })
 
   it('cannot submit until an establishment is picked', async () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled()
     await user.type(screen.getByLabelText('Votre établissement'), 'chevreul')
@@ -132,21 +201,21 @@ describe('OnboardingForm — step 1 establishment gate', () => {
   })
 
   it('offers a contact link instead of a free-text fallback', async () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const link = screen.getByRole('link', { name: /Je ne trouve pas mon établissement/ })
     expect(link.getAttribute('href')).toMatch(/^mailto:/)
   })
 
   it('says so when the registry returns nothing', async () => {
     searchSchools.mockResolvedValue([])
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Votre établissement'), 'zzzz')
     expect(await screen.findByText('Aucun établissement trouvé.')).toBeInTheDocument()
   })
 
   it('swaps the combobox for a free-text name field on another country', async () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     await user.selectOptions(screen.getByLabelText('Pays'), 'Espagne')
     expect(screen.queryByLabelText('Votre établissement')).not.toBeInTheDocument()
@@ -158,7 +227,7 @@ describe('OnboardingForm — step 1 establishment gate', () => {
   })
 
   it('reveals a free-text country field for « Autre pays »', async () => {
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     await user.selectOptions(screen.getByLabelText('Pays'), 'other')
     await user.type(screen.getByLabelText('Précisez le pays'), 'Canada')
@@ -174,7 +243,7 @@ describe('OnboardingForm — step 1 establishment gate', () => {
       ok: false, error: 'unknown_school',
       message: 'Cet établissement est introuvable dans l’annuaire officiel. Sélectionnez-le dans la liste.',
     })
-    render(<OnboardingForm />)
+    render(<OnboardingForm schoolId="s1" />)
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Votre établissement'), 'chevreul')
     await user.click(await screen.findByRole('option', { name: /Lycée Chevreul Lestonnac/ }))

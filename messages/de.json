@@ -134,7 +134,7 @@
       },
       "programDetails": {
         "heading": "Programmdetails",
-        "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht). Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
+        "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht) sowie die Zusage-E-Mail. Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
         "destination": "Reiseziel",
         "destinationHint": "So, wie es in den Formularen erscheint, z. B. « le Minnesota, USA »",
         "travelStart": "Abreisedatum",
@@ -148,6 +148,13 @@
         "sendingCity": "Stadt der Schule",
         "absenceDates": "Zu entschuldigende Fehltage",
         "absenceDatesHint": "Ein Tag pro Zeile, z. B. « le jeudi 19 octobre 2026 »",
+        "acceptanceHeading": "Für die Zusage-E-Mail",
+        "acceptanceSubtitle": "Diese Werte ersetzen die Platzhalter „auszufüllen“ in der E-Mail „Gute Nachrichten“ an die ausgewählten Familien.",
+        "participationCost": "Kostenbeteiligung",
+        "participationCostHint": "z. B. „850 € pro Schüler/in, Flug und Unterkunft inbegriffen“",
+        "paymentDetails": "Mitgliedschaft / Zahlung",
+        "paymentDetailsHint": "Zahlungslink oder Modalitäten, z. B. „Scheck an den Verein“",
+        "confirmationDeadline": "Bestätigungsfrist",
         "save": "Speichern",
         "saved": "Gespeichert."
       },

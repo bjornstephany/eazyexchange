@@ -53,7 +53,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
       },
     })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
@@ -184,7 +184,7 @@ export default function SignupPage() {
           <div className="flex items-center gap-3.5 font-mono text-xs font-medium text-[#8A97B2]">
             <span className="flex-1 border-t border-[#E4E9F2]" />ou continuer avec<span className="flex-1 border-t border-[#E4E9F2]" />
           </div>
-          <GoogleButton intent="organizer_signup" next="/dashboard" label="Google" />
+          <GoogleButton intent="organizer_signup" next="/onboarding" label="Google" />
 
           <p className="m-0 text-center text-xs leading-[1.5] text-[#8A97B2]">
             En créant un compte, vous acceptez nos{' '}

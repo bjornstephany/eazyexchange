@@ -28,7 +28,10 @@ export async function confirmSignupCode(email: string, code: string): Promise<Co
   }
   const result = await provisionOrganizer(data.user)
   if (!result.ok) return { ok: false, error: 'provision_failed' }
-  redirect('/dashboard')
+  // Straight into onboarding. Routing a fresh signup through /dashboard only to
+  // be bounced adds a redirect that can only fail: if the layout gate does not
+  // fire, /dashboard renders for a user with no school.
+  redirect('/onboarding')
 }
 
 // Re-sends the signup confirmation email (carrying a fresh code). Relies on

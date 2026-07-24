@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { createClient } from '@/lib/supabase/server'
 import { mustOnboard } from '@/lib/onboarding/gate'
+import { shellDestination } from '@/lib/auth/shell-destination'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { OnboardingForm } from './OnboardingForm'
@@ -15,7 +16,9 @@ export default async function OnboardingPage() {
   if (!user) redirect('/login')
 
   const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') redirect('/my-forms')
+  if (!profile || profile.role !== 'organizer') {
+    redirect(shellDestination(profile?.role, 'organizer')!)
+  }
 
   const schoolName = profile.schools?.name ?? ''
 
@@ -26,7 +29,11 @@ export default async function OnboardingPage() {
     .eq('school_a_id', profile.school_id)
   const ownedCount = count ?? 0
 
-  if (!mustOnboard(schoolName, ownedCount)) redirect('/dashboard')
+  // Onboarding is done — the only realistic visitor here is someone who just
+  // finished it, so land them where the work is. Keeping this identical to the
+  // action's own destination also means a revalidation-triggered re-render
+  // cannot flash a different page (spec §7).
+  if (!mustOnboard(schoolName, ownedCount)) redirect('/applications')
 
   // Blank name → start at the school-name step; named but no exchange → jump
   // straight to the first-exchange step.
@@ -40,7 +47,7 @@ export default async function OnboardingPage() {
           <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Bienvenue sur Eazyexchange</h3>
           <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">Configurons votre programme en quelques étapes.</p>
         </div>
-        <OnboardingForm initialStep={initialStep} initialSchoolName={schoolName} />
+        <OnboardingForm schoolId={profile.school_id} initialStep={initialStep} />
       </AuthCard>
     </div>
   )
