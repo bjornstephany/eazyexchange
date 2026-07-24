@@ -116,7 +116,12 @@
         "description": "Wird an die Eltern gesendet, wenn Sie eine Bewerbung annehmen. Die Schaltflächen Ja / Nein / Fragen werden automatisch hinzugefügt.",
         "subjectLabel": "Betreff",
         "bodyLabel": "Nachricht",
-        "placeholdersLabel": "Verfügbare Platzhalter:",
+        "whenSent": "Wird automatisch an die Eltern gesendet, wenn Sie eine Bewerbung annehmen.",
+        "insertLabel": "Einfügen:",
+        "tokens": {
+          "studentName": "Vor- und Nachname des Schülers",
+          "exchangeName": "Name des Programms"
+        },
         "previewLabel": "Vorschau",
         "resetToDefault": "Auf Standardvorlage zurücksetzen",
         "saveButton": "Speichern",

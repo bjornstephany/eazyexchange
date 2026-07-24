@@ -116,7 +116,12 @@
         "description": "Envoyé aux parents lorsque vous acceptez une candidature. Les boutons Oui / Non / Questions sont ajoutés automatiquement.",
         "subjectLabel": "Objet",
         "bodyLabel": "Message",
-        "placeholdersLabel": "Balises disponibles :",
+        "whenSent": "Envoyé automatiquement aux parents lorsque vous acceptez une candidature.",
+        "insertLabel": "Insérer :",
+        "tokens": {
+          "studentName": "Prénom et nom de l’élève",
+          "exchangeName": "Nom du programme"
+        },
         "previewLabel": "Aperçu",
         "resetToDefault": "Rétablir le modèle par défaut",
         "saveButton": "Enregistrer",

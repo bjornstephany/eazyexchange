@@ -116,7 +116,12 @@
         "description": "Sent to the parents when you accept an application. The Yes / No / Questions buttons are added automatically.",
         "subjectLabel": "Subject",
         "bodyLabel": "Message",
-        "placeholdersLabel": "Available placeholders:",
+        "whenSent": "Sent automatically to the parents when you accept an application.",
+        "insertLabel": "Insert:",
+        "tokens": {
+          "studentName": "Student’s first and last name",
+          "exchangeName": "Programme name"
+        },
         "previewLabel": "Preview",
         "resetToDefault": "Reset to the default template",
         "saveButton": "Save",

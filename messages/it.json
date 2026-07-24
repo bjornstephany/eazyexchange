@@ -116,7 +116,12 @@
         "description": "Inviata ai genitori quando accetti una candidatura. I pulsanti Sì / No / Domande vengono aggiunti automaticamente.",
         "subjectLabel": "Oggetto",
         "bodyLabel": "Messaggio",
-        "placeholdersLabel": "Segnaposto disponibili:",
+        "whenSent": "Inviata automaticamente ai genitori quando accetti una candidatura.",
+        "insertLabel": "Inserisci:",
+        "tokens": {
+          "studentName": "Nome e cognome dell’alunno",
+          "exchangeName": "Nome del programma"
+        },
         "previewLabel": "Anteprima",
         "resetToDefault": "Ripristina il modello predefinito",
         "saveButton": "Salva",

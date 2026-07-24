@@ -116,7 +116,12 @@
         "description": "Se envía a los padres cuando aceptas una candidatura. Los botones Sí / No / Preguntas se añaden automáticamente.",
         "subjectLabel": "Asunto",
         "bodyLabel": "Mensaje",
-        "placeholdersLabel": "Etiquetas disponibles:",
+        "whenSent": "Se envía automáticamente a los padres cuando aceptas una candidatura.",
+        "insertLabel": "Insertar:",
+        "tokens": {
+          "studentName": "Nombre y apellidos del alumno",
+          "exchangeName": "Nombre del programa"
+        },
         "previewLabel": "Vista previa",
         "resetToDefault": "Restablecer la plantilla predeterminada",
         "saveButton": "Guardar",
