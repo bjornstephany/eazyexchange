@@ -126,4 +126,38 @@ describe('ApplicationForm', () => {
     expect(await screen.findByText(/dépassent la limite/i)).toBeInTheDocument()
     expect(screen.queryByText(/ta candidature a été envoyée/i)).not.toBeInTheDocument()
   })
+
+  it('blocks submit client-side on a malformed phone and flags the field', async () => {
+    const user = userEvent.setup()
+    renderForm({ initialData: { cell_phone: 'io' } })
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/vérifiez le format/i)).toBeInTheDocument()
+    // Anchored: "Père — Téléphone portable" and its mother twin also match.
+    expect(screen.getByLabelText(/^téléphone portable/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(submitApplication).not.toHaveBeenCalled()
+  })
+
+  it('blocks submit client-side on a malformed e-mail', async () => {
+    const user = userEvent.setup()
+    renderForm({ initialData: { email: 'marie@gmail.' } })
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/vérifiez le format/i)).toBeInTheDocument()
+    expect(submitApplication).not.toHaveBeenCalled()
+  })
+
+  it('accepts a spaced French mobile number', async () => {
+    const user = userEvent.setup()
+    renderForm({ initialData: { cell_phone: '06 12 34 56 78' } })
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(submitApplication).toHaveBeenCalled()
+  })
+
+  it('surfaces a server-side bad-format rejection without marking the form done', async () => {
+    const user = userEvent.setup()
+    vi.mocked(submitApplication).mockResolvedValueOnce({ ok: false, invalidFormat: ['father_email'] })
+    renderForm()
+    await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
+    expect(await screen.findByText(/vérifiez le format/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ta candidature a été envoyée/i)).not.toBeInTheDocument()
+  })
 })

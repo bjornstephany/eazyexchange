@@ -209,7 +209,7 @@ const fr: LandingContent = {
       { time: '07:40', text: 'Document reçu · Chloé D. · autorisation', ok: true },
     ],
     todoTitle: 'À faire maintenant',
-    todoBody: 'Vérifier la candidature de Yanis Meziane. C’est tout.',
+    todoBody: 'Vérifier la candidature de Yanis Meziane.',
     annotations: [
       'Ces relances sont parties à 6 h. Personne n’a écrit un seul mail.',
       'Un document manquant a déjà sa prochaine relance programmée.',
@@ -220,17 +220,17 @@ const fr: LandingContent = {
     blocks: [
       {
         eyebrow: '01 · Invitations',
-        title: 'Les élèves remplissent leur dossier eux-mêmes',
+        title: 'Invitez les élèves à candidater',
         body: 'Vous invitez par e-mail. Chaque élève reçoit son espace avec la liste exacte de ce qu’on attend de lui : formulaires, signatures, pièces à téléverser. Vous regardez les dossiers se compléter.',
       },
       {
         eyebrow: '02 · Relances',
-        title: 'Les relances partent sans vous',
+        title: 'Envoyez les relances automatiquement',
         body: 'Un document manque ? Eazyexchange relance l’élève et ses parents au bon rythme, jusqu’à réception. Vous n’écrivez plus jamais « RE: RE: scan du passeport ? ».',
       },
       {
         eyebrow: '03 · Suivi',
-        title: 'Vous savez qui bloque, en un coup d’œil',
+        title: 'Voyez tout en un coup d’œil',
         body: 'Chaque élève, chaque pièce, chaque paiement sur un seul écran, phase par phase. Fini le tableur partagé et les fils de mails pour savoir où en est un dossier.',
       },
     ],
@@ -312,7 +312,7 @@ const fr: LandingContent = {
       { label: '30 h de coordination, valorisées', value: '≈ 300 €' },
       { label: 'Temps gagné avec Eazyexchange', value: '≈ 30 h / échange', green: true },
     ],
-    totalLabel: 'Votre premier échange sur Eazyexchange',
+    totalLabel: 'Votre premier échange',
     totalValue: '0 €',
     focus:
       'Ces heures, vous les rendez à ce qui compte vraiment : l’expérience et la sécurité de vos élèves — pas la course aux dossiers.',
@@ -428,7 +428,7 @@ const en: LandingContent = {
       { time: '07:40', text: 'Document received · Chloé D. · authorization', ok: true },
     ],
     todoTitle: 'To do now',
-    todoBody: 'Review Yanis Meziane’s application. That’s it.',
+    todoBody: 'Review Yanis Meziane’s application.',
     annotations: [
       'These reminders went out at 6 am. Nobody wrote a single email.',
       'A missing document already has its next reminder scheduled.',
@@ -439,17 +439,17 @@ const en: LandingContent = {
     blocks: [
       {
         eyebrow: '01 · Invitations',
-        title: 'Students complete their own files',
+        title: 'Invite students to apply',
         body: 'You invite by email. Each student gets their own space with the exact list of what’s expected of them: forms, signatures, documents to upload. You watch the files complete themselves.',
       },
       {
         eyebrow: '02 · Reminders',
-        title: 'Reminders go out without you',
+        title: 'Send reminders automatically',
         body: 'A document is missing? Eazyexchange reminds the student and their parents at the right pace, until it arrives. You never write “RE: RE: passport scan?” again.',
       },
       {
         eyebrow: '03 · Tracking',
-        title: 'Know who’s blocking, at a glance',
+        title: 'See everything at a glance',
         body: 'Every student, every document, every payment on a single screen, phase by phase. No more shared spreadsheet and email threads to find out where a file stands.',
       },
     ],
@@ -531,7 +531,7 @@ const en: LandingContent = {
       { label: '30 h of coordination, valued', value: '≈ €300' },
       { label: 'Time saved with Eazyexchange', value: '≈ 30 h / exchange', green: true },
     ],
-    totalLabel: 'Your first exchange on Eazyexchange',
+    totalLabel: 'Your first exchange',
     totalValue: '€0',
     focus:
       'Those hours go back to what matters most — your students’ experience and safety, not chasing paperwork.',
@@ -647,7 +647,7 @@ const es: LandingContent = {
       { time: '07:40', text: 'Documento recibido · Chloé D. · autorización', ok: true },
     ],
     todoTitle: 'Para hacer ahora',
-    todoBody: 'Revisar la candidatura de Yanis Meziane. Eso es todo.',
+    todoBody: 'Revisar la candidatura de Yanis Meziane.',
     annotations: [
       'Estos recordatorios salieron a las 6 h. Nadie escribió un solo correo.',
       'Un documento faltante ya tiene su próximo recordatorio programado.',
@@ -658,17 +658,17 @@ const es: LandingContent = {
     blocks: [
       {
         eyebrow: '01 · Invitaciones',
-        title: 'Los estudiantes completan su expediente ellos mismos',
+        title: 'Invita a los estudiantes a presentar su candidatura',
         body: 'Invitas por correo electrónico. Cada estudiante recibe su espacio con la lista exacta de lo que se espera de él: formularios, firmas, documentos que subir. Tú ves cómo los expedientes se van completando.',
       },
       {
         eyebrow: '02 · Recordatorios',
-        title: 'Los recordatorios salen sin ti',
+        title: 'Envía los recordatorios automáticamente',
         body: '¿Falta un documento? Eazyexchange recuerda al estudiante y a sus padres al ritmo adecuado, hasta recibirlo. Nunca más escribirás «RE: RE: ¿escaneo del pasaporte?».',
       },
       {
         eyebrow: '03 · Seguimiento',
-        title: 'Sabes quién bloquea, de un vistazo',
+        title: 'Ve todo de un vistazo',
         body: 'Cada estudiante, cada documento, cada pago en una sola pantalla, fase por fase. Se acabaron la hoja de cálculo compartida y los hilos de correo para saber cómo va un expediente.',
       },
     ],
@@ -750,7 +750,7 @@ const es: LandingContent = {
       { label: '30 h de coordinación, valoradas', value: '≈ 300 €' },
       { label: 'Tiempo ganado con Eazyexchange', value: '≈ 30 h / intercambio', green: true },
     ],
-    totalLabel: 'Tu primer intercambio en Eazyexchange',
+    totalLabel: 'Tu primer intercambio',
     totalValue: '0 €',
     focus:
       'Esas horas vuelven a lo que de verdad importa: la experiencia y la seguridad de tus alumnos, no perseguir documentos.',
@@ -866,7 +866,7 @@ const it: LandingContent = {
       { time: '07:40', text: 'Documento ricevuto · Chloé D. · autorizzazione', ok: true },
     ],
     todoTitle: 'Da fare adesso',
-    todoBody: 'Verificare la candidatura di Yanis Meziane. Tutto qui.',
+    todoBody: 'Verificare la candidatura di Yanis Meziane.',
     annotations: [
       'Questi solleciti sono partiti alle 6. Nessuno ha scritto una sola mail.',
       'Un documento mancante ha già il prossimo sollecito programmato.',
@@ -877,17 +877,17 @@ const it: LandingContent = {
     blocks: [
       {
         eyebrow: '01 · Inviti',
-        title: 'Gli studenti completano la pratica da soli',
+        title: 'Invita gli studenti a candidarsi',
         body: 'Inviti via e-mail. Ogni studente riceve il suo spazio con l’elenco esatto di ciò che ci si aspetta da lui: moduli, firme, documenti da caricare. Tu guardi le pratiche completarsi.',
       },
       {
         eyebrow: '02 · Solleciti',
-        title: 'I solleciti partono senza di te',
+        title: 'Invia i solleciti automaticamente',
         body: 'Manca un documento? Eazyexchange sollecita lo studente e i suoi genitori al ritmo giusto, fino alla ricezione. Non scriverai mai più «RE: RE: scansione del passaporto?».',
       },
       {
         eyebrow: '03 · Monitoraggio',
-        title: 'Sai chi blocca, a colpo d’occhio',
+        title: 'Vedi tutto a colpo d’occhio',
         body: 'Ogni studente, ogni documento, ogni pagamento su un unico schermo, fase per fase. Basta fogli di calcolo condivisi e thread di mail per sapere a che punto è una pratica.',
       },
     ],
@@ -969,7 +969,7 @@ const it: LandingContent = {
       { label: '30 h di coordinamento, valorizzate', value: '≈ 300 €' },
       { label: 'Tempo guadagnato con Eazyexchange', value: '≈ 30 h / scambio', green: true },
     ],
-    totalLabel: 'Il tuo primo scambio su Eazyexchange',
+    totalLabel: 'Il tuo primo scambio',
     totalValue: '0 €',
     focus:
       'Quelle ore tornano a ciò che conta davvero: l’esperienza e la sicurezza dei tuoi studenti, non la rincorsa ai documenti.',
@@ -1085,7 +1085,7 @@ const de: LandingContent = {
       { time: '07:40', text: 'Dokument erhalten · Chloé D. · Einverständnis', ok: true },
     ],
     todoTitle: 'Jetzt zu tun',
-    todoBody: 'Die Bewerbung von Yanis Meziane prüfen. Das ist alles.',
+    todoBody: 'Die Bewerbung von Yanis Meziane prüfen.',
     annotations: [
       'Diese Erinnerungen gingen um 6 Uhr raus. Niemand hat eine einzige Mail geschrieben.',
       'Ein fehlendes Dokument hat seine nächste Erinnerung bereits geplant.',
@@ -1096,17 +1096,17 @@ const de: LandingContent = {
     blocks: [
       {
         eyebrow: '01 · Einladungen',
-        title: 'Die Schüler füllen ihre Akte selbst aus',
+        title: 'Laden Sie Schüler zur Bewerbung ein',
         body: 'Sie laden per E-Mail ein. Jeder Schüler erhält seinen Bereich mit der genauen Liste dessen, was von ihm erwartet wird: Formulare, Unterschriften, hochzuladende Dokumente. Sie sehen zu, wie sich die Akten vervollständigen.',
       },
       {
         eyebrow: '02 · Erinnerungen',
-        title: 'Die Erinnerungen gehen ohne Sie raus',
+        title: 'Versenden Sie Erinnerungen automatisch',
         body: 'Ein Dokument fehlt? Eazyexchange erinnert den Schüler und seine Eltern im richtigen Rhythmus, bis es eintrifft. Sie schreiben nie wieder „RE: RE: Scan des Reisepasses?“.',
       },
       {
         eyebrow: '03 · Überblick',
-        title: 'Sie sehen auf einen Blick, wer blockiert',
+        title: 'Sehen Sie alles auf einen Blick',
         body: 'Jeder Schüler, jedes Dokument, jede Zahlung auf einem einzigen Bildschirm, Phase für Phase. Schluss mit geteilten Tabellen und Mail-Verläufen, um den Stand einer Akte zu kennen.',
       },
     ],
@@ -1188,7 +1188,7 @@ const de: LandingContent = {
       { label: '30 Std. Koordination, bewertet', value: '≈ 300 €' },
       { label: 'Gewonnene Zeit mit Eazyexchange', value: '≈ 30 Std. / Austausch', green: true },
     ],
-    totalLabel: 'Ihr erster Austausch auf Eazyexchange',
+    totalLabel: 'Ihr erster Austausch',
     totalValue: '0 €',
     focus:
       'Diese Stunden fließen zurück in das, was am wichtigsten ist – das Erlebnis und die Sicherheit Ihrer Schüler, nicht das Hinterherjagen von Unterlagen.',

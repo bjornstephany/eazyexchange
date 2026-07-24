@@ -1,3 +1,5 @@
+import { isValidEmail, isValidPhone } from '@/lib/validation'
+
 export type AppFieldType = 'text' | 'textarea' | 'date' | 'email' | 'tel' | 'yesno' | 'radio'
 
 // Locale-free schema. Labels live in the `apply` message catalog, keyed by id
@@ -43,7 +45,7 @@ export const APPLICATION_SECTIONS: AppSection[] = [
         ],
       },
       { id: 'grade', type: 'text', required: true },
-      { id: 'french_class', type: 'text', required: true },
+      { id: 'class_group', type: 'text', required: true },
       { id: 'email', type: 'email', required: true },
       { id: 'cell_phone', type: 'tel', required: true },
     ],
@@ -169,6 +171,23 @@ export function missingRequiredApplication(
   return missing
 }
 
+// Ids of `email`/`tel` fields holding something that isn't one. Only non-empty
+// values are checked: an empty required field is missingRequiredApplication's
+// business, and the optional parent group must not light up red when left
+// blank. Drafts are never run through this — they are partial by design.
+export function invalidFormatApplicationFields(data: Record<string, string>): string[] {
+  return allApplicationFields()
+    .filter((f) => {
+      if (f.type !== 'email' && f.type !== 'tel') return false
+      // String() coercion mirrors hasOverlongAnswer: client payloads aren't
+      // runtime-typed, so a non-string value must not reach the validators.
+      const value = String(data[f.id] ?? '').trim()
+      if (value === '') return false
+      return f.type === 'email' ? !isValidEmail(value) : !isValidPhone(value)
+    })
+    .map((f) => f.id)
+}
+
 // Ids of fields whose answer exceeds their per-field maxLength. Pure server-side
 // backstop of the client-side maxLength attribute; String() coercion mirrors
 // hasOverlongAnswer (client payloads aren't runtime-typed).
@@ -197,20 +216,16 @@ export function applicantInitials(data: Record<string, string> | null | undefine
 // second), or the student's own email as a last-resort fallback so an accept
 // never silently fails to notify. Blank/whitespace parent values are ignored.
 // A valid submission always has at least one parent group complete (which
-// includes that parent's email), so the fallback is a defensive backstop.
-// Minimal, deliberately lax address check: enough to reject junk like "e" that
-// Resend would 422 on (which black-holes the whole send), without trying to be a
-// full RFC validator. Requires local@domain.tld with no spaces.
-function looksLikeEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
-
+// includes that parent's email), so the fallback is a defensive backstop. The
+// address check is the shared isValidEmail — submissions are now format-checked
+// at entry, so anything reaching here should already be well-formed, but the
+// filter stays: one recipient Resend 422s on black-holes the whole send.
 export function parentRecipients(
   data: Record<string, string> | null | undefined,
   fallbackEmail: string,
 ): string[] {
   const emails = [data?.father_email, data?.mother_email]
     .map((e) => (e ?? '').trim())
-    .filter((e) => looksLikeEmail(e))
+    .filter((e) => isValidEmail(e))
   return emails.length > 0 ? emails : [fallbackEmail]
 }

@@ -17,7 +17,6 @@ import { LanguageSelect } from './LanguageSelect'
 export type SettingsProps = {
   profile: { fullName: string; email: string; schoolName: string }
   isOwner: boolean
-  schoolCountry: string
   canChangePassword: boolean
   team: { members: TeamMember[]; pending: PendingInvite[] }
   billing: BillingOverview | null
@@ -64,7 +63,7 @@ export function SettingsView(props: SettingsProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-[18px]">
           {section === 'compte' && (
             <>
-              <ProfileCard profile={props.profile} isOwner={props.isOwner} schoolCountry={props.schoolCountry} />
+              <ProfileCard profile={props.profile} />
               <LanguageSelect current={props.locale} />
               <SecurityCard canChangePassword={props.canChangePassword} />
             </>

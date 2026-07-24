@@ -32,12 +32,14 @@ export function BillingCard({ billing }: { billing: BillingOverview }) {
           <div className="text-[13.5px] font-semibold text-foreground">{t('settings.billing.paymentMethodLabel')}</div>
           <div className="mt-0.5 text-[12.5px] text-tertiary">{billing.payment.note}</div>
         </div>
-        <Link
-          href={billing.payment.href}
-          className="flex-none rounded-[9px] border px-3.5 py-2 text-[12.5px] font-semibold text-foreground hover:bg-hoverrow"
-        >
-          {billing.payment.cta}
-        </Link>
+        {billing.payment.manage && (
+          <Link
+            href={billing.payment.manage.href}
+            className="flex-none rounded-[9px] border px-3.5 py-2 text-[12.5px] font-semibold text-foreground hover:bg-hoverrow"
+          >
+            {billing.payment.manage.cta}
+          </Link>
+        )}
       </div>
     </div>
   )

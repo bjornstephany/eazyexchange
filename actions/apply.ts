@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { randomToken, tokenExpired, resumeTokenExpiry } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
-import { missingRequiredApplication, overLimitApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
+import { missingRequiredApplication, overLimitApplicationFields, invalidFormatApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
 import { validateUploadFile, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
 import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
 import {
@@ -45,6 +45,7 @@ export type StartApplicationResult =
 export type ApplyWriteResult =
   | { ok: true }
   | { ok: false; overLimit: string[] }
+  | { ok: false; invalidFormat: string[] }
   | { ok: false; registered: true }
 
 export async function startApplication(
@@ -324,6 +325,12 @@ export async function submitApplication(token: string, data: Record<string, stri
   // the photo (which lives on the row, not in `data`).
   const missing = missingRequiredApplication(data, { hasPhoto: app.photo_path != null })
   if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
+
+  // Format backstop for the e-mail/phone fields. Structured, not thrown: the
+  // client can point at the offending fields, and a malformed parent address
+  // here would 422 the whole acceptance send later on.
+  const invalidFormat = invalidFormatApplicationFields(data)
+  if (invalidFormat.length > 0) return { ok: false, invalidFormat }
 
   // Re-check the window at submit time: startApplication gated it, but the
   // organizer may have closed applications (or the deadline passed) while this

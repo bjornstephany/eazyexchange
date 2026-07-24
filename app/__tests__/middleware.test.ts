@@ -66,6 +66,23 @@ describe('middleware', () => {
     expect(res.headers.get('location')).toBeNull()
   })
 
+  // The signup consent line and the landing footer link here, and robots.ts /
+  // sitemap.ts advertise these URLs to anonymous crawlers. Gating them sent every
+  // visitor without an account to /login instead of the document they clicked.
+  it.each(['/legal/cgu', '/legal/cgv', '/legal/confidentialite', '/legal/mentions-legales'])(
+    'lets a logged-out visitor reach %s (no redirect)',
+    async (path) => {
+      const res = await middleware(req(path))
+      expect(res.headers.get('location')).toBeNull()
+    }
+  )
+
+  it('still serves /legal to a logged-in user without bouncing them to their app', async () => {
+    user = { id: 'u1' }
+    const res = await middleware(req('/legal/cgv'))
+    expect(res.headers.get('location')).toBeNull()
+  })
+
   it('lets a logged-out visitor reach /invite/<tok> (no redirect)', async () => {
     const res = await middleware(req('/invite/tok123'))
     expect(res.headers.get('location')).toBeNull()

@@ -31,9 +31,9 @@ export const cgv: LegalDocument = {
           t: 'ul',
           items: [
             'Essai gratuit : 1 échange, sans carte bancaire ;',
-            'Starter : 2 échanges — [PLACEHOLDER : prix] € / [PLACEHOLDER : période] ;',
-            'Growth : 6 échanges — [PLACEHOLDER : prix] € / [PLACEHOLDER : période] ;',
-            'Scale : échanges illimités — [PLACEHOLDER : prix] € / [PLACEHOLDER : période].',
+            'Essentiel : 2 échanges — 199 € / an ;',
+            'Association : 6 échanges — 399 € / an ;',
+            'Réseau : échanges illimités — 599 € / an.',
           ],
         },
         {
@@ -58,7 +58,7 @@ export const cgv: LegalDocument = {
       blocks: [
         {
           t: 'p',
-          text: 'Les paiements sont traités par notre prestataire Stripe. L’éditeur ne conserve aucune donnée bancaire. La facturation est [PLACEHOLDER : mensuelle / annuelle] et l’abonnement est renouvelé automatiquement à l’échéance, sauf résiliation.',
+          text: 'Les paiements sont traités par notre prestataire Stripe. L’éditeur ne conserve aucune donnée bancaire. La facturation est annuelle et l’abonnement est renouvelé automatiquement à l’échéance, sauf résiliation.',
         },
       ],
     },
