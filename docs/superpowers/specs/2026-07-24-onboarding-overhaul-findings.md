@@ -43,16 +43,57 @@ code read of the three confirmation paths on `feature/onboarding-overhaul`.
   the `school &&` guard on that line cannot silently skip the gate for a fresh
   signup. The organizer does reach onboarding, via one wasted hop.
 
-- **New top suspect, unverified: `{{ .SiteURL }}`.** It is the one part of that
-  link neither code nor this read covers. If prod's Auth **Site URL** is stale or
-  points anywhere other than `https://eazyexchange.com`, the fallback link
-  resolves to a dead host and the tab is blank — which matches the symptom far
-  better than anything in the code path above. Session memory already flags this
-  setting as load-bearing (`project_supabase_site_url_prod`). Confirm with the
-  same endpoint, reading `site_url`, before writing any fix.
+- **`{{ .SiteURL }}` checked and cleared.** Prod Auth `site_url` is
+  `https://eazyexchange.com`, and `https://eazyexchange.com/**` is in the
+  redirect allow list. The fallback link resolves to a real host on a real route.
 
-- **Fix owner: Supabase dashboard (manual, Bjorn)** — but for a different reason
-  than the spec predicted. See "Consequences" below.
+### Actual mechanism: an organizer↔student redirect loop
+
+Found by code inspection after both dashboard-level suspects were eliminated.
+**Not yet observed live** — see "Confidence" below.
+
+`getProfile()` (`lib/supabase/request.ts:40`) returns `null` whenever the `users`
+row is not readable by the request's RLS-scoped client: `.single()` yields
+`{ data: null }` for zero rows *and* for any error, and the error is discarded.
+A null profile then satisfies **both** of these guards at once:
+
+| File | Line | Guard | With `profile === null` |
+|---|---|---|---|
+| `app/(organizer)/layout.tsx` | 20 | `if (profile?.role !== 'organizer') redirect('/my-forms')` | fires |
+| `app/(student)/layout.tsx` | 15 | `if (profile?.role !== 'student') redirect('/dashboard')` | fires |
+
+So `/dashboard` → `/my-forms` → `/dashboard` → … until the browser aborts with
+`ERR_TOO_MANY_REDIRECTS`, which presents as **a blank tab**. `/onboarding` joins
+the same loop through its own line 18 (`!profile || role !== 'organizer'` →
+`/my-forms`).
+
+Why a fresh signup is the case that hits it: `/auth/confirm` provisions the
+`users` row with the **admin** client (`provisionOrganizer`), then immediately
+redirects to `/dashboard`, where `getProfile()` reads it back through the
+**user's** client. Any lag or RLS visibility gap on that first read produces
+exactly the null profile above. This also explains why the symptom is specific to
+confirming an email rather than to ordinary logins.
+
+Note this is a **general** defect, not an onboarding-only one: any authenticated
+user whose profile row is briefly unreadable gets a blank tab instead of an error.
+
+- **Fix owner: code, in this branch.** No dashboard step is required for the
+  blank tab. The loop needs one side to stop bouncing — the natural fix is for
+  the null-profile case to be handled explicitly (sign out to `/login`, or render
+  an error) rather than being folded into "not my role, try the other shell".
+  Task 10 owns the entry redirects and is the right home for it.
+
+### Confidence
+
+- **Proven by code:** the two guards above are both satisfied by a null profile,
+  so the loop is unavoidable once `getProfile()` returns null. This is a
+  certainty about the code, not a hypothesis.
+- **Not proven:** that a null profile is what actually happens after a real
+  signup confirmation on prod. That last link is inference. Confirming it needs
+  either a real prod signup (staging cannot send email) or an `error_reports` /
+  Vercel log check for a burst of redirects around a signup.
+- The spec's §1 anticipated a "session hiccup" sending the organizer to
+  `/login`. The real fallthrough is `/my-forms`, and it loops instead of landing.
 
 ## Item 7 verdict — the « Continuer » flash
 
@@ -91,9 +132,12 @@ Item 1 result — they can run as soon as the §1 rewrite is settled.
 - **Task 8: unaffected by Item 1.** It still needs the Item 7 repro before the
   server-side-redirect decision can be made.
 
-- **Task 11 manual steps change.** Not "replace `{{ .ConfirmationURL }}`" — that
-  is already done. Instead:
-  1. Verify prod Auth **Site URL** is `https://eazyexchange.com` (blank-tab
-     suspect above).
-  2. Edit the confirmation template's fallback link `next=/dashboard` →
-     `next=/onboarding`, so it matches the three code paths Task 10 repoints.
+- **Task 10 grows a second job:** break the organizer↔student redirect loop by
+  handling `profile === null` explicitly, instead of letting it fall through
+  both role guards. This is the blank-tab fix and it is code, not configuration.
+  Worth a regression test that pins a null profile to a terminal destination.
+
+- **Task 11 manual steps shrink to one.** Not "replace `{{ .ConfirmationURL }}`"
+  (already done) and not the Site URL (verified correct). Only: edit the prod
+  confirmation template's fallback link `next=/dashboard` → `next=/onboarding`,
+  so it matches the three code paths Task 10 repoints.
