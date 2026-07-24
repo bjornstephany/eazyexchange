@@ -21,6 +21,18 @@ describe('LegalDocumentView', () => {
     expect(screen.getByText('a')).toBeInTheDocument()
   })
 
+  // The table of contents was dropped; section ids stay so deep links resolve.
+  it('renders no table-of-contents nav above the text', () => {
+    render(<LegalDocumentView doc={doc} />)
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Section un' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the section id so deep links still resolve', () => {
+    const { container } = render(<LegalDocumentView doc={doc} />)
+    expect(container.querySelector('section#s1')).not.toBeNull()
+  })
+
   it('shows the draft banner only when placeholders are present', () => {
     const { rerender } = render(<LegalDocumentView doc={doc} />)
     expect(screen.queryByText(/brouillon/i)).not.toBeInTheDocument()

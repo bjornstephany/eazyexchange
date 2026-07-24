@@ -40,14 +40,9 @@ export function LegalDocumentView({ doc }: { doc: LegalDocument }) {
 
       {doc.intro && <p className="m-0 text-[15px] leading-[1.65] text-[#5B6B8C]">{doc.intro}</p>}
 
-      <nav aria-label="Sommaire" className="flex flex-col gap-1.5 rounded-[11px] bg-[#F4F6FB] px-4 py-3">
-        {doc.sections.map((s) => (
-          <a key={s.id} href={`#${s.id}`} className="text-sm font-medium text-[#2456E6] hover:underline">
-            {s.heading}
-          </a>
-        ))}
-      </nav>
-
+      {/* No table of contents: these documents are short enough that a link list
+          above the text is noise. The section ids below stay so existing deep
+          links (/legal/cgv#paiement) keep resolving. */}
       {doc.sections.map((s) => (
         <section key={s.id} id={s.id} className="flex scroll-mt-24 flex-col gap-3">
           <h2 className="m-0 font-display text-[20px] font-bold tracking-[-0.01em] text-[#10203F]">{s.heading}</h2>
