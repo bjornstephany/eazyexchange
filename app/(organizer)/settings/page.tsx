@@ -51,6 +51,7 @@ export default async function SettingsPage() {
         schoolName: profile.schools?.name ?? '',
       }}
       isOwner={isOwner}
+      schoolCountry={profile.schools?.country ?? 'FR'}
       canChangePassword={canChangePassword}
       team={team}
       billing={billing}

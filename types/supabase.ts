@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       applications: {
@@ -832,8 +857,51 @@ export type Database = {
         }
         Relationships: []
       }
+      school_registry: {
+        Row: {
+          academy: string | null
+          commune: string
+          department: string | null
+          id: number
+          name: string
+          postal_code: string
+          search_name: string
+          search_text: string
+          status: string | null
+          type: string
+          uai: string
+        }
+        Insert: {
+          academy?: string | null
+          commune: string
+          department?: string | null
+          id?: number
+          name: string
+          postal_code: string
+          search_name: string
+          search_text: string
+          status?: string | null
+          type: string
+          uai: string
+        }
+        Update: {
+          academy?: string | null
+          commune?: string
+          department?: string | null
+          id?: number
+          name?: string
+          postal_code?: string
+          search_name?: string
+          search_text?: string
+          status?: string | null
+          type?: string
+          uai?: string
+        }
+        Relationships: []
+      }
       schools: {
         Row: {
+          country: string
           created_at: string
           current_period_end: string | null
           grace_until: string | null
@@ -843,8 +911,10 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
+          uai: string | null
         }
         Insert: {
+          country?: string
           created_at?: string
           current_period_end?: string | null
           grace_until?: string | null
@@ -854,8 +924,10 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          uai?: string | null
         }
         Update: {
+          country?: string
           created_at?: string
           current_period_end?: string | null
           grace_until?: string | null
@@ -865,6 +937,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          uai?: string | null
         }
         Relationships: []
       }
@@ -979,6 +1052,10 @@ export type Database = {
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
+      }
+      claim_school: {
+        Args: { p_country: string; p_name: string; p_uai: string }
+        Returns: string
       }
       exchange_in_my_school: { Args: { eid: string }; Returns: boolean }
       field_template: { Args: { fid: string }; Returns: string }
@@ -1151,6 +1228,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

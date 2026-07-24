@@ -53,7 +53,8 @@
         "emailLabel": "Adresse e-mail",
         "emailHint": "Contactez le support pour changer d’adresse.",
         "schoolNameLabel": "Établissement",
-        "schoolNameHint": "Seul le propriétaire peut modifier le nom de l’établissement."
+        "schoolNameHint": "Seul le propriétaire peut modifier le nom de l’établissement.",
+        "schoolNameLockedHint": "Établissement vérifié auprès de l’annuaire de l’Éducation nationale. Contactez le support pour en changer."
       },
       "security": {
         "heading": "Sécurité",
