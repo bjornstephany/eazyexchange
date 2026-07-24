@@ -10,7 +10,7 @@
 
 | # | Task | Status |
 |---|---|---|
-| 1 | Reproduce the blank tab and the « Continuer » flash | not started |
+| 1 | Reproduce the blank tab and the « Continuer » flash | **partial** (`537aee2`) — item 1 done, hypothesis DISPROVED; item 7 not run; spec §1 needs a rewrite before Task 10 |
 | 2 | Migration — three acceptance-email columns | **done** (`782d542`) |
 | 3 | `good-news-fields` pure module | **done** (`60dfaa6`) |
 | 4 | `saveProgramDetails` persists the three columns | **done** (`4428cf1`) |
@@ -98,9 +98,14 @@ green, `pnpm build` green.
 
 ## Blocked on Bjorn
 
-- **Task 1, Step 1** needs one Management-API read that the classifier blocks the
-  agent from issuing. Bjorn runs it with the `!` prefix; the exact command is in
-  the plan. Everything else in Task 1 runs against staging unattended.
+- ~~**Task 1, Step 1** needs one Management-API read~~ — **done 2026-07-24**, see
+  the findings file. The hypothesis was disproved.
+- **Decision needed before Task 10:** spec §1's blank-tab diagnosis is wrong and
+  its confirmation-path table is stale. §1's prescription is unaffected. Either
+  amend §1 or accept the findings file as the correction of record.
+- **One more Management-API read would help**, same endpoint, field `site_url` —
+  a stale prod Auth Site URL is now the top blank-tab suspect and is the only
+  part of the fallback link neither code nor the first read covers.
 
 ## Ordering constraints
 
