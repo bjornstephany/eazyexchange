@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite') || pathname.startsWith('/signup')
   const isPublicRoute =
     pathname === '/' ||
+    // CGU / CGV / confidentialité / mentions légales. These are linked from the
+    // signup consent line and the landing footer — both seen by visitors with no
+    // account — and advertised to anonymous crawlers by robots.ts / sitemap.ts.
+    // Gating them bounced every one of those to /login.
+    pathname.startsWith('/legal') ||
     pathname.startsWith('/apply') ||
     pathname.startsWith('/invite') ||
     pathname.startsWith('/join') ||

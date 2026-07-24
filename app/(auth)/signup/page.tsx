@@ -157,10 +157,6 @@ export default function SignupPage() {
         </div>
         <AuthCard maxWidth={460} className="flex flex-col gap-4">
           <h3 className="m-0 mb-1 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Créer votre compte</h3>
-          <GoogleButton intent="organizer_signup" next="/dashboard" label="S’inscrire avec Google" />
-          <div className="flex items-center gap-3.5 font-mono text-xs font-medium text-[#8A97B2]">
-            <span className="flex-1 border-t border-[#E4E9F2]" />ou<span className="flex-1 border-t border-[#E4E9F2]" />
-          </div>
           <form onSubmit={handleSignup} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
@@ -179,6 +175,17 @@ export default function SignupPage() {
               {loading ? 'Création…' : 'Créer mon compte'}
             </Button>
           </form>
+
+          {/* Email/password is the primary path; Google reads as the alternative.
+              Same order and same wording as /login — the two entry points must not
+              disagree about which method is the default. `intent` is load-bearing:
+              app/auth/callback/route.ts signs out and deletes the orphan auth row
+              of any Google user with neither an invited profile nor this flag. */}
+          <div className="flex items-center gap-3.5 font-mono text-xs font-medium text-[#8A97B2]">
+            <span className="flex-1 border-t border-[#E4E9F2]" />ou continuer avec<span className="flex-1 border-t border-[#E4E9F2]" />
+          </div>
+          <GoogleButton intent="organizer_signup" next="/dashboard" label="Google" />
+
           <p className="m-0 text-center text-xs leading-[1.5] text-[#8A97B2]">
             En créant un compte, vous acceptez nos{' '}
             <Link href="/legal/cgu" className="font-medium text-[#5B6B8C] underline underline-offset-2 hover:text-[#10203F]">
