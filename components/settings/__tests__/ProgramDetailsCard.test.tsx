@@ -64,6 +64,9 @@ describe('ProgramDetailsCard', () => {
           proviseur_name: 'M. X',
           sending_city: 'Paris',
           absence_dates: ['le jeudi 19 octobre 2026'],
+          participation_cost: null,
+          payment_details: null,
+          confirmation_deadline: null,
           updated_at: '2026-01-01T00:00:00Z',
         }}
         readOnly={false}

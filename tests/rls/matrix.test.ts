@@ -236,6 +236,12 @@ describe.each([
       tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
   })
 
+  it('exchange_program_details: cannot write school A acceptance-email columns', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchange_program_details set payment_details = 'pwned'
+         where exchange_id = ${fx.exchangeA}`))
+  })
+
   it('exchange_program_details: cannot insert into school A exchange', async () => {
     expectBlocked(await writeOutcome(sql, uid(), (tx) =>
       tx`insert into exchange_program_details (exchange_id, destination) values (${fx.exchangeA}, 'pwned')`))
@@ -359,6 +365,18 @@ describe('own-school allow', () => {
   it('enrolled student A cannot write program details', async () => {
     expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
       tx`update exchange_program_details set destination = 'pwned' where exchange_id = ${fx.exchangeA}`))
+  })
+
+  it('enrolled student A reads the acceptance-email columns', async () => {
+    expect(await readRows(fx.studentA, (tx) =>
+      tx`select participation_cost, payment_details, confirmation_deadline
+         from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(1)
+  })
+
+  it('enrolled student A cannot write the acceptance-email columns', async () => {
+    expectBlocked(await writeOutcome(sql, fx.studentA, (tx) =>
+      tx`update exchange_program_details set participation_cost = '0 €'
+         where exchange_id = ${fx.exchangeA}`))
   })
 
   it('organizer A manages their exchange info cards (read/insert/update/delete)', async () => {
