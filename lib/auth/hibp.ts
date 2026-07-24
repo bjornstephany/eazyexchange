@@ -5,8 +5,17 @@
 export const PWNED_MESSAGE =
   'Ce mot de passe apparaît dans des fuites de données connues — choisissez-en un autre.'
 
+// The policy outcome as a code, so a caller that reports through translated
+// strings (Settings → Sécurité) can map it itself instead of surfacing the
+// hardcoded French below.
+export function passwordPolicyIssue(pw: string): 'too_short' | null {
+  return pw.length >= 8 ? null : 'too_short'
+}
+
 export function passwordPolicyError(pw: string): string | null {
-  return pw.length >= 8 ? null : 'Le mot de passe doit contenir au moins 8 caractères.'
+  return passwordPolicyIssue(pw) === null
+    ? null
+    : 'Le mot de passe doit contenir au moins 8 caractères.'
 }
 
 export async function isPasswordPwned(password: string): Promise<boolean> {

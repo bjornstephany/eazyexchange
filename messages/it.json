@@ -53,8 +53,7 @@
         "emailLabel": "Indirizzo e-mail",
         "emailHint": "Contatta l’assistenza per cambiare indirizzo.",
         "schoolNameLabel": "Istituto",
-        "schoolNameHint": "Solo il proprietario può modificare il nome dell’istituto.",
-        "schoolNameLockedHint": "Istituto verificato nel registro nazionale francese dell’istruzione. Contatta l’assistenza per modificarlo."
+        "schoolNameLockedHint": "L’istituto viene definito alla creazione dell’account. Contatta l’assistenza per modificarlo."
       },
       "security": {
         "heading": "Sicurezza",
@@ -64,7 +63,7 @@
         "changeButton": "Modifica password",
         "currentPasswordLabel": "Password attuale",
         "newPasswordLabel": "Nuova password",
-        "confirmPasswordLabel": "Conferma",
+        "confirmPasswordLabel": "Conferma la nuova password",
         "submitButton": "Aggiorna password"
       },
       "team": {
@@ -149,9 +148,14 @@
       },
       "errors": {
         "nameEmpty": "Il nome non può essere vuoto.",
-        "schoolNameEmpty": "Il nome dell’istituto non può essere vuoto.",
+        "nameTooLong": "Il nome non può superare i {max} caratteri.",
+        "profileSaveFailed": "Non è stato possibile salvare il tuo profilo. Riprova.",
         "passwordUpdateFailed": "Non è stato possibile aggiornare la password. Riprova.",
-        "passwordMismatch": "Le password non corrispondono."
+        "passwordMismatch": "Le password non corrispondono.",
+        "currentPasswordIncorrect": "La password attuale non è corretta.",
+        "passwordTooShort": "La password deve contenere almeno 8 caratteri.",
+        "passwordLeaked": "Questa password compare in violazioni di dati note — scegline un’altra.",
+        "tooManyAttempts": "Troppi tentativi. Attendi qualche istante e riprova."
       }
     },
     "dataPrivacy": {
@@ -231,7 +235,6 @@
       },
       "payment": {
         "noneNote": "Nessun metodo di pagamento registrato.",
-        "addCta": "Aggiungi una carta",
         "editCta": "Modifica",
         "card": "{brand} •••• {last4} — scade {exp}"
       }

@@ -53,8 +53,7 @@
         "emailLabel": "Email address",
         "emailHint": "Contact support to change your address.",
         "schoolNameLabel": "School",
-        "schoolNameHint": "Only the owner can change the school name.",
-        "schoolNameLockedHint": "School verified against the French national education registry. Contact support to change it."
+        "schoolNameLockedHint": "Your school is set when your account is created. Contact support to change it."
       },
       "security": {
         "heading": "Security",
@@ -64,7 +63,7 @@
         "changeButton": "Change password",
         "currentPasswordLabel": "Current password",
         "newPasswordLabel": "New password",
-        "confirmPasswordLabel": "Confirm",
+        "confirmPasswordLabel": "Confirm new password",
         "submitButton": "Update password"
       },
       "team": {
@@ -149,9 +148,14 @@
       },
       "errors": {
         "nameEmpty": "Name cannot be empty.",
-        "schoolNameEmpty": "School name cannot be empty.",
+        "nameTooLong": "Name cannot be longer than {max} characters.",
+        "profileSaveFailed": "Your profile could not be saved. Please try again.",
         "passwordUpdateFailed": "The password could not be updated. Please try again.",
-        "passwordMismatch": "Passwords do not match."
+        "passwordMismatch": "Passwords do not match.",
+        "currentPasswordIncorrect": "Current password is incorrect.",
+        "passwordTooShort": "Password must be at least 8 characters long.",
+        "passwordLeaked": "This password appears in known data breaches — please choose another one.",
+        "tooManyAttempts": "Too many attempts. Please wait a little while and try again."
       }
     },
     "dataPrivacy": {
@@ -231,7 +235,6 @@
       },
       "payment": {
         "noneNote": "No payment method on file.",
-        "addCta": "Add a card",
         "editCta": "Edit",
         "card": "{brand} •••• {last4} — expires {exp}"
       }

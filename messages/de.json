@@ -53,8 +53,7 @@
         "emailLabel": "E-Mail-Adresse",
         "emailHint": "Kontaktieren Sie den Support, um Ihre Adresse zu ändern.",
         "schoolNameLabel": "Einrichtung",
-        "schoolNameHint": "Nur der Inhaber kann den Namen der Einrichtung ändern.",
-        "schoolNameLockedHint": "Schule im französischen nationalen Bildungsverzeichnis verifiziert. Wenden Sie sich an den Support, um sie zu ändern."
+        "schoolNameLockedHint": "Die Einrichtung wird bei der Kontoerstellung festgelegt. Wenden Sie sich an den Support, um sie zu ändern."
       },
       "security": {
         "heading": "Sicherheit",
@@ -64,7 +63,7 @@
         "changeButton": "Passwort ändern",
         "currentPasswordLabel": "Aktuelles Passwort",
         "newPasswordLabel": "Neues Passwort",
-        "confirmPasswordLabel": "Bestätigen",
+        "confirmPasswordLabel": "Neues Passwort bestätigen",
         "submitButton": "Passwort aktualisieren"
       },
       "team": {
@@ -149,9 +148,14 @@
       },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
-        "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
+        "nameTooLong": "Der Name darf höchstens {max} Zeichen lang sein.",
+        "profileSaveFailed": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
         "passwordUpdateFailed": "Das Passwort konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-        "passwordMismatch": "Die Passwörter stimmen nicht überein."
+        "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+        "currentPasswordIncorrect": "Das aktuelle Passwort ist nicht korrekt.",
+        "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+        "passwordLeaked": "Dieses Passwort taucht in bekannten Datenlecks auf — bitte wählen Sie ein anderes.",
+        "tooManyAttempts": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut."
       }
     },
     "dataPrivacy": {
@@ -231,7 +235,6 @@
       },
       "payment": {
         "noneNote": "Keine Zahlungsmethode hinterlegt.",
-        "addCta": "Karte hinzufügen",
         "editCta": "Bearbeiten",
         "card": "{brand} •••• {last4} — läuft ab am {exp}"
       }

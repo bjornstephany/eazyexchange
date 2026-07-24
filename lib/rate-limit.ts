@@ -18,7 +18,10 @@ export const RATE_LIMIT_MESSAGE =
 export const RATE_LIMIT_UNAVAILABLE_MESSAGE =
   'This service is temporarily unavailable. Please try again in a few minutes.'
 
-async function checkRateLimit(
+// Exported for callers that report expected outcomes as structured return
+// values rather than throws (prod redacts thrown Server Action messages). The
+// enforce* wrappers below are the throwing form and are unchanged.
+export async function checkRateLimit(
   key: string,
   limit: number,
   windowSeconds: number,

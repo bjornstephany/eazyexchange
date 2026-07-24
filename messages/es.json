@@ -53,8 +53,7 @@
         "emailLabel": "Dirección de correo electrónico",
         "emailHint": "Contacte con el soporte para cambiar su dirección.",
         "schoolNameLabel": "Centro educativo",
-        "schoolNameHint": "Solo el propietario puede modificar el nombre del centro educativo.",
-        "schoolNameLockedHint": "Centro verificado en el registro nacional de educación francés. Contacte con el soporte para cambiarlo."
+        "schoolNameLockedHint": "El centro educativo se define al crear la cuenta. Contacte con el soporte para cambiarlo."
       },
       "security": {
         "heading": "Seguridad",
@@ -64,7 +63,7 @@
         "changeButton": "Cambiar la contraseña",
         "currentPasswordLabel": "Contraseña actual",
         "newPasswordLabel": "Nueva contraseña",
-        "confirmPasswordLabel": "Confirmar",
+        "confirmPasswordLabel": "Confirmar la nueva contraseña",
         "submitButton": "Actualizar la contraseña"
       },
       "team": {
@@ -149,9 +148,14 @@
       },
       "errors": {
         "nameEmpty": "El nombre no puede estar vacío.",
-        "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",
+        "nameTooLong": "El nombre no puede superar los {max} caracteres.",
+        "profileSaveFailed": "No se ha podido guardar su perfil. Vuelva a intentarlo.",
         "passwordUpdateFailed": "No se ha podido actualizar la contraseña. Vuelva a intentarlo.",
-        "passwordMismatch": "Las contraseñas no coinciden."
+        "passwordMismatch": "Las contraseñas no coinciden.",
+        "currentPasswordIncorrect": "La contraseña actual no es correcta.",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+        "passwordLeaked": "Esta contraseña aparece en filtraciones de datos conocidas — elija otra.",
+        "tooManyAttempts": "Demasiados intentos. Espere un momento y vuelva a intentarlo."
       }
     },
     "dataPrivacy": {
@@ -231,7 +235,6 @@
       },
       "payment": {
         "noneNote": "No hay ningún método de pago registrado.",
-        "addCta": "Añadir una tarjeta",
         "editCta": "Modificar",
         "card": "{brand} •••• {last4} — caduca el {exp}"
       }
