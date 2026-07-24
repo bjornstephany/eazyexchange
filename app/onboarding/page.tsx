@@ -43,7 +43,7 @@ export default async function OnboardingPage() {
           <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Bienvenue sur Eazyexchange</h3>
           <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">Configurons votre programme en quelques étapes.</p>
         </div>
-        <OnboardingForm initialStep={initialStep} initialSchoolName={schoolName} />
+        <OnboardingForm schoolId={profile.school_id} initialStep={initialStep} />
       </AuthCard>
     </div>
   )
