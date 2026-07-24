@@ -97,4 +97,41 @@ describe('CandidaturesView', () => {
     expect(screen.getByText('Enzo Inscrit')).toBeInTheDocument()
     expect(screen.queryByText('Alex Attente')).toBeNull()
   })
+
+  it('shows only the invite CTA when applications never opened and nobody applied', () => {
+    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" />)
+    expect(screen.getByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Inviter vos élèves à postuler' })).toBeInTheDocument()
+    expect(screen.queryByText('Candidatures ouvertes')).toBeNull()
+    expect(screen.queryByText('Candidatures fermées')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Toutes/ })).toBeNull()
+  })
+
+  it('keeps the grid and the panel once applications are open, even with nobody yet', () => {
+    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
+    expect(screen.queryByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeNull()
+    expect(screen.getByText('Candidatures ouvertes')).toBeInTheDocument()
+  })
+
+  it('existing applications suppress the empty state even if applications never opened', () => {
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" />)
+    expect(screen.queryByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeNull()
+    expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
+  })
+
+  it('opening applications from the dialog leaves the empty state without unmounting the dialog', async () => {
+    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Inviter vos élèves à postuler' }))
+    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
+    // The dialog survives the flip and reaches its opened state…
+    expect(await screen.findByRole('button', { name: 'Terminé' })).toBeInTheDocument()
+    // …and the page behind it is now the grid with its panel.
+    expect(screen.getByText('Candidatures ouvertes')).toBeInTheDocument()
+  })
+
+  it('honours initialTab', () => {
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" initialTab="rejected" />)
+    expect(screen.getByText('r@r.fr')).toBeInTheDocument()
+    expect(screen.queryByText('Léa Moreau')).toBeNull()
+  })
 })

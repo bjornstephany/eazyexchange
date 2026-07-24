@@ -2,13 +2,14 @@ import { cookies } from 'next/headers'
 import { getExchanges } from '@/actions/exchanges'
 import { listApplications, getApplicationForReview } from '@/actions/applications-review'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
+import { parseTab } from '@/lib/applications/tabs'
 import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import { ApplicationDetail } from '@/components/applications/ApplicationDetail'
 import { EmptyDashboard } from '@/components/dashboard/EmptyDashboard'
 import type { AppRow } from '@/lib/dashboard/rollup'
 
-export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
-  const { id } = await searchParams
+export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<{ id?: string; tab?: string }> }) {
+  const { id, tab } = await searchParams
   const exchanges = await getExchanges()
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
@@ -32,6 +33,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
       applicationOpen={!!active.application_open}
       applicationDeadline={active.application_deadline ?? null}
       applySlug={active.apply_slug}
+      initialTab={parseTab(tab)}
     />
   )
 }
