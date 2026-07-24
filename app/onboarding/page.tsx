@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { createClient } from '@/lib/supabase/server'
 import { mustOnboard } from '@/lib/onboarding/gate'
+import { shellDestination } from '@/lib/auth/shell-destination'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { OnboardingForm } from './OnboardingForm'
@@ -15,7 +16,9 @@ export default async function OnboardingPage() {
   if (!user) redirect('/login')
 
   const profile = await getProfile()
-  if (!profile || profile.role !== 'organizer') redirect('/my-forms')
+  if (!profile || profile.role !== 'organizer') {
+    redirect(shellDestination(profile?.role, 'organizer')!)
+  }
 
   const schoolName = profile.schools?.name ?? ''
 

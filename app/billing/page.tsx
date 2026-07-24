@@ -10,6 +10,7 @@ import { planCopy } from '@/lib/billing/plan-copy'
 import { asAppTranslator, loadMessages, pickNamespaces } from '@/lib/i18n/messages'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { CenteredCard } from '@/components/auth/CenteredCard'
+import { shellDestination, type ProfileRole } from '@/lib/auth/shell-destination'
 import { PlanSelector } from '@/components/billing/PlanSelector'
 import { UpgradeOptions } from '@/components/billing/UpgradeOptions'
 
@@ -31,7 +32,9 @@ export default async function BillingPage({
   // Own profile + own school: RLS covers both reads — no service role needed.
   const { data: profile } = await supabase
     .from('users').select('school_id, role').eq('id', user.id).maybeSingle()
-  if (!profile || profile.role !== 'organizer') redirect('/my-forms')
+  if (!profile || profile.role !== 'organizer') {
+    redirect(shellDestination(profile?.role as ProfileRole | undefined, 'organizer')!)
+  }
 
   const { data: school } = await supabase
     .from('schools')

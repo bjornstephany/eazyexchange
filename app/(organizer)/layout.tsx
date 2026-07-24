@@ -8,6 +8,7 @@ import { OrganizerShell, type ExchangeOption } from '@/components/shell/Organize
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { sortExchanges } from '@/lib/shell/exchange-order'
 import { mustOnboard } from '@/lib/onboarding/gate'
+import { shellDestination } from '@/lib/auth/shell-destination'
 import { NextIntlClientProvider } from 'next-intl'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { loadMessages } from '@/lib/i18n/messages'
@@ -17,7 +18,11 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   const profile = await getProfile()
-  if (profile?.role !== 'organizer') redirect('/my-forms')
+  // A missing profile leaves the shells entirely rather than bouncing to the
+  // student one, which used to loop into a blank tab. See shell-destination.ts.
+  if (!profile || profile.role !== 'organizer') {
+    redirect(shellDestination(profile?.role, 'organizer')!)
+  }
 
   const supabase = await createClient()
 
