@@ -10,17 +10,17 @@
 
 | # | Task | Status |
 |---|---|---|
-| 1 | Reproduce the blank tab and the « Continuer » flash | **partial** (`537aee2`) — item 1 done, hypothesis DISPROVED; item 7 not run; spec §1 needs a rewrite before Task 10 |
+| 1 | Reproduce the blank tab and the « Continuer » flash | **done** — item 1 hypothesis DISPROVED, real cause found and fixed; item 7 fixed-behaviour verified |
 | 2 | Migration — three acceptance-email columns | **done** (`782d542`) |
 | 3 | `good-news-fields` pure module | **done** (`60dfaa6`) |
 | 4 | `saveProgramDetails` persists the three columns | **done** (`4428cf1`) |
 | 5 | Réglages → Programme edits the acceptance-email values | **done** (`adec011`) |
-| 6 | Onboarding draft module | not started |
-| 7 | Shrink `first-exchange` to the required fields | not started |
-| 8 | `completeFirstExchange` derives, then redirects | not started |
-| 9 | `OnboardingForm` — two steps, live date check, draft | not started |
-| 10 | Entry and exit redirects | **partial** — blank-tab loop fixed (`bbbca13`); repointing the three paths at `/onboarding` still to do |
-| 11 | Full gate, staging verification, manual steps | not started |
+| 6 | Onboarding draft module | **done** (`4f5e82b`) |
+| 7 | Shrink `first-exchange` to the required fields | **done** (`2d7bfe4`) |
+| 8 | `completeFirstExchange` derives, then redirects | **done** (`71c7cec`) |
+| 9 | `OnboardingForm` — two steps, live date check, draft | **done** (`117a47c`) |
+| 10 | Entry and exit redirects | **done** (`bbbca13` loop fix + `fdbc022` redirects) |
+| 11 | Full gate, staging verification, manual steps | **done** (`ed55531`) — 5/5 staging checks PASS |
 
 Update this table as each task lands. Nothing here depends on conversation
 history — the plan carries complete code for every task.
@@ -98,14 +98,18 @@ green, `pnpm build` green.
 
 ## Blocked on Bjorn
 
-- ~~**Task 1, Step 1** needs one Management-API read~~ — **done 2026-07-24**, see
-  the findings file. The hypothesis was disproved.
-- **Decision needed before Task 10:** spec §1's blank-tab diagnosis is wrong and
-  its confirmation-path table is stale. §1's prescription is unaffected. Either
-  amend §1 or accept the findings file as the correction of record.
-- **One more Management-API read would help**, same endpoint, field `site_url` —
-  a stale prod Auth Site URL is now the top blank-tab suspect and is the only
-  part of the fallback link neither code nor the first read covers.
+**All 11 tasks are done. Nothing is blocked. Not merged — merging needs Bjorn.**
+
+Two things left for Bjorn, both in the findings file's "Manual steps":
+1. Prod email template: fallback link `next=/dashboard` → `next=/onboarding`
+   (low urgency — /dashboard still works, it just costs a hop).
+2. Prod smoke of a fresh signup. This is also the only way to close out the
+   blank-tab question: the loop is fixed by construction, but that a real signup
+   was producing the null profile remains inference.
+
+Open decision, not blocking: spec §1's blank-tab diagnosis is wrong and its
+confirmation-path table is stale. Either amend §1 or accept the findings file as
+the correction of record (recommended — it already carries the corrected table).
 
 ## Blank-tab loop fix (`bbbca13`) — what is and is not proven
 

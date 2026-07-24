@@ -97,14 +97,20 @@ user whose profile row is briefly unreadable gets a blank tab instead of an erro
 
 ## Item 7 verdict — the « Continuer » flash
 
-**Not yet reproduced.** Task 1 Step 1 contradicted the spec, and the plan
-instructs stopping to report at that point rather than continuing into Steps 2–5.
-Steps 2–3 (staging repro in a browser) are unattended-able and unaffected by the
-Item 1 result — they can run as soon as the §1 rewrite is settled.
+**The original flash was never reproduced; the fixed behaviour was verified.**
+Task 1 Step 1 contradicted the spec, so the plan's "stop and report" applied and
+Steps 2–3 were not run against the *pre-fix* code. By the time a browser was
+driven through the flow (Task 11, Step 3), Tasks 8 and 10 had already removed the
+client step transition entirely, so there was no longer a flash to observe.
 
-- Navigation sequence observed after clicking Continuer: _not yet run_
-- Intermediate screen seen: _not yet run_
-- Conclusion: _pending_
+- Navigation sequence observed after clicking Continuer: **`/applications`, and
+  nothing else** — measured with a `framenavigated` listener on staging.
+- Intermediate screen seen: **none**. `/dashboard` never appears.
+- Conclusion: the spec's §7 remedy holds — navigating from the server action
+  leaves no client transition to race the revalidation. What was *not*
+  established is that the old client-side `setStep(3)` was the flash's cause;
+  that hypothesis is now unfalsifiable on this branch, and cheap enough to leave
+  alone given the destination behaves correctly.
 
 ## Consequences for the plan
 
