@@ -450,7 +450,7 @@
       "bulkResult": "{s, plural, one {# traitée} other {# traitées}} · {f} en échec",
       "tableHeader": {
         "student": "Élève",
-        "level": "Niveau 26-27",
+        "level": "Niveau",
         "gender": "Genre",
         "receivedDate": "Reçue le",
         "status": "Statut"
@@ -849,6 +849,7 @@
       "submitting": "Envoi…",
       "missing": "Veuillez remplir tous les champs obligatoires.",
       "tooLong": "Certaines réponses dépassent la limite de caractères.",
+      "badFormat": "Vérifiez le format des e-mails et numéros de téléphone signalés.",
       "unexpected": "Une erreur est survenue.",
       "registered": "Cette adresse e-mail est déjà associée à une candidature. Connecte-toi à ton compte.",
       "done": "Merci ! Ta candidature a été envoyée.",
@@ -917,8 +918,8 @@
           "she_her": "Elle"
         }
       },
-      "grade": { "label": "Niveau 26-27" },
-      "french_class": { "label": "Classe de français 26-27" },
+      "grade": { "label": "Niveau" },
+      "class_group": { "label": "Classe" },
       "email": { "label": "E-mail" },
       "cell_phone": { "label": "Téléphone portable" },
       "father_last_name": { "label": "Père — Nom" },

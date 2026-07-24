@@ -450,7 +450,7 @@
       "bulkResult": "{s, plural, one {# bearbeitet} other {# bearbeitet}} · {f} fehlgeschlagen",
       "tableHeader": {
         "student": "Schüler",
-        "level": "Klasse 26-27",
+        "level": "Klassenstufe",
         "gender": "Geschlecht",
         "receivedDate": "Erhalten am",
         "status": "Status"
@@ -809,6 +809,7 @@
       "submitting": "Wird gesendet…",
       "missing": "Bitte fülle alle Pflichtfelder aus.",
       "tooLong": "Einige Antworten überschreiten die Zeichengrenze.",
+      "badFormat": "Bitte prüfe das Format der markierten E-Mail- und Telefonfelder.",
       "unexpected": "Ein Fehler ist aufgetreten.",
       "registered": "Diese E-Mail-Adresse ist bereits mit einer Bewerbung verknüpft. Melde dich bei deinem Konto an.",
       "done": "Danke! Deine Bewerbung wurde gesendet.",
@@ -945,10 +946,10 @@
         }
       },
       "grade": {
-        "label": "Klassenstufe 26-27"
+        "label": "Klassenstufe"
       },
-      "french_class": {
-        "label": "Französischkurs 26-27"
+      "class_group": {
+        "label": "Klasse"
       },
       "email": {
         "label": "E-Mail"

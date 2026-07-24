@@ -179,7 +179,12 @@ import { allApplicationFields } from '@/lib/application-form'
 function completeAppData(): Record<string, string> {
   const data: Record<string, string> = {}
   for (const f of allApplicationFields()) data[f.id] = 'x'
-  data.email = 'a@b.co'
+  // Contact fields need real shapes: submitApplication format-checks every
+  // email/tel field, so a blanket 'x' would be rejected before it ever writes.
+  for (const f of allApplicationFields()) {
+    if (f.type === 'email') data[f.id] = 'a@b.co'
+    if (f.type === 'tel') data[f.id] = '0612345678'
+  }
   data.family_status = 'married'
   return data
 }
@@ -353,6 +358,11 @@ describe('saveApplicationDraft', () => {
     const res = await saveApplicationDraft('tok', { first_name: 'A' })
     expect(res).toEqual({ ok: true })
   })
+  it('does not format-check drafts — a half-typed number must still autosave', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1' }
+    const res = await saveApplicationDraft('tok', { cell_phone: '06 12', father_email: 'marie@' })
+    expect(res).toEqual({ ok: true })
+  })
 })
 
 describe('getApplicationDraft', () => {
@@ -419,6 +429,24 @@ describe('submitApplication', () => {
     scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
     await submitApplication('tok', completeAppData())
     expect(scenario.updated.table).toBe('applications')
+    expect(scenario.updated.row.status).toBe('submitted')
+  })
+  it('rejects a malformed parent e-mail with a structured result and writes nothing', async () => {
+    // The address that would otherwise 422 the whole acceptance send later.
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    const res = await submitApplication('tok', { ...completeAppData(), father_email: 'marie@gmial' })
+    expect(res).toEqual({ ok: false, invalidFormat: ['father_email'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('rejects a malformed phone with a structured result', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    const res = await submitApplication('tok', { ...completeAppData(), cell_phone: 'io' })
+    expect(res).toEqual({ ok: false, invalidFormat: ['cell_phone'] })
+    expect(scenario.updated).toBeNull()
+  })
+  it('accepts a spaced French mobile number', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    await submitApplication('tok', { ...completeAppData(), cell_phone: '06 12 34 56 78' })
     expect(scenario.updated.row.status).toBe('submitted')
   })
   it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {

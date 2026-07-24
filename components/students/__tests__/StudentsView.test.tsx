@@ -13,7 +13,7 @@ const base: StudentVM = {
   sub: 'Première · 1re G2 · Français',
   identity: [
     { l: 'Nom', v: 'Laurent' }, { l: 'Prénom', v: 'Camille' },
-    { l: 'Date de naissance', v: '14/03/2009' }, { l: 'Niveau 26-27', v: 'Première' },
+    { l: 'Date de naissance', v: '14/03/2009' }, { l: 'Niveau', v: 'Première' },
     { l: 'Classe', v: '1re G2' }, { l: 'Langue maternelle', v: 'Français' },
     { l: 'E-mail', v: 'camille@email.fr' }, { l: 'Téléphone', v: '06 12 24 37 52' },
   ],
