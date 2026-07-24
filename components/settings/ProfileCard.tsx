@@ -10,9 +10,10 @@ function initialsOf(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
 }
 
-export function ProfileCard({ profile, isOwner }: {
+export function ProfileCard({ profile, isOwner, schoolCountry }: {
   profile: { fullName: string; email: string; schoolName: string }
   isOwner: boolean
+  schoolCountry: string
 }) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
@@ -37,12 +38,19 @@ export function ProfileCard({ profile, isOwner }: {
     setBusy(false)
   }
 
+  // A France-verified school's name comes from school_registry and is not
+  // client-writable (see updateProfile). Changing establishment is a rare,
+  // support-worthy event.
+  const schoolLocked = schoolCountry === 'FR'
   const fields: { key: keyof typeof f | 'email'; label: string; disabled?: boolean; hint?: string }[] = [
     { key: 'fullName', label: t('settings.profile.fullNameLabel') },
     { key: 'email', label: t('settings.profile.emailLabel'), disabled: true, hint: t('settings.profile.emailHint') },
     {
-      key: 'schoolName', label: t('settings.profile.schoolNameLabel'), disabled: !isOwner,
-      hint: isOwner ? undefined : t('settings.profile.schoolNameHint'),
+      key: 'schoolName', label: t('settings.profile.schoolNameLabel'),
+      disabled: !isOwner || schoolLocked,
+      hint: schoolLocked
+        ? t('settings.profile.schoolNameLockedHint')
+        : isOwner ? undefined : t('settings.profile.schoolNameHint'),
     },
   ]
 

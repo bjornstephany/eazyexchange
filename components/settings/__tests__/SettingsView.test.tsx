@@ -28,6 +28,9 @@ const baseProps = {
     schoolName: 'Lycée Frédéric Mistral',
   },
   isOwner: false,
+  // Not 'FR': the existing cases exercise the editable field, and a
+  // registry-verified French school is deliberately read-only.
+  schoolCountry: 'Espagne',
   canChangePassword: true,
   team: { members: [], pending: [] },
   billing: null,
@@ -207,5 +210,19 @@ describe('SettingsView — Programme for all organizers', () => {
     expect(screen.queryByText('Rappels automatiques')).toBeNull()
     expect(screen.queryByText('E-mail « Bonne nouvelle » aux parents')).toBeNull()
     expect(screen.queryByRole('radio', { name: /Normale/ })).toBeNull()
+  })
+})
+
+describe('SettingsView — the school name is locked for verified French schools', () => {
+  it('an owner cannot edit the name of a registry-verified school', () => {
+    render(<SettingsView {...baseProps} isOwner={true} schoolCountry="FR" />)
+    expect(screen.getByLabelText('Établissement')).toBeDisabled()
+    expect(screen.getByText(/vérifié auprès de l’annuaire/)).toBeInTheDocument()
+  })
+
+  it('an owner can still edit the name of a school outside France', () => {
+    render(<SettingsView {...baseProps} isOwner={true} schoolCountry="Espagne" />)
+    expect(screen.getByLabelText('Établissement')).toBeEnabled()
+    expect(screen.queryByText(/vérifié auprès de l’annuaire/)).not.toBeInTheDocument()
   })
 })

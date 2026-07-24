@@ -53,7 +53,8 @@
         "emailLabel": "Email address",
         "emailHint": "Contact support to change your address.",
         "schoolNameLabel": "School",
-        "schoolNameHint": "Only the owner can change the school name."
+        "schoolNameHint": "Only the owner can change the school name.",
+        "schoolNameLockedHint": "School verified against the French national education registry. Contact support to change it."
       },
       "security": {
         "heading": "Security",

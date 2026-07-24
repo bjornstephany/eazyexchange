@@ -53,7 +53,8 @@
         "emailLabel": "Indirizzo e-mail",
         "emailHint": "Contatta l’assistenza per cambiare indirizzo.",
         "schoolNameLabel": "Istituto",
-        "schoolNameHint": "Solo il proprietario può modificare il nome dell’istituto."
+        "schoolNameHint": "Solo il proprietario può modificare il nome dell’istituto.",
+        "schoolNameLockedHint": "Istituto verificato nel registro nazionale francese dell’istruzione. Contatta l’assistenza per modificarlo."
       },
       "security": {
         "heading": "Sicurezza",
