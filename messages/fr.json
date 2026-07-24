@@ -174,6 +174,49 @@
     },
     "billing": {
       "per": "/ an",
+      "heading": "Offres & facturation",
+      "leadActive": "Vous êtes sur l’offre {plan}.",
+      "leadTrial": "Vous êtes en essai gratuit. Choisissez une offre pour créer plus d’échanges.",
+      "unavailable": "Le paiement en ligne est momentanément indisponible. Merci de réessayer plus tard.",
+      "backToDashboard": "Retour au tableau de bord",
+      "managePortal": "Gérer ma facturation",
+      "capLine": "{cap, plural, one {# échange} other {# échanges}}",
+      "capUnlimited": "Échanges illimités",
+      "popularBadge": "POPULAIRE",
+      "selectorLegend": "Choix du forfait",
+      "continueCta": "Continuer avec {plan}",
+      "upgradeCta": "Passer à {plan}",
+      "currentPlanBadge": "Offre actuelle",
+      "cgv": "En souscrivant, vous acceptez nos <cgv>Conditions Générales de Vente</cgv>.",
+      "audience": {
+        "starter": "Pour un jumelage unique",
+        "growth": "Pour plusieurs programmes en parallèle",
+        "scale": "Pour les grands établissements"
+      },
+      "features": {
+        "f1": "Élèves et familles illimités",
+        "f2": "Formulaires et documents illimités",
+        "f3": "Relances automatiques par e-mail",
+        "f4": "Suivi des dossiers en temps réel"
+      },
+      "delta": {
+        "more": "+{n, plural, one {# échange} other {# échanges}}",
+        "unlimited": "Échanges illimités"
+      },
+      "capReached": {
+        "heading": "Votre offre {plan} est complète",
+        "body": "Vous utilisez vos {cap, plural, one {# échange} other {# échanges}}. Passez à l’offre supérieure pour en créer davantage.",
+        "blockedLead": "Création d’échange bloquée : votre offre actuelle a atteint sa limite."
+      },
+      "trialCapReached": {
+        "heading": "Votre essai gratuit est complet",
+        "body": "Votre échange offert est utilisé. Choisissez une offre pour en créer davantage."
+      },
+      "grace": {
+        "heading": "Votre dernier paiement a échoué",
+        "body": "Mettez à jour votre carte pour conserver l’accès à vos échanges.",
+        "cta": "Mettre à jour ma carte"
+      },
       "usage": "{used} / {cap} {cap, plural, one {échange} other {échanges}} {used, plural, one {utilisé} other {utilisés}}",
       "usageUnlimited": "{used} {used, plural, one {échange actif} other {échanges actifs}} · échanges illimités",
       "plans": {
@@ -205,7 +248,14 @@
       "exchangeGroup": {
         "title": "Mes échanges",
         "add": "+ Ajouter",
-        "empty": "Aucun échange"
+        "empty": "Aucun échange",
+        "reorder": "Réordonner {name}",
+        "dnd": {
+          "picked": "{name} saisi. Utilisez les flèches pour déplacer, Espace pour déposer, Échap pour annuler.",
+          "moved": "{name} déplacé en position {position} sur {total}.",
+          "dropped": "{name} déposé en position {position} sur {total}.",
+          "cancelled": "Déplacement de {name} annulé."
+        }
       },
       "sidebar": {
         "collapse": "Réduire",

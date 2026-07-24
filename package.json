@@ -16,6 +16,8 @@
     "wt": "node scripts/wt.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
     "@radix-ui/react-dialog": "^1.1.17",
     "@radix-ui/react-label": "^2.1.10",
     "@radix-ui/react-select": "^2.3.1",
@@ -27,7 +29,7 @@
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",
     "lucide-react": "^1.21.0",
-    "next": "15.5.20",
+    "next": "15.5.21",
     "next-intl": "^4.13.2",
     "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
@@ -46,7 +48,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^8",
-    "eslint-config-next": "15.5.20",
+    "eslint-config-next": "15.5.21",
     "jsdom": "^29.1.1",
     "postcss": "^8",
     "postgres": "^3.4.9",

@@ -174,6 +174,49 @@
     },
     "billing": {
       "per": "/ anno",
+      "heading": "Piani e fatturazione",
+      "leadActive": "Hai il piano {plan}.",
+      "leadTrial": "Sei in prova gratuita. Scegli un piano per creare altri scambi.",
+      "unavailable": "Il pagamento online non è momentaneamente disponibile. Riprova più tardi.",
+      "backToDashboard": "Torna alla dashboard",
+      "managePortal": "Gestisci la fatturazione",
+      "capLine": "{cap, plural, one {# scambio} other {# scambi}}",
+      "capUnlimited": "Scambi illimitati",
+      "popularBadge": "POPOLARE",
+      "selectorLegend": "Scelta del piano",
+      "continueCta": "Continua con {plan}",
+      "upgradeCta": "Passa a {plan}",
+      "currentPlanBadge": "Piano attuale",
+      "cgv": "Sottoscrivendo, accetti le nostre <cgv>Condizioni Generali di Vendita</cgv>.",
+      "audience": {
+        "starter": "Per un gemellaggio singolo",
+        "growth": "Per più programmi in parallelo",
+        "scale": "Per i grandi istituti"
+      },
+      "features": {
+        "f1": "Studenti e famiglie illimitati",
+        "f2": "Moduli e documenti illimitati",
+        "f3": "Solleciti automatici via e-mail",
+        "f4": "Monitoraggio delle pratiche in tempo reale"
+      },
+      "delta": {
+        "more": "+{n, plural, one {# scambio} other {# scambi}}",
+        "unlimited": "Scambi illimitati"
+      },
+      "capReached": {
+        "heading": "Il tuo piano {plan} è al completo",
+        "body": "Stai usando tutti i tuoi {cap, plural, one {# scambio} other {# scambi}}. Passa a un piano superiore per crearne altri.",
+        "blockedLead": "Creazione dello scambio bloccata: il tuo piano attuale ha raggiunto il limite."
+      },
+      "trialCapReached": {
+        "heading": "La tua prova gratuita è al completo",
+        "body": "Il tuo scambio gratuito è già in uso. Scegli un piano per crearne altri."
+      },
+      "grace": {
+        "heading": "Il tuo ultimo pagamento non è andato a buon fine",
+        "body": "Aggiorna la tua carta per mantenere l’accesso ai tuoi scambi.",
+        "cta": "Aggiorna la mia carta"
+      },
       "usage": "{used} / {cap} {cap, plural, one {scambio} other {scambi}} {used, plural, one {utilizzato} other {utilizzati}}",
       "usageUnlimited": "{used} {used, plural, one {scambio attivo} other {scambi attivi}} · scambi illimitati",
       "plans": {
@@ -205,7 +248,14 @@
       "exchangeGroup": {
         "title": "I miei scambi",
         "add": "+ Aggiungi",
-        "empty": "Nessuno scambio"
+        "empty": "Nessuno scambio",
+        "reorder": "Riordina {name}",
+        "dnd": {
+          "picked": "{name} selezionato. Usa le frecce per spostarlo, Spazio per rilasciarlo, Esc per annullare.",
+          "moved": "{name} spostato in posizione {position} di {total}.",
+          "dropped": "{name} rilasciato in posizione {position} di {total}.",
+          "cancelled": "Riordino di {name} annullato."
+        }
       },
       "sidebar": {
         "collapse": "Riduci",

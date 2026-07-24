@@ -94,7 +94,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
-    expect(push).toHaveBeenCalledWith('/billing')
+    expect(push).toHaveBeenCalledWith('/billing?reason=limit')
     // The creation dialog must not open.
     expect(screen.queryByText('Donnez un nom à votre échange pour commencer.')).toBeNull()
   })
@@ -107,7 +107,7 @@ describe('OrganizerShell', () => {
       </OrganizerShell>
     )
     fireEvent.click(screen.getByRole('button', { name: /Nouvel échange/ }))
-    expect(push).not.toHaveBeenCalledWith('/billing')
+    expect(push).not.toHaveBeenCalledWith('/billing?reason=limit')
     expect(screen.getByText('Donnez un nom à votre échange pour commencer.')).toBeInTheDocument()
   })
 
@@ -231,7 +231,9 @@ describe('OrganizerShell', () => {
         <p>page</p>
       </OrganizerShell>
     )
-    fireEvent.click(screen.getByRole('button', { name: /Espagne 2026/ }))
+    // Anchored: each row now has a sibling grip labelled "Réordonner <name>",
+    // which an unanchored /name/ would match too.
+    fireEvent.click(screen.getByRole('button', { name: /^Espagne 2026/ }))
     await waitFor(() => expect(setActiveExchange).toHaveBeenCalledWith('ex2'))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'))
   })
@@ -240,7 +242,7 @@ describe('OrganizerShell', () => {
     push.mockClear()
     vi.mocked(setActiveExchange).mockClear()
     renderShell({ pathname: '/dashboard' })
-    fireEvent.click(screen.getByRole('button', { name: /France–Canada 2026/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^France–Canada 2026/ }))
     expect(setActiveExchange).not.toHaveBeenCalled()
     expect(push).not.toHaveBeenCalled()
   })

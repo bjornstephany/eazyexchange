@@ -174,6 +174,49 @@
     },
     "billing": {
       "per": "/ año",
+      "heading": "Planes y facturación",
+      "leadActive": "Tienes el plan {plan}.",
+      "leadTrial": "Estás en la prueba gratuita. Elige un plan para crear más intercambios.",
+      "unavailable": "El pago en línea no está disponible temporalmente. Inténtalo de nuevo más tarde.",
+      "backToDashboard": "Volver al panel",
+      "managePortal": "Gestionar la facturación",
+      "capLine": "{cap, plural, one {# intercambio} other {# intercambios}}",
+      "capUnlimited": "Intercambios ilimitados",
+      "popularBadge": "POPULAR",
+      "selectorLegend": "Elección de plan",
+      "continueCta": "Continuar con {plan}",
+      "upgradeCta": "Cambiar a {plan}",
+      "currentPlanBadge": "Plan actual",
+      "cgv": "Al suscribirte, aceptas nuestras <cgv>Condiciones Generales de Venta</cgv>.",
+      "audience": {
+        "starter": "Para un hermanamiento único",
+        "growth": "Para varios programas en paralelo",
+        "scale": "Para grandes centros educativos"
+      },
+      "features": {
+        "f1": "Alumnos y familias ilimitados",
+        "f2": "Formularios y documentos ilimitados",
+        "f3": "Recordatorios automáticos por correo",
+        "f4": "Seguimiento de expedientes en tiempo real"
+      },
+      "delta": {
+        "more": "+{n, plural, one {# intercambio} other {# intercambios}}",
+        "unlimited": "Intercambios ilimitados"
+      },
+      "capReached": {
+        "heading": "Tu plan {plan} está completo",
+        "body": "Estás usando tus {cap, plural, one {# intercambio} other {# intercambios}}. Cambia a un plan superior para crear más.",
+        "blockedLead": "Creación de intercambio bloqueada: tu plan actual ha alcanzado su límite."
+      },
+      "trialCapReached": {
+        "heading": "Tu prueba gratuita está completa",
+        "body": "Tu intercambio gratuito está en uso. Elige un plan para crear más."
+      },
+      "grace": {
+        "heading": "Tu último pago ha fallado",
+        "body": "Actualiza tu tarjeta para conservar el acceso a tus intercambios.",
+        "cta": "Actualizar mi tarjeta"
+      },
       "usage": "{used} / {cap} {cap, plural, one {intercambio} other {intercambios}} {used, plural, one {utilizado} other {utilizados}}",
       "usageUnlimited": "{used} {used, plural, one {intercambio activo} other {intercambios activos}} · intercambios ilimitados",
       "plans": {
@@ -205,7 +248,14 @@
       "exchangeGroup": {
         "title": "Mis intercambios",
         "add": "+ Añadir",
-        "empty": "Ningún intercambio"
+        "empty": "Ningún intercambio",
+        "reorder": "Reordenar {name}",
+        "dnd": {
+          "picked": "{name} seleccionado. Usa las flechas para moverlo, Espacio para soltarlo, Escape para cancelar.",
+          "moved": "{name} movido a la posición {position} de {total}.",
+          "dropped": "{name} soltado en la posición {position} de {total}.",
+          "cancelled": "Reordenación de {name} cancelada."
+        }
       },
       "sidebar": {
         "collapse": "Contraer",

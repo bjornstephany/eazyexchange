@@ -79,7 +79,7 @@ describe('NewExchangeModal', () => {
     const user = await fillName()
     await user.click(screen.getByRole('button', { name: 'Créer l’échange' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/billing'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/billing?reason=limit'))
     expect(onOpenChange).toHaveBeenCalledWith(false)
     // The redacted cap message must not linger on screen.
     expect(screen.queryByText(EXCHANGE_LIMIT_MESSAGE)).toBeNull()

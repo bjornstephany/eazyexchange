@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type Stripe from 'stripe'
 import { resolveBillingUpdate } from '@/lib/billing/webhook'
 
@@ -50,6 +50,47 @@ describe('resolveBillingUpdate', () => {
     }))
     expect('plan' in (r?.patch ?? {})).toBe(false)
     expect(r?.patch.subscription_status).toBe('active')
+  })
+
+  describe('plan resolution from the subscription price', () => {
+    const KEYS = ['STRIPE_PRICE_STARTER', 'STRIPE_PRICE_GROWTH', 'STRIPE_PRICE_SCALE'] as const
+    const originals = KEYS.map((k) => [k, process.env[k]] as const)
+    beforeEach(() => {
+      process.env.STRIPE_PRICE_STARTER = 'price_s'
+      process.env.STRIPE_PRICE_GROWTH = 'price_g'
+      process.env.STRIPE_PRICE_SCALE = 'price_x'
+    })
+    afterEach(() => {
+      for (const [k, v] of originals) {
+        if (v === undefined) delete process.env[k]
+        else process.env[k] = v
+      }
+    })
+
+    function updated(priceId: string | undefined, metaPlan?: string) {
+      return resolveBillingUpdate(evt('customer.subscription.updated', {
+        id: 'sub_1', customer: 'cus_1', status: 'active', current_period_end: 1767225600,
+        metadata: metaPlan ? { plan: metaPlan } : {},
+        items: priceId ? { data: [{ id: 'si_1', price: { id: priceId } }] } : undefined,
+      }))
+    }
+
+    // The landmine: the portal changed the price but left metadata.plan stale.
+    it('prefers the price on the subscription over stale metadata', () => {
+      expect(updated('price_g', 'starter')?.patch.plan).toBe('growth')
+    })
+
+    it('falls back to metadata when the price id is unknown', () => {
+      expect(updated('price_unknown', 'starter')?.patch.plan).toBe('starter')
+    })
+
+    it('falls back to metadata when there are no items', () => {
+      expect(updated(undefined, 'scale')?.patch.plan).toBe('scale')
+    })
+
+    it('leaves plan untouched when neither price nor metadata resolves', () => {
+      expect('plan' in (updated('price_unknown')?.patch ?? {})).toBe(false)
+    })
   })
 
   it('invoice.payment_failed → setGraceIfNull with empty patch', () => {

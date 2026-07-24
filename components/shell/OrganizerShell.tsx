@@ -78,7 +78,7 @@ export function OrganizerShell({
   // (createExchange would only return an { error: 'limit' } result anyway).
   const handleNewExchange = useCallback(() => {
     if (atCap) {
-      router.push('/billing')
+      router.push('/billing?reason=limit')
       return
     }
     setNewExchangeOpen(true)

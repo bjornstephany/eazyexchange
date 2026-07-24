@@ -160,7 +160,20 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 - **Auth preambles are shared helpers** — server actions use `requireUser()` / `requireOrganizer()` / `requireStudent()` from `lib/auth/require.ts`; never hand-roll the `getAuthUser → getProfile → role check → throw` dance. Error strings (`'Unauthenticated'`, `'Unauthorized'`) are load-bearing for tests.
 - **Application server actions are split by trust model** — `actions/apply.ts` (anonymous resume-token funnel), `actions/applications-review.ts` (authenticated organizer review), `actions/invitations.ts` (anonymous invite-token response). New application behavior goes in the file matching its trust model; never re-merge them.
 - Package manager is **pnpm** (not npm).
-- **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` except `name`). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
+- **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` except `name`). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`,
+`customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
+**Upgrades** (`app/billing/upgrade/route.ts`) swap the price on the existing subscription
+through a Stripe-hosted `subscription_update_confirm` portal flow — never through
+`/billing/checkout`, which would create a second parallel subscription and a second charge.
+Two things make that work, and both are easy to break:
+(1) **Dashboard prerequisite** — the customer portal configuration must have subscription
+updates enabled with all three prices listed under `features.subscription_update.products`,
+or `sessions.create` 400s and the upgrade button is silently inert (the route degrades to
+`/billing?error=unavailable`). Manual step, like the Google OAuth provider config.
+(2) **The webhook reads the plan from the price ID**, not from subscription metadata: a
+portal price change does not rewrite metadata, so trusting `metadata.plan` would write the
+*old* plan straight back and the organizer would pay for capacity they never receive
+(`planForPriceId` in `lib/billing/plans.ts`; precedence price → metadata → unchanged).
 
 ## Automated Reminders
 
