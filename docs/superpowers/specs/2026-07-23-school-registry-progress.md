@@ -116,9 +116,44 @@ The 2026-07-23 purge removed the real rows the plan was written against. All
 four correctly keep `uai = null` and land in the unverified list. **Nothing to
 backfill** — Step 8 collapses to running the verification query.
 
-## Remaining: Task 9 from Step 2
+## Step 2 — browser check DONE, all 5 items pass (2026-07-24)
 
-- [ ] Step 2 — preview browser check (5 items in the plan)
+Run against a local dev server pointed at staging (recipe:
+`reference_visual_check_via_staging_playwright`), not the preview URL — the
+preview is SSO-protected and the flow needs a real authenticated session.
+
+| # | Check | Result |
+| --- | --- | --- |
+| 1 | Pays select defaults to France + combobox | ✔ label « Pays », value `FR` |
+| 2 | `chevreul` returns formatted results | ✔ 8 rows in ~1.8s, « … — 69007 Lyon · Privé » |
+| 3 | Pick → chip, Continuer enabled, step 2 prefill | ✔ chip + « Changer »; « Lycée d'origine » prefilled |
+| 4 | Pays → Espagne swaps in a free-text field | ✔ combobox 1→0, `#foreign-school` 0→1 |
+| 5 | /settings Établissement locked | ✔ `#pf-schoolName` disabled + registry hint |
+
+Data path was also probed directly against staging with the two queries
+`searchSchools` runs: 14 611 rows, 74–500 ms, null-status rows render without
+the `·` suffix, and `%_*\` normalizes to `''` so no wildcard reaches a LIKE.
+
+### The check earned its keep — it found a real bug (fixed, `b0c090d`)
+
+Picking « Lycée Chevreul Lestonnac — 69007 Lyon » stored **« Lycée Chevreul
+Lestonnac - Site St Didier — 69370 Saint-Didier-au-Mont-d'Or »**. `claim_school`
+re-derived the name from the UAI alone (`order by id limit 1`), and UAI is not
+unique: 65 codes cover 135 rows. Fix prefers the exact `(uai, name)` pair, still
+re-validated against `school_registry`, falling back to lowest id. Migration
+edited in place (never applied to prod); staging's function was replaced.
+
+Two notes for whoever reads the plan's Step 2 wording:
+- « step 2 shows the registry name as *Lycée d'origine* » — true, but that field
+  sits inside the collapsed « Informations complémentaires (facultatif) » block.
+- The hint in check 5 renders in the account's interface language; a probe
+  account defaulting to English shows "verified against the French national
+  education registry", not « annuaire ».
+
+Gate re-run after the fix: lint ✔ · **1468** tests ✔ · build ✔ · **148** RLS ✔
+
+## Remaining: Task 9 from Step 3
+
 - [ ] Step 3 — **Bjorn's go-ahead. Everything below writes to production.**
 - [ ] Step 4 — MCP `apply_migration` to prod (`name` = `school_registry`)
 - [ ] Step 5 — reconcile the filename if prod stamps a different version
