@@ -62,7 +62,12 @@ export type CompleteOnboardingInput = {
   country: string
   /** The picked registry establishment's UAI. Required when country === 'FR'. */
   uai: string | null
-  /** Free-typed school name. Required when country !== 'FR'; IGNORED for FR. */
+  /**
+   * Required when country !== 'FR' (the free-typed name).
+   * For FR this is the picked registry row's name, which disambiguates the 65
+   * UAIs shared by multi-site establishments. Never trusted: claim_school only
+   * accepts it if school_registry carries that exact (uai, name) pair.
+   */
   name: string
 }
 
@@ -101,7 +106,11 @@ export async function completeOnboarding(
 
   const isFrance = country === 'FR'
   const uai = isFrance ? ((input.uai ?? '').trim() || null) : null
-  const typedName = isFrance ? null : ((input.name ?? '').trim() || null)
+  // For FR the name is the picked registry row's name, used to disambiguate the
+  // 65 UAIs shared by multi-site establishments. claim_school re-checks it
+  // against school_registry, so it is a hint, never a trusted value.
+  const claimedName = (input.name ?? '').trim() || null
+  const typedName = isFrance ? null : claimedName
 
   if (isFrance && !uai) {
     return { ok: false, error: 'invalid', message: SCHOOL_REQUIRED_MESSAGE }
@@ -115,7 +124,7 @@ export async function completeOnboarding(
   // both (and returns null to reject). Cast rather than hand-edit the generated
   // types; the SQL is the contract.
   const { data: schoolName, error } = await supabase.rpc('claim_school', {
-    p_country: country, p_uai: uai, p_name: typedName,
+    p_country: country, p_uai: uai, p_name: isFrance ? claimedName : typedName,
   } as unknown as { p_country: string; p_uai: string; p_name: string })
   if (error) throw error
   // null = the RPC rejected the claim (unknown UAI is the only way to get here

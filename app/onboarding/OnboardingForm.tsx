@@ -81,7 +81,9 @@ export function OnboardingForm({
       const result = await completeOnboarding({
         country: resolvedCountry,
         uai: country === 'FR' ? school?.uai ?? null : null,
-        name: country === 'FR' ? '' : foreignName.trim(),
+        // For FR, send the picked row's name so a shared UAI resolves to the
+        // exact campus shown in the picker (re-validated server-side).
+        name: country === 'FR' ? school?.name ?? '' : foreignName.trim(),
       })
       if (!result.ok) { setError(result.message); return }
       setDetails(prev => ({

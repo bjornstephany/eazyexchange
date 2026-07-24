@@ -8,6 +8,7 @@ let fx: Fixtures
 // A deterministic row of our own, so the assertions do not depend on whether
 // `pnpm sync:schools` has run against this database.
 const UAI = 'RLSTEST1'
+const SITE_B = 'Lycée RLS Test - Site B'
 
 beforeAll(async () => {
   fx = await seedFixtures(sql)
@@ -17,6 +18,15 @@ beforeAll(async () => {
     values
       (${UAI}, 'Lycée RLS Test', 'Lycée', 'Public', 'Lyon', '69007',
        'lycee rls test', 'lycee rls test lyon 69007')`
+  // A second site under the SAME UAI, inserted after the first so it has the
+  // higher id. 65 real UAIs are shared this way; resolving on the UAI alone
+  // silently stores whichever site sorts first.
+  await sql`
+    insert into school_registry
+      (uai, name, type, status, commune, postal_code, search_name, search_text)
+    values
+      (${UAI}, ${SITE_B}, 'Lycée', 'Public', 'Vaulx-en-Velin', '69120',
+       'lycee rls test site b', 'lycee rls test site b vaulx en velin 69120')`
 })
 afterAll(async () => {
   await sql`delete from school_registry where uai = ${UAI}`
@@ -27,16 +37,17 @@ afterAll(async () => {
 describe('school_registry (public open data, read-only for clients)', () => {
   it('anon can select — the picker runs before a school exists', async () => {
     const rows = await runAs(sql, null, (tx) =>
-      tx`select uai, name from school_registry where uai = ${UAI}`)
-    expect(rows).toHaveLength(1)
+      tx`select uai, name from school_registry where uai = ${UAI} order by id`)
+    expect(rows).toHaveLength(2)   // both sites of the shared-UAI fixture
     expect(rows[0].name).toBe('Lycée RLS Test')
+    expect(rows[1].name).toBe(SITE_B)
   })
 
   it('authenticated organizers and students can select too', async () => {
     for (const uid of [fx.orgA, fx.studentA]) {
       const rows = await runAs(sql, uid, (tx) =>
         tx`select uai from school_registry where uai = ${UAI}`)
-      expect(rows, `persona ${uid}`).toHaveLength(1)
+      expect(rows, `persona ${uid}`).toHaveLength(2)
     }
   })
 
@@ -75,6 +86,32 @@ describe('claim_school() — the only writer of schools.uai / schools.country', 
       return row.name
     })
     expect(name).toBe('Lycée RLS Test')
+  })
+
+  it('a shared UAI resolves to the exact site the organizer picked', async () => {
+    await runAs(sql, fx.orgA, async (tx) => {
+      const [row] = await tx`select claim_school('FR', ${UAI}, ${SITE_B}) as name`
+      expect(row.name).toBe(SITE_B)
+      const [school] = await tx`select name, uai from schools where id = ${fx.schoolA}`
+      expect(school.name).toBe(SITE_B)
+      expect(school.uai).toBe(UAI)
+    })
+  })
+
+  it('a shared UAI with no name falls back to the lowest-id site', async () => {
+    await runAs(sql, fx.orgA, async (tx) => {
+      const [row] = await tx`select claim_school('FR', ${UAI}, null) as name`
+      expect(row.name).toBe('Lycée RLS Test')
+    })
+  })
+
+  it('a name the registry does not carry for that UAI is never stored', async () => {
+    await runAs(sql, fx.orgA, async (tx) => {
+      const [row] = await tx`select claim_school('FR', ${UAI}, 'Lycée Inventé') as name`
+      expect(row.name).toBe('Lycée RLS Test')   // fell back, did NOT take the hint
+      const [school] = await tx`select name from schools where id = ${fx.schoolA}`
+      expect(school.name).toBe('Lycée RLS Test')
+    })
   })
 
   it('an unknown UAI is rejected and writes nothing', async () => {

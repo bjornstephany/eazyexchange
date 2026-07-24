@@ -48,8 +48,10 @@ describe('OnboardingForm', () => {
     await user.click(await screen.findByRole('option', { name: /Lycée Chevreul Lestonnac/ }))
     await user.click(screen.getByRole('button', { name: 'Continuer' }))
 
+    // The picked row's name rides along so a UAI shared by several campuses
+    // resolves to the one shown in the picker.
     await waitFor(() => expect(completeOnboarding).toHaveBeenCalledWith({
-      country: 'FR', uai: '0690574Z', name: '',
+      country: 'FR', uai: '0690574Z', name: 'Lycée Chevreul Lestonnac',
     }))
 
     // Step 2: exchange name + required destination/dates; free-text cards optional

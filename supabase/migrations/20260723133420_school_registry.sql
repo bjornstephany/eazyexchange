@@ -75,11 +75,28 @@ begin
   end if;
 
   if p_country = 'FR' then
+    -- UAI is NOT unique: 65 codes are shared by multi-site establishments (135
+    -- rows). Resolving on the UAI alone would silently store a different campus
+    -- than the one the organizer picked — e.g. picking "Lycée Chevreul
+    -- Lestonnac — 69007 Lyon" stored "…- Site St Didier — 69370
+    -- Saint-Didier-au-Mont-d'Or". So prefer the exact (uai, name) pair.
+    -- The name is still re-checked against school_registry rather than trusted,
+    -- so a crafted request cannot spoof a name the registry does not carry for
+    -- that UAI. Falls back to the lowest id when the caller sends no name, or
+    -- when a registry sync has since renamed the row.
     select r.name, r.uai into v_name, v_uai
       from school_registry r
       where r.uai = p_uai
+        and r.name = nullif(btrim(coalesce(p_name, '')), '')
       order by r.id
       limit 1;
+    if v_name is null then
+      select r.name, r.uai into v_name, v_uai
+        from school_registry r
+        where r.uai = p_uai
+        order by r.id
+        limit 1;
+    end if;
     if v_name is null then return null; end if;
   else
     v_name := nullif(btrim(coalesce(p_name, '')), '');

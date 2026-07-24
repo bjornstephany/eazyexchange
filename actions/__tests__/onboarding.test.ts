@@ -56,11 +56,23 @@ describe('completeOnboarding — France', () => {
     })
   })
 
-  it('ignores a client-supplied name — the registry row wins', async () => {
+  // The name is forwarded only to disambiguate the 65 UAIs shared by
+  // multi-site establishments. It is a hint, not a value: claim_school accepts
+  // it only if school_registry carries that exact (uai, name) pair, and the
+  // returned name — not the submitted one — is what the caller gets back.
+  it('forwards the picked name as a disambiguation hint', async () => {
+    scenario.rpcResult = 'Lycée Chevreul Lestonnac'
+    const res = await completeOnboarding({
+      country: 'FR', uai: '0690574Z', name: 'Lycée Chevreul Lestonnac',
+    })
+    expect(res).toEqual({ ok: true, schoolName: 'Lycée Chevreul Lestonnac' })
+    expect(scenario.rpc!.args.p_name).toBe('Lycée Chevreul Lestonnac')
+  })
+
+  it('never returns a client-supplied name — the registry row wins', async () => {
     scenario.rpcResult = 'Lycée Chevreul Lestonnac'
     const res = await completeOnboarding({ country: 'FR', uai: '0690574Z', name: 'Nom Falsifié' })
     expect(res).toEqual({ ok: true, schoolName: 'Lycée Chevreul Lestonnac' })
-    expect(scenario.rpc!.args.p_name).toBeNull()
   })
 
   it('rejects an unknown UAI with a structured result, never a throw', async () => {
