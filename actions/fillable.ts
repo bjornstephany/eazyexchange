@@ -50,6 +50,11 @@ export type ProgramDetailsInput = {
   proviseur_name: string | null
   sending_city: string | null
   absence_dates: string[]
+  // The « Bonne nouvelle » acceptance email's three non-date values. Free text,
+  // not numeric — see lib/exchange/good-news-fields.ts.
+  participation_cost: string | null
+  payment_details: string | null
+  confirmation_deadline: string | null
 }
 
 const MAX_FIELD = 200
@@ -71,7 +76,8 @@ export async function saveProgramDetails(
   await assertOrganizerOnExchange(supabase, exchangeId)
 
   const texts = [input.destination, input.association_name, input.sending_school_name,
-    input.receiving_school_name, input.proviseur_name, input.sending_city]
+    input.receiving_school_name, input.proviseur_name, input.sending_city,
+    input.participation_cost, input.payment_details]
   if (texts.some(t => (t ?? '').length > MAX_FIELD)) {
     return { ok: false, message: `Un champ dépasse ${MAX_FIELD} caractères.` }
   }
@@ -103,6 +109,10 @@ export async function saveProgramDetails(
     proviseur_name: cleanText(input.proviseur_name),
     sending_city: cleanText(input.sending_city),
     absence_dates: absenceDates,
+    participation_cost: cleanText(input.participation_cost),
+    payment_details: cleanText(input.payment_details),
+    // A `date` column: '' from an unset <input type="date"> must land as null.
+    confirmation_deadline: cleanText(input.confirmation_deadline),
     updated_at: new Date().toISOString(),
   }, { onConflict: 'exchange_id' })
   if (error) return { ok: false, message: 'L’enregistrement a échoué. Réessayez.' }

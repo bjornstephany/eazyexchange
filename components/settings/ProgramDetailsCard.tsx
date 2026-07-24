@@ -49,6 +49,11 @@ export function ProgramDetailsCard({ exchangeId, initial, readOnly }: Props) {
       proviseur_name: form.proviseur_name || null,
       sending_city: form.sending_city || null,
       absence_dates: form.absence_dates.split('\n').map(s => s.trim()).filter(Boolean),
+      // Carried through untouched until this card grows inputs for them, so a
+      // save from here never blanks the acceptance-email values.
+      participation_cost: initial?.participation_cost ?? null,
+      payment_details: initial?.payment_details ?? null,
+      confirmation_deadline: initial?.confirmation_deadline ?? null,
     }
     try {
       const res = await saveProgramDetails(exchangeId, input)
