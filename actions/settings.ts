@@ -4,8 +4,8 @@ import { requireOrganizer, requireUser } from '@/lib/auth/require'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { enforceRateLimit, enforceRateLimitStrict } from '@/lib/rate-limit'
-import { isPasswordPwned, passwordPolicyError, PWNED_MESSAGE } from '@/lib/auth/hibp'
+import { checkRateLimit, enforceRateLimitStrict } from '@/lib/rate-limit'
+import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
 import { isPlanKey, type PlanKey } from '@/lib/billing/plans'
@@ -23,7 +23,7 @@ import type { ReminderCadence } from './exchanges'
 
 type OrganizerCtx = {
   userId: string; schoolId: string; orgRole: 'owner' | 'admin'
-  email: string; fullName: string; schoolCountry: string
+  email: string; fullName: string
 }
 
 async function getOrganizerCtx(opts?: { orgRole?: 'owner' }): Promise<OrganizerCtx> {
@@ -32,47 +32,42 @@ async function getOrganizerCtx(opts?: { orgRole?: 'owner' }): Promise<OrganizerC
     userId: user.id, schoolId: profile.school_id,
     orgRole: (profile.org_role ?? 'admin') as 'owner' | 'admin',
     email: profile.email, fullName: profile.full_name,
-    schoolCountry: profile.schools?.country ?? 'FR',
   }
 }
 
-export async function updateProfile(input: {
-  fullName: string; schoolName: string
-}): Promise<void> {
+export type ActionResult = { ok: true } | { ok: false; message: string }
+
+const FULL_NAME_MAX = 120
+
+// Takes the full name only. There is deliberately NO school-rename path here:
+// schools.name is the one client-updatable school column (column grant from
+// 20260701000001), and left open it would undo the signup gate one screen
+// later — pick a real lycée to get in, then rename to anything. FR names come
+// from school_registry via claim_school(); every other country's name is typed
+// once at onboarding. Both change only through support.
+export async function updateProfile(input: { fullName: string }): Promise<ActionResult> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx()
   const t = await getTranslations('organizer')
 
+  // Expected validation outcomes travel as return values (prod redacts throws).
   const fullName = input.fullName.trim()
-  if (!fullName) throw new Error(t('settings.errors.nameEmpty'))
+  if (!fullName) return { ok: false, message: t('settings.errors.nameEmpty') }
+  // Unbounded until now, and this lands in email HTML as the inviter name.
+  if (fullName.length > FULL_NAME_MAX) {
+    return { ok: false, message: t('settings.errors.nameTooLong', { max: FULL_NAME_MAX }) }
+  }
 
   const { error: userError } = await supabase.from('users').update({
     full_name: fullName,
   }).eq('id', ctx.userId)
-  if (userError) throw userError
-
-  // Only the owner may rename the school, and only when the school is NOT
-  // registry-verified. schools.name is the one client-updatable school column
-  // (column grant from 20260701000001) — left open it would undo the signup
-  // gate one screen later: pick a real lycée to get in, then rename to
-  // anything. FR names come from school_registry via claim_school() and change
-  // only through support. Non-FR schools legitimately rename through here, so
-  // the grant stays. Ignored rather than rejected, mirroring the admin case
-  // below and avoiding a redacted-error dead end in production; the field is
-  // read-only in the UI.
-  const schoolIsVerified = ctx.schoolCountry === 'FR'
-  if (ctx.orgRole === 'owner' && !schoolIsVerified) {
-    const schoolName = input.schoolName.trim()
-    if (!schoolName) throw new Error(t('settings.errors.schoolNameEmpty'))
-    const { error: schoolError } = await supabase.from('schools')
-      .update({ name: schoolName }).eq('id', ctx.schoolId)
-    if (schoolError) throw schoolError
-  }
+  if (userError) return { ok: false, message: t('settings.errors.profileSaveFailed') }
 
   revalidatePath('/settings')
   // organizerName/schoolName are read in the shared shell layout (rail nav),
   // not just on /settings — bust the whole tree so other tabs pick it up too.
   revalidatePath('/', 'layout')
+  return { ok: true }
 }
 
 // Role-agnostic on purpose: students have no settings page, so the student
@@ -89,14 +84,26 @@ export async function updateLocale(locale: Locale): Promise<void> {
   revalidatePath('/', 'layout')
 }
 
-export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+// Every outcome here is an expected one — wrong current password, too short,
+// leaked, rate limited — so all four come back as return values. Thrown
+// messages are replaced by an opaque digest in production, which is what the
+// user used to see for every failure.
+export async function changePassword(
+  currentPassword: string, newPassword: string,
+): Promise<ActionResult> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx()
   const t = await getTranslations('organizer')
-  await enforceRateLimit(`pwchange:${ctx.userId}`, 5, 3600)
 
-  const policyError = passwordPolicyError(newPassword)
-  if (policyError) throw new Error(policyError)
+  const rate = await checkRateLimit(`pwchange:${ctx.userId}`, 5, 3600)
+  // Fails OPEN on a DB blip, matching enforceRateLimit: a transient error must
+  // never lock someone out of their own password change.
+  if (rate === 'error') console.error('[rate-limit] check failed, allowing request')
+  if (rate === 'limited') return { ok: false, message: t('settings.errors.tooManyAttempts') }
+
+  if (passwordPolicyIssue(newPassword) === 'too_short') {
+    return { ok: false, message: t('settings.errors.passwordTooShort') }
+  }
 
   // Verify the current password on a throwaway client so the session cookies
   // of THIS request are never touched.
@@ -108,18 +115,40 @@ export async function changePassword(currentPassword: string, newPassword: strin
   const { error: signInError } = await bare.auth.signInWithPassword({
     email: ctx.email, password: currentPassword,
   })
-  if (signInError) throw new Error('Mot de passe actuel incorrect.')
+  if (signInError) {
+    return { ok: false, message: t('settings.errors.currentPasswordIncorrect') }
+  }
 
-  if (await isPasswordPwned(newPassword)) throw new Error(PWNED_MESSAGE)
+  if (await isPasswordPwned(newPassword)) {
+    return { ok: false, message: t('settings.errors.passwordLeaked') }
+  }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
-  if (error) throw new Error(t('settings.errors.passwordUpdateFailed'))
+  if (error) return { ok: false, message: t('settings.errors.passwordUpdateFailed') }
+  return { ok: true }
 }
 
 export type BillingOverview = {
   planLabel: string; price: string; per: string; desc: string
   usageLabel: string; usagePct: number
-  payment: { note: string; cta: string; href: string }
+  // `manage` is null on the trial: the card is collected when a plan is
+  // chosen, and the only button here used to point at /billing — the
+  // plan-selection page — which is the second-subscription path.
+  payment: { note: string; manage: { cta: string; href: string } | null }
+}
+
+// Prefer the customer-level default; fall back to the subscription's own,
+// which is where Checkout puts it (app/billing/checkout/route.ts never sets
+// invoice_settings). Both are expanded in the single retrieve above.
+function defaultCardOf(customer: Stripe.Customer): Stripe.PaymentMethod.Card | null {
+  const invoiceDefault = customer.invoice_settings
+    ?.default_payment_method as Stripe.PaymentMethod | null
+  if (invoiceDefault?.card) return invoiceDefault.card
+  for (const sub of customer.subscriptions?.data ?? []) {
+    const subDefault = sub.default_payment_method as Stripe.PaymentMethod | null
+    if (subDefault?.card) return subDefault.card
+  }
+  return null
 }
 
 export async function getBillingOverview(): Promise<BillingOverview> {
@@ -146,23 +175,30 @@ export async function getBillingOverview(): Promise<BillingOverview> {
     ? t('billing.usageUnlimited', { used })
     : t('billing.usage', { used, cap })
 
-  let payment = { note: t('billing.payment.noneNote'), cta: t('billing.payment.addCta'), href: '/billing' }
+  const payment: BillingOverview['payment'] = {
+    note: t('billing.payment.noneNote'),
+    // On an active plan the portal is always reachable, card found or not —
+    // "no payment method" plus no way to add one would be a dead end.
+    manage: planKey ? { cta: t('billing.payment.editCta'), href: '/billing/portal' } : null,
+  }
   if (planKey && school.stripe_customer_id && process.env.STRIPE_SECRET_KEY) {
     try {
+      // Both fields: Checkout attaches the card to the SUBSCRIPTION and does
+      // not write invoice_settings, so reading only the latter reports "no
+      // payment method" to a paying customer.
       const customer = await getStripe().customers.retrieve(school.stripe_customer_id, {
-        expand: ['invoice_settings.default_payment_method'],
+        expand: [
+          'invoice_settings.default_payment_method',
+          'subscriptions.data.default_payment_method',
+        ],
       })
       const card = !('deleted' in customer && customer.deleted)
-        ? ((customer as Stripe.Customer).invoice_settings
-            ?.default_payment_method as Stripe.PaymentMethod | null)?.card
+        ? defaultCardOf(customer as Stripe.Customer)
         : null
       if (card) {
         const brand = card.brand.charAt(0).toUpperCase() + card.brand.slice(1)
         const exp = `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
-        payment = {
-          note: t('billing.payment.card', { brand, last4: card.last4, exp }),
-          cta: t('billing.payment.editCta'), href: '/billing/portal',
-        }
+        payment.note = t('billing.payment.card', { brand, last4: card.last4, exp })
       }
     } catch {
       // Stripe unavailable/misconfigured: fall through to the no-card note.

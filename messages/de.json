@@ -53,8 +53,7 @@
         "emailLabel": "E-Mail-Adresse",
         "emailHint": "Kontaktieren Sie den Support, um Ihre Adresse zu ändern.",
         "schoolNameLabel": "Einrichtung",
-        "schoolNameHint": "Nur der Inhaber kann den Namen der Einrichtung ändern.",
-        "schoolNameLockedHint": "Schule im französischen nationalen Bildungsverzeichnis verifiziert. Wenden Sie sich an den Support, um sie zu ändern."
+        "schoolNameLockedHint": "Die Einrichtung wird bei der Kontoerstellung festgelegt. Wenden Sie sich an den Support, um sie zu ändern."
       },
       "security": {
         "heading": "Sicherheit",
@@ -64,7 +63,7 @@
         "changeButton": "Passwort ändern",
         "currentPasswordLabel": "Aktuelles Passwort",
         "newPasswordLabel": "Neues Passwort",
-        "confirmPasswordLabel": "Bestätigen",
+        "confirmPasswordLabel": "Neues Passwort bestätigen",
         "submitButton": "Passwort aktualisieren"
       },
       "team": {
@@ -116,7 +115,12 @@
         "description": "Wird an die Eltern gesendet, wenn Sie eine Bewerbung annehmen. Die Schaltflächen Ja / Nein / Fragen werden automatisch hinzugefügt.",
         "subjectLabel": "Betreff",
         "bodyLabel": "Nachricht",
-        "placeholdersLabel": "Verfügbare Platzhalter:",
+        "whenSent": "Wird automatisch an die Eltern gesendet, wenn Sie eine Bewerbung annehmen.",
+        "insertLabel": "Einfügen:",
+        "tokens": {
+          "studentName": "Vor- und Nachname des Schülers",
+          "exchangeName": "Name des Programms"
+        },
         "previewLabel": "Vorschau",
         "resetToDefault": "Auf Standardvorlage zurücksetzen",
         "saveButton": "Speichern",
@@ -156,9 +160,14 @@
       },
       "errors": {
         "nameEmpty": "Der Name darf nicht leer sein.",
-        "schoolNameEmpty": "Der Name der Einrichtung darf nicht leer sein.",
+        "nameTooLong": "Der Name darf höchstens {max} Zeichen lang sein.",
+        "profileSaveFailed": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
         "passwordUpdateFailed": "Das Passwort konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-        "passwordMismatch": "Die Passwörter stimmen nicht überein."
+        "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+        "currentPasswordIncorrect": "Das aktuelle Passwort ist nicht korrekt.",
+        "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+        "passwordLeaked": "Dieses Passwort taucht in bekannten Datenlecks auf — bitte wählen Sie ein anderes.",
+        "tooManyAttempts": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut."
       }
     },
     "dataPrivacy": {
@@ -238,7 +247,6 @@
       },
       "payment": {
         "noneNote": "Keine Zahlungsmethode hinterlegt.",
-        "addCta": "Karte hinzufügen",
         "editCta": "Bearbeiten",
         "card": "{brand} •••• {last4} — läuft ab am {exp}"
       }
@@ -306,12 +314,38 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Vorlagen",
+        "historique": "Verlauf",
         "auto": "Auto-Erinnerungen"
+      },
+      "history": {
+        "heading": "Verlauf",
+        "description": "Was für dieses Programm veröffentlicht und an die Familien gesendet wurde.",
+        "empty": "Für dieses Programm wurde noch nichts gesendet oder veröffentlicht.",
+        "infoPublished": "Information veröffentlicht: „{subject}“",
+        "infoUpdated": "Information geändert: „{subject}“",
+        "infoDeleted": "Information gelöscht: „{subject}“",
+        "goodNews": "E-Mail „Gute Nachricht“ gesendet · {count, plural, one {# Familie} other {# Familien}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Details anzeigen",
+        "collapse": "Details ausblenden",
+        "failedNotice": "die E-Mail wurde nicht versendet"
       },
       "info": {
         "heading": "Wichtige Infos",
         "description": "Fügen Sie die wichtigsten Infos zum Programm hinzu. Schüler sehen sie im Tab „Infos“ ihres Portals.",
         "addButton": "Info hinzufügen",
+        "statusVisible": "Für Schüler sichtbar",
+        "publishedOn": "veröffentlicht am {date}",
+        "updatedOn": "geändert am {date}",
+        "editButton": "Bearbeiten",
+        "cancelButton": "Abbrechen",
+        "publishButton": "Veröffentlichen",
+        "showMore": "Alles anzeigen",
+        "showLess": "Weniger anzeigen",
+        "deleteConfirmQuestion": "Löschen? Diese Information verschwindet aus dem Schülerportal.",
+        "deleteConfirmYes": "Bestätigen",
+        "discardConfirmQuestion": "Änderungen verwerfen?",
+        "discardConfirmYes": "Verwerfen",
         "titlePlaceholder": "Titel (z. B. Treffpunkt)",
         "bodyPlaceholder": "Für Schüler sichtbare Details…",
         "saveButton": "Speichern",
@@ -457,7 +491,7 @@
       "bulkResult": "{s, plural, one {# bearbeitet} other {# bearbeitet}} · {f} fehlgeschlagen",
       "tableHeader": {
         "student": "Schüler",
-        "level": "Klasse 26-27",
+        "level": "Klassenstufe",
         "gender": "Geschlecht",
         "receivedDate": "Erhalten am",
         "status": "Status"
@@ -816,6 +850,7 @@
       "submitting": "Wird gesendet…",
       "missing": "Bitte fülle alle Pflichtfelder aus.",
       "tooLong": "Einige Antworten überschreiten die Zeichengrenze.",
+      "badFormat": "Bitte prüfe das Format der markierten E-Mail- und Telefonfelder.",
       "unexpected": "Ein Fehler ist aufgetreten.",
       "registered": "Diese E-Mail-Adresse ist bereits mit einer Bewerbung verknüpft. Melde dich bei deinem Konto an.",
       "done": "Danke! Deine Bewerbung wurde gesendet.",
@@ -952,10 +987,10 @@
         }
       },
       "grade": {
-        "label": "Klassenstufe 26-27"
+        "label": "Klassenstufe"
       },
-      "french_class": {
-        "label": "Französischkurs 26-27"
+      "class_group": {
+        "label": "Klasse"
       },
       "email": {
         "label": "E-Mail"

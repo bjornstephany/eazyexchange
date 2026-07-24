@@ -53,8 +53,7 @@
         "emailLabel": "Dirección de correo electrónico",
         "emailHint": "Contacte con el soporte para cambiar su dirección.",
         "schoolNameLabel": "Centro educativo",
-        "schoolNameHint": "Solo el propietario puede modificar el nombre del centro educativo.",
-        "schoolNameLockedHint": "Centro verificado en el registro nacional de educación francés. Contacte con el soporte para cambiarlo."
+        "schoolNameLockedHint": "El centro educativo se define al crear la cuenta. Contacte con el soporte para cambiarlo."
       },
       "security": {
         "heading": "Seguridad",
@@ -64,7 +63,7 @@
         "changeButton": "Cambiar la contraseña",
         "currentPasswordLabel": "Contraseña actual",
         "newPasswordLabel": "Nueva contraseña",
-        "confirmPasswordLabel": "Confirmar",
+        "confirmPasswordLabel": "Confirmar la nueva contraseña",
         "submitButton": "Actualizar la contraseña"
       },
       "team": {
@@ -116,7 +115,12 @@
         "description": "Se envía a los padres cuando aceptas una candidatura. Los botones Sí / No / Preguntas se añaden automáticamente.",
         "subjectLabel": "Asunto",
         "bodyLabel": "Mensaje",
-        "placeholdersLabel": "Etiquetas disponibles:",
+        "whenSent": "Se envía automáticamente a los padres cuando aceptas una candidatura.",
+        "insertLabel": "Insertar:",
+        "tokens": {
+          "studentName": "Nombre y apellidos del alumno",
+          "exchangeName": "Nombre del programa"
+        },
         "previewLabel": "Vista previa",
         "resetToDefault": "Restablecer la plantilla predeterminada",
         "saveButton": "Guardar",
@@ -156,9 +160,14 @@
       },
       "errors": {
         "nameEmpty": "El nombre no puede estar vacío.",
-        "schoolNameEmpty": "El nombre del centro educativo no puede estar vacío.",
+        "nameTooLong": "El nombre no puede superar los {max} caracteres.",
+        "profileSaveFailed": "No se ha podido guardar su perfil. Vuelva a intentarlo.",
         "passwordUpdateFailed": "No se ha podido actualizar la contraseña. Vuelva a intentarlo.",
-        "passwordMismatch": "Las contraseñas no coinciden."
+        "passwordMismatch": "Las contraseñas no coinciden.",
+        "currentPasswordIncorrect": "La contraseña actual no es correcta.",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+        "passwordLeaked": "Esta contraseña aparece en filtraciones de datos conocidas — elija otra.",
+        "tooManyAttempts": "Demasiados intentos. Espere un momento y vuelva a intentarlo."
       }
     },
     "dataPrivacy": {
@@ -238,7 +247,6 @@
       },
       "payment": {
         "noneNote": "No hay ningún método de pago registrado.",
-        "addCta": "Añadir una tarjeta",
         "editCta": "Modificar",
         "card": "{brand} •••• {last4} — caduca el {exp}"
       }
@@ -306,12 +314,38 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Plantillas",
+        "historique": "Historial",
         "auto": "Recordatorios auto."
+      },
+      "history": {
+        "heading": "Historial",
+        "description": "Lo que se ha publicado y enviado a las familias para este programa.",
+        "empty": "Todavía no se ha enviado ni publicado nada para este programa.",
+        "infoPublished": "Información publicada: «{subject}»",
+        "infoUpdated": "Información modificada: «{subject}»",
+        "infoDeleted": "Información eliminada: «{subject}»",
+        "goodNews": "Correo «Buenas noticias» enviado · {count, plural, one {# familia} other {# familias}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Ver el detalle",
+        "collapse": "Ocultar el detalle",
+        "failedNotice": "el correo no ha salido"
       },
       "info": {
         "heading": "Información clave",
         "description": "Añade la información clave del programa. Los estudiantes la ven en la pestaña «Infos» de su portal.",
         "addButton": "Añadir información",
+        "statusVisible": "Visible para los alumnos",
+        "publishedOn": "publicada el {date}",
+        "updatedOn": "modificada el {date}",
+        "editButton": "Editar",
+        "cancelButton": "Cancelar",
+        "publishButton": "Publicar",
+        "showMore": "Mostrar todo",
+        "showLess": "Mostrar menos",
+        "deleteConfirmQuestion": "¿Eliminar? Esta información desaparecerá del portal de los alumnos.",
+        "deleteConfirmYes": "Confirmar",
+        "discardConfirmQuestion": "¿Descartar los cambios?",
+        "discardConfirmYes": "Descartar",
         "titlePlaceholder": "Título (p. ej. Punto de encuentro)",
         "bodyPlaceholder": "Detalles visibles para los estudiantes…",
         "saveButton": "Guardar",
@@ -457,7 +491,7 @@
       "bulkResult": "{s, plural, one {# procesada} other {# procesadas}} · {f} fallidas",
       "tableHeader": {
         "student": "Alumno",
-        "level": "Curso 26-27",
+        "level": "Curso",
         "gender": "Género",
         "receivedDate": "Recibida el",
         "status": "Estado"
@@ -816,6 +850,7 @@
       "submitting": "Enviando…",
       "missing": "Por favor, rellena todos los campos obligatorios.",
       "tooLong": "Algunas respuestas superan el límite de caracteres.",
+      "badFormat": "Comprueba el formato de los correos y teléfonos señalados.",
       "unexpected": "Se ha producido un error.",
       "registered": "Esta dirección de correo ya está asociada a una candidatura. Inicia sesión en tu cuenta.",
       "done": "¡Gracias! Tu candidatura ha sido enviada.",
@@ -952,10 +987,10 @@
         }
       },
       "grade": {
-        "label": "Curso 26-27"
+        "label": "Curso"
       },
-      "french_class": {
-        "label": "Clase de francés 26-27"
+      "class_group": {
+        "label": "Clase"
       },
       "email": {
         "label": "E-mail"

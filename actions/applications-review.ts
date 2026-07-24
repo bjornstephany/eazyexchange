@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
 import { logAudit } from '@/lib/audit'
+import { recordCommunicationEvent } from '@/lib/communication/events'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/db'
 
@@ -226,7 +227,12 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
             metadata: { exchange_id: app.exchange_id },
           })
 
-          void sendGoodNewsEmail({
+          // Awaited, not fire-and-forget: Historique must record what actually
+          // happened. This does NOT serialize a bulk accept — the whole
+          // per-application body already runs inside Promise.all over ids, so
+          // the Resend calls stay parallel; the action just waits for the
+          // slowest round-trip.
+          const sent = await sendGoodNewsEmail({
             to: parentRecipients(app.data as Record<string, string>, app.email),
             studentName: buildApplicantName(app.data),
             exchangeName: exchange?.name ?? '',
@@ -236,7 +242,16 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
             language: app.language === 'fr' ? 'fr' : 'en',
             personalNote: op.personalNote,
             ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
-          }).catch(() => {})
+          }).catch(() => false)
+
+          await recordCommunicationEvent(supabase, {
+            exchangeId: app.exchange_id,
+            actorId: user.id,
+            applicationId: id,
+            kind: 'good_news_sent',
+            subject: buildApplicantName(app.data),
+            status: sent ? 'ok' : 'failed',
+          })
           return { ok: true }
         }
 

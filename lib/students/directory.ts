@@ -153,8 +153,8 @@ export function buildStudentVM(input: {
     { l: 'Nom', v: dash(data.last_name) },
     { l: 'Prénom', v: dash(data.first_name) },
     { l: 'Date de naissance', v: data.date_of_birth ? frDob(data.date_of_birth) : '—' },
-    { l: 'Niveau 26-27', v: dash(data.grade) },
-    { l: 'Classe', v: dash(data.french_class) },
+    { l: 'Niveau', v: dash(data.grade) },
+    { l: 'Classe', v: dash(data.class_group) },
     { l: 'Langue maternelle', v: dash(data.native_language) },
     { l: 'E-mail', v: dash(data.email) === '—' ? student.email : dash(data.email) },
     { l: 'Téléphone', v: dash(data.cell_phone) },
@@ -165,7 +165,7 @@ export function buildStudentVM(input: {
     parentCard('MÈRE', 'mother', data),
   ].filter((x): x is ParentContact => x !== null)
 
-  const sub = [data.grade, data.french_class, data.native_language]
+  const sub = [data.grade, data.class_group, data.native_language]
     .map(v => (v ?? '').trim()).filter(Boolean).join(' · ')
 
   return {

@@ -20,10 +20,16 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
     if (nw !== cf) { setError(t('settings.errors.passwordMismatch')); return }
     setBusy(true)
     try {
-      await changePassword(cur, nw)
-      setDone(true); setOpen(false); setCur(''); setNw(''); setCf('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : c('errors.generic'))
+      const result = await changePassword(cur, nw)
+      if (result.ok) {
+        setDone(true); setOpen(false); setCur(''); setNw(''); setCf('')
+      } else {
+        // Every expected failure comes back here as a translated message;
+        // a throw would reach production as an opaque digest.
+        setError(result.message)
+      }
+    } catch {
+      setError(c('errors.generic'))
     }
     setBusy(false)
   }
@@ -63,7 +69,10 @@ export function SecurityCard({ canChangePassword }: { canChangePassword: boolean
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {pwFields.map(pf => (
               <div key={pf.key}>
-                <label htmlFor={`pw-${pf.key}`} className="mb-1.5 block text-xs font-semibold text-foreground">{pf.label}</label>
+                {/* min-h fits two wrapped lines: the labels are long enough to
+                    wrap in some locales, and without it the three inputs of the
+                    sm:grid-cols-3 row stop lining up. */}
+                <label htmlFor={`pw-${pf.key}`} className="mb-1.5 flex min-h-8 items-end text-xs font-semibold text-foreground">{pf.label}</label>
                 <input
                   id={`pw-${pf.key}`} type="password" value={pf.value}
                   onChange={e => pf.set(e.target.value)}

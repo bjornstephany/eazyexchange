@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   APPLICATION_SECTIONS, allApplicationFields,
-  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields, applicantInitials,
+  requiredApplicationFieldIds, missingRequiredApplication, parentGroupFields, overLimitApplicationFields,
+  invalidFormatApplicationFields, applicantInitials,
   parentRecipients,
 } from '../application-form'
 
@@ -179,6 +180,48 @@ describe('overLimitApplicationFields', () => {
       'recharge', 'todo_list', 'ideal_partner', 'share_when_hosting', 'anything_else',
     ])
     expect(limited.every(f => f.maxLength === 150)).toBe(true)
+  })
+})
+
+describe('invalidFormatApplicationFields', () => {
+  it('flags a malformed e-mail and a malformed phone', () => {
+    expect(invalidFormatApplicationFields({
+      email: 'marie@gmail.',
+      cell_phone: 'io',
+    })).toEqual(expect.arrayContaining(['email', 'cell_phone']))
+  })
+  it('accepts the formats real families type', () => {
+    expect(invalidFormatApplicationFields({
+      email: 'marie.dupont@gmail.com',
+      cell_phone: '06 12 34 56 78',
+      father_email: 'jean+ex@lycee-victor-hugo.fr',
+      father_cell_phone: '+33 6 12 34 56 78',
+    })).toEqual([])
+  })
+  it('ignores empty values — emptiness is missingRequiredApplication’s job', () => {
+    expect(invalidFormatApplicationFields({ email: '', cell_phone: '   ' })).toEqual([])
+  })
+  it('does not flag an untouched optional parent group', () => {
+    // The whole father block blank is a valid submission when the mother is
+    // complete; it must not light up red on format grounds.
+    expect(invalidFormatApplicationFields(emptied(FATHER_IDS))).toEqual([])
+  })
+  it('only looks at email and tel fields', () => {
+    // completeData() puts 'x' in every field — junk for an address or a number,
+    // fine for a name — so only the six contact fields may come back.
+    const flagged = invalidFormatApplicationFields(completeData())
+    expect(flagged.sort()).toEqual([
+      'cell_phone', 'email',
+      'father_cell_phone', 'father_email',
+      'mother_cell_phone', 'mother_email',
+    ])
+  })
+  it('coerces non-string payload values instead of throwing', () => {
+    // Server actions receive `data` from the client; Record<string,string> is
+    // not enforced at runtime.
+    const hostile = { email: { toString: () => 'nope' } } as unknown as Record<string, string>
+    expect(() => invalidFormatApplicationFields(hostile)).not.toThrow()
+    expect(invalidFormatApplicationFields(hostile)).toContain('email')
   })
 })
 

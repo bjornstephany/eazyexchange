@@ -109,6 +109,7 @@ export async function runRetentionSweep(now: Date, mode: SweepMode): Promise<Swe
 
   // 6. Simple age-based, service-role-only row purges.
   summary.emailSendLog = await purgeByAge(admin, mode, 'email_send_log', 'created_at', cutoff(now, 'emailSendLog'))
+  summary.communicationEvents = await purgeByAge(admin, mode, 'communication_events', 'created_at', cutoff(now, 'communicationEvents'))
   summary.auditLog = await purgeByAge(admin, mode, 'audit_log', 'created_at', cutoff(now, 'auditLog'))
   summary.rateLimits = await purgeByAge(admin, mode, 'rate_limits', 'window_start', cutoff(now, 'rateLimits'))
 

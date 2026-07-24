@@ -20,6 +20,7 @@ describe('retention rules', () => {
 
   it('encodes the policy windows', () => {
     expect(RETENTION_DAYS.emailSendLog).toBe(365)
+    expect(RETENTION_DAYS.communicationEvents).toBe(365)
     expect(RETENTION_DAYS.auditLog).toBe(730)
     expect(RETENTION_DAYS.errorReportsResolved).toBe(90)
     expect(RETENTION_DAYS.rejectedApplicant).toBe(182)

@@ -12,6 +12,7 @@ import {
   type Announcements,
   type DragEndEvent,
 } from '@dnd-kit/core'
+import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -91,10 +92,11 @@ function SortableExchangeRow({
     <div
       ref={setNodeRef}
       style={{
-        // Vertical axis only: the X component is dropped on purpose so a
-        // dragged row can never drift out of the 250 px rail. One line here
-        // instead of a third @dnd-kit package for one modifier.
-        transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
+        // Both axes are honoured here; the DndContext modifiers below are what
+        // bound the drag (vertical only, and never outside the rows' container).
+        transform: transform
+          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+          : undefined,
         transition,
       }}
       className={cn('group flex items-center gap-0.5', isDragging && 'relative z-10 opacity-80')}
@@ -247,6 +249,11 @@ export function ExchangeList({
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            // Vertical only (a row can never drift out of the 250 px rail), and
+            // clamped to the rows' own container — which starts below the
+            // "Mes échanges" header and ends at the last row, so a drag can run
+            // past neither end of the list.
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             onDragEnd={handleDragEnd}
             accessibility={{ announcements }}
           >

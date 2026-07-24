@@ -53,8 +53,7 @@
         "emailLabel": "Email address",
         "emailHint": "Contact support to change your address.",
         "schoolNameLabel": "School",
-        "schoolNameHint": "Only the owner can change the school name.",
-        "schoolNameLockedHint": "School verified against the French national education registry. Contact support to change it."
+        "schoolNameLockedHint": "Your school is set when your account is created. Contact support to change it."
       },
       "security": {
         "heading": "Security",
@@ -64,7 +63,7 @@
         "changeButton": "Change password",
         "currentPasswordLabel": "Current password",
         "newPasswordLabel": "New password",
-        "confirmPasswordLabel": "Confirm",
+        "confirmPasswordLabel": "Confirm new password",
         "submitButton": "Update password"
       },
       "team": {
@@ -116,7 +115,12 @@
         "description": "Sent to the parents when you accept an application. The Yes / No / Questions buttons are added automatically.",
         "subjectLabel": "Subject",
         "bodyLabel": "Message",
-        "placeholdersLabel": "Available placeholders:",
+        "whenSent": "Sent automatically to the parents when you accept an application.",
+        "insertLabel": "Insert:",
+        "tokens": {
+          "studentName": "Student’s first and last name",
+          "exchangeName": "Programme name"
+        },
         "previewLabel": "Preview",
         "resetToDefault": "Reset to the default template",
         "saveButton": "Save",
@@ -156,9 +160,14 @@
       },
       "errors": {
         "nameEmpty": "Name cannot be empty.",
-        "schoolNameEmpty": "School name cannot be empty.",
+        "nameTooLong": "Name cannot be longer than {max} characters.",
+        "profileSaveFailed": "Your profile could not be saved. Please try again.",
         "passwordUpdateFailed": "The password could not be updated. Please try again.",
-        "passwordMismatch": "Passwords do not match."
+        "passwordMismatch": "Passwords do not match.",
+        "currentPasswordIncorrect": "Current password is incorrect.",
+        "passwordTooShort": "Password must be at least 8 characters long.",
+        "passwordLeaked": "This password appears in known data breaches — please choose another one.",
+        "tooManyAttempts": "Too many attempts. Please wait a little while and try again."
       }
     },
     "dataPrivacy": {
@@ -238,7 +247,6 @@
       },
       "payment": {
         "noneNote": "No payment method on file.",
-        "addCta": "Add a card",
         "editCta": "Edit",
         "card": "{brand} •••• {last4} — expires {exp}"
       }
@@ -306,12 +314,38 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Templates",
+        "historique": "History",
         "auto": "Auto reminders"
+      },
+      "history": {
+        "heading": "History",
+        "description": "What has been published and sent to families for this programme.",
+        "empty": "Nothing has been sent or published for this programme yet.",
+        "infoPublished": "Note published: “{subject}”",
+        "infoUpdated": "Note updated: “{subject}”",
+        "infoDeleted": "Note deleted: “{subject}”",
+        "goodNews": "“Good news” email sent · {count, plural, one {# family} other {# families}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Show details",
+        "collapse": "Hide details",
+        "failedNotice": "the email did not go out"
       },
       "info": {
         "heading": "Key information",
         "description": "Add the program’s key information. Students see it in the “Infos” tab of their portal.",
         "addButton": "Add information",
+        "statusVisible": "Visible to students",
+        "publishedOn": "published on {date}",
+        "updatedOn": "updated on {date}",
+        "editButton": "Edit",
+        "cancelButton": "Cancel",
+        "publishButton": "Publish",
+        "showMore": "Show all",
+        "showLess": "Show less",
+        "deleteConfirmQuestion": "Delete? This note will disappear from the student portal.",
+        "deleteConfirmYes": "Confirm",
+        "discardConfirmQuestion": "Discard your changes?",
+        "discardConfirmYes": "Discard",
         "titlePlaceholder": "Title (e.g. Meeting point)",
         "bodyPlaceholder": "Details visible to students…",
         "saveButton": "Save",
@@ -457,7 +491,7 @@
       "bulkResult": "{s, plural, one {# processed} other {# processed}} · {f} failed",
       "tableHeader": {
         "student": "Student",
-        "level": "Grade 26-27",
+        "level": "Grade",
         "gender": "Gender",
         "receivedDate": "Received on",
         "status": "Status"
@@ -856,6 +890,7 @@
       "submitting": "Sending…",
       "missing": "Please complete all required fields.",
       "tooLong": "Some answers exceed the character limit.",
+      "badFormat": "Check the format of the highlighted e-mail and phone fields.",
       "unexpected": "An unexpected error occurred.",
       "registered": "This email is already registered for an exchange. Please log in to your account instead.",
       "done": "Thank you! Your application has been submitted.",
@@ -924,8 +959,8 @@
           "she_her": "She/her"
         }
       },
-      "grade": { "label": "Grade in 26-27" },
-      "french_class": { "label": "French class in 26-27" },
+      "grade": { "label": "Grade" },
+      "class_group": { "label": "Class group" },
       "email": { "label": "E-mail" },
       "cell_phone": { "label": "Cell phone" },
       "father_last_name": { "label": "Father — Last name" },
