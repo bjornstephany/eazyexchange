@@ -28,11 +28,13 @@ beforeEach(() => {
 })
 
 describe('confirmSignupCode', () => {
-  it('verifies the code, provisions, and redirects to /dashboard', async () => {
+  it('verifies the code, provisions, and redirects to /onboarding', async () => {
     const dest = await catchRedirect(() => confirmSignupCode('a@b.com', '123456'))
     expect(verifyOtp).toHaveBeenCalledWith({ email: 'a@b.com', token: '123456', type: 'signup' })
     expect(provisionOrganizer).toHaveBeenCalledTimes(1)
-    expect(dest).toBe('/dashboard')
+    // Not /dashboard: a fresh signup has no school, so routing it through a page
+    // the layout gate is guaranteed to bounce adds a hop that can only fail.
+    expect(dest).toBe('/onboarding')
   })
 
   it('returns invalid_code and does not provision on a bad code', async () => {

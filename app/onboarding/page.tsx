@@ -29,7 +29,11 @@ export default async function OnboardingPage() {
     .eq('school_a_id', profile.school_id)
   const ownedCount = count ?? 0
 
-  if (!mustOnboard(schoolName, ownedCount)) redirect('/dashboard')
+  // Onboarding is done — the only realistic visitor here is someone who just
+  // finished it, so land them where the work is. Keeping this identical to the
+  // action's own destination also means a revalidation-triggered re-render
+  // cannot flash a different page (spec §7).
+  if (!mustOnboard(schoolName, ownedCount)) redirect('/applications')
 
   // Blank name → start at the school-name step; named but no exchange → jump
   // straight to the first-exchange step.
