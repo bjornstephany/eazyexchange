@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
-import { NextIntlClientProvider } from 'next-intl'
-import fr from '@/messages/fr.json'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-const updateProfile = vi.fn().mockResolvedValue(undefined)
-const changePassword = vi.fn().mockResolvedValue(undefined)
+const updateProfile = vi.fn().mockResolvedValue({ ok: true })
+const changePassword = vi.fn().mockResolvedValue({ ok: true })
 vi.mock('@/actions/settings', () => ({
   updateProfile: (...a: unknown[]) => updateProfile(...a),
   changePassword: (...a: unknown[]) => changePassword(...a),
@@ -28,9 +26,6 @@ const baseProps = {
     schoolName: 'Lycée Frédéric Mistral',
   },
   isOwner: false,
-  // Not 'FR': the existing cases exercise the editable field, and a
-  // registry-verified French school is deliberately read-only.
-  schoolCountry: 'Espagne',
   canChangePassword: true,
   team: { members: [], pending: [] },
   billing: null,
@@ -52,26 +47,20 @@ describe('SettingsView — Compte', () => {
     expect(screen.getByLabelText('Établissement')).toHaveValue('Lycée Frédéric Mistral')
   })
 
-  it('Établissement is editable only for the owner', () => {
-    const { rerender } = render(<SettingsView {...baseProps} />) // admin
-    expect(screen.getByLabelText('Établissement')).toBeDisabled()
-    expect(screen.getByText('Seul le propriétaire peut modifier le nom de l’établissement.')).toBeInTheDocument()
-    rerender(
-      <NextIntlClientProvider locale="fr" messages={fr}>
-        <SettingsView {...baseProps} isOwner={true} />
-      </NextIntlClientProvider>
-    )
-    expect(screen.getByLabelText('Établissement')).toBeEnabled()
-  })
-
-  it('saves the profile and flashes confirmation', async () => {
+  it('saves only the full name, and flashes confirmation', async () => {
     render(<SettingsView {...baseProps} />)
     fireEvent.change(screen.getByLabelText('Nom complet'), { target: { value: 'Marie B. Blanchet' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
     expect(await screen.findByText('✓ Modifications enregistrées')).toBeInTheDocument()
-    expect(updateProfile).toHaveBeenCalledWith({
-      fullName: 'Marie B. Blanchet', schoolName: 'Lycée Frédéric Mistral',
-    })
+    expect(updateProfile).toHaveBeenCalledWith({ fullName: 'Marie B. Blanchet' })
+  })
+
+  it('shows the message of a structured save failure', async () => {
+    updateProfile.mockResolvedValueOnce({ ok: false, message: 'Le nom ne peut pas être vide.' })
+    render(<SettingsView {...baseProps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    expect(await screen.findByText('Le nom ne peut pas être vide.')).toBeInTheDocument()
+    expect(screen.queryByText('✓ Modifications enregistrées')).toBeNull()
   })
 
   it('password panel: mismatch is caught client-side', async () => {
@@ -79,7 +68,7 @@ describe('SettingsView — Compte', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modifier le mot de passe' }))
     fireEvent.change(screen.getByLabelText('Mot de passe actuel'), { target: { value: 'oldpassword' } })
     fireEvent.change(screen.getByLabelText('Nouveau mot de passe'), { target: { value: 'newpassword' } })
-    fireEvent.change(screen.getByLabelText('Confirmer'), { target: { value: 'other' } })
+    fireEvent.change(screen.getByLabelText('Confirmer le nouveau mot de passe'), { target: { value: 'other' } })
     fireEvent.click(screen.getByRole('button', { name: 'Mettre à jour le mot de passe' }))
     expect(await screen.findByText('Les mots de passe ne correspondent pas.')).toBeInTheDocument()
     expect(changePassword).not.toHaveBeenCalled()
@@ -90,10 +79,26 @@ describe('SettingsView — Compte', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modifier le mot de passe' }))
     fireEvent.change(screen.getByLabelText('Mot de passe actuel'), { target: { value: 'oldpassword' } })
     fireEvent.change(screen.getByLabelText('Nouveau mot de passe'), { target: { value: 'newpassword' } })
-    fireEvent.change(screen.getByLabelText('Confirmer'), { target: { value: 'newpassword' } })
+    fireEvent.change(screen.getByLabelText('Confirmer le nouveau mot de passe'), { target: { value: 'newpassword' } })
     fireEvent.click(screen.getByRole('button', { name: 'Mettre à jour le mot de passe' }))
     expect(await screen.findByText('✓ Mot de passe mis à jour')).toBeInTheDocument()
     expect(changePassword).toHaveBeenCalledWith('oldpassword', 'newpassword')
+  })
+
+  // The four expected failures (wrong current password, too short, leaked,
+  // rate limited) arrive as structured results — a throw would surface as an
+  // opaque digest in production.
+  it('password panel: a structured failure is shown verbatim and the panel stays open', async () => {
+    changePassword.mockResolvedValueOnce({ ok: false, message: 'Mot de passe actuel incorrect.' })
+    render(<SettingsView {...baseProps} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le mot de passe' }))
+    fireEvent.change(screen.getByLabelText('Mot de passe actuel'), { target: { value: 'wrongpassword' } })
+    fireEvent.change(screen.getByLabelText('Nouveau mot de passe'), { target: { value: 'newpassword' } })
+    fireEvent.change(screen.getByLabelText('Confirmer le nouveau mot de passe'), { target: { value: 'newpassword' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Mettre à jour le mot de passe' }))
+    expect(await screen.findByText('Mot de passe actuel incorrect.')).toBeInTheDocument()
+    expect(screen.queryByText('✓ Mot de passe mis à jour')).toBeNull()
+    expect(screen.getByLabelText('Mot de passe actuel')).toBeInTheDocument()
   })
 
   it('Google-only account: no password button, explanatory note instead', () => {
@@ -116,7 +121,7 @@ const owner = {
   billing: {
     planLabel: 'Essai gratuit', price: '0 €', per: '', desc: 'Votre premier échange est offert — aucun paiement requis.',
     usageLabel: '1 / 1 échange utilisé', usagePct: 100,
-    payment: { note: 'Aucun moyen de paiement enregistré.', cta: 'Ajouter une carte', href: '/billing' },
+    payment: { note: 'Aucun moyen de paiement enregistré.', manage: null },
   },
   program: {
     id: 'ex1', name: 'Programme Espagne', year: 2026, archived: false,
@@ -156,14 +161,36 @@ describe('SettingsView — owner sections', () => {
     expect(screen.queryByRole('button', { name: 'Révoquer' })).toBeNull()
   })
 
-  it('billing: plan card, usage, payment CTA', () => {
+  // On the trial the payment row carries no button at all: the card is
+  // collected when a plan is chosen, and a link to /billing (the plan-selection
+  // page) mislabelled "Add a card" is the second-subscription path.
+  it('billing: plan card, usage, and no payment button on the trial', () => {
     render(<SettingsView {...owner} />)
     fireEvent.click(screen.getByRole('button', { name: 'Facturation' }))
     expect(screen.getByText('Essai gratuit')).toBeInTheDocument()
     expect(screen.getByText('0 €')).toBeInTheDocument()
     expect(screen.getByText('1 / 1 échange utilisé')).toBeInTheDocument()
+    expect(screen.getByText('Aucun moyen de paiement enregistré.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Voir les forfaits' })).toHaveAttribute('href', '/billing')
-    expect(screen.getByRole('link', { name: 'Ajouter une carte' })).toHaveAttribute('href', '/billing')
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  it('billing: an active plan manages its card through the Stripe portal', () => {
+    render(
+      <SettingsView
+        {...owner}
+        billing={{
+          ...owner.billing,
+          payment: {
+            note: 'Visa •••• 4242 — expire 04/29',
+            manage: { cta: 'Modifier', href: '/billing/portal' },
+          },
+        }}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Facturation' }))
+    expect(screen.getByText('Visa •••• 4242 — expire 04/29')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Modifier' })).toHaveAttribute('href', '/billing/portal')
   })
 
   it('program: stats line, archive modal confirm', async () => {
@@ -213,16 +240,18 @@ describe('SettingsView — Programme for all organizers', () => {
   })
 })
 
-describe('SettingsView — the school name is locked for verified French schools', () => {
-  it('an owner cannot edit the name of a registry-verified school', () => {
-    render(<SettingsView {...baseProps} isOwner={true} schoolCountry="FR" />)
+// One rule, no exceptions: the school name is read-only for every organizer in
+// every country, so there is no client write path to schools.name left.
+describe('SettingsView — the school name is locked for everyone', () => {
+  it('an owner cannot edit it', () => {
+    render(<SettingsView {...baseProps} isOwner={true} />)
     expect(screen.getByLabelText('Établissement')).toBeDisabled()
-    expect(screen.getByText(/vérifié auprès de l’annuaire/)).toBeInTheDocument()
+    expect(screen.getByText(/défini à la création du compte/)).toBeInTheDocument()
   })
 
-  it('an owner can still edit the name of a school outside France', () => {
-    render(<SettingsView {...baseProps} isOwner={true} schoolCountry="Espagne" />)
-    expect(screen.getByLabelText('Établissement')).toBeEnabled()
-    expect(screen.queryByText(/vérifié auprès de l’annuaire/)).not.toBeInTheDocument()
+  it('an admin cannot edit it either', () => {
+    render(<SettingsView {...baseProps} />)
+    expect(screen.getByLabelText('Établissement')).toBeDisabled()
+    expect(screen.getByText(/défini à la création du compte/)).toBeInTheDocument()
   })
 })

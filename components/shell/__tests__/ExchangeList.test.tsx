@@ -21,9 +21,15 @@ vi.mock('@/actions/session', () => ({
 // (grips included) and capture onDragEnd to drive the drop path deterministically.
 // The reorder math itself is pure and covered in lib/shell/__tests__/exchange-order.test.ts.
 let dragEnd: ((event: unknown) => void) | undefined
+let dragModifiers: unknown[] | undefined
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd }: { children: React.ReactNode; onDragEnd: (e: unknown) => void }) => {
+  DndContext: ({ children, onDragEnd, modifiers }: {
+    children: React.ReactNode
+    onDragEnd: (e: unknown) => void
+    modifiers?: unknown[]
+  }) => {
     dragEnd = onDragEnd
+    dragModifiers = modifiers
     return <>{children}</>
   },
   closestCenter: () => [],
@@ -69,7 +75,20 @@ describe('ExchangeList', () => {
     setActive.mockClear()
     setOrder.mockClear()
     dragEnd = undefined
+    dragModifiers = undefined
     mockPathname = '/students'
+  })
+
+  // Without these a row drags downward without limit and upward past the
+  // "Mes échanges" header. restrictToParentElement clamps travel to the rows'
+  // own container, which is why it can handle non-uniform row heights (an
+  // archived row carries an extra badge).
+  it('bounds the drag to the vertical axis and to the rows container', async () => {
+    const { restrictToParentElement, restrictToVerticalAxis } = await import('@dnd-kit/modifiers')
+    renderWithIntl(
+      <ExchangeList exchanges={exchanges} activeId="ex1" collapsed={false} onNewExchange={() => {}} />,
+    )
+    expect(dragModifiers).toEqual([restrictToVerticalAxis, restrictToParentElement])
   })
 
   it('lists every exchange with the group header and the add pill', () => {
