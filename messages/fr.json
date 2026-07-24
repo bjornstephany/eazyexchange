@@ -412,6 +412,27 @@
       "subtitle": "Candidature · {exchangeName} · {year}",
       "heading": "Candidatures",
       "emptyState": "Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.",
+      "empty": {
+        "title": "Invitez vos élèves à postuler",
+        "body": "Fixez une date limite, puis partagez le lien de candidature ou laissez-nous écrire à vos élèves. Les candidatures ouvrent dès l'enregistrement.",
+        "cta": "Inviter vos élèves à postuler"
+      },
+      "openDialog": {
+        "title": "Inviter vos élèves à postuler",
+        "description": "Choisissez une date limite. Les candidatures ouvrent aussitôt.",
+        "deadlineLabel": "Date limite des candidatures",
+        "saving": "Ouverture…",
+        "methodHeading": "Comment souhaitez-vous inviter ?",
+        "lockedHint": "Choisissez une date limite pour débloquer ces options.",
+        "linkHeading": "Partager un lien",
+        "emailHeading": "Ou laissez-nous envoyer les e-mails",
+        "done": "Terminé"
+      },
+      "panel": {
+        "summaryOpen": "Candidatures ouvertes",
+        "summaryClosed": "Candidatures fermées",
+        "deadlineSuffix": " · date limite {date}"
+      },
       "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
       "stateOpen": "Ouvert",
       "stateClosed": "Fermé",

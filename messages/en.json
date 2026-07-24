@@ -412,6 +412,27 @@
       "subtitle": "Application · {exchangeName} · {year}",
       "heading": "Applications",
       "emptyState": "No applications received yet — share the application link with your students.",
+      "empty": {
+        "title": "Invite your students to apply",
+        "body": "Set a deadline, then share the application link or let us email your students. Applications open as soon as you save.",
+        "cta": "Invite your students to apply"
+      },
+      "openDialog": {
+        "title": "Invite your students to apply",
+        "description": "Choose a deadline. Applications open as soon as you pick one.",
+        "deadlineLabel": "Application deadline",
+        "saving": "Opening…",
+        "methodHeading": "How do you want to invite?",
+        "lockedHint": "Choose a deadline to unlock these.",
+        "linkHeading": "Share a link",
+        "emailHeading": "Or let us send the emails",
+        "done": "Done"
+      },
+      "panel": {
+        "summaryOpen": "Applications open",
+        "summaryClosed": "Applications closed",
+        "deadlineSuffix": " · deadline {date}"
+      },
       "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
       "stateOpen": "Open",
       "stateClosed": "Closed",

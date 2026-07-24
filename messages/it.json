@@ -412,6 +412,27 @@
       "subtitle": "Candidatura · {exchangeName} · {year}",
       "heading": "Candidature",
       "emptyState": "Nessuna candidatura ricevuta al momento — condividi il link di candidatura con i tuoi studenti.",
+      "empty": {
+        "title": "Invita i tuoi studenti a candidarsi",
+        "body": "Imposta una scadenza, poi condividi il link di candidatura o lascia che scriviamo noi ai tuoi studenti. Le candidature si aprono al salvataggio.",
+        "cta": "Invita i tuoi studenti a candidarsi"
+      },
+      "openDialog": {
+        "title": "Invita i tuoi studenti a candidarsi",
+        "description": "Scegli una scadenza. Le candidature si apriranno subito.",
+        "deadlineLabel": "Scadenza delle candidature",
+        "saving": "Apertura…",
+        "methodHeading": "Come vuoi invitare?",
+        "lockedHint": "Scegli una scadenza per sbloccare queste opzioni.",
+        "linkHeading": "Condividere un link",
+        "emailHeading": "Oppure lascia che inviamo noi le e-mail",
+        "done": "Fatto"
+      },
+      "panel": {
+        "summaryOpen": "Candidature aperte",
+        "summaryClosed": "Candidature chiuse",
+        "deadlineSuffix": " · scadenza {date}"
+      },
       "countSummary": "{n, plural, one {# candidatura ricevuta} other {# candidature ricevute}} per {exchangeName}.",
       "stateOpen": "Aperto",
       "stateClosed": "Chiuso",

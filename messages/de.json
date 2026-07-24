@@ -412,6 +412,27 @@
       "subtitle": "Bewerbung · {exchangeName} · {year}",
       "heading": "Bewerbungen",
       "emptyState": "Noch keine Bewerbungen eingegangen — teilen Sie den Bewerbungslink mit Ihren Schülern.",
+      "empty": {
+        "title": "Laden Sie Ihre Schüler zur Bewerbung ein",
+        "body": "Legen Sie eine Frist fest und teilen Sie dann den Bewerbungslink, oder lassen Sie uns Ihre Schüler anschreiben. Die Bewerbungen öffnen sofort nach dem Speichern.",
+        "cta": "Schüler zur Bewerbung einladen"
+      },
+      "openDialog": {
+        "title": "Schüler zur Bewerbung einladen",
+        "description": "Wählen Sie eine Frist. Die Bewerbungen werden sofort geöffnet.",
+        "deadlineLabel": "Bewerbungsfrist",
+        "saving": "Wird geöffnet…",
+        "methodHeading": "Wie möchten Sie einladen?",
+        "lockedHint": "Wählen Sie eine Frist, um diese Optionen freizuschalten.",
+        "linkHeading": "Einen Link teilen",
+        "emailHeading": "Oder lassen Sie uns die E-Mails senden",
+        "done": "Fertig"
+      },
+      "panel": {
+        "summaryOpen": "Bewerbungen offen",
+        "summaryClosed": "Bewerbungen geschlossen",
+        "deadlineSuffix": " · Frist {date}"
+      },
       "countSummary": "{n, plural, one {# Bewerbung erhalten} other {# Bewerbungen erhalten}} für {exchangeName}.",
       "stateOpen": "Offen",
       "stateClosed": "Geschlossen",
