@@ -141,3 +141,85 @@ Item 1 result — they can run as soon as the §1 rewrite is settled.
   (already done) and not the Site URL (verified correct). Only: edit the prod
   confirmation template's fallback link `next=/dashboard` → `next=/onboarding`,
   so it matches the three code paths Task 10 repoints.
+
+---
+
+## Staging verification (Task 11, Step 3) — 2026-07-24
+
+Run against **staging** (`loygdbjdyciipvdcpvmr`) with a purpose-made organizer
+(`onboarding-check@example.com`, named school + no exchange = step 2), driven
+with Playwright. The demo seed was deliberately **not** touched — the plan's
+Task 1 Step 2 deletes the seeded exchanges, which would disrupt any sibling
+session using staging. The test user, its school and its exchange were deleted
+afterwards; staging is back to how it was found.
+
+| # | Check | Verdict |
+|---|---|---|
+| 1 | Step 2 shows four inputs only, no « Informations complémentaires », no card textareas | **PASS** (exactly 4 inputs found) |
+| 2 | Return-before-departure shows the error immediately and disables « Continuer » | **PASS**, and it clears + re-enables once fixed |
+| 3 | Typing, closing the tab, reopening `/onboarding` restores the text | **PASS** (name, destination and both dates restored) |
+| 4 | « Continuer » lands on `/applications` with no intermediate screen | **PASS** — observed navigation sequence was `/applications`, nothing else |
+| 5 | Réglages → Programme shows, saves and reloads the three acceptance-email fields | **PASS** (values survived a full reload) |
+
+No hydration warnings and no browser console errors on any page. The dev
+overlay's « 1 Issue » badge is the pre-existing multiple-lockfiles workspace
+warning, unrelated to this branch.
+
+### ⚠️ `pnpm dev` points at PRODUCTION, not staging
+
+The plan's Task 1 Step 3 says to start the dev server with a bare `pnpm dev` and
+drive it "against staging". **It is not against staging.** `.env.local` — which
+`pnpm wt` links into every worktree — holds the **prod** project
+(`rgisrqlbcjdoetoybaqd`); `.env.staging` is a separate file the dev server does
+not read. Following that step literally would have created the test organizer,
+school and exchange **in production**.
+
+It surfaced only as a confusing « Invalid login credentials »: the test user had
+been made on staging, and the browser was talking to prod.
+
+To actually drive staging, export the staging values over the prod ones (shell
+env beats `.env.local` in Next.js):
+
+```bash
+set -a; source .env.staging; set +a
+env NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+    SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+    NEXT_PUBLIC_APP_URL=http://localhost:3293 \
+    pnpm dev
+```
+
+Two smaller traps in the same area: the Supabase **MCP tools are wired to prod**,
+so they cannot be used to set up staging fixtures; and `psql` is not installed in
+this environment, so the plan's `psql "$STAGING_DB_URL"` snippets do not run —
+use a small `@supabase/supabase-js` script with the staging service-role key,
+executed from inside the worktree so `node_modules` resolves.
+
+### Out of scope, but observed
+
+The **login** page still routes organizers to `/dashboard`, so a returning
+mid-onboarding organizer goes `/login → /dashboard → /onboarding`. Task 10 fixed
+the three *confirmation* paths; this is the same wasted hop on the login path
+(`app/(auth)/login/page.tsx`, the `router.push` after `signInWithPassword`).
+Harmless today because the layout gate catches it — and, since `bbbca13`, no
+longer able to loop — but it is the identical pattern the spec's §1 argues
+against. Worth a backlog line rather than a scope grab here.
+
+## Manual steps (Bjorn only)
+
+- [ ] **Supabase → Authentication → Email Templates → Confirm signup.** The
+      template does **not** need the `{{ .ConfirmationURL }}` replacement the
+      plan anticipated — it is already token-only (see the Item 1 verdict). The
+      one change still wanted is the fallback link's destination, so it matches
+      the three code paths Task 10 repointed:
+
+      from: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard
+      to:   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding
+
+      Low urgency: `/dashboard` still works, it just costs the extra hop.
+
+- [ ] **Prod smoke:** fresh `/signup` → confirm → lands on `/onboarding` →
+      finish → lands on `/applications`. Prod's `users` table is empty, so this
+      starts clean. This is also the only way to close out the blank-tab
+      question — the loop is fixed by construction, but that a real signup was
+      producing the null profile remains inference.
