@@ -19,7 +19,7 @@
 | 7 | Shrink `first-exchange` to the required fields | not started |
 | 8 | `completeFirstExchange` derives, then redirects | not started |
 | 9 | `OnboardingForm` — two steps, live date check, draft | not started |
-| 10 | Entry and exit redirects | not started |
+| 10 | Entry and exit redirects | **partial** — blank-tab loop fixed (`bbbca13`); repointing the three paths at `/onboarding` still to do |
 | 11 | Full gate, staging verification, manual steps | not started |
 
 Update this table as each task lands. Nothing here depends on conversation
@@ -106,6 +106,28 @@ green, `pnpm build` green.
 - **One more Management-API read would help**, same endpoint, field `site_url` —
   a stale prod Auth Site URL is now the top blank-tab suspect and is the only
   part of the fallback link neither code nor the first read covers.
+
+## Blank-tab loop fix (`bbbca13`) — what is and is not proven
+
+`lib/auth/shell-destination.ts` is now the single decision for "which shell does
+this request belong in", and a missing profile leaves the shells for `/login`
+instead of picking the other one. Applied at four sites: both shell layouts,
+`/onboarding`, `/billing`. `/communication` already went to `/login`.
+
+- **Proven:** the loop is gone by construction, and ten tests pin it, including
+  the property that neither shell may send a missing profile to the other and
+  that both agree on one destination. Gate green: lint, tsc, 1507 tests / 208
+  files, build.
+- **Still unproven:** that this is what Bjorn actually saw. The mechanism is
+  certain; that a fresh prod signup produces the null profile is inference. A
+  real prod signup, or an `error_reports` / Vercel-log check for a redirect burst
+  around a signup, would close it. **Do not report the blank tab as fixed until
+  one of those happens** — report it as "the loop that would cause it is fixed".
+- If the null profile is caused by admin-write-then-RLS-read lag in
+  `/auth/confirm`, the organizer now gets a `/login` page instead of a blank tab.
+  That is strictly better but still not "into the product" — a retry or a short
+  read-back wait in `provisionOrganizer` may be the real cure. Not in scope here;
+  worth a backlog line if the prod check confirms the lag.
 
 ## Ordering constraints
 
