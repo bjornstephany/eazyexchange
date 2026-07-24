@@ -19,6 +19,8 @@ let scenario: {
   createUserResult: any            // returned by auth.admin.createUser
   generateLinkAttrs: any | null    // captured attrs of auth.admin.generateLink
   generateLinkResult: any          // returned by auth.admin.generateLink
+  generateLinkResults: any[]       // consumed first, one per call (for retry tests)
+  generateLinkCalls: number        // how many times auth.admin.generateLink was called
   verifyOtpAttrs: any | null       // captured attrs of auth.verifyOtp
   verifyOtpResult: any             // returned by auth.verifyOtp
   userProfile: any | null          // routes rowFor('users') for getInvitation's maybeSingle lookup
@@ -109,7 +111,15 @@ const adminClient = {
   auth: {
     admin: {
       createUser: async (attrs: any) => { scenario.createUserAttrs = attrs; return scenario.createUserResult },
-      generateLink: async (attrs: any) => { scenario.generateLinkAttrs = attrs; return scenario.generateLinkResult },
+      generateLink: async (attrs: any) => {
+        scenario.generateLinkAttrs = attrs
+        scenario.generateLinkCalls++
+        // A queued result models a flaky auth endpoint across retries; falling
+        // back to generateLinkResult keeps every pre-existing scenario valid.
+        return scenario.generateLinkResults.length
+          ? scenario.generateLinkResults.shift()
+          : scenario.generateLinkResult
+      },
       deleteUser: async (id: string) => { scenario.deletedAuthUserId = id; return { error: null } },
     },
     // The cookie-aware server client is mocked to this same object, so the
@@ -158,10 +168,12 @@ vi.mock('@/lib/email', () => ({
   sendChecklistEmail: vi.fn().mockResolvedValue(true),
   sendStudentSetupEmail: vi.fn().mockResolvedValue(undefined),
 }))
+vi.mock('@/lib/email-log', () => ({ logEmailSend: vi.fn().mockResolvedValue(undefined) }))
 
 import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
 import { respondToInvitation, getInvitation } from '../invitations'
 import { sendApplicationResumeEmail, sendStudentSetupEmail } from '@/lib/email'
+import { logEmailSend } from '@/lib/email-log'
 import { allApplicationFields } from '@/lib/application-form'
 
 function completeAppData(): Record<string, string> {
@@ -186,6 +198,8 @@ beforeEach(() => {
     createUserAttrs: null,
     createUserResult: { data: { user: { id: 'new-user' } }, error: null },
     generateLinkAttrs: null,
+    generateLinkResults: [],
+    generateLinkCalls: 0,
     generateLinkResult: { data: { properties: { hashed_token: 'hash-1' } }, error: null },
     verifyOtpAttrs: null,
     verifyOtpResult: { data: { session: {} }, error: null },
@@ -495,6 +509,34 @@ describe('respondToInvitation', () => {
     expect(res).toEqual({ ok: true })
     // enrollment was still finalized
     expect(scenario.updates.some((u) => u.row.status === 'enrolled')).toBe(true)
+  })
+  // Supabase auth intermittently 403s service-role calls to /admin/generate_link
+  // ("bad_jwt"). A single blip used to cost the student their only route to an
+  // account — silently, with no trace anywhere. Retry, then record the loss.
+  it('retries a transient generateLink failure and still emails the student', async () => {
+    scenario.generateLinkResults = [
+      { data: null, error: { status: 403, code: 'bad_jwt', message: 'invalid JWT' } },
+      { data: { properties: { hashed_token: 'hash-2' } }, error: null },
+    ]
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.generateLinkCalls).toBe(2)
+    expect(sendStudentSetupEmail).toHaveBeenCalledTimes(1)
+    expect((sendStudentSetupEmail as any).mock.calls[0][0].setupUrl).toContain('token_hash=hash-2')
+    expect(logEmailSend).not.toHaveBeenCalled()
+  })
+  it('logs an email_send_log error row when every generateLink attempt fails', async () => {
+    scenario.generateLinkResult = { data: null, error: { status: 403, code: 'bad_jwt', message: 'invalid JWT' } }
+    const res = await respondToInvitation('inv-1', 'yes', '')
+    expect(res).toEqual({ ok: true })
+    expect(scenario.generateLinkCalls).toBe(3)
+    expect(sendStudentSetupEmail).not.toHaveBeenCalled()
+    // The loss must be queryable — email_send_log is the operational trail.
+    expect(logEmailSend).toHaveBeenCalledTimes(1)
+    expect((logEmailSend as any).mock.calls[0][0]).toMatchObject({
+      recipient: 'a@b.co', kind: 'student setup email', status: 'error', errorCode: 403,
+      schoolId: 's-1', exchangeId: 'ex-1',
+    })
   })
   it('returns email_exists and releases the claim when the auth account already exists', async () => {
     scenario.createUserResult = { data: { user: null }, error: { code: 'email_exists', message: 'exists' } }

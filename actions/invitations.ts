@@ -4,6 +4,7 @@ import { applicantName as buildApplicantName } from '@/lib/application-form'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { tokenExpired } from '@/lib/tokens'
 import { sendChecklistEmail, sendStudentSetupEmail } from '@/lib/email'
+import { logEmailSend } from '@/lib/email-log'
 import { getAppUrl } from '@/lib/app-url'
 import { inviteError, type InviteActionResult } from '@/lib/invite-response'
 import { DEFAULT_LOCALE, isLocale } from '@/lib/i18n/config'
@@ -193,6 +194,16 @@ export async function respondToInvitation(
   return { ok: true }
 }
 
+// Supabase's auth admin API intermittently rejects service-role calls with a
+// 403 `bad_jwt`, so a single generateLink attempt is not a reliable signal. This
+// email is the student's ONLY route to an account — the invite page shows the
+// parent "already confirmed" on a revisit and offers no resend — so one blip
+// used to strand the student permanently. Retry, then leave a trail.
+const SETUP_LINK_ATTEMPTS = 3
+const SETUP_LINK_BACKOFF_MS = [150, 400]
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 // Emails the student a magiclink /auth/confirm setup URL (NOT a session in the
 // parent's browser). generateLink returns a hashed OTP token without sending any
 // email; we deliver it via Resend so app/auth/confirm/route.ts verifies it and
@@ -202,12 +213,30 @@ async function emailStudentSetupLink(
   opts: { email: string; schoolId: string; exchangeId: string },
 ): Promise<void> {
   try {
-    const { data: link, error } = await admin.auth.admin.generateLink({
-      type: 'magiclink', email: opts.email,
-    })
-    const tokenHash = link?.properties?.hashed_token
-    if (error || !tokenHash) {
-      console.warn('[invitations] student setup link generation failed — no email sent')
+    let tokenHash: string | undefined
+    let lastStatus: number | null = null
+    for (let attempt = 0; attempt < SETUP_LINK_ATTEMPTS; attempt++) {
+      const { data: link, error } = await admin.auth.admin.generateLink({
+        type: 'magiclink', email: opts.email,
+      })
+      tokenHash = link?.properties?.hashed_token
+      if (!error && tokenHash) break
+      tokenHash = undefined
+      lastStatus = (error as { status?: number } | null)?.status ?? null
+      const backoff = SETUP_LINK_BACKOFF_MS[attempt]
+      if (backoff !== undefined) await sleep(backoff)
+    }
+    if (!tokenHash) {
+      console.warn(
+        `[invitations] student setup link generation failed after ${SETUP_LINK_ATTEMPTS} attempts — no email sent`,
+      )
+      // The send never reached Resend, so send() logged nothing. Write the row
+      // here instead: email_send_log is the only place this loss is queryable,
+      // and it is the RLS-protected home for the recipient address.
+      await logEmailSend({
+        recipient: opts.email, kind: 'student setup email', status: 'error',
+        errorCode: lastStatus, schoolId: opts.schoolId, exchangeId: opts.exchangeId,
+      })
       return
     }
     const setupUrl =
