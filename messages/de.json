@@ -426,7 +426,8 @@
         "lockedHint": "Wählen Sie eine Frist, um diese Optionen freizuschalten.",
         "linkHeading": "Einen Link teilen",
         "emailHeading": "Oder lassen Sie uns die E-Mails senden",
-        "done": "Fertig"
+        "done": "Fertig",
+        "openError": "Die Bewerbungen konnten nicht geöffnet werden. Bitte versuchen Sie es erneut."
       },
       "panel": {
         "summaryOpen": "Bewerbungen offen",

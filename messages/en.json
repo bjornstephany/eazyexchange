@@ -426,7 +426,8 @@
         "lockedHint": "Choose a deadline to unlock these.",
         "linkHeading": "Share a link",
         "emailHeading": "Or let us send the emails",
-        "done": "Done"
+        "done": "Done",
+        "openError": "Applications could not be opened. Please try again."
       },
       "panel": {
         "summaryOpen": "Applications open",

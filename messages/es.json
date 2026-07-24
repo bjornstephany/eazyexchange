@@ -426,7 +426,8 @@
         "lockedHint": "Elija una fecha límite para desbloquear estas opciones.",
         "linkHeading": "Compartir un enlace",
         "emailHeading": "O deje que enviemos los correos",
-        "done": "Listo"
+        "done": "Listo",
+        "openError": "No se han podido abrir las candidaturas. Vuelva a intentarlo."
       },
       "panel": {
         "summaryOpen": "Candidaturas abiertas",

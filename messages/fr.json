@@ -426,7 +426,8 @@
         "lockedHint": "Choisissez une date limite pour débloquer ces options.",
         "linkHeading": "Partager un lien",
         "emailHeading": "Ou laissez-nous envoyer les e-mails",
-        "done": "Terminé"
+        "done": "Terminé",
+        "openError": "Impossible d'ouvrir les candidatures. Veuillez réessayer."
       },
       "panel": {
         "summaryOpen": "Candidatures ouvertes",

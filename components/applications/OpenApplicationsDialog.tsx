@@ -34,10 +34,11 @@ export function OpenApplicationsDialog({
   const [saving, setSaving] = useState(false)
   const [opened, setOpened] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Reset transient state each time the dialog is opened.
   useEffect(() => {
-    if (open) { setDeadline(''); setSaving(false); setOpened(false); setCopied(false) }
+    if (open) { setDeadline(''); setSaving(false); setOpened(false); setCopied(false); setError(null) }
   }, [open])
 
   const applyUrl =
@@ -51,10 +52,16 @@ export function OpenApplicationsDialog({
     if (!next) return
     setDeadline(next)
     setSaving(true)
+    setError(null)
     try {
       await setApplicationOpen(exchangeId, true, next)
       setOpened(true)
       onOpened(next)
+    } catch {
+      // Roll the optimistic value back so re-picking the SAME date still fires a
+      // change event — otherwise the only way to retry is to pick a different one.
+      setDeadline('')
+      setError(t('openError'))
     } finally {
       setSaving(false)
     }
@@ -88,6 +95,10 @@ export function OpenApplicationsDialog({
             className="h-12"
           />
         </div>
+
+        {error && (
+          <div className="rounded-[10px] border border-[#F0C674] bg-[#FDF6E7] px-3.5 py-2.5 text-[13px] font-medium text-[#8A6100]">{error}</div>
+        )}
 
         <p className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary">
           {t('methodHeading')}

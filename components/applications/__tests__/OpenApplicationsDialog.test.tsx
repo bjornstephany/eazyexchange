@@ -87,4 +87,16 @@ describe('OpenApplicationsDialog', () => {
     await screen.findByRole('button', { name: 'Terminé' })
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
   })
+
+  it('surfaces a retryable error when opening applications fails', async () => {
+    setApplicationOpen.mockRejectedValueOnce(new Error('boom'))
+    const { onOpened } = setup()
+    const field = screen.getByLabelText('Date limite des candidatures')
+    fireEvent.change(field, { target: { value: '2026-09-01' } })
+    await screen.findByText("Impossible d'ouvrir les candidatures. Veuillez réessayer.")
+    expect(onOpened).not.toHaveBeenCalled()
+    // The optimistic value is rolled back, so re-picking the same date still fires a change.
+    expect(field).toHaveValue('')
+    expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
+  })
 })
