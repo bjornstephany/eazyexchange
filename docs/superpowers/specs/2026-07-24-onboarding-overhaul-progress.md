@@ -12,8 +12,8 @@
 |---|---|---|
 | 1 | Reproduce the blank tab and the « Continuer » flash | not started |
 | 2 | Migration — three acceptance-email columns | **done** (`782d542`) |
-| 3 | `good-news-fields` pure module | not started |
-| 4 | `saveProgramDetails` persists the three columns | not started |
+| 3 | `good-news-fields` pure module | **done** (`60dfaa6`) |
+| 4 | `saveProgramDetails` persists the three columns | **done** (`4428cf1`) |
 | 5 | Réglages → Programme edits the acceptance-email values | not started |
 | 6 | Onboarding draft module | not started |
 | 7 | Shrink `first-exchange` to the required fields | not started |
@@ -51,6 +51,32 @@ running. Triage on resume found its work complete but uncommitted:
   new keys in its fixture to satisfy the widened `Row` type; that one-file
   change rode along in Task 2's commit so the tree compiles at every commit.
   Task 5 extends the same file further.
+
+## Task 4 notes (recovered after a second crash)
+
+The session that ran Task 3 was killed before it updated this table — Task 3's
+commit `60dfaa6` was already on the branch when the next session resumed. Check
+`git log` against this table before trusting it.
+
+Two plan corrections found while implementing Task 4:
+
+- The plan says to **create** `actions/__tests__/fillable-program-details.test.ts`.
+  That file **already exists** and is tracked (`dfcf258`, `3f4af85`) with nine
+  tests, including the two authorization checks. Writing the plan's version over
+  it would have silently deleted them. The four new cases were appended as a
+  second `describe` block instead, the shared mock grew an `upserted` capture
+  array, and `validInput` is now typed `ProgramDetailsInput` so it fails compile
+  if the type widens again.
+- Widening `ProgramDetailsInput` with three **required** fields breaks
+  `components/settings/ProgramDetailsCard.tsx` — the plan does not mention it
+  until Task 5. Task 4's commit bridges the three values through from `initial`
+  rather than passing `null`: a `null` pass-through would have blanked the
+  acceptance-email columns on every save from Réglages between Tasks 4 and 5.
+  **Task 5 must replace that bridge with real form state**, not add inputs
+  alongside it.
+
+Gate after Task 4: lint clean, `npx tsc --noEmit` clean, 1492 tests / 207 files
+green (run with `--exclude '**/.claude/**'`).
 
 ## Blocked on Bjorn
 
