@@ -5,7 +5,7 @@ vi.mock('@/lib/rate-limit', () => ({ clientIp: async () => 'ip', enforceRateLimi
 const sendInvite = vi.fn(async (..._a: unknown[]) => {})
 vi.mock('@/lib/email', () => ({
   sendApplicationInviteEmail: (...a: unknown[]) => sendInvite(...a),
-  sendGoodNewsEmail: vi.fn(), sendApplicationRejectionEmail: vi.fn(),
+  sendGoodNewsEmail: vi.fn(async () => true), sendApplicationRejectionEmail: vi.fn(),
 }))
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn(async () => {}) }))
 vi.mock('@/lib/supabase/request', () => ({
