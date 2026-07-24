@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { getExchanges, getInfoCards } from '@/actions/exchanges'
 import { getCommunicationSettings } from '@/actions/settings'
+import { getCommunicationEvents } from '@/actions/communication'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { CommunicationView } from '@/components/communication/CommunicationView'
 
@@ -25,9 +26,10 @@ export default async function CommunicationPage() {
   // dashboard (the rail tab itself only renders when an exchange is active).
   if (!active) redirect('/dashboard')
 
-  const [infoCards, comms] = await Promise.all([
+  const [infoCards, comms, events] = await Promise.all([
     getInfoCards(active.id),
     getCommunicationSettings(active.id),
+    getCommunicationEvents(active.id),
   ])
 
   return (
@@ -40,6 +42,7 @@ export default async function CommunicationPage() {
       reminderCadence={comms.reminderCadence}
       goodNewsSubject={comms.goodNewsSubject}
       goodNewsBody={comms.goodNewsBody}
+      events={events}
     />
   )
 }

@@ -5,6 +5,8 @@ import type { InfoCard, ReminderCadence } from '@/actions/exchanges'
 import { InfoCardsCard } from './InfoCardsCard'
 import { GoodNewsCard } from './GoodNewsCard'
 import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
+import type { CommunicationEvent } from '@/lib/communication/history'
+import { HistoryCard } from './HistoryCard'
 
 export type CommunicationProps = {
   exchangeId: string
@@ -15,9 +17,10 @@ export type CommunicationProps = {
   reminderCadence: ReminderCadence
   goodNewsSubject: string
   goodNewsBody: string
+  events: CommunicationEvent[]
 }
 
-type SubTab = 'infos' | 'modeles' | 'auto'
+type SubTab = 'infos' | 'modeles' | 'historique' | 'auto'
 
 export function CommunicationView(props: CommunicationProps) {
   const t = useTranslations('organizer')
@@ -25,6 +28,7 @@ export function CommunicationView(props: CommunicationProps) {
   const tabs: { key: SubTab; label: string }[] = [
     { key: 'infos', label: t('communication.tabs.infos') },
     { key: 'modeles', label: t('communication.tabs.modeles') },
+    { key: 'historique', label: t('communication.tabs.historique') },
     { key: 'auto', label: t('communication.tabs.auto') },
   ]
 
@@ -66,6 +70,9 @@ export function CommunicationView(props: CommunicationProps) {
               readOnly={props.archived}
             />
           )}
+          {/* Historique is read-only by nature, so `archived` deliberately
+              does not reach it. */}
+          {tab === 'historique' && <HistoryCard events={props.events} />}
           {tab === 'auto' && (
             <ReminderSettingsCard
               exchangeId={props.exchangeId}

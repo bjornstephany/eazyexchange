@@ -304,7 +304,21 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Modelli",
+        "historique": "Cronologia",
         "auto": "Promemoria auto."
+      },
+      "history": {
+        "heading": "Cronologia",
+        "description": "Ciò che è stato pubblicato e inviato alle famiglie per questo programma.",
+        "empty": "Non è ancora stato inviato né pubblicato nulla per questo programma.",
+        "infoPublished": "Informazione pubblicata: «{subject}»",
+        "infoUpdated": "Informazione modificata: «{subject}»",
+        "infoDeleted": "Informazione eliminata: «{subject}»",
+        "goodNews": "E-mail «Buona notizia» inviata · {count, plural, one {# famiglia} other {# famiglie}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Vedi il dettaglio",
+        "collapse": "Nascondi il dettaglio",
+        "failedNotice": "l’e-mail non è partita"
       },
       "info": {
         "heading": "Informazioni utili",

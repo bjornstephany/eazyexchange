@@ -304,7 +304,21 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Vorlagen",
+        "historique": "Verlauf",
         "auto": "Auto-Erinnerungen"
+      },
+      "history": {
+        "heading": "Verlauf",
+        "description": "Was für dieses Programm veröffentlicht und an die Familien gesendet wurde.",
+        "empty": "Für dieses Programm wurde noch nichts gesendet oder veröffentlicht.",
+        "infoPublished": "Information veröffentlicht: „{subject}“",
+        "infoUpdated": "Information geändert: „{subject}“",
+        "infoDeleted": "Information gelöscht: „{subject}“",
+        "goodNews": "E-Mail „Gute Nachricht“ gesendet · {count, plural, one {# Familie} other {# Familien}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Details anzeigen",
+        "collapse": "Details ausblenden",
+        "failedNotice": "die E-Mail wurde nicht versendet"
       },
       "info": {
         "heading": "Wichtige Infos",

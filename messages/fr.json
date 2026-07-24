@@ -304,7 +304,21 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Modèles",
+        "historique": "Historique",
         "auto": "Réglages auto"
+      },
+      "history": {
+        "heading": "Historique",
+        "description": "Ce qui a été publié et envoyé aux familles pour ce programme.",
+        "empty": "Rien n’a encore été envoyé ni publié pour ce programme.",
+        "infoPublished": "Info publiée : « {subject} »",
+        "infoUpdated": "Info modifiée : « {subject} »",
+        "infoDeleted": "Info supprimée : « {subject} »",
+        "goodNews": "« Bonne nouvelle » envoyée · {count, plural, one {# famille} other {# familles}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Voir le détail",
+        "collapse": "Masquer le détail",
+        "failedNotice": "l’e-mail n’est pas parti"
       },
       "info": {
         "heading": "Infos pratiques",

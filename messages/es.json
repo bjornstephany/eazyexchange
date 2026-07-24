@@ -304,7 +304,21 @@
       "tabs": {
         "infos": "Infos",
         "modeles": "Plantillas",
+        "historique": "Historial",
         "auto": "Recordatorios auto."
+      },
+      "history": {
+        "heading": "Historial",
+        "description": "Lo que se ha publicado y enviado a las familias para este programa.",
+        "empty": "Todavía no se ha enviado ni publicado nada para este programa.",
+        "infoPublished": "Información publicada: «{subject}»",
+        "infoUpdated": "Información modificada: «{subject}»",
+        "infoDeleted": "Información eliminada: «{subject}»",
+        "goodNews": "Correo «Buenas noticias» enviado · {count, plural, one {# familia} other {# familias}}",
+        "counts": "{sent} ✓ · {failed} ✗",
+        "expand": "Ver el detalle",
+        "collapse": "Ocultar el detalle",
+        "failedNotice": "el correo no ha salido"
       },
       "info": {
         "heading": "Información clave",
