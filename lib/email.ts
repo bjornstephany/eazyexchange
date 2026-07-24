@@ -186,7 +186,7 @@ export async function sendGoodNewsEmail(opts: {
   // application they had rejected. Organizer-authored → always escaped.
   personalNote?: string | null
   ctx?: EmailLogContext
-}): Promise<void> {
+}): Promise<boolean> {
   const { subject, bodyHtml } = renderGoodNews({
     subject: opts.subject, body: opts.body,
     studentName: opts.studentName, exchangeName: opts.exchangeName,
@@ -202,7 +202,7 @@ export async function sendGoodNewsEmail(opts: {
     btn(`${opts.respondUrl}?r=no`, labels.no, '#5C7268') +
     btn(`${opts.respondUrl}?r=maybe`, labels.maybe, '#2456E6')
   const html = layout(`${bodyHtml}${noteHtml}<div style="margin-top:20px;">${buttons}</div>`, APP_FOOTER_FR)
-  await send(opts.to, subject, html, 'good news email', opts.ctx)
+  return send(opts.to, subject, html, 'good news email', opts.ctx)
 }
 
 export async function sendStudentSetupEmail(opts: {

@@ -11,8 +11,8 @@ function makeClient() {
         eq: () => builder,
         order: () => builder,
         limit: async () => ({ data: [{ position: 0 }], error: null }),
-        insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'card-1', title: 'T', body: '', position: 0 }, error: null }) }) }),
-        update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: { id: 'card-1', title: 'T', body: '', position: 0 }, error: null }) }) }) }),
+        insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'card-1', title: 'T', body: '', position: 0, created_at: '2026-07-20T09:00:00.000Z', updated_at: '2026-07-20T09:00:00.000Z' }, error: null }) }) }),
+        update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: { id: 'card-1', title: 'T', body: '', position: 0, created_at: '2026-07-20T09:00:00.000Z', updated_at: '2026-07-20T09:00:00.000Z' }, error: null }) }) }) }),
         delete: () => ({ eq: async () => ({ error: null }) }),
         maybeSingle: async () => {
           if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role }, error: null }
@@ -58,6 +58,9 @@ describe('exchange info-card actions', () => {
 
   it('creates the card for the owning organizer', async () => {
     await expect(addInfoCard('ex-1', { title: 'T', body: '' }))
-      .resolves.toEqual({ ok: true, card: { id: 'card-1', title: 'T', body: '', position: 0 } })
+      .resolves.toEqual({ ok: true, card: {
+        id: 'card-1', title: 'T', body: '', position: 0,
+        createdAt: '2026-07-20T09:00:00.000Z', updatedAt: '2026-07-20T09:00:00.000Z',
+      } })
   })
 })

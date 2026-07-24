@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { addInfoCard, updateInfoCard, deleteInfoCard, type InfoCard } from '@/actions/exchanges'
-import { INFO_TITLE_MAX, INFO_BODY_MAX, type InfoCardError } from '@/lib/exchange/info-card'
+import type { InfoCardError } from '@/lib/exchange/info-card'
+import { InfoCardRow } from './InfoCardRow'
+import { InfoCardComposer } from './InfoCardComposer'
 
 export function InfoCardsCard({ exchangeId, initialCards, readOnly }: {
   exchangeId: string
@@ -12,7 +14,13 @@ export function InfoCardsCard({ exchangeId, initialCards, readOnly }: {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const [cards, setCards] = useState<InfoCard[]>(initialCards)
-  const [draft, setDraft] = useState({ title: '', body: '' })
+  // One card at a time: the LIST owns which card is open, so opening another
+  // necessarily closes the first. `pendingEditId` is the card the organizer
+  // asked for while the open one still had unsaved edits — the open row raises
+  // its discard prompt and the switch only happens once they confirm.
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null)
+  const [dirtyId, setDirtyId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,29 +38,48 @@ export function InfoCardsCard({ exchangeId, initialCards, readOnly }: {
     } finally { setBusy(false) }
   }
 
-  async function onAdd() {
-    const ok = await run(async () => {
-      const r = await addInfoCard(exchangeId, draft)
+  async function onPublish(input: { title: string; body: string }): Promise<boolean> {
+    return run(async () => {
+      const r = await addInfoCard(exchangeId, input)
       if (r.ok) setCards(prev => [...prev, r.card])
       return r
     })
-    if (ok) setDraft({ title: '', body: '' })
   }
 
+  function closeEditor() { setEditingId(null); setPendingEditId(null); setDirtyId(null) }
+
   async function onSave(card: InfoCard, next: { title: string; body: string }) {
-    await run(async () => {
+    const ok = await run(async () => {
       const r = await updateInfoCard(card.id, next)
       if (r.ok) setCards(prev => prev.map(x => (x.id === card.id ? r.card : x)))
       return r
     })
+    if (ok) closeEditor()
   }
 
   async function onDelete(card: InfoCard) {
-    await run(async () => {
+    const ok = await run(async () => {
       await deleteInfoCard(card.id)
       setCards(prev => prev.filter(x => x.id !== card.id))
     })
+    if (ok) closeEditor()
   }
+
+  // Opening another card closes the first — but never silently over unsaved
+  // edits: park the request and let the open row ask.
+  function requestEdit(cardId: string) {
+    if (editingId && editingId !== cardId && dirtyId === editingId) {
+      setPendingEditId(cardId)
+      return
+    }
+    setEditingId(cardId); setPendingEditId(null); setDirtyId(null)
+  }
+
+  // Stable identity so InfoCardRow's dirty-reporting effect does not re-fire on
+  // every list render.
+  const reportDirty = useCallback((cardId: string, dirty: boolean) => {
+    setDirtyId(prev => (dirty ? cardId : prev === cardId ? null : prev))
+  }, [])
 
   return (
     <div className="rounded-2xl border bg-card px-7 py-[26px]">
@@ -62,79 +89,32 @@ export function InfoCardsCard({ exchangeId, initialCards, readOnly }: {
       <div className="flex flex-col gap-3">
         {cards.length === 0 && <p className="text-[12.5px] text-muted-foreground">{t('communication.info.empty')}</p>}
         {cards.map(card => (
-          <EditableRow key={card.id} card={card} readOnly={readOnly || busy}
-            t={t} onSave={onSave} onDelete={onDelete} />
+          <InfoCardRow
+            key={card.id}
+            card={card}
+            editing={editingId === card.id}
+            busy={busy}
+            readOnly={readOnly}
+            forceDiscardPrompt={editingId === card.id && pendingEditId !== null}
+            onRequestEdit={() => requestEdit(card.id)}
+            onCancelEdit={() => {
+              // Confirmed: honour the parked request, or just close.
+              const next = pendingEditId
+              closeEditor()
+              if (next) setEditingId(next)
+            }}
+            onDiscardCancelled={() => setPendingEditId(null)}
+            onDirtyChange={dirty => reportDirty(card.id, dirty)}
+            onSave={next => onSave(card, next)}
+            onDelete={() => onDelete(card)}
+          />
         ))}
       </div>
 
-      {!readOnly && (
-        <div className="mt-4 flex flex-col gap-2 rounded-xl border border-subtle px-[18px] py-4">
-          <input
-            value={draft.title} maxLength={INFO_TITLE_MAX} disabled={busy}
-            onChange={e => setDraft(d => ({ ...d, title: e.target.value }))}
-            placeholder={t('communication.info.titlePlaceholder')}
-            className="rounded-lg border px-3 py-2 text-[13.5px] outline-none focus:border-brand"
-          />
-          <textarea
-            value={draft.body} maxLength={INFO_BODY_MAX} rows={2} disabled={busy}
-            onChange={e => setDraft(d => ({ ...d, body: e.target.value }))}
-            placeholder={t('communication.info.bodyPlaceholder')}
-            className="resize-y rounded-lg border px-3 py-2 text-[13.5px] outline-none focus:border-brand"
-          />
-          <button
-            type="button" disabled={busy || draft.title.trim().length === 0} onClick={onAdd}
-            className="self-start rounded-[9px] bg-brand px-3.5 py-2 text-[12.5px] font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
-          >
-            {t('communication.info.addButton')}
-          </button>
-        </div>
-      )}
+      {!readOnly && <InfoCardComposer busy={busy} onPublish={onPublish} />}
 
       {readOnly && <p className="mt-3 text-[12.5px] text-muted-foreground">{t('communication.info.readOnlyNotice')}</p>}
       {error && <p className="mt-2 text-[12.5px] font-medium text-danger-text">{error}</p>}
-    </div>
-  )
-}
-
-function EditableRow({ card, readOnly, t, onSave, onDelete }: {
-  card: InfoCard
-  readOnly: boolean
-  t: ReturnType<typeof useTranslations>
-  onSave: (card: InfoCard, next: { title: string; body: string }) => Promise<void>
-  onDelete: (card: InfoCard) => Promise<void>
-}) {
-  const [title, setTitle] = useState(card.title)
-  const [body, setBody] = useState(card.body)
-  const dirty = title !== card.title || body !== card.body
-
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-subtle px-[18px] py-4">
-      <input
-        value={title} maxLength={INFO_TITLE_MAX} disabled={readOnly}
-        onChange={e => setTitle(e.target.value)}
-        className="rounded-lg border px-3 py-2 text-[13.5px] font-semibold outline-none focus:border-brand disabled:opacity-70"
-      />
-      <textarea
-        value={body} maxLength={INFO_BODY_MAX} rows={2} disabled={readOnly}
-        onChange={e => setBody(e.target.value)}
-        className="resize-y rounded-lg border px-3 py-2 text-[13.5px] outline-none focus:border-brand disabled:opacity-70"
-      />
-      {!readOnly && (
-        <div className="flex gap-2">
-          <button
-            type="button" disabled={!dirty} onClick={() => onSave(card, { title, body })}
-            className="rounded-[9px] border bg-card px-3 py-1.5 text-[12.5px] font-semibold text-foreground hover:bg-hoverrow disabled:opacity-50"
-          >
-            {t('communication.info.saveButton')}
-          </button>
-          <button
-            type="button" onClick={() => onDelete(card)}
-            className="rounded-[9px] border border-danger bg-card px-3 py-1.5 text-[12.5px] font-semibold text-danger-text hover:bg-danger"
-          >
-            {t('communication.info.deleteButton')}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

@@ -28,6 +28,7 @@ const baseProps = {
   reminderCadence: 'normale' as const,
   goodNewsSubject: 'Bonne nouvelle',
   goodNewsBody: 'Bonjour',
+  events: [],
 }
 
 function openTab(label: string) {
@@ -35,10 +36,11 @@ function openTab(label: string) {
 }
 
 describe('CommunicationView', () => {
-  it('renders exactly three sub-tabs', () => {
+  it('renders exactly four sub-tabs', () => {
     renderWithIntl(<CommunicationView {...baseProps} />)
     expect(screen.getByRole('button', { name: c.tabs.infos })).toBeTruthy()
     expect(screen.getByRole('button', { name: c.tabs.modeles })).toBeTruthy()
+    expect(screen.getByRole('button', { name: c.tabs.historique })).toBeTruthy()
     expect(screen.getByRole('button', { name: c.tabs.auto })).toBeTruthy()
   })
 
@@ -90,5 +92,13 @@ describe('CommunicationView', () => {
     const cadences = screen.getAllByRole('radio') as HTMLInputElement[]
     expect(cadences.length).toBe(3)
     expect(cadences.every(r => r.disabled)).toBe(true)
+  })
+  it('shows Historique, and it stays available on an archived programme', () => {
+    renderWithIntl(<CommunicationView {...baseProps} archived />)
+    openTab(c.tabs.historique)
+    // The card's description, not its heading: in fr the heading is the same
+    // word as the tab label, so it matches twice.
+    expect(screen.getByText(fr.organizer.communication.history.description)).toBeTruthy()
+    expect(screen.getByText(fr.organizer.communication.history.empty)).toBeTruthy()
   })
 })
