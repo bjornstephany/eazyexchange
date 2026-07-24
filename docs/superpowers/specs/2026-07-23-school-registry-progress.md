@@ -75,6 +75,47 @@ not have. Use `supabase gen types typescript --project-id loygdbjdyciipvdcpvmr`
    sibling branch applied it to staging) and a `graphql_public` block. Task 9
    Step 7 regenerates from **prod** and replaces the file — do not skip it.
 
+## Session 2026-07-24 — merged `main`, re-ran the gate
+
+`main` was 33 commits ahead (billing upgrade path, exchange reordering, i18n
+phase 3, dep audit). Merged in as `240a74e`. **One conflict**, in
+`lib/supabase/request.ts`: this branch added `schools(country)` to the
+`getProfile` select, `main` added `users.exchange_order`. Resolved as the union
+of both — neither side was wrong.
+
+Gate re-run against the merged tree, all four green:
+
+```
+pnpm lint     ✔ No ESLint warnings or errors
+pnpm test     205 files, 1467 tests passed
+pnpm build    ✔ compiled successfully
+pnpm test:rls 10 files, 145 tests passed   (142 + 3 from main)
+```
+
+### ⚠️ Ordering constraint discovered — migration MUST precede the merge
+
+`getProfile` now selects `schools(country)`, a column this branch's migration
+adds. It does not exist on prod yet (verified: `column s.country does not
+exist`). Merging to `main` before Step 4 applies the migration would break
+`getProfile` — i.e. **every authenticated page in production**. Step 4 before
+Step 9 is not a preference, it is a hard dependency.
+
+### Step 8 is now a no-op — prod has no real school to backfill
+
+The plan said "backfill the five production schools". Prod today holds
+**4 schools, all test/stub rows**, and 2 users:
+
+| name | created | members | exchanges |
+| --- | --- | --- | --- |
+| Edina | 2026-07-06 | 0 | 0 |
+| Test | 2026-07-07 | 0 | 0 |
+| Test | 2026-07-23 | 0 | 1 |
+| Test Organizer School | 2026-07-24 | 2 | 1 |
+
+The 2026-07-23 purge removed the real rows the plan was written against. All
+four correctly keep `uai = null` and land in the unverified list. **Nothing to
+backfill** — Step 8 collapses to running the verification query.
+
 ## Remaining: Task 9 from Step 2
 
 - [ ] Step 2 — preview browser check (5 items in the plan)
@@ -83,7 +124,7 @@ not have. Use `supabase gen types typescript --project-id loygdbjdyciipvdcpvmr`
 - [ ] Step 5 — reconcile the filename if prod stamps a different version
 - [ ] Step 6 — `SCHOOL_REGISTRY_DB_URL='<prod>' pnpm sync:schools`
 - [ ] Step 7 — regenerate types from **prod**, `npx tsc --noEmit`
-- [ ] Step 8 — backfill the 5 production schools' UAIs (record every statement)
+- [ ] Step 8 — ~~backfill~~ → verify `schools where uai is null` (see above)
 - [ ] Step 9 — merge (needs the gate re-run + Bjorn's confirmation)
 - [ ] Step 10 — post-merge prod smoke check
 
