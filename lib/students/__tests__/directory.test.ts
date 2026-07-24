@@ -23,7 +23,7 @@ const application = {
   id: 'app1',
   data: {
     last_name: 'Laurent', first_name: 'Camille', date_of_birth: '2009-03-14',
-    grade: 'Première', french_class: '1re G2', native_language: 'Français',
+    grade: 'Première', class_group: '1re G2', native_language: 'Français',
     email: 'camille.laurent@email.fr', cell_phone: '06 12 24 37 52',
     father_first_name: 'Marc', father_last_name: 'Laurent',
     father_cell_phone: '06 22 34 51 61', father_email: 'marc.laurent@email.fr',
@@ -42,7 +42,7 @@ describe('buildStudentVM', () => {
       { l: 'Nom', v: 'Laurent' },
       { l: 'Prénom', v: 'Camille' },
       { l: 'Date de naissance', v: '14/03/2009' },
-      { l: 'Niveau 26-27', v: 'Première' },
+      { l: 'Niveau', v: 'Première' },
       { l: 'Classe', v: '1re G2' },
       { l: 'Langue maternelle', v: 'Français' },
       { l: 'E-mail', v: 'camille.laurent@email.fr' },

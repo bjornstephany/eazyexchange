@@ -453,7 +453,7 @@
       "bulkResult": "{s, plural, one {# procesada} other {# procesadas}} · {f} fallidas",
       "tableHeader": {
         "student": "Alumno",
-        "level": "Curso 26-27",
+        "level": "Curso",
         "gender": "Género",
         "receivedDate": "Recibida el",
         "status": "Estado"
@@ -812,6 +812,7 @@
       "submitting": "Enviando…",
       "missing": "Por favor, rellena todos los campos obligatorios.",
       "tooLong": "Algunas respuestas superan el límite de caracteres.",
+      "badFormat": "Comprueba el formato de los correos y teléfonos señalados.",
       "unexpected": "Se ha producido un error.",
       "registered": "Esta dirección de correo ya está asociada a una candidatura. Inicia sesión en tu cuenta.",
       "done": "¡Gracias! Tu candidatura ha sido enviada.",
@@ -948,10 +949,10 @@
         }
       },
       "grade": {
-        "label": "Curso 26-27"
+        "label": "Curso"
       },
-      "french_class": {
-        "label": "Clase de francés 26-27"
+      "class_group": {
+        "label": "Clase"
       },
       "email": {
         "label": "E-mail"

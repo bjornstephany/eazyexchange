@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { missingRequiredApplication, overLimitApplicationFields, parentGroupFields } from '@/lib/application-form'
+import { missingRequiredApplication, overLimitApplicationFields, invalidFormatApplicationFields, parentGroupFields } from '@/lib/application-form'
 import { localizedApplicationSections, type LocalizedField } from '@/lib/application-form.labels'
 import { asAppTranslator } from '@/lib/i18n/messages'
 import { useTranslations } from 'next-intl'
@@ -75,10 +75,11 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
   async function onSubmit() {
     const miss = missingRequiredApplication(data, { hasPhoto })
     const over = overLimitApplicationFields(data)
-    const flagged = [...miss, ...over]
+    const badFormat = invalidFormatApplicationFields(data)
+    const flagged = [...miss, ...over, ...badFormat]
     setMissing(flagged)
     if (flagged.length) {
-      setError(miss.length ? t('form.missing') : t('form.tooLong'))
+      setError(miss.length ? t('form.missing') : over.length ? t('form.tooLong') : t('form.badFormat'))
       document.getElementById(`field-${flagged[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
       return
     }
@@ -91,9 +92,13 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
           setSubmitting(false)
           return
         }
-        setMissing(res.overLimit)
-        setError(t('form.tooLong'))
-        document.getElementById(`field-${res.overLimit[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+        // The server re-runs the same gates; only the two it can disagree with
+        // the client on come back structured (a stale tab, or a payload that
+        // never went through the form).
+        const flaggedByServer = 'overLimit' in res ? res.overLimit : res.invalidFormat
+        setMissing(flaggedByServer)
+        setError('overLimit' in res ? t('form.tooLong') : t('form.badFormat'))
+        document.getElementById(`field-${flaggedByServer[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         setSubmitting(false)
         return
       }
