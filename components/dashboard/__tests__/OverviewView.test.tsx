@@ -50,10 +50,17 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 
-  it('action card click applies its filter', () => {
+  it('the review card is a deep link to the Applications page, not a table filter', () => {
     renderWithIntl(<OverviewView {...base} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Examiner' }))
-    expect(screen.queryByText('Camille Laurent')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Examiner' })).toHaveAttribute('href', '/applications?tab=toreview')
+    expect(screen.queryByRole('button', { name: 'Examiner' })).toBeNull()
+  })
+
+  it('filter-style action cards still filter the table', () => {
+    renderWithIntl(<OverviewView {...base} />)
+    // `base` is late with missing docs, so the « Relancer » card is a button.
+    fireEvent.click(screen.getByRole('button', { name: 'Relancer' }))
+    expect(screen.getByRole('button', { name: /Filtre :/ })).toBeInTheDocument()
   })
 
   it('hides rejected/declined rows behind the « Afficher » toggle', () => {

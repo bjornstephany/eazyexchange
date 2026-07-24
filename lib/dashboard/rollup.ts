@@ -310,6 +310,9 @@ export function lifecycleActionCards(apps: AppRow[], rollups: DossierRollup[], a
       title: t('organizer.dashboard.actionCards.toReviewTitle', { n: a }),
       desc: t('organizer.dashboard.actionCards.toReviewDesc'),
       cta: t('organizer.dashboard.actionCards.toReviewCta'), tone: 'accent', filterKey: 'toreview',
+      // Reviewing happens on the Applications page, not by filtering the table
+      // behind this card. filterKey stays as the React key.
+      href: '/applications?tab=toreview',
     })
   }
   const r = rollups.filter(x => x.overall.kind === 'info').length
