@@ -450,7 +450,7 @@
       "bulkResult": "{s, plural, one {# processed} other {# processed}} · {f} failed",
       "tableHeader": {
         "student": "Student",
-        "level": "Grade 26-27",
+        "level": "Grade",
         "gender": "Gender",
         "receivedDate": "Received on",
         "status": "Status"
@@ -849,6 +849,7 @@
       "submitting": "Sending…",
       "missing": "Please complete all required fields.",
       "tooLong": "Some answers exceed the character limit.",
+      "badFormat": "Check the format of the highlighted e-mail and phone fields.",
       "unexpected": "An unexpected error occurred.",
       "registered": "This email is already registered for an exchange. Please log in to your account instead.",
       "done": "Thank you! Your application has been submitted.",
@@ -917,8 +918,8 @@
           "she_her": "She/her"
         }
       },
-      "grade": { "label": "Grade in 26-27" },
-      "french_class": { "label": "French class in 26-27" },
+      "grade": { "label": "Grade" },
+      "class_group": { "label": "Class group" },
       "email": { "label": "E-mail" },
       "cell_phone": { "label": "Cell phone" },
       "father_last_name": { "label": "Father — Last name" },
