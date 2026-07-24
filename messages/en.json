@@ -130,7 +130,7 @@
       },
       "programDetails": {
         "heading": "Program details",
-        "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation). Edit them here: every not-yet-signed form updates.",
+        "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation) and the acceptance email. Edit them here: every not-yet-signed form updates.",
         "destination": "Destination",
         "destinationHint": "As it will appear in the forms, e.g. “le Minnesota, USA”",
         "travelStart": "Departure date",
@@ -144,6 +144,13 @@
         "sendingCity": "School’s city",
         "absenceDates": "Absence days to excuse",
         "absenceDatesHint": "One day per line, e.g. “le jeudi 19 octobre 2026”",
+        "acceptanceHeading": "For the acceptance email",
+        "acceptanceSubtitle": "These values replace the “to be completed” placeholders in the “Good news” email sent to selected families.",
+        "participationCost": "Cost to families",
+        "participationCostHint": "E.g. “€850 per student, flights and accommodation included”",
+        "paymentDetails": "Membership / payment",
+        "paymentDetailsHint": "Payment link or instructions, e.g. “cheque payable to the association”",
+        "confirmationDeadline": "Confirmation deadline",
         "save": "Save",
         "saved": "Saved."
       },

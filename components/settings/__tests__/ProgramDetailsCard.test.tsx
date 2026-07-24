@@ -76,3 +76,71 @@ describe('ProgramDetailsCard', () => {
     expect(screen.getByLabelText('Accompagnateurs')).toHaveValue('A B\nC D')
   })
 })
+
+describe('ProgramDetailsCard — acceptance-email group', () => {
+  beforeEach(() => saveMock.mockReset().mockResolvedValue({ ok: true as const }))
+
+  const emptyRow = {
+    exchange_id: 'ex-1',
+    destination: null, travel_start: null, travel_end: null, chaperones: [],
+    association_name: null, sending_school_name: null, receiving_school_name: null,
+    proviseur_name: null, sending_city: null, absence_dates: [],
+    participation_cost: null, payment_details: null, confirmation_deadline: null,
+    updated_at: '2026-01-01T00:00:00Z',
+  }
+
+  it('renders the three acceptance-email fields', () => {
+    render(<ProgramDetailsCard exchangeId="ex-1" initial={null} readOnly={false} />)
+    expect(screen.getByLabelText('Participation aux frais')).toBeInTheDocument()
+    expect(screen.getByLabelText('Adhésion / paiement')).toBeInTheDocument()
+    expect(screen.getByLabelText('Date limite de confirmation')).toBeInTheDocument()
+  })
+
+  it('prefills them from the existing row', () => {
+    render(
+      <ProgramDetailsCard
+        exchangeId="ex-1"
+        initial={{
+          ...emptyRow,
+          participation_cost: '850 € par élève',
+          payment_details: 'https://helloasso.com/x',
+          confirmation_deadline: '2026-09-15',
+        }}
+        readOnly={false}
+      />,
+    )
+    expect(screen.getByLabelText('Participation aux frais')).toHaveValue('850 € par élève')
+    expect(screen.getByLabelText('Date limite de confirmation')).toHaveValue('2026-09-15')
+  })
+
+  it('sends all three to saveProgramDetails on save', async () => {
+    render(<ProgramDetailsCard exchangeId="ex-1" initial={null} readOnly={false} />)
+    fireEvent.change(screen.getByLabelText('Participation aux frais'), { target: { value: '850 €' } })
+    fireEvent.change(screen.getByLabelText('Adhésion / paiement'), { target: { value: 'Chèque' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1))
+    expect(saveMock.mock.calls[0][1]).toMatchObject({
+      participation_cost: '850 €',
+      payment_details: 'Chèque',
+      confirmation_deadline: null,
+    })
+  })
+
+  it('keeps an untouched value instead of blanking it on save', async () => {
+    render(
+      <ProgramDetailsCard
+        exchangeId="ex-1"
+        initial={{ ...emptyRow, participation_cost: '850 € par élève' }}
+        readOnly={false}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1))
+    expect(saveMock.mock.calls[0][1]).toMatchObject({ participation_cost: '850 € par élève' })
+  })
+
+  it('disables them when the exchange is archived', () => {
+    render(<ProgramDetailsCard exchangeId="ex-1" initial={null} readOnly={true} />)
+    expect(screen.getByLabelText('Participation aux frais')).toBeDisabled()
+  })
+})

@@ -26,6 +26,9 @@ export function ProgramDetailsCard({ exchangeId, initial, readOnly }: Props) {
     proviseur_name: initial?.proviseur_name ?? '',
     sending_city: initial?.sending_city ?? '',
     absence_dates: (initial?.absence_dates ?? []).join('\n'),
+    participation_cost: initial?.participation_cost ?? '',
+    payment_details: initial?.payment_details ?? '',
+    confirmation_deadline: initial?.confirmation_deadline ?? '',
   })
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<'saved' | null>(null)
@@ -49,11 +52,9 @@ export function ProgramDetailsCard({ exchangeId, initial, readOnly }: Props) {
       proviseur_name: form.proviseur_name || null,
       sending_city: form.sending_city || null,
       absence_dates: form.absence_dates.split('\n').map(s => s.trim()).filter(Boolean),
-      // Carried through untouched until this card grows inputs for them, so a
-      // save from here never blanks the acceptance-email values.
-      participation_cost: initial?.participation_cost ?? null,
-      payment_details: initial?.payment_details ?? null,
-      confirmation_deadline: initial?.confirmation_deadline ?? null,
+      participation_cost: form.participation_cost || null,
+      payment_details: form.payment_details || null,
+      confirmation_deadline: form.confirmation_deadline || null,
     }
     try {
       const res = await saveProgramDetails(exchangeId, input)
@@ -100,6 +101,20 @@ export function ProgramDetailsCard({ exchangeId, initial, readOnly }: Props) {
           <label htmlFor="pd-absence_dates" className={labelCls}>{t('settings.programDetails.absenceDates')}</label>
           <textarea id="pd-absence_dates" rows={3} value={form.absence_dates} onChange={set('absence_dates')} disabled={readOnly} className={areaCls} />
           <p className={hintCls}>{t('settings.programDetails.absenceDatesHint')}</p>
+        </div>
+      </div>
+
+      <div className="mt-7 border-t pt-6">
+        <div className="mb-1 font-display text-[14px] font-bold tracking-[-.01em] text-foreground">
+          {t('settings.programDetails.acceptanceHeading')}
+        </div>
+        <p className="mb-4 text-[12.5px] leading-normal text-muted-foreground">
+          {t('settings.programDetails.acceptanceSubtitle')}
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {text('participation_cost', t('settings.programDetails.participationCost'), t('settings.programDetails.participationCostHint'))}
+          {text('payment_details', t('settings.programDetails.paymentDetails'), t('settings.programDetails.paymentDetailsHint'))}
+          {text('confirmation_deadline', t('settings.programDetails.confirmationDeadline'), undefined, 'date')}
         </div>
       </div>
 
