@@ -13,4 +13,6 @@ import fr from '@/messages/fr.json'
 export const serverTranslationsMock = {
   getTranslations: async (namespace?: string) =>
     createTranslator({ locale: 'fr', messages: fr, namespace } as never),
+  // Components under test render French by default, matching renderWithIntl.
+  getLocale: async () => 'fr',
 }

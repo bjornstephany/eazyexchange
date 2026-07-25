@@ -10,6 +10,7 @@ import { sortExchanges } from '@/lib/shell/exchange-order'
 import { mustOnboard } from '@/lib/onboarding/gate'
 import { shellDestination } from '@/lib/auth/shell-destination'
 import { NextIntlClientProvider } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { loadMessages } from '@/lib/i18n/messages'
 
@@ -67,6 +68,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   const locale = await resolveLocale()
   const messages = await loadMessages(locale)
+  const tBilling = await getTranslations('organizer.billing')
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -81,7 +83,9 @@ export default async function OrganizerLayout({ children }: { children: React.Re
           remaining={remaining}
           orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
         >
-          {showGrace && <PaymentWarningBanner />}
+          {showGrace && (
+            <PaymentWarningBanner body={tBilling('grace.body')} cta={tBilling('grace.cta')} />
+          )}
           {children}
         </OrganizerShell>
       </div>

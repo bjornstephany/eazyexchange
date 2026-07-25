@@ -1,6 +1,8 @@
 // Pure derivations for the Élèves directory (design: Eazyexchange Eleves.dc.html).
 // Server actions assemble raw rows; everything display-shaped is computed here.
-import { rollupStudent, frShortDate, type CellMap, type Pill, type TemplateInfo } from '@/lib/dashboard/rollup'
+import { rollupStudent, type CellMap, type Pill, type TemplateInfo } from '@/lib/dashboard/rollup'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 // Type-only import: used solely for the translator param type below, so it is
 // erased at compile time and this module stays React-free at runtime. Typing the
 // param as a real next-intl translator preserves the type-safe key gate.
@@ -108,7 +110,7 @@ export function buildStudentVM(input: {
   cellMap: CellMap
   avatarIndex: number
   today?: Date
-}, t: T): StudentVM {
+}, t: T, locale: Locale): StudentVM {
   const { student, application, templates, cellMap, avatarIndex } = input
   const today = input.today ?? new Date()
   const data = application?.data ?? {}
@@ -186,7 +188,7 @@ export function buildStudentVM(input: {
     provided,
     total,
     pct: total > 0 ? Math.round((provided / total) * 100) : 0,
-    dueLabel: rollup.due ? t('organizer.students.dueLabel', { date: frShortDate(rollup.due) }) : null,
+    dueLabel: rollup.due ? t('organizer.students.dueLabel', { date: shortDate(rollup.due, locale) }) : null,
   }
 }
 

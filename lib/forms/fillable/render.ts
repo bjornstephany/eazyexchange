@@ -6,6 +6,8 @@ import type {
 import { VARIABLE_REQUIREMENTS, DETAIL_LABELS, DETAIL_ORDER } from './types'
 import { MAX_ANSWER_LENGTH } from '@/lib/validation'
 
+// fr-FR on purpose: these formatters build French legal text inside a French
+// document — the date's language does not follow the viewer's UI locale.
 const FR_DATE = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })
 const FR_DAY_MONTH = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', timeZone: 'Europe/Paris' })
 const EN_DATE = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })

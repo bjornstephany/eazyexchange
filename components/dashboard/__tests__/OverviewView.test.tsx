@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import de from '@/messages/de.json'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
@@ -25,7 +26,7 @@ const base = {
 describe('OverviewView — unified lifecycle table', () => {
   it('renders heading, unified funnel and one row per person (dedupe by email)', () => {
     renderWithIntl(<OverviewView {...base} />)
-    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.getByText('Vue d’ensemble')).toBeInTheDocument()
     expect(screen.getByText('Candidatures')).toBeInTheDocument()
     expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
     // enrolled app c@l.fr merged into the student row: exactly one Camille row
@@ -85,6 +86,12 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(date).toHaveTextContent('18 sept. 2026')
   })
 
+  it('renders the response date in the active locale, not French', () => {
+    renderWithIntl(<OverviewView {...base} />, { locale: 'de', messages: de })
+    expect(screen.getByTitle('18. September 2026')).toHaveTextContent('18. Sept. 2026')
+    expect(screen.queryByTitle('18 septembre 2026')).toBeNull()
+  })
+
   it('dates a declined row too — the rule is responded_at, not acceptance', () => {
     const closedApps: AppRow[] = [
       ...apps,
@@ -139,18 +146,18 @@ describe('OverviewView — unified lifecycle table', () => {
   it('shows the empty-state CTA only when applications never opened AND nobody exists', () => {
     renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
     expect(screen.getByRole('heading', { name: /Commencez votre échange/ })).toBeInTheDocument()
-    expect(screen.queryByText("Vue d'ensemble")).toBeNull()
+    expect(screen.queryByText('Vue d’ensemble')).toBeNull()
   })
 
   it('shows the normal overview once applications are open, even with nobody yet', () => {
     renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} />)
-    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.getByText('Vue d’ensemble')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Commencez votre échange/ })).toBeNull()
   })
 
   it('directly-invited students suppress the empty state even if applications never opened', () => {
     renderWithIntl(<OverviewView {...base} apps={[]} applicationOpen={false} applicationDeadline={null} />)
-    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+    expect(screen.getByText('Vue d’ensemble')).toBeInTheDocument()
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 

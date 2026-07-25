@@ -22,6 +22,7 @@ type Props = {
 
 type SigState = Record<string, { full_name: string; approved: boolean }>
 
+// fr-FR on purpose: the signature line is part of a French document, not UI chrome.
 const SIGNED_AT = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
   timeZone: 'Europe/Paris',

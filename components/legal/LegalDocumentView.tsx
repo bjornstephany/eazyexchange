@@ -19,6 +19,7 @@ function Block({ block }: { block: LegalBlock }) {
 
 export function LegalDocumentView({ doc }: { doc: LegalDocument }) {
   const draft = doc.draft === true || hasPlaceholders(doc)
+  // fr-FR on purpose: the legal documents themselves are French-only.
   const updated = new Date(doc.lastUpdated).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',

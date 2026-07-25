@@ -26,7 +26,7 @@ describe('sendStudentReminderEmail', () => {
     expect(html).toContain('Espagne &lt;2026&gt;')
     expect(html).toContain('AST &lt;sortie&gt;')
     expect(html).toContain('Passeport')
-    expect(html).toContain('10 oct') // frShortDate rendering
+    expect(html).toContain('10 oct') // shortDate(…, 'fr') rendering
     expect(html).not.toContain('<Yanis>')
   })
 })

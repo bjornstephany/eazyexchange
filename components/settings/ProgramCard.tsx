@@ -1,12 +1,14 @@
 'use client'
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { archiveExchange, restoreExchange, type ProgramInfo } from '@/actions/settings'
-import { frShortDate } from '@/lib/dashboard/rollup'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 
 export function ProgramCard({ program, isOwner }: { program: ProgramInfo; isOwner: boolean }) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
+  const locale = useLocale() as Locale
   const [modal, setModal] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +24,7 @@ export function ProgramCard({ program, isOwner }: { program: ProgramInfo; isOwne
     t('settings.program.stats.enrolled', { count: program.enrolled }),
     t('settings.program.stats.applications', { count: program.applications }),
     ...(program.earliestDeadline
-      ? [t('settings.program.stats.deadline', { date: frShortDate(program.earliestDeadline) })]
+      ? [t('settings.program.stats.deadline', { date: shortDate(program.earliestDeadline, locale) })]
       : []),
   ].join(' · ')
 

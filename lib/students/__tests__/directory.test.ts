@@ -32,7 +32,7 @@ const application = {
 const today = new Date('2026-09-20T10:00:00Z')
 
 function vm(cellMap: CellMap, app: typeof application | null = application): StudentVM {
-  return buildStudentVM({ student, application: app, templates, cellMap, avatarIndex: 0, today }, t)
+  return buildStudentVM({ student, application: app, templates, cellMap, avatarIndex: 0, today }, t, 'fr')
 }
 
 describe('buildStudentVM', () => {
@@ -119,7 +119,7 @@ describe('buildStudentVM', () => {
       student, application, templates,
       cellMap: { 's1:t3': { assignmentId: 'a3' } },
       avatarIndex: 0, today: new Date('2026-10-05T10:00:00Z'),
-    }, t)
+    }, t, 'fr')
     expect(late.statusKey).toBe('retard')
     expect(late.summary).toBe('Date limite dépassée — 1 pièce attendue')
   })
@@ -130,10 +130,19 @@ describe('buildStudentVM', () => {
       student,
       application: { ...application, photoUrl: 'https://signed.example/app1/photo.jpg' },
       templates, cellMap, avatarIndex: 0, today,
-    }, t)
+    }, t, 'fr')
     expect(withPhoto.photoUrl).toBe('https://signed.example/app1/photo.jpg')
     expect(vm(cellMap).photoUrl).toBeNull()
     expect(vm(cellMap, null).photoUrl).toBeNull()
+  })
+
+  it('formats dueLabel in the caller locale', () => {
+    const cellMap: CellMap = { 's1:t3': { assignmentId: 'a3', status: 'draft' } }
+    const german = buildStudentVM(
+      { student, application, templates, cellMap, avatarIndex: 0, today }, t, 'de',
+    )
+    expect(german.dueLabel).toContain('3. Okt.')
+    expect(german.dueLabel).not.toContain('oct')
   })
 })
 

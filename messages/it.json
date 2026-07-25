@@ -136,7 +136,7 @@
         "heading": "Dettagli del programma",
         "subtitle": "Questi dati compilano automaticamente i moduli da firmare online (liberatoria, richiesta di assenza, impegno della famiglia, autorizzazione medica) e l’e-mail di accettazione. Modificali qui: tutti i moduli non ancora firmati si aggiornano.",
         "destination": "Destinazione",
-        "destinationHint": "Come apparirà nei moduli, es. « le Minnesota, USA »",
+        "destinationHint": "Come apparirà nei moduli, in francese — viene copiato alla lettera nei moduli francesi. Es. «le Minnesota, USA»",
         "travelStart": "Data di partenza",
         "travelEnd": "Data di ritorno",
         "chaperones": "Accompagnatori",
@@ -147,13 +147,13 @@
         "proviseur": "Nome del preside",
         "sendingCity": "Città dell’istituto",
         "absenceDates": "Giorni di assenza da giustificare",
-        "absenceDatesHint": "Un giorno per riga, es. « le jeudi 19 octobre 2026 »",
+        "absenceDatesHint": "Un giorno per riga, in francese — viene copiato alla lettera nel modulo francese di assenza. Es. «le jeudi 19 octobre 2026»",
         "acceptanceHeading": "Per l’e-mail di accettazione",
         "acceptanceSubtitle": "Questi valori sostituiscono le diciture «da completare» nell’e-mail «Buone notizie» inviata alle famiglie selezionate.",
         "participationCost": "Partecipazione alle spese",
         "participationCostHint": "Es. «850 € per studente, volo e alloggio inclusi»",
         "paymentDetails": "Adesione / pagamento",
-        "paymentDetailsHint": "Link di pagamento o modalità, es. «assegno intestato all’associazione»",
+        "paymentDetailsHint": "Link di pagamento o modalità, in francese — viene copiato alla lettera nell’e-mail francese di accettazione. Es. «chèque à l’ordre de l’association»",
         "confirmationDeadline": "Termine di conferma",
         "save": "Salva",
         "saved": "Salvato."
@@ -425,9 +425,7 @@
         "maybeDesc": "Risposte « Forse » da ricontattare.",
         "maybeCta": "Sollecita"
       },
-      "subline": "{a, plural, one {# candidatura} other {# candidature}} da esaminare, {r, plural, one {# fascicolo} other {# fascicoli}} da verificare, {l, plural, one {# studente} other {# studenti}} in ritardo.",
-      "progressDossiers": "{done} / {total} fascicoli convalidati",
-      "progressCandidatures": "{done} / {total} candidature elaborate"
+      "subline": "{a, plural, one {# candidatura} other {# candidature}} da esaminare, {r, plural, one {# fascicolo} other {# fascicoli}} da verificare, {l, plural, one {# studente} other {# studenti}} in ritardo."
     },
     "applications": {
       "questionsHeading": "Domande della famiglia",
@@ -614,9 +612,7 @@
         "mandatory": "Obbligatorio",
         "dependsOnSituation": "in base alla situazione",
         "complete": "Completo",
-        "toRedo": "Da rifare",
-        "missingCount": "{count, plural, one {# mancante} other {# mancanti}}",
-        "toVerifyCount": "{count} da verificare"
+        "toRedo": "Da rifare"
       },
       "progress": {
         "notRequestedDoc": "Non ancora richiesto",

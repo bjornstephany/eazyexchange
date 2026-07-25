@@ -1,9 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { AppRow } from '@/lib/dashboard/rollup'
-import { applicantStatusPill, frShortDate } from '@/lib/dashboard/rollup'
+import { applicantStatusPill } from '@/lib/dashboard/rollup'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { applicantName } from '@/lib/application-form'
 import { TAB_KEYS, matchesTab, type TabKey } from '@/lib/applications/tabs'
 import { acceptApplications, rejectApplications, type AcceptBlock } from '@/actions/applications-review'
@@ -38,6 +40,7 @@ export function CandidaturesView({
 }) {
   const router = useRouter()
   const tr = useTranslations()
+  const locale = useLocale() as Locale
   const [tab, setTab] = useState<TabKey>(initialTab ?? 'all')
   const [open, setOpen] = useState(applicationOpen)
   const [deadline, setDeadline] = useState(applicationDeadline ?? '')
@@ -331,7 +334,7 @@ export function CandidaturesView({
                   </span>
                   <span className="text-sm text-navy">{a.data.grade ?? '—'}</span>
                   <span className="text-sm text-navy">{genderLabel(a.data.sex)}</span>
-                  <span className="text-sm text-navy">{frShortDate(a.submitted_at)}</span>
+                  <span className="text-sm text-navy">{shortDate(a.submitted_at, locale)}</span>
                   <StatusPill pill={applicantStatusPill(a.status, tr)} />
                   <span className="text-muted-foreground">›</span>
                 </div>

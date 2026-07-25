@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { frShortDate } from '@/lib/dates'
+import { useLocale, useTranslations } from 'next-intl'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { Button } from '@/components/ui/button'
 
 export type InvitationControls = {
@@ -24,6 +25,7 @@ export function InvitationPanel({
   onInviteByEmail: () => void
 }) {
   const t = useTranslations('organizer.applications')
+  const locale = useLocale() as Locale
   const { open, deadline, saving, onToggleOpen, onDeadlineChange } = controls
   const [copied, setCopied] = useState(false)
 
@@ -44,7 +46,7 @@ export function InvitationPanel({
         <span className="font-medium text-navy">
           {open ? t('panel.summaryOpen') : t('panel.summaryClosed')}
         </span>
-        {deadline && <span>{t('panel.deadlineSuffix', { date: frShortDate(deadline) })}</span>}
+        {deadline && <span>{t('panel.deadlineSuffix', { date: shortDate(deadline, locale) })}</span>}
         <span className="ml-auto text-tertiary">⌄</span>
       </summary>
 

@@ -136,7 +136,7 @@
         "heading": "Programmdetails",
         "subtitle": "Diese Angaben füllen die online zu unterzeichnenden Formulare automatisch aus (Haftungsausschluss, Abwesenheitsantrag, Familienverpflichtung, medizinische Vollmacht) sowie die Zusage-E-Mail. Hier bearbeiten: alle noch nicht unterzeichneten Formulare werden aktualisiert.",
         "destination": "Reiseziel",
-        "destinationHint": "So, wie es in den Formularen erscheint, z. B. « le Minnesota, USA »",
+        "destinationHint": "Auf Französisch — der Text wird unverändert in die französischen Austauschformulare übernommen. Z. B. „le Minnesota, USA“.",
         "travelStart": "Abreisedatum",
         "travelEnd": "Rückreisedatum",
         "chaperones": "Begleitpersonen",
@@ -147,13 +147,13 @@
         "proviseur": "Name der Schulleitung",
         "sendingCity": "Stadt der Schule",
         "absenceDates": "Zu entschuldigende Fehltage",
-        "absenceDatesHint": "Ein Tag pro Zeile, z. B. « le jeudi 19 octobre 2026 »",
+        "absenceDatesHint": "Ein Tag pro Zeile, auf Französisch — der Text wird unverändert in das französische Abwesenheitsformular übernommen. Z. B. „le jeudi 19 octobre 2026“.",
         "acceptanceHeading": "Für die Zusage-E-Mail",
         "acceptanceSubtitle": "Diese Werte ersetzen die Platzhalter „auszufüllen“ in der E-Mail „Gute Nachrichten“ an die ausgewählten Familien.",
         "participationCost": "Kostenbeteiligung",
         "participationCostHint": "z. B. „850 € pro Schüler/in, Flug und Unterkunft inbegriffen“",
         "paymentDetails": "Mitgliedschaft / Zahlung",
-        "paymentDetailsHint": "Zahlungslink oder Modalitäten, z. B. „Scheck an den Verein“",
+        "paymentDetailsHint": "Zahlungslink oder Modalitäten, auf Französisch — der Text wird unverändert in die französische Zusage-E-Mail übernommen. Z. B. „chèque à l’ordre de l’association“.",
         "confirmationDeadline": "Bestätigungsfrist",
         "save": "Speichern",
         "saved": "Gespeichert."
@@ -425,9 +425,7 @@
         "maybeDesc": "„Vielleicht“-Antworten zum Nachfassen bei den Familien.",
         "maybeCta": "Erinnern"
       },
-      "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand.",
-      "progressDossiers": "{done} / {total} Dossiers validiert",
-      "progressCandidatures": "{done} / {total} Bewerbungen bearbeitet"
+      "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand."
     },
     "applications": {
       "questionsHeading": "Fragen der Familie",
@@ -614,9 +612,7 @@
         "mandatory": "Obligatorisch",
         "dependsOnSituation": "je nach Situation",
         "complete": "Vollständig",
-        "toRedo": "Zu wiederholen",
-        "missingCount": "{count, plural, one {# fehlend} other {# fehlend}}",
-        "toVerifyCount": "{count} zu prüfen"
+        "toRedo": "Zu wiederholen"
       },
       "progress": {
         "notRequestedDoc": "Noch nicht angefordert",

@@ -2,8 +2,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireUser, requireOrganizer } from '@/lib/auth/require'
 import { revalidatePath } from 'next/cache'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Locale } from '@/lib/i18n/config'
 import type { CellMap } from '@/lib/dashboard/rollup'
 import {
   buildStudentVM, sortStudents,
@@ -96,7 +97,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
   }
 
   const dirTemplates = (templates ?? []) as DirectoryTemplate[]
-  const tr = await getTranslations()
+  const [tr, locale] = await Promise.all([getTranslations(), getLocale()])
   const vms = students.map((s, i) =>
     buildStudentVM({
       student: s,
@@ -104,7 +105,7 @@ export async function getStudentsDirectory(exchangeId: string): Promise<{ studen
       templates: dirTemplates,
       cellMap,
       avatarIndex: i,
-    }, tr)
+    }, tr, locale as Locale)
   )
   return { students: sortStudents(vms) }
 }

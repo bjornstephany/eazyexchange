@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { frShortDate } from '@/lib/dates'
+import { shortDate } from '@/lib/dates'
 import { getAppUrl } from '@/lib/app-url'
 import { EXCHANGE_TERMS_EMAIL } from '@/lib/exchange-terms'
 import { logEmailSend, type EmailLogContext } from '@/lib/email-log'
@@ -244,7 +244,7 @@ export async function sendTemplateReminderEmail(opts: {
   ctx?: EmailLogContext
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
-  const due = opts.deadline ? ` avant le <strong>${esc(frShortDate(opts.deadline))}</strong>` : ''
+  const due = opts.deadline ? ` avant le <strong>${esc(shortDate(opts.deadline, 'fr'))}</strong>` : ''
   const html = layout(`
     <p>${greeting}</p>
     <p>Il manque encore « <strong>${esc(opts.templateName)}</strong> » à ton dossier pour <strong>${esc(opts.exchangeName)}</strong>. Merci de le compléter${due}.</p>
@@ -261,7 +261,7 @@ export async function sendStudentReminderEmail(opts: {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const n = opts.items.length
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(shortDate(i.deadline, 'fr'))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>
@@ -278,7 +278,7 @@ export async function sendChecklistEmail(opts: {
 }): Promise<boolean> {
   const greeting = opts.studentName ? `Bonjour ${esc(opts.studentName)},` : 'Bonjour,'
   const rows = opts.items.map(i =>
-    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(frShortDate(i.deadline))}` : ''}</li>`
+    `<li><strong>${esc(i.name)}</strong>${i.deadline ? ` — date limite ${esc(shortDate(i.deadline, 'fr'))}` : ''}</li>`
   ).join('')
   const html = layout(`
     <p>${greeting}</p>

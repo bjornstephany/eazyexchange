@@ -11,15 +11,18 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { submissionStatusBadge } from '@/lib/submission-status'
 import type { SubmissionStatus } from '@/types/db'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { asAppTranslator } from '@/lib/i18n/messages'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function AssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
   const { assignmentId } = await params
-  const [{ template, submission }, t] = await Promise.all([
+  const [{ template, submission }, t, locale] = await Promise.all([
     getAssignmentDetails(assignmentId),
     getTranslations('student'),
+    getLocale(),
   ])
 
   // PDF-to-sign templates: the family downloads the organizer’s PDF, prints,
@@ -76,9 +79,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           )}
           {template.deadline && (
             <p className="mt-1 text-[13px] text-muted-foreground">
-              {t('assignment.deadline', {
-                date: new Date(template.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
-              })}
+              {t('assignment.deadline', { date: shortDate(template.deadline, locale as Locale) })}
             </p>
           )}
         </div>

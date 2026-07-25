@@ -136,7 +136,7 @@
         "heading": "Program details",
         "subtitle": "These values automatically fill the online signable forms (liability waiver, absence request, family commitment, medical authorisation) and the acceptance email. Edit them here: every not-yet-signed form updates.",
         "destination": "Destination",
-        "destinationHint": "As it will appear in the forms, e.g. “le Minnesota, USA”",
+        "destinationHint": "Written in French — copied word-for-word into the French exchange forms. E.g. “le Minnesota, USA”.",
         "travelStart": "Departure date",
         "travelEnd": "Return date",
         "chaperones": "Chaperones",
@@ -147,13 +147,13 @@
         "proviseur": "Principal’s name",
         "sendingCity": "School’s city",
         "absenceDates": "Absence days to excuse",
-        "absenceDatesHint": "One day per line, e.g. “le jeudi 19 octobre 2026”",
+        "absenceDatesHint": "One day per line, written in French — copied word-for-word into the French absence form. E.g. “le jeudi 19 octobre 2026”.",
         "acceptanceHeading": "For the acceptance email",
         "acceptanceSubtitle": "These values replace the “to be completed” placeholders in the “Good news” email sent to selected families.",
         "participationCost": "Cost to families",
         "participationCostHint": "E.g. “€850 per student, flights and accommodation included”",
         "paymentDetails": "Membership / payment",
-        "paymentDetailsHint": "Payment link or instructions, e.g. “cheque payable to the association”",
+        "paymentDetailsHint": "Payment link or instructions, written in French — copied word-for-word into the French acceptance email. E.g. “chèque à l’ordre de l’association”.",
         "confirmationDeadline": "Confirmation deadline",
         "save": "Save",
         "saved": "Saved."
@@ -422,12 +422,10 @@
         "missingDocsDesc": "Documents not received before the deadline.",
         "missingDocsCta": "View students",
         "maybeTitle": "{n, plural, one {# student undecided — to follow up} other {# students undecided — to follow up}}",
-        "maybeDesc": "« Maybe » replies to follow up with families.",
+        "maybeDesc": "“Maybe” replies to follow up with families.",
         "maybeCta": "Send reminder"
       },
-      "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late.",
-      "progressDossiers": "{done} / {total} files validated",
-      "progressCandidatures": "{done} / {total} applications processed"
+      "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late."
     },
     "applications": {
       "questionsHeading": "Family’s questions",
@@ -508,7 +506,7 @@
       },
       "emptyTab": "No applications in this tab.",
       "goodNewsBlock": {
-        "title": "« Bonne nouvelle » email is incomplete",
+        "title": "“Bonne nouvelle” email is incomplete",
         "missingIntro": "These details are still missing. Without them the family would receive an email with blanks in it:",
         "literal": "The template still contains bracketed text to replace.",
         "cta": "Fill them in under Settings",
@@ -614,9 +612,7 @@
         "mandatory": "Mandatory",
         "dependsOnSituation": "depends on situation",
         "complete": "Complete",
-        "toRedo": "To redo",
-        "missingCount": "{count, plural, one {# missing} other {# missing}}",
-        "toVerifyCount": "{count} to review"
+        "toRedo": "To redo"
       },
       "progress": {
         "notRequestedDoc": "Not requested yet",

@@ -1,7 +1,6 @@
 // Pure derivation library for the organizer dashboard (unified lifecycle view:
 // candidature → dossier complet). No React, no Supabase — only Intl.
 
-import { frShortDate } from '@/lib/dates'
 import { applicantName } from '@/lib/application-form'
 // Type-only import: used solely for the translator param type below, so it is
 // erased at compile time and this module stays React-free at runtime. Typing the
@@ -12,9 +11,6 @@ import type { useTranslations } from 'next-intl'
 // with FULL key paths (`common.status.*`, `organizer.dashboard.*`) so unknown
 // keys fail `npx tsc --noEmit`.
 type T = ReturnType<typeof useTranslations<never>>
-
-// Re-export: dashboard components historically import frShortDate from here.
-export { frShortDate }
 
 export type Pill = { kind: 'ok' | 'warn' | 'info' | 'bad' | 'neutral'; label: string }
 export type AppRow = { id: string; status: string; submitted_at: string | null; responded_at: string | null; data: Record<string, string>; email: string; photoUrl?: string | null }
@@ -31,11 +27,6 @@ export type DossierRollup = {
 }
 export type FunnelStage = { key: string; label: string; count: number; display?: string }
 export type ActionCard = { title: string; desc: string; cta: string; tone: 'accent' | 'warn' | 'bad'; filterKey: string; href?: string }
-
-// French pluralization helper: 's' when n > 1, else ''.
-export function p(n: number): string {
-  return n > 1 ? 's' : ''
-}
 
 const CONFIRMED_STATUSES = ['enrolling', 'enrolled']
 
