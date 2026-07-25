@@ -13,7 +13,7 @@
 // hasUnfilledPlaceholders detects, and it is the whole mechanism behind the
 // never-send-a-blank guard in actions/applications-review.ts.
 
-import { frShortDate } from '@/lib/dates'
+import { shortDate } from '@/lib/dates'
 import type { GoodNewsValues } from '@/lib/exchange/good-news-fields'
 
 export const DEFAULT_GOOD_NEWS_SUBJECT =
@@ -52,14 +52,14 @@ function detailValues(d: GoodNewsValues | null): Record<string, string | null> {
   if (!d) return {}
   const period = blank(d.travel_start) || blank(d.travel_end)
     ? null
-    : `du ${frShortDate(d.travel_start, { year: true })} au ${frShortDate(d.travel_end, { year: true })}`
+    : `du ${shortDate(d.travel_start, 'fr', { year: true })} au ${shortDate(d.travel_end, 'fr', { year: true })}`
   return {
     '{{travel_dates}}': period,
     '{{participation_cost}}': blank(d.participation_cost) ? null : d.participation_cost!.trim(),
     '{{payment_details}}': blank(d.payment_details) ? null : d.payment_details!.trim(),
     '{{confirmation_deadline}}': blank(d.confirmation_deadline)
       ? null
-      : frShortDate(d.confirmation_deadline, { year: true }),
+      : shortDate(d.confirmation_deadline, 'fr', { year: true }),
   }
 }
 
