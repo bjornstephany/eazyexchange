@@ -15,6 +15,10 @@ export type Profile = {
   full_name: string
   email: string
   org_role: string | null
+  // Manual approval gate. RLS is the real boundary (my_role() returns null
+  // unless this is 'approved'); the layouts read this only to decide whether
+  // to show the app or /pending.
+  status: 'pending' | 'approved' | 'rejected'
   locale: Locale
   // Personal sidebar order for exchanges (ids the organizer dragged into
   // place). Display-only: unknown ids are ignored at sort time.
@@ -43,7 +47,7 @@ export const getProfile = requestCache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('users')
-    .select('id, role, school_id, full_name, email, org_role, locale, exchange_order, schools(name, country, subscription_status, plan, grace_until)')
+    .select('id, role, school_id, full_name, email, org_role, status, locale, exchange_order, schools(name, country, subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<Profile>()
   return data ?? null

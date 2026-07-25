@@ -980,6 +980,24 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_allowlist: {
+        Row: {
+          created_at: string
+          email: string
+          note: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          note?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assignment_id: string
@@ -1043,33 +1061,48 @@ export type Database = {
           email: string
           exchange_order: string[]
           full_name: string
+          how_found_us: string | null
           id: string
           locale: string
+          notes: string | null
           org_role: string
+          reviewed_at: string | null
           role: string
+          role_description: string | null
           school_id: string
+          status: string
         }
         Insert: {
           created_at?: string
           email: string
           exchange_order?: string[]
           full_name: string
+          how_found_us?: string | null
           id: string
           locale?: string
+          notes?: string | null
           org_role?: string
+          reviewed_at?: string | null
           role: string
+          role_description?: string | null
           school_id: string
+          status?: string
         }
         Update: {
           created_at?: string
           email?: string
           exchange_order?: string[]
           full_name?: string
+          how_found_us?: string | null
           id?: string
           locale?: string
+          notes?: string | null
           org_role?: string
+          reviewed_at?: string | null
           role?: string
+          role_description?: string | null
           school_id?: string
+          status?: string
         }
         Relationships: [
           {
