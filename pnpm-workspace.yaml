@@ -5,12 +5,12 @@ overrides:
   # so forcing the patched line is safe. Drop this once next ships sharp ^0.35.
   sharp: ^0.35.3
 
-  # next 15.5.21 hard-pins postcss 8.4.31, but <=8.5.11 carries a high advisory
-  # (GHSA-6g55-p6wh-862q: arbitrary file read via attacker-controlled
-  # sourceMappingURL in CSS comments). 8.4.31 -> 8.5.x is a same-major bump of a
-  # semver-stable package used by both next and tailwind. Drop this once next
-  # pins postcss >=8.5.12.
-  postcss: ^8.5.12
+  # next 15.5.21 hard-pins postcss 8.4.31, but <=8.5.17 carries a high advisory
+  # (GHSA-r28c-9q8g-f849, successor to GHSA-6g55-p6wh-862q: arbitrary .map file
+  # disclosure via attacker-controlled sourceMappingURL). 8.4.31 -> 8.5.x is a
+  # same-major bump of a semver-stable package used by both next and tailwind.
+  # Drop this once next pins postcss >=8.5.18.
+  postcss: ^8.5.18
 
 allowBuilds:
   # sharp = next 15's image optimizer; its install step fetches prebuilt binaries.
