@@ -1931,3 +1931,75 @@ Cannot be automated; do these by hand in a browser.
 **Type consistency.** `ProvisionResult` gains `status` in Task 4 and is consumed with that shape in Tasks 4 and 5. `Profile.status` is defined in Task 2 and read in Tasks 3 and 7. `isPlatformAdmin` is defined in Task 7 Step 3 and used in Steps 7 and 9 of that task with the same signature. `SchoolOption` is imported from `lib/schools/registry` everywhere. `searchPublicSchools` is defined in Task 6 Step 3 and passed as `SchoolCombobox`'s `search` prop in Step 6 with a matching type.
 
 **Known risk carried into execution.** Task 6 Step 7 says the two existing signup test files "will likely need updating" without giving their new content — the required change depends on how they currently drive the form, which the implementer will see. This is the one place in the plan where judgment is required rather than transcription.
+
+---
+
+## Execution Progress (2026-07-25)
+
+**Tasks 1–8: DONE, committed on `feature/signup-approval-gate`.** Full gate green at
+`bf184c7`: `pnpm lint` clean, `pnpm test` 1791/229 files, `pnpm build` OK (`/pending`
+and `/admin` both in the route table), `pnpm test:rls` 193 (162 pre-existing + 31 new).
+
+| Commit | Task |
+|---|---|
+| `eef1e50` | 1 — migration + RLS gate + `tests/rls/approval-gate.test.ts` |
+| `f8ef04e` | 2 — types + `Profile.status` |
+| `7e0eee3` | 3 — `/pending` + middleware/layout redirects |
+| `f16699e` | 5 — signup notification emails (moved ahead of Task 4, see below) |
+| `a74d9c4` | 4 — provisioning: intake fields, registry school, status read-back |
+| `34813bb` | 6 — anonymous registry search + signup form fields |
+| `b1f75b0` | 7 — `/admin` review queue |
+| `bf184c7` | 8 — `.env.example` + `CLAUDE.md` |
+
+**Task 9 (deploy) is NOT started.** Resume there. It needs Bjorn: the Vercel
+`ADMIN_EMAILS` value, and confirmation before merging to `main`.
+
+### Deviations from the plan as written
+
+1. **Migration — the prod-only backfill row is guarded.** `public.users.id` references
+   `auth.users(id)`, and the auth row for `marvanemust@gmail.com` exists only in prod.
+   Unguarded, the insert fails `supabase db reset` and the staging apply with a foreign
+   key violation. It is now inside a `do $$ … end $$` that checks the `auth.users` row
+   exists (and no profile exists yet); the stub school insert is inside the same guard so
+   no orphan school is created where the user does not exist. **On prod it still runs.**
+
+2. **`tests/rls/seed.ts` — `orgPending` needs an explicit UPDATE, and cleanup.**
+   `set_initial_user_status()` auto-approves any organizer joining a school that already
+   has an approved organizer, and `orgA` — inserted by the *same* multi-row statement —
+   is visible to the trigger. So the persona is inserted, then forced back with
+   `update users set status = 'pending'`. The trigger rule is correct for real colleague
+   invites; the fixture is the special case. `orgPending` was also added to the
+   `delete from auth.users` list in `cleanupFixtures` (the plan omitted it, which would
+   have made the `delete from schools` fail on the FK).
+
+3. **`approval-gate.test.ts` — two fixes to the plan's code.** The
+   `set_initial_user_status` cases create an `auth.users` row before each profile insert
+   (same FK). The non-vacuousness test uses a flat `sql.begin`, not a `sql.begin` nested
+   inside `runAs` — the RLS pool is `max: 1`, so a nested transaction would deadlock.
+
+4. **`types/supabase.ts` was hand-written, not generated.** `supabase gen types` shells
+   out to the `docker` CLI, which is not installed in this WSL distro (the Supabase CLI
+   itself works — it talks to the daemon socket, which is why `db reset` succeeds). The
+   edit is additive and follows generator conventions exactly (alphabetical keys, the new
+   `signup_allowlist` table between `schools` and `submissions`). **Task 9 Step 5 is the
+   correction point** — regenerate from prod via MCP and overwrite verbatim; commit if
+   it differs.
+
+5. **Task 5 landed before Task 4.** Task 4's `provision.ts` imports
+   `sendSignupRequestEmail` / `sendSignupFailureEmail`; running `tsc` between the two
+   tasks in plan order would fail. Both plan commit messages are preserved.
+
+6. **`app/admin/page.tsx` was added to the service-role allowlist too**, not just
+   `app/admin/actions.ts` — the page imports `createAdminClient` and the allowlist test
+   scans `app/`.
+
+7. **`<form action>` needs a void-returning action.** `approveUser` / `rejectUser` return
+   `{ ok }`, so `app/admin/actions.ts` also exports thin `approveUserForm` /
+   `rejectUserForm` wrappers, which is what the page binds.
+
+8. **Existing tests updated for the new behaviour** (beyond the two the plan predicted):
+   `app/__tests__/middleware.test.ts` (+3 gate cases), `app/__tests__/onboarding-page.test.ts`
+   (+1), `app/__tests__/confirm.test.ts` (+1), `app/(auth)/signup/__tests__/actions.test.ts`
+   (split into pending/approved destinations), `app/(auth)/__tests__/signup.test.tsx`.
+   Note the last one **deliberately reverses** its old assertion « does not render an
+   Établissement field » — the picker is back on `/signup` by design.
