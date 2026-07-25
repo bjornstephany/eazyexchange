@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
+import de from '@/messages/de.json'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
@@ -83,6 +84,12 @@ describe('OverviewView — unified lifecycle table', () => {
     renderWithIntl(<OverviewView {...base} />)
     const date = screen.getByTitle('18 septembre 2026')
     expect(date).toHaveTextContent('18 sept. 2026')
+  })
+
+  it('renders the response date in the active locale, not French', () => {
+    renderWithIntl(<OverviewView {...base} />, { locale: 'de', messages: de })
+    expect(screen.getByTitle('18. September 2026')).toHaveTextContent('18. Sept. 2026')
+    expect(screen.queryByTitle('18 septembre 2026')).toBeNull()
   })
 
   it('dates a declined row too — the rule is responded_at, not acceptance', () => {

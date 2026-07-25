@@ -2,8 +2,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { fullDate } from '@/lib/dates'
+import { useLocale, useTranslations } from 'next-intl'
+import { longDate, shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import type { AppRow, DossierRollup, TemplateInfo, CellMap, ActionCard, Pill, EnrolledStudent } from '@/lib/dashboard/rollup'
 import {
   buildLifecycleRows,
@@ -15,7 +16,6 @@ import {
   formsPill,
   docsPill,
   nextDeadline,
-  frShortDate,
 } from '@/lib/dashboard/rollup'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { StudentDrawer, type DrawerSubject } from '@/components/dashboard/StudentDrawer'
@@ -59,6 +59,7 @@ export function OverviewView(props: OverviewProps) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const tr = useTranslations()
+  const locale = useLocale() as Locale
   const router = useRouter()
   const [filter, setFilter] = useState<string | null>(null)
   const [showClosed, setShowClosed] = useState(false)
@@ -201,9 +202,9 @@ export function OverviewView(props: OverviewProps) {
                   {row.respondedAt && (
                     <span
                       className="whitespace-nowrap text-[11.5px] text-muted-foreground"
-                      title={fullDate(row.respondedAt)}
+                      title={longDate(row.respondedAt, locale)}
                     >
-                      {frShortDate(row.respondedAt, { year: true })}
+                      {shortDate(row.respondedAt, locale, { year: true })}
                     </span>
                   )}
                 </span>
@@ -242,7 +243,7 @@ export function OverviewView(props: OverviewProps) {
           {cards.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t('dashboard.upToDate')}
-              {next ? t('dashboard.nextDeadlineSuffix', { date: frShortDate(next) }) : ''}
+              {next ? t('dashboard.nextDeadlineSuffix', { date: shortDate(next, locale) }) : ''}
             </p>
           ) : (
             cards.map((card) => (

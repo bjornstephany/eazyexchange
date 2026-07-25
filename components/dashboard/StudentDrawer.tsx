@@ -1,8 +1,9 @@
 'use client'
 import { useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { DossierRollup, Pill } from '@/lib/dashboard/rollup'
-import { frShortDate } from '@/lib/dashboard/rollup'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 
 export type DrawerSubject = {
@@ -22,6 +23,7 @@ function initials(name: string): string {
 
 export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | null; onClose: () => void }) {
   const t = useTranslations('organizer')
+  const locale = useLocale() as Locale
 
   useEffect(() => {
     if (!subject) return
@@ -56,7 +58,7 @@ export function StudentDrawer({ subject, onClose }: { subject: DrawerSubject | n
 
         <div className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-tertiary mt-6 mb-3">
           {t('dashboard.formsAndDocsHeading')}
-          {subject.rollup.due ? t('dashboard.dueSuffix', { date: frShortDate(subject.rollup.due) }) : ''}
+          {subject.rollup.due ? t('dashboard.dueSuffix', { date: shortDate(subject.rollup.due, locale) }) : ''}
         </div>
         <div>
           {subject.items.map((item, i) => (

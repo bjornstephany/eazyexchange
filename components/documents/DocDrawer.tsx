@@ -1,12 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { TemplateIcon } from '@/components/forms/TemplateIcon'
 import { reqPill, progressLabel, docDrawerRows, type TemplateVM } from '@/lib/forms/rollup'
 import { isSafeExternalUrl } from '@/lib/forms/template-result'
-import { frShortDate } from '@/lib/dashboard/rollup'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { deleteTemplate, remindTemplate } from '@/actions/forms'
 
 // Right detail drawer (460px) for a pièce justificative, per handoff.
@@ -23,6 +24,7 @@ export function DocDrawer({
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const tr = useTranslations()
+  const locale = useLocale() as Locale
 
   useEffect(() => {
     setBusy(false); setError(null); setRemindResult(null)
@@ -97,7 +99,7 @@ export function DocDrawer({
             <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.acceptedFormats')}</span>
             <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.maxSize')}</span>
             {vm.deadline && (
-              <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.deadlineChip', { date: frShortDate(vm.deadline) })}</span>
+              <span className="rounded-lg border bg-hoverrow px-[11px] py-1.5 font-mono text-[11.5px] font-medium text-muted-foreground">{t('documents.drawer.deadlineChip', { date: shortDate(vm.deadline, locale) })}</span>
             )}
           </div>
 
