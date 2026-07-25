@@ -11,6 +11,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Terminal for a non-approved account. NOT in isAuthRoute below — that branch
+  // redirects non-approved users to /pending, which would loop onto itself.
+  if (pathname === '/pending') {
+    return supabaseResponse
+  }
+
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite') || pathname.startsWith('/signup')
   const isPublicRoute =
     pathname === '/' ||
@@ -36,8 +42,8 @@ export async function middleware(request: NextRequest) {
   if (user && (isAuthRoute || pathname === '/')) {
     // Fetch role + setup state to redirect correctly
     const { data: profile } = await supabase
-      .from('users').select('role, full_name').eq('id', user.id)
-      .single<{ role: string; full_name: string | null }>()
+      .from('users').select('role, full_name, status').eq('id', user.id)
+      .single<{ role: string; full_name: string | null; status: string }>()
 
     // An orphaned/stale session: getClaims() verifies the JWT locally so `user`
     // is set, but there is no backing users row (account deleted, or the DB was
@@ -47,6 +53,13 @@ export async function middleware(request: NextRequest) {
     // Let the request reach the auth route so the user can re-authenticate.
     if (!profile) {
       return supabaseResponse
+    }
+
+    // Not approved: /pending is the only page they get. Checked before the
+    // accept-invite and role-destination branches below, which would otherwise
+    // hand them a shell the layout has to bounce again.
+    if (profile.status !== 'approved') {
+      return NextResponse.redirect(new URL('/pending', request.url))
     }
 
     // A freshly-invited user has a session (set by /auth/confirm) but an empty

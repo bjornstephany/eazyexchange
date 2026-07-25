@@ -30,8 +30,9 @@ export async function confirmSignupCode(email: string, code: string): Promise<Co
   if (!result.ok) return { ok: false, error: 'provision_failed' }
   // Straight into onboarding. Routing a fresh signup through /dashboard only to
   // be bounced adds a redirect that can only fail: if the layout gate does not
-  // fire, /dashboard renders for a user with no school.
-  redirect('/onboarding')
+  // fire, /dashboard renders for a user with no school. A self-signup lands
+  // pending and cannot reach /onboarding at all, so it goes to /pending.
+  redirect(result.status === 'approved' ? '/onboarding' : '/pending')
 }
 
 // Re-sends the signup confirmation email (carrying a fresh code). Relies on

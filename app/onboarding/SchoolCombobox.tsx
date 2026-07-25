@@ -13,9 +13,12 @@ import { Label } from '@/components/ui/label'
 export const SUPPORT_EMAIL = 'contact@eazyexchange.com'
 const SEARCH_DEBOUNCE_MS = 250
 
-export function SchoolCombobox({ value, onSelect }: {
+export function SchoolCombobox({ value, onSelect, search = searchSchools }: {
   value: SchoolOption | null
   onSelect: (option: SchoolOption | null) => void
+  // /signup runs before any account exists, so it passes the unauthenticated
+  // twin. Defaults to the organizer-gated one used by /onboarding.
+  search?: (query: string) => Promise<SchoolOption[]>
 }) {
   const [query, setQuery] = useState('')
   const [options, setOptions] = useState<SchoolOption[]>([])
@@ -35,7 +38,7 @@ export function SchoolCombobox({ value, onSelect }: {
     setSearching(true)
     const mine = ++ticket.current
     const timer = setTimeout(() => {
-      void searchSchools(query)
+      void search(query)
         .then((rows) => {
           if (mine !== ticket.current) return
           setOptions(rows)
@@ -48,7 +51,7 @@ export function SchoolCombobox({ value, onSelect }: {
         })
     }, SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [query, value])
+  }, [query, value, search])
 
   if (value) {
     return (

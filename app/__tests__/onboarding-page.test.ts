@@ -32,7 +32,7 @@ async function getRedirect(): Promise<string> {
 beforeEach(() => {
   redirect.mockClear()
   authedUser = { id: 'u1' }
-  profile = { role: 'organizer', school_id: 's-1', schools: { name: '' } }
+  profile = { role: 'organizer', status: 'approved', school_id: 's-1', schools: { name: '' } }
   ownedExchangeCount = 0
 })
 
@@ -43,31 +43,38 @@ describe('OnboardingPage', () => {
   })
 
   it('redirects a student to /my-forms', async () => {
-    profile = { role: 'student', school_id: 's-1', schools: { name: '' } }
+    profile = { role: 'student', status: 'approved', school_id: 's-1', schools: { name: '' } }
     expect(await getRedirect()).toBe('/my-forms')
   })
 
+  // The approval gate sits above the schoolName read, so a pending organizer
+  // never reaches the exchange-count query.
+  it('redirects a pending organizer to /pending', async () => {
+    profile = { role: 'organizer', status: 'pending', school_id: 's-1', schools: { name: '' } }
+    expect(await getRedirect()).toBe('/pending')
+  })
+
   it('redirects a fully-onboarded organizer (named + has exchange) to /applications', async () => {
-    profile = { role: 'organizer', school_id: 's-1', schools: { name: 'Lincoln High' } }
+    profile = { role: 'organizer', status: 'approved', school_id: 's-1', schools: { name: 'Lincoln High' } }
     ownedExchangeCount = 2
     expect(await getRedirect()).toBe('/applications')
   })
 
   it('renders (no redirect) for a named school that owns no exchange', async () => {
-    profile = { role: 'organizer', school_id: 's-1', schools: { name: 'Lincoln High' } }
+    profile = { role: 'organizer', status: 'approved', school_id: 's-1', schools: { name: 'Lincoln High' } }
     ownedExchangeCount = 0
     await expect(OnboardingPage()).resolves.toBeTruthy() // renders at step 2
   })
 
   it('renders (no redirect) for a blank school name', async () => {
-    profile = { role: 'organizer', school_id: 's-1', schools: { name: '' } }
+    profile = { role: 'organizer', status: 'approved', school_id: 's-1', schools: { name: '' } }
     await expect(OnboardingPage()).resolves.toBeTruthy() // renders at step 1
   })
 })
 
 describe('OnboardingPage — form props', () => {
   it('passes the school id down so the draft is school-scoped', async () => {
-    profile = { role: 'organizer', school_id: 's-1', schools: { name: 'Lincoln High' } }
+    profile = { role: 'organizer', status: 'approved', school_id: 's-1', schools: { name: 'Lincoln High' } }
     ownedExchangeCount = 0
     const el = await OnboardingPage()
     expect(JSON.stringify(el)).toContain('"schoolId":"s-1"')

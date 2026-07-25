@@ -20,6 +20,12 @@ export default async function OnboardingPage() {
     redirect(shellDestination(profile?.role, 'organizer')!)
   }
 
+  // RLS already denies everything for a non-approved account; this only stops
+  // the shell rendering an empty, broken onboarding on the way. It must sit
+  // above the schoolName read so a pending organizer never reaches the
+  // exchange-count query.
+  if (profile.status !== 'approved') redirect('/pending')
+
   const schoolName = profile.schools?.name ?? ''
 
   const supabase = await createClient()

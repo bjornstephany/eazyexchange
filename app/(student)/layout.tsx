@@ -19,6 +19,10 @@ export default async function StudentLayout({ children }: { children: React.Reac
     redirect(shellDestination(profile?.role, 'student')!)
   }
 
+  // RLS already denies everything for a non-approved account; this only stops
+  // the shell rendering an empty, broken portal on the way.
+  if (profile.status !== 'approved') redirect('/pending')
+
   const ctx = await getStudentContext()
 
   // resolveLocale() reads the same per-request cached profile fetched above, so

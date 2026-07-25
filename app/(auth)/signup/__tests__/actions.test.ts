@@ -11,7 +11,9 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({ auth: { verifyOtp, resend } }),
 }))
 
-const provisionOrganizer = vi.fn(async (_u: unknown) => ({ ok: true }) as { ok: boolean; reason?: string })
+const provisionOrganizer = vi.fn(
+  async (_u: unknown) => ({ ok: true, status: 'pending' }) as { ok: boolean; status?: string; reason?: string },
+)
 vi.mock('@/lib/auth/provision', () => ({ provisionOrganizer: (u: unknown) => provisionOrganizer(u) }))
 
 import { confirmSignupCode, resendSignupCode } from '@/app/(auth)/signup/actions'
@@ -28,10 +30,18 @@ beforeEach(() => {
 })
 
 describe('confirmSignupCode', () => {
-  it('verifies the code, provisions, and redirects to /onboarding', async () => {
+  // A self-signup lands pending behind the approval gate, and /onboarding would
+  // bounce it straight back — so the holding page is the destination.
+  it('verifies the code, provisions, and redirects a pending signup to /pending', async () => {
     const dest = await catchRedirect(() => confirmSignupCode('a@b.com', '123456'))
     expect(verifyOtp).toHaveBeenCalledWith({ email: 'a@b.com', token: '123456', type: 'signup' })
     expect(provisionOrganizer).toHaveBeenCalledTimes(1)
+    expect(dest).toBe('/pending')
+  })
+
+  it('sends a pre-approved (allowlisted) signup to /onboarding', async () => {
+    provisionOrganizer.mockResolvedValueOnce({ ok: true, status: 'approved' })
+    const dest = await catchRedirect(() => confirmSignupCode('a@b.com', '123456'))
     // Not /dashboard: a fresh signup has no school, so routing it through a page
     // the layout gate is guaranteed to bounce adds a hop that can only fail.
     expect(dest).toBe('/onboarding')

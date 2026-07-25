@@ -25,6 +25,10 @@ export default async function OrganizerLayout({ children }: { children: React.Re
     redirect(shellDestination(profile?.role, 'organizer')!)
   }
 
+  // RLS already denies everything for a non-approved account; this only stops
+  // the shell rendering an empty, broken dashboard on the way.
+  if (profile.status !== 'approved') redirect('/pending')
+
   const supabase = await createClient()
 
   const school = profile?.schools ?? null
