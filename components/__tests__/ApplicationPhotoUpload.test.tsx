@@ -3,7 +3,7 @@ import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('@/actions/apply', () => ({
-  uploadApplicationPhoto: vi.fn(async () => ({ path: 'app-1/photo.png' })),
+  uploadApplicationPhoto: vi.fn(async () => ({ ok: true, path: 'app-1/photo.png' })),
 }))
 
 const compressMock = vi.fn(async (f: File) => f)
@@ -57,14 +57,14 @@ describe('ApplicationPhotoUpload', () => {
   })
 
   it('shows the uploading state while the action is in flight', async () => {
-    let resolveUpload!: (v: { path: string }) => void
+    let resolveUpload!: (v: { ok: true; path: string }) => void
     vi.mocked(uploadApplicationPhoto).mockImplementationOnce(
       () => new Promise(res => { resolveUpload = res }),
     )
     renderCard()
     pickFile()
     expect(await screen.findByRole('button', { name: /envoi…/i })).toBeDisabled()
-    resolveUpload({ path: 'app-1/photo.png' })
+    resolveUpload({ ok: true, path: 'app-1/photo.png' })
     expect(await screen.findByRole('button', { name: /remplacer la photo/i })).toBeEnabled()
   })
 

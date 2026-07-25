@@ -2,10 +2,13 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { randomToken, tokenExpired, resumeTokenExpiry } from '@/lib/tokens'
-import { normalizeEmail, isValidEmail, hasOverlongAnswer, MAX_ANSWER_LENGTH } from '@/lib/validation'
+import { normalizeEmail, isValidEmail, hasOverlongAnswer } from '@/lib/validation'
 import { missingRequiredApplication, overLimitApplicationFields, invalidFormatApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
-import { validateUploadFile, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
-import { enforceRateLimit, enforceRateLimitStrict, clientIp } from '@/lib/rate-limit'
+import { uploadFileIssue, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
+import { checkRateLimit, clientIp } from '@/lib/rate-limit'
+import {
+  applyFailure, type ApplyWriteResult, type ApplyPhotoResult,
+} from '@/lib/apply/result'
 import {
   sendApplicationResumeEmail, sendApplicationConfirmationEmail, sendNewApplicationAlertEmail,
 } from '@/lib/email'
@@ -39,14 +42,30 @@ export type StartApplicationResult =
   | { closed: true }
   | { invalidEmail: true }
   | { registered: true }
+  | { notFound: true }
+  | { rateLimited: true }
 
-// Structured result for the two draft-writing actions: expected validation
-// outcomes must be return values, never throws (prod redacts thrown messages).
-export type ApplyWriteResult =
-  | { ok: true }
-  | { ok: false; overLimit: string[] }
-  | { ok: false; invalidFormat: string[] }
-  | { ok: false; registered: true }
+// Reports the funnel's two rate-limit tiers as a value instead of throwing,
+// preserving each tier's failure mode: `open` fails OPEN on a DB error (a blip
+// must never block a legitimate applicant) while `strict` fails CLOSED (it
+// gates mail leaving our sending domain — losing the cap means unlimited mail).
+// Not exported: a 'use server' module may only export async functions.
+async function overRateLimit(
+  open: { key: string; limit: number; window: number },
+  strict?: { key: string; limit: number; window: number },
+): Promise<boolean> {
+  const first = await checkRateLimit(open.key, open.limit, open.window)
+  // Don't log the key — it can contain an applicant email (PII).
+  if (first === 'error') console.error('[rate-limit] check failed, allowing request')
+  if (first === 'limited') return true
+  if (!strict) return false
+  const second = await checkRateLimit(strict.key, strict.limit, strict.window)
+  if (second === 'error') {
+    console.error('[rate-limit] check failed, BLOCKING mail-sending request')
+    return true
+  }
+  return second === 'limited'
+}
 
 export async function startApplication(
   slug: string,
@@ -62,8 +81,10 @@ export async function startApplication(
   // by source IP and by recipient to prevent enumeration / mail-bombing from our
   // sending domain. Per-email is the tighter limit (don't re-mail the same victim).
   const ip = await clientIp()
-  await enforceRateLimit(`apply_ip:${ip}`, 10, 3600)
-  await enforceRateLimitStrict(`apply_email:${email}`, 3, 3600)
+  if (await overRateLimit(
+    { key: `apply_ip:${ip}`, limit: 10, window: 3600 },
+    { key: `apply_email:${email}`, limit: 3, window: 3600 },
+  )) return { rateLimited: true }
 
   const admin = createAdminClient()
   const { data: exchange } = await admin
@@ -71,8 +92,8 @@ export async function startApplication(
     .select('id, name, school_a_id, application_open, application_deadline')
     .eq('apply_slug', slug)
     .maybeSingle()
-  if (!exchange) throw new Error('Application not found')
-  if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
+  if (!exchange) return { notFound: true }
+  if (applicationsClosed(exchange)) return { closed: true }
   await assertExchangeWritable(admin, exchange.id)
 
   // One email = one application per exchange. Any existing row blocks a new
@@ -250,21 +271,23 @@ export async function peekApplicationDraft(
 
 // Emails the applicant their private resume link on demand ("Finish later").
 // Only valid while the application is still an open draft.
-export async function sendApplicationResumeLink(token: string): Promise<void> {
+export async function sendApplicationResumeLink(token: string): Promise<ApplyWriteResult> {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
     .select('email, status, resume_token_expires_at, school_id, exchange_id, exchanges(name)')
     .eq('resume_token', token).maybeSingle()
-  if (!app) throw new Error('Application not found')
-  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft') throw new Error('This application has already been submitted.')
+  if (!app) return applyFailure('not_found')
+  if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
+  if (app.status !== 'draft') return applyFailure('locked')
 
   // This mails the applicant's address, so cap by IP + recipient to prevent
-  // mail-bombing from our sending domain (mirrors startApplication's old gate).
+  // mail-bombing from our sending domain (mirrors startApplication's gate).
   const ip = await clientIp()
-  await enforceRateLimit(`resume_ip:${ip}`, 10, 3600)
-  await enforceRateLimitStrict(`resume_email:${app.email}`, 3, 3600)
+  if (await overRateLimit(
+    { key: `resume_ip:${ip}`, limit: 10, window: 3600 },
+    { key: `resume_email:${app.email}`, limit: 3, window: 3600 },
+  )) return applyFailure('rate_limited')
 
   await sendApplicationResumeEmail({
     to: app.email,
@@ -272,25 +295,25 @@ export async function sendApplicationResumeLink(token: string): Promise<void> {
     resumeUrl: `${APP_URL}/apply/resume/${token}`,
     ctx: { schoolId: app.school_id, exchangeId: app.exchange_id },
   })
+  return { ok: true }
 }
 
 export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
-  if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const overLimit = overLimitApplicationFields(data)
-  if (overLimit.length > 0) return { ok: false, overLimit }
+  if (hasOverlongAnswer(data) || overLimit.length > 0) return applyFailure('too_long', overLimit)
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
-  if (!app) throw new Error('Application not found')
-  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
+  if (!app) return applyFailure('not_found')
+  if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
+  if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
   await assertExchangeWritable(admin, app.exchange_id)
   // First edit of an organizer-invited row marks it "started".
   const patch: { data: Record<string, string>; status?: 'draft' } =
     app.status === 'invited' ? { data, status: 'draft' } : { data }
   const { error } = await admin
     .from('applications').update(patch).eq('resume_token', token)
-  if (error) throw error
+  if (error) return applyFailure('failed')
   return { ok: true }
 }
 
@@ -308,29 +331,29 @@ export async function setApplicationLanguage(token: string, locale: Locale): Pro
 }
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
-  if (hasOverlongAnswer(data)) throw new Error(`An answer exceeds the ${MAX_ANSWER_LENGTH}-character limit.`)
   const overLimit = overLimitApplicationFields(data)
-  if (overLimit.length > 0) return { ok: false, overLimit }
+  if (hasOverlongAnswer(data) || overLimit.length > 0) return applyFailure('too_long', overLimit)
 
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
     .select('id, status, email, exchange_id, school_id, resume_token_expires_at, photo_path')
     .eq('resume_token', token).maybeSingle()
-  if (!app) throw new Error('Application not found')
-  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted')
+  if (!app) return applyFailure('not_found')
+  if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
+  if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
 
   // Server-side backstop of the client submit gate — same policy, including
-  // the photo (which lives on the row, not in `data`).
+  // the photo (which lives on the row, not in `data`). Structured so the client
+  // can flag the offending fields instead of showing a digest.
   const missing = missingRequiredApplication(data, { hasPhoto: app.photo_path != null })
-  if (missing.length > 0) throw new Error('Please complete all required fields before submitting.')
+  if (missing.length > 0) return applyFailure('missing_fields', missing)
 
   // Format backstop for the e-mail/phone fields. Structured, not thrown: the
   // client can point at the offending fields, and a malformed parent address
   // here would 422 the whole acceptance send later on.
   const invalidFormat = invalidFormatApplicationFields(data)
-  if (invalidFormat.length > 0) return { ok: false, invalidFormat }
+  if (invalidFormat.length > 0) return applyFailure('bad_format', invalidFormat)
 
   // Re-check the window at submit time: startApplication gated it, but the
   // organizer may have closed applications (or the deadline passed) while this
@@ -339,8 +362,8 @@ export async function submitApplication(token: string, data: Record<string, stri
     .from('exchanges')
     .select('name, application_open, application_deadline')
     .eq('id', app.exchange_id).maybeSingle()
-  if (!exchange) throw new Error('Application not found')
-  if (applicationsClosed(exchange)) throw new Error('Applications are closed for this exchange')
+  if (!exchange) return applyFailure('not_found')
+  if (applicationsClosed(exchange)) return applyFailure('closed')
   await assertExchangeWritable(admin, app.exchange_id)
 
   // Race backstop for the start-time guard: if this email became enrolled in
@@ -357,12 +380,12 @@ export async function submitApplication(token: string, data: Record<string, stri
     .not('enrolled_user_id', 'is', null)
     .limit(1)
     .maybeSingle()
-  if (enrolledElsewhere) return { ok: false, registered: true }
+  if (enrolledElsewhere) return applyFailure('registered')
 
   const { error } = await admin.from('applications').update({
     data, status: 'submitted', submitted_at: new Date().toISOString(),
   }).eq('resume_token', token)
-  if (error) throw error
+  if (error) return applyFailure('failed')
 
   // Emails: applicant confirmation + organizer alert. Fire-and-forget.
   const applicantName = buildApplicantName(data)
@@ -382,37 +405,36 @@ export async function submitApplication(token: string, data: Record<string, stri
   return { ok: true }
 }
 
-export async function uploadApplicationPhoto(token: string, formData: FormData): Promise<{ path: string }> {
+export async function uploadApplicationPhoto(token: string, formData: FormData): Promise<ApplyPhotoResult> {
   const file = formData.get('photo')
-  if (!(file instanceof File)) throw new Error('No file provided')
-  const err = validateUploadFile({ type: file.type, size: file.size })
-  if (err) throw new Error(err)
-  if (!file.type.startsWith('image/')) throw new Error('Please upload an image file')
+  if (!(file instanceof File)) return applyFailure('no_file')
+  if (uploadFileIssue({ type: file.type, size: file.size })) return applyFailure('file_rejected')
+  if (!file.type.startsWith('image/')) return applyFailure('not_an_image')
 
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
-  if (!app) throw new Error('Application not found')
-  if (tokenExpired(app.resume_token_expires_at)) throw new Error('This application link has expired.')
-  if (app.status !== 'draft' && app.status !== 'invited') throw new Error('This application is already submitted and locked')
+  if (!app) return applyFailure('not_found')
+  if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
+  if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
   await assertExchangeWritable(admin, app.exchange_id)
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
   const path = `${app.id}/photo.${ext}`
   const { error: upErr } = await admin.storage.from(APPLICATION_PHOTO_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type })
-  if (upErr) throw upErr
+  if (upErr) return applyFailure('failed')
   // First upload of an organizer-invited row marks it "started".
   const patch: { photo_path: string; status?: 'draft' } =
     app.status === 'invited' ? { photo_path: path, status: 'draft' } : { photo_path: path }
   const { error } = await admin.from('applications').update(patch).eq('id', app.id)
-  if (error) throw error
-  return { path }
+  if (error) return applyFailure('failed')
+  return { ok: true, path }
 }
 
 export type RecapResult =
   | { ok: true; filename: string; pdf: string /* base64 */ }
-  | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' }
+  | { ok: false; reason: 'not_found' | 'expired' | 'not_submitted' | 'rate_limited' | 'failed' }
 
 // Photos are accepted up to 10 MB (lib/uploads.ts) and are never downscaled
 // before upload, but the recap only ever draws one at 96×120 pt. Holding the
@@ -454,7 +476,9 @@ function recapFilename(data: Record<string, string>): string {
 export async function downloadApplicationRecap(token: string, language?: Locale): Promise<RecapResult> {
   // Same anonymous-token preamble as the other actions in this file.
   const ip = await clientIp()
-  await enforceRateLimit(`recap_ip:${ip}`, 20, 3600)
+  if (await overRateLimit({ key: `recap_ip:${ip}`, limit: 20, window: 3600 })) {
+    return { ok: false, reason: 'rate_limited' }
+  }
 
   const admin = createAdminClient()
   const { data: app } = await admin

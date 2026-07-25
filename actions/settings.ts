@@ -4,7 +4,7 @@ import { requireOrganizer, requireUser } from '@/lib/auth/require'
 import { createClient as createBareClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { checkRateLimit, enforceRateLimitStrict } from '@/lib/rate-limit'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
@@ -255,16 +255,26 @@ export async function getTeam(): Promise<{ members: TeamMember[]; pending: Pendi
   }
 }
 
-export async function inviteOrganizer(rawEmail: string): Promise<void> {
+export async function inviteOrganizer(rawEmail: string): Promise<ActionResult> {
   const ctx = await getOrganizerCtx({ orgRole: 'owner' })
-  await enforceRateLimitStrict(`team-invite:${ctx.schoolId}`, 10, 3600)
+  const t = await getTranslations('organizer')
+
+  // Fails CLOSED on a DB error, matching the enforceRateLimitStrict this
+  // replaced: this key gates mail leaving our sending domain, so losing the
+  // cap would mean unlimited invites.
+  const rate = await checkRateLimit(`team-invite:${ctx.schoolId}`, 10, 3600)
+  if (rate === 'error') {
+    console.error('[rate-limit] check failed, BLOCKING mail-sending request')
+    return { ok: false, message: t('settings.errors.unavailable') }
+  }
+  if (rate === 'limited') return { ok: false, message: t('settings.errors.tooManyAttempts') }
 
   const admin = createAdminClient()
   const result = await createAndSendOrganizerInvite(admin, {
     schoolId: ctx.schoolId, email: rawEmail,
     inviterUserId: ctx.userId, inviterName: ctx.fullName, appUrl: getAppUrl(),
   })
-  if (!result.ok) throw new Error(result.message)
+  if (!result.ok) return { ok: false, message: result.message }
   await logAudit({
     action: 'organizer.invited',
     actorUserId: ctx.userId,
@@ -273,6 +283,7 @@ export async function inviteOrganizer(rawEmail: string): Promise<void> {
     targetId: result.inviteId,
   })
   revalidatePath('/settings')
+  return { ok: true }
 }
 
 export async function revokeOrganizerInvite(inviteId: string): Promise<void> {

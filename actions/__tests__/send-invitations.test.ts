@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-vi.mock('@/lib/rate-limit', () => ({ clientIp: async () => 'ip', enforceRateLimit: vi.fn(async () => {}) }))
+const checkRateLimit = vi.fn(async () => 'allowed' as 'allowed' | 'limited' | 'error')
+vi.mock('@/lib/rate-limit', () => ({
+  clientIp: async () => 'ip',
+  checkRateLimit: (...a: unknown[]) => checkRateLimit(...(a as [])),
+}))
 const sendInvite = vi.fn(async (..._a: unknown[]) => {})
 vi.mock('@/lib/email', () => ({
   sendApplicationInviteEmail: (...a: unknown[]) => sendInvite(...a),
@@ -39,6 +43,7 @@ import { sendApplicationInvitations } from '../applications-review'
 
 beforeEach(() => {
   sendInvite.mockClear(); upsert.mockClear()
+  checkRateLimit.mockResolvedValue('allowed')
   exchange = {
     id: 'ex1', name: 'X', school_a_id: 'school-1',
     application_open: true, application_deadline: '2999-01-01',

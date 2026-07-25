@@ -167,6 +167,7 @@
         "currentPasswordIncorrect": "Current password is incorrect.",
         "passwordTooShort": "Password must be at least 8 characters long.",
         "passwordLeaked": "This password appears in known data breaches — please choose another one.",
+        "unavailable": "This service is temporarily unavailable. Please try again in a few minutes.",
         "tooManyAttempts": "Too many attempts. Please wait a little while and try again."
       }
     },
@@ -472,6 +473,7 @@
         "sending": "Sending…",
         "close": "Close",
         "notOpenError": "Open applications and set a deadline first.",
+        "rateLimitedError": "Too many sends. Please wait a moment before trying again.",
         "tooManyError": "Too many addresses (max 200 per send).",
         "result": "{sent} sent · {skipped} already in the list · {invalid} invalid"
       },
@@ -841,6 +843,22 @@
     }
   },
   "apply": {
+    "errors": {
+      "not_found": "This link is no longer valid — ask your organizer for a new one.",
+      "expired": "This link has expired — ask your organizer for a new one.",
+      "locked": "Your application has already been submitted — it can no longer be edited.",
+      "not_submitted": "Your application has not been submitted yet.",
+      "closed": "Applications are closed for this exchange.",
+      "rate_limited": "Too many attempts. Please wait a few minutes and try again.",
+      "too_long": "Some answers exceed the character limit.",
+      "bad_format": "Check the format of the highlighted e-mail and phone fields.",
+      "missing_fields": "Please complete all required fields.",
+      "registered": "This email is already registered for an exchange. Please log in to your account instead.",
+      "no_file": "No file selected.",
+      "not_an_image": "Please choose an image (JPEG, PNG or WebP).",
+      "file_rejected": "That file isn’t accepted — JPEG, PNG or WebP image, 10 MB maximum.",
+      "failed": "Something went wrong. Please try again."
+    },
     "form": { "yes": "Yes", "no": "No" },
     "recap": {
       "title": "Application summary",
@@ -848,13 +866,7 @@
       "footer": "Your answers, as submitted via EazyExchange.",
       "photoAlt": "Applicant photo",
       "label": "Download my answers (PDF)",
-      "preparing": "Preparing…",
-      "errors": {
-        "not_found": "This link is no longer valid — ask your organizer for a new one.",
-        "expired": "This link has expired — ask your organizer for a new one.",
-        "not_submitted": "Your application has not been submitted yet.",
-        "unexpected": "The download failed. Please try again."
-      }
+      "preparing": "Preparing…"
     },
     "page": {
       "badge": "Application",
@@ -902,11 +914,6 @@
       "resend": "Resend link",
       "reassure": "Progress saved automatically. We emailed you a link in case you switch devices.",
       "submitting": "Sending…",
-      "missing": "Please complete all required fields.",
-      "tooLong": "Some answers exceed the character limit.",
-      "badFormat": "Check the format of the highlighted e-mail and phone fields.",
-      "unexpected": "An unexpected error occurred.",
-      "registered": "This email is already registered for an exchange. Please log in to your account instead.",
       "done": "Thank you! Your application has been submitted.",
       "remind": "We’ve emailed you a link to continue your application anytime.",
       "parentHelper": "Fill in at least one parent completely."

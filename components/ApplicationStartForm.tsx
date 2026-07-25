@@ -43,10 +43,22 @@ export function ApplicationStartForm({ slug, locale }: { slug: string; locale: L
         setLoading(false)
         return
       }
+      // Both were thrown before, so a parent saw a digest: no exchange behind
+      // this slug, and the per-IP / per-email caps.
+      if ('notFound' in res) {
+        setError(t('errors.not_found'))
+        setLoading(false)
+        return
+      }
+      if ('rateLimited' in res) {
+        setError(t('errors.rate_limited'))
+        setLoading(false)
+        return
+      }
       setNotice(res.existing)
       setLoading(false)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('start.genericError')); setLoading(false)
+    } catch {
+      setError(t('start.genericError')); setLoading(false)
     }
   }
 

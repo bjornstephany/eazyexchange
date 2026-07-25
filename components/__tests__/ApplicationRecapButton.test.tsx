@@ -87,7 +87,7 @@ describe('ApplicationRecapButton', () => {
     downloadApplicationRecap.mockRejectedValueOnce(new Error('digest-abc123'))
     renderWithIntl(<ApplicationRecapButton token="t" language="fr" />)
     fireEvent.click(screen.getByRole('button', { name: /télécharger mes réponses/i }))
-    expect(await screen.findByText(/le téléchargement a échoué/i)).toBeInTheDocument()
+    expect(await screen.findByText(/une erreur est survenue/i)).toBeInTheDocument()
     // Never surface the raw (redacted) error text.
     expect(screen.queryByText(/digest-abc123/)).not.toBeInTheDocument()
   })

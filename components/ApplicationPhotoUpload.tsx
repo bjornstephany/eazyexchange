@@ -28,10 +28,14 @@ export function ApplicationPhotoUpload({ token, initialPhotoUrl, invalid, onUplo
       const compressed = await compressImage(file)
       const fd = new FormData()
       fd.set('photo', compressed)
-      await uploadApplicationPhoto(token, fd)
+      const res = await uploadApplicationPhoto(token, fd)
+      // Server-side rejections are codes now, not thrown messages.
+      if (!res.ok) { setError(t(`errors.${res.reason}`)); return }
       setPreview(URL.createObjectURL(compressed))
       onUploaded()
     } catch (err: unknown) {
+      // 'image-too-large' is thrown by compressImage() client-side, before the
+      // action is ever called — it is not a server outcome.
       setError(err instanceof Error && err.message === 'image-too-large' ? t('photo.tooLarge') : t('photo.failed'))
     } finally {
       setUploading(false)

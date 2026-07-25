@@ -17,7 +17,8 @@ export function ApplicationRecapButton({ token, language }: { token: string; lan
       const res = await downloadApplicationRecap(token, language)
       if (!res.ok) {
         // Structured reason, never a thrown message (prod redacts those).
-        setError(t(`recap.errors.${res.reason}`))
+        // Same `apply.errors` group as the rest of the funnel.
+        setError(t(`errors.${res.reason}`))
         return
       }
       const bytes = Uint8Array.from(atob(res.pdf), c => c.charCodeAt(0))
@@ -28,7 +29,7 @@ export function ApplicationRecapButton({ token, language }: { token: string; lan
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setError(t('recap.errors.unexpected'))
+      setError(t('errors.failed'))
     } finally {
       setBusy(false)
     }
