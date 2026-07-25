@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { isPasswordPwned, passwordPolicyError, passwordPolicyIssue } from '@/lib/auth/hibp'
+import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 
 // SHA-1('password') = 5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8
 // prefix 5BAA6, suffix 1E4C9B93F3F0682250B6CF8331B7EE68FD8
@@ -34,15 +34,8 @@ describe('isPasswordPwned', () => {
   })
 })
 
-describe('passwordPolicyError', () => {
-  it('rejects short passwords, accepts 8+', () => {
-    expect(passwordPolicyError('court')).toBe('Le mot de passe doit contenir au moins 8 caractères.')
-    expect(passwordPolicyError('longenough')).toBeNull()
-  })
-})
-
-// The code form, for callers that report through translated strings rather
-// than surfacing the hardcoded French above.
+// The only form: callers own their copy (next-intl in Settings,
+// JOIN_ERROR_MESSAGES on /join), so this module returns a code, never a string.
 describe('passwordPolicyIssue', () => {
   it('returns a code for short passwords and null for 8+', () => {
     expect(passwordPolicyIssue('court')).toBe('too_short')

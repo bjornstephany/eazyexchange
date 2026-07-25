@@ -2,9 +2,10 @@
 // Public (unauthenticated) organizer-invite acceptance. Service-role only —
 // mirrors the anonymous application flow's token-keyed pattern.
 import { createAdminClient } from '@/lib/supabase/admin'
-import { enforceRateLimit, clientIp } from '@/lib/rate-limit'
-import { isPasswordPwned, passwordPolicyError, PWNED_MESSAGE } from '@/lib/auth/hibp'
+import { checkRateLimit, clientIp } from '@/lib/rate-limit'
+import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 import { inviteState, type InviteState } from '@/lib/team/invite-state'
+import { joinError, type JoinResult } from '@/lib/team/join-result'
 
 export type JoinInfo =
   | { state: 'ok'; schoolName: string; email: string }
@@ -35,26 +36,26 @@ export async function getJoinInvite(token: string): Promise<JoinInfo> {
   return { state: 'ok', schoolName: row.schools?.name ?? '', email: row.email }
 }
 
-const JOIN_STATE_MESSAGES: Record<Exclude<JoinInfo['state'], 'ok'>, string> = {
-  invalid: 'Ce lien d’invitation est invalide.',
-  expired: 'Ce lien d’invitation a expiré — demandez à votre collègue de renvoyer une invitation.',
-  revoked: 'Cette invitation a été révoquée.',
-  accepted: 'Cette invitation a déjà été utilisée. Connectez-vous.',
-}
-
+// Every outcome below is *expected*, so it comes back as a value: production
+// replaces thrown Server Action messages with an opaque digest, which would
+// leave an organizer staring at a hex string instead of "password too short".
 export async function acceptOrganizerInvite(
   token: string, fullName: string, password: string,
-): Promise<{ email: string }> {
-  await enforceRateLimit(`join:${await clientIp()}`, 10, 3600)
+): Promise<JoinResult> {
+  const rate = await checkRateLimit(`join:${await clientIp()}`, 10, 3600)
+  // Fails OPEN on a DB blip, matching the enforceRateLimit this replaced: a
+  // transient error must never wall someone out of accepting their invite.
+  if (rate === 'error') console.error('[rate-limit] check failed, allowing request')
+  if (rate === 'limited') return joinError('rate_limited')
 
   const { state, row } = await lookupInvite(token)
-  if (state !== 'ok' || !row) throw new Error(JOIN_STATE_MESSAGES[state as Exclude<JoinInfo['state'], 'ok'>])
+  if (state !== 'ok') return joinError(state)
+  if (!row) return joinError('invalid')
 
   const name = fullName.trim()
-  if (!name) throw new Error('Indiquez votre nom complet.')
-  const policyError = passwordPolicyError(password)
-  if (policyError) throw new Error(policyError)
-  if (await isPasswordPwned(password)) throw new Error(PWNED_MESSAGE)
+  if (!name) return joinError('name_required')
+  if (passwordPolicyIssue(password) === 'too_short') return joinError('password_too_short')
+  if (await isPasswordPwned(password)) return joinError('password_leaked')
 
   const admin = createAdminClient()
 
@@ -66,7 +67,7 @@ export async function acceptOrganizerInvite(
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', row.id).is('accepted_at', null).is('revoked_at', null)
     .select('id')
-  if (!claimed || claimed.length === 0) throw new Error(JOIN_STATE_MESSAGES.accepted)
+  if (!claimed || claimed.length === 0) return joinError('accepted')
 
   // Link possession proves e-mail ownership → create the user pre-confirmed.
   const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -74,11 +75,7 @@ export async function acceptOrganizerInvite(
   })
   if (createError || !created?.user) {
     await admin.from('organizer_invites').update({ accepted_at: null }).eq('id', row.id)
-    throw new Error(
-      createError?.code === 'email_exists'
-        ? 'Un compte existe déjà avec cette adresse. Connectez-vous.'
-        : 'Le compte n’a pas pu être créé. Réessayez.',
-    )
+    return joinError(createError?.code === 'email_exists' ? 'email_exists' : 'creation_failed')
   }
 
   const { error: profileError } = await admin.from('users').insert({
@@ -93,8 +90,8 @@ export async function acceptOrganizerInvite(
     // No orphan auth rows (same rollback as provisionOrganizer).
     await admin.auth.admin.deleteUser(created.user.id)
     await admin.from('organizer_invites').update({ accepted_at: null }).eq('id', row.id)
-    throw new Error('Le compte n’a pas pu être créé. Réessayez.')
+    return joinError('creation_failed')
   }
 
-  return { email: row.email }
+  return { ok: true, email: row.email }
 }
