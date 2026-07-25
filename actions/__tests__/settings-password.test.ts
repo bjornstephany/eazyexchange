@@ -42,7 +42,7 @@ vi.mock('@supabase/supabase-js', () => ({
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({}) }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: async () => scenario.rate,
-  enforceRateLimitStrict: async () => {},
+
 }))
 vi.mock('@/lib/auth/hibp', async () => {
   const actual = await vi.importActual<typeof import('@/lib/auth/hibp')>('@/lib/auth/hibp')
