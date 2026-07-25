@@ -91,4 +91,21 @@ describe('message catalog parity', () => {
     expect(fl['organizer.billing.grace.cta']).toBe('Mettre à jour ma carte')
     expect(fl['organizer.billing.cgv']).toContain('<cgv>')
   })
+
+  it('the French-example hints name the constraint in every non-fr locale', () => {
+    const constraint: Record<string, string> = {
+      en: 'written in French', es: 'en francés', it: 'in francese', de: 'auf Französisch',
+    }
+    for (const [locale, phrase] of Object.entries(constraint)) {
+      const l = leaves(catalogs[locale])
+      for (const key of ['destinationHint', 'absenceDatesHint', 'paymentDetailsHint']) {
+        const value = l[`organizer.settings.programDetails.${key}`]
+        // Case-insensitive: the phrase opens the sentence in some hints
+        // ("Written in French — …") and sits mid-sentence in others.
+        expect(value.toLowerCase(), `${locale}.${key}`).toContain(phrase.toLowerCase())
+        // The French example itself is load-bearing and stays verbatim.
+        expect(value, `${locale}.${key}`).toMatch(/le Minnesota|le jeudi 19 octobre 2026|chèque à l’ordre/)
+      }
+    }
+  })
 })
