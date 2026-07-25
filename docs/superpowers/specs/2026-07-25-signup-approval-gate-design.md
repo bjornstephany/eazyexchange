@@ -186,11 +186,53 @@ Non-French schools keep the existing behaviour: no free-text fallback, the
 « Je ne trouve pas mon établissement » path points at `contact@eazyexchange.com`.
 The registry gate simply moves earlier in the funnel.
 
-### 5. Pre-approval
+### 5. Initial status — decided in the database, not the call site
 
-`provisionOrganizer` sets `status = 'approved'` when `lower(email)` exists in
-`signup_allowlist`, otherwise `'pending'`. Adding a tester later is one insert
-via MCP — no redeploy, no code change, effective on their next signup.
+`status` defaults to `'pending'`, and **four** paths create `users` rows. Only
+the first should ever be pending:
+
+| path | correct initial status |
+|---|---|
+| `lib/auth/provision.ts` (self-signup) | `pending`, unless allowlisted |
+| `actions/join.ts:81` (colleague accepting an `organizer_invites` link) | `approved` — the school is already approved |
+| `actions/invitations.ts:133` (invited student) | `approved` — otherwise `form_templates` → `students read assigned templates` (`my_role() = 'student'`) denies them their own forms, breaking the product |
+| `tests/rls/seed.ts` | `approved` — otherwise the whole existing matrix fails |
+
+Putting the allowlist check in `provisionOrganizer` would fix only the first, so
+the decision lives in a `BEFORE INSERT` trigger instead, where no future
+call site can forget it:
+
+```sql
+create function public.set_initial_user_status() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status <> 'pending' then return new; end if;   -- explicit value wins
+  if new.role = 'student'
+     or exists (select 1 from signup_allowlist a where a.email = lower(new.email))
+     or exists (select 1 from users u
+                 where u.school_id = new.school_id
+                   and u.role = 'organizer' and u.status = 'approved')
+  then
+    new.status := 'approved';
+  end if;
+  return new;
+end $$;
+```
+
+The third clause is what covers invited colleagues: they join a school that
+already has an approved organizer. A self-signup cannot match it, because
+`provisionOrganizer` creates a brand-new school with no members.
+
+"Explicit value wins" is safe because `users` has **no INSERT policy at all**,
+so RLS denies every client insert; only the service role can reach this trigger.
+It exists so `tests/rls/seed.ts` can state `approved` outright.
+
+`provisionOrganizer` therefore contains no allowlist logic. It reads the status
+back from the insert (`.select('status').single()`) to choose between redirecting
+to `/onboarding` and `/pending`.
+
+Adding a tester later is one insert into `signup_allowlist` via MCP — no
+redeploy, no code change, effective on their next signup.
 
 The table ships **seeded empty**; that is the point of choosing a table over an
 env var. Seed rows can be added any time.
@@ -201,6 +243,11 @@ env var. Seed rows can be added any time.
 senders, following `sendFeedbackNotificationEmail` exactly: HTML-escaped,
 logged to `email_send_log`, never throws. Called fire-and-forget from
 `provisionOrganizer` after the `users` insert, with a link to `/admin`.
+
+Recipients are `ADMIN_EMAILS` — the same variable the `/admin` gate reads, so
+the notification cannot silently go nowhere. Deliberately **not**
+`FEEDBACK_EMAIL`: that one is optional by design (`if (!to) return`) and is not
+confirmed set in Vercel prod, which would drop signup alerts silently.
 
 Chosen over an Edge Function + Database Webhook because it needs no second
 deploy target, no dashboard step, and works on staging and under test — whereas
@@ -227,9 +274,10 @@ alternative was removing Google from `/signup`.
 One migration, one transaction, in this order:
 
 1. add the five `users` columns and `signup_allowlist`
-2. replace `my_role()`
-3. revoke/re-grant `users` column privileges
-4. backfill:
+2. add `set_initial_user_status()` and its `BEFORE INSERT` trigger
+3. replace `my_role()`
+4. revoke/re-grant `users` column privileges
+5. backfill:
    - `bjornstephany+testorganizer@gmail.com`, `bjornstephany+teststudent@gmail.com` → `approved`
    - `marvanemust@gmail.com` → stub school + `users` row with `status = 'pending'`, so the request appears in `/admin` and they see `/pending` instead of a broken login
    - delete the 3 orphan schools **by explicit id**
@@ -238,7 +286,7 @@ One migration, one transaction, in this order:
      `7e7c2f60-bf3a-4e82-90ec-4b0ed1c5886c`) — not by a "zero members"
      predicate, which is order-dependent against the stub school created above
 
-**The backfill must be in the same transaction as step 2**, or every existing
+**The backfill must be in the same transaction as step 3**, or every existing
 organizer is locked out between statements.
 
 Then: staging first
