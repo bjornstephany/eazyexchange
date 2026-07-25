@@ -93,7 +93,7 @@ describe('OpenApplicationsDialog', () => {
     const { onOpened } = setup()
     const field = screen.getByLabelText('Date limite des candidatures')
     fireEvent.change(field, { target: { value: '2026-09-01' } })
-    await screen.findByText("Impossible d'ouvrir les candidatures. Veuillez réessayer.")
+    await screen.findByText("Impossible d’ouvrir les candidatures. Veuillez réessayer.")
     expect(onOpened).not.toHaveBeenCalled()
     // The optimistic value is rolled back, so re-picking the same date still fires a change.
     expect(field).toHaveValue('')

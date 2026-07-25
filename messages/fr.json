@@ -438,7 +438,7 @@
       "emptyState": "Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.",
       "empty": {
         "title": "Invitez vos élèves à postuler",
-        "body": "Fixez une date limite, puis partagez le lien de candidature ou laissez-nous écrire à vos élèves. Les candidatures ouvrent dès l'enregistrement.",
+        "body": "Fixez une date limite, puis partagez le lien de candidature ou laissez-nous écrire à vos élèves. Les candidatures ouvrent dès l’enregistrement.",
         "cta": "Inviter vos élèves à postuler"
       },
       "openDialog": {
@@ -451,7 +451,7 @@
         "linkHeading": "Partager un lien",
         "emailHeading": "Ou laissez-nous envoyer les e-mails",
         "done": "Terminé",
-        "openError": "Impossible d'ouvrir les candidatures. Veuillez réessayer."
+        "openError": "Impossible d’ouvrir les candidatures. Veuillez réessayer."
       },
       "panel": {
         "summaryOpen": "Candidatures ouvertes",
