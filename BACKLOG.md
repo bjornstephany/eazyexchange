@@ -5,7 +5,6 @@ pick items off the top when starting new work.
 
 ## Queue
 
-- `actions/join.ts` throws on its expected password-set outcomes (too short, leaked) — production shows an opaque digest; convert to structured returns like `changePassword` (deferred from the 2026-07-24 settings audit)
 - revoke the `schools.name` column grant from `20260701000001` — defence-in-depth now that no server action writes it; costs a migration + staging/prod apply + `pnpm test:rls` (deferred from the 2026-07-24 settings audit)
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — delete this line if still unwanted)
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)

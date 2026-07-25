@@ -18,7 +18,10 @@ export function JoinForm({ token, email, schoolName }: { token: string; email: s
     if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); return }
     setBusy(true)
     try {
-      await acceptOrganizerInvite(token, fullName, password)
+      const result = await acceptOrganizerInvite(token, fullName, password)
+      // Expected failures arrive as values — a throw here would be an opaque
+      // digest in production. See lib/team/join-result.ts.
+      if (!result.ok) { setError(result.message); setBusy(false); return }
       const supabase = createClient()
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
       if (signInError) { setError('Compte créé — connectez-vous avec votre nouveau mot de passe.'); setBusy(false); return }
