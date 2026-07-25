@@ -165,4 +165,14 @@ describe('claim_school() — the only writer of schools.uai / schools.country', 
     expectBlocked(await writeOutcome(sql, fx.orgA, (tx) =>
       tx`update schools set uai = 'FORGED' where id = ${fx.schoolA}`))
   })
+
+  // claim_school() is the ONLY writer of the name, so the `name` column grant
+  // authenticated used to hold was dead weight (20260725122126 revoked it).
+  it('an organizer cannot rename their OWN school directly', async () => {
+    expectBlocked(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update schools set name = 'Renommé À La Main' where id = ${fx.schoolA}`))
+    const [school] = await runAs(sql, fx.orgA, (tx) =>
+      tx`select name from schools where id = ${fx.schoolA}`)
+    expect(school.name).not.toBe('Renommé À La Main')
+  })
 })
