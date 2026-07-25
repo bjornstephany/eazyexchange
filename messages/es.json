@@ -507,6 +507,19 @@
         "other": "Otro"
       },
       "emptyTab": "Ninguna candidatura en esta pestaña.",
+      "goodNewsBlock": {
+        "title": "El correo « Bonne nouvelle » está incompleto",
+        "missingIntro": "Todavía faltan estos datos. Sin ellos, la familia recibiría un correo con huecos:",
+        "literal": "La plantilla aún contiene texto entre corchetes por sustituir.",
+        "cta": "Completar en Ajustes",
+        "ctaTemplate": "Editar la plantilla",
+        "fields": {
+          "travel_dates": "Fechas de la estancia",
+          "participation_cost": "Participación en los gastos",
+          "payment_details": "Inscripción / pago",
+          "confirmation_deadline": "Fecha límite de confirmación"
+        }
+      },
       "review": {
         "statusAccepted": "Aceptado — a la espera de respuesta",
         "statusEnrolled": "Inscrito(a) (ha respondido Sí)",
@@ -920,7 +933,7 @@
       "required": "Se requiere una foto para enviar tu candidatura."
     },
     "invite": {
-      "resultYes": "Gracias — su hijo/a recibirá un enlace para crear su acceso.",
+      "resultYes": "Gracias — su hijo/a recibirá un enlace para crear su cuenta.",
       "resultNo": "Gracias por avisarnos. Le deseamos lo mejor a su hijo/a.",
       "resultMaybe": "Gracias — hemos anotado sus preguntas, el organizador se pondrá en contacto con usted.",
       "badge": "Candidatura aceptada 🎉",
@@ -939,7 +952,7 @@
       "expiredTitle": "Esta invitación ha caducado",
       "expiredBody": "Póngase en contacto con el organizador para recibir una nueva invitación.",
       "alreadyConfirmedTitle": "Participación ya confirmada",
-      "alreadyConfirmedBody": "Gracias — la participación en el intercambio {exchange} está confirmada. Su hijo/a recibe un enlace por correo para crear su acceso.",
+      "alreadyConfirmedBody": "Gracias — la participación en el intercambio {exchange} está confirmada. Su hijo/a recibe un enlace por correo para crear su cuenta.",
       "answeredTitle": "Esta invitación ya ha recibido una respuesta",
       "answeredBody": "Ya se ha registrado una respuesta. Si se trata de un error, contacte con el organizador."
     },

@@ -6,15 +6,22 @@ import { updateGoodNewsTemplate } from '@/actions/settings'
 import { toEditor, toStored, tokenChip, type TokenLabels } from '@/lib/communication/tokens'
 import {
   renderGoodNews,
+  templateHasUnfilledPlaceholders,
+  templateHasLiteralPlaceholders,
   DEFAULT_GOOD_NEWS_SUBJECT,
   DEFAULT_GOOD_NEWS_BODY,
 } from '@/lib/good-news-template'
+import { missingGoodNewsFields, type GoodNewsValues } from '@/lib/exchange/good-news-fields'
+import { GoodNewsBlockNotice } from '@/components/applications/GoodNewsBlockNotice'
 
-export function GoodNewsCard({ exchangeId, exchangeName, initialSubject, initialBody, readOnly }: {
+export function GoodNewsCard({ exchangeId, exchangeName, initialSubject, initialBody, details, readOnly }: {
   exchangeId: string
   exchangeName: string
   initialSubject: string
   initialBody: string
+  // Réglages → Programme values that fill {{travel_dates}} &c. Null when the
+  // organizer has not filled that card yet.
+  details: GoodNewsValues | null
   readOnly: boolean
 }) {
   const t = useTranslations('organizer')
@@ -43,7 +50,22 @@ export function GoodNewsCard({ exchangeId, exchangeName, initialSubject, initial
   // Live preview with a representative student so the organizer sees the result.
   const preview = renderGoodNews({
     subject: storedSubject, body: storedBody, studentName: 'Marie Dupont', exchangeName,
+    details,
   })
+
+  // The same check the accept path runs, shown while the organizer types. A
+  // hard block discovered against a real candidate would be hostile; discovered
+  // here it is just an unfinished template. Scanned in STORED form — the editor
+  // renders tokens as [[chips]], which the scan would read as placeholders.
+  const blocked = templateHasUnfilledPlaceholders({
+    subject: storedSubject, body: storedBody, details,
+  })
+  const block = blocked
+    ? {
+        missing: missingGoodNewsFields(details),
+        literal: templateHasLiteralPlaceholders({ subject: storedSubject, body: storedBody }),
+      }
+    : null
 
   // Insert at the caret, replacing any selection, then put the caret straight
   // after the inserted chip so the organizer can keep typing.
@@ -138,14 +160,20 @@ export function GoodNewsCard({ exchangeId, exchangeName, initialSubject, initial
         </button>
       )}
 
+      {block && (
+        <div className="mb-4">
+          <GoodNewsBlockNotice block={block} showTemplateLink={false} />
+        </div>
+      )}
+
       <div className="mb-4 rounded-xl border border-subtle bg-subtle/40 p-4">
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-tertiary">{t('settings.goodNews.previewLabel')}</div>
         <div className="mb-2 text-[13px] font-semibold text-foreground">{preview.subject}</div>
         <div className="text-[13px] leading-relaxed text-muted-foreground" dangerouslySetInnerHTML={{ __html: preview.bodyHtml }} />
-        <div className="mt-3 flex flex-col gap-1.5">
-          <span className="rounded-[9px] bg-[#1F7A57] px-3 py-2 text-center text-[12.5px] font-semibold text-white">Oui, nous confirmons</span>
-          <span className="rounded-[9px] bg-[#5C7268] px-3 py-2 text-center text-[12.5px] font-semibold text-white">Non</span>
-          <span className="rounded-[9px] bg-[#2456E6] px-3 py-2 text-center text-[12.5px] font-semibold text-white">Oui, mais nous avons des questions…</span>
+        {/* One button, mirroring the email: the response page presents the
+            three choices itself. */}
+        <div className="mt-3">
+          <span className="block rounded-[9px] bg-[#2456E6] px-3 py-2 text-center text-[12.5px] font-semibold text-white">Répondre à l’invitation</span>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { getAppUrl } from '@/lib/app-url'
 import { EXCHANGE_TERMS_EMAIL } from '@/lib/exchange-terms'
 import { logEmailSend, type EmailLogContext } from '@/lib/email-log'
 import { renderGoodNews } from '@/lib/good-news-template'
+import type { GoodNewsValues } from '@/lib/exchange/good-news-fields'
 
 const FROM = process.env.EMAIL_FROM ?? 'Eazyexchange <onboarding@resend.dev>'
 const APP_URL = getAppUrl()
@@ -102,7 +103,7 @@ export async function sendRejectionEmail(opts: {
     <p style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #b91c1c;">
       <strong>Organizer note:</strong> ${note}
     </p>
-    <p><a href="${link}" style="display: inline-block; background: #1F7A57; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
+    <p><a href="${link}" style="display: inline-block; background: #2456E6; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Update your submission</a></p>
   `)
 
   // Don't fail the caller's action just because the email bounced: send()
@@ -122,7 +123,7 @@ export async function sendApplicationResumeEmail(opts: { to: string; exchangeNam
   const html = layout(`
     <p>Hi,</p>
     <p>Here's your private link to continue your application for <strong>${esc(opts.exchangeName)}</strong>. You can leave and come back anytime, on any device:</p>
-    <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
+    <p><a href="${opts.resumeUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Continue my application</a></p>
     <p style="font-size:12px;color:#5C7268;">Keep this email — it's the only way back to your in-progress application.</p>
   `, APP_FOOTER)
   await send(opts.to, `Continue your application — ${opts.exchangeName}`, html, 'application resume email', opts.ctx)
@@ -131,8 +132,8 @@ export async function sendApplicationResumeEmail(opts: { to: string; exchangeNam
 export async function sendApplicationInviteEmail(opts: { to: string; exchangeName: string; applyUrl: string; ctx?: EmailLogContext }): Promise<void> {
   const html = layout(`
     <p>Hi,</p>
-    <p>You've been invited to apply for <strong>${esc(opts.exchangeName)}</strong>. It only takes a few minutes — you can save and finish later on any device.</p>
-    <p><a href="${opts.applyUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Start my application</a></p>
+    <p>You've been invited to apply for <strong>${esc(opts.exchangeName)}</strong>. You can save and finish later on any device.</p>
+    <p><a href="${opts.applyUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Start my application</a></p>
     <p style="font-size:12px;color:#5C7268;">Keep this email — it's your private link back to your application.</p>
   `, APP_FOOTER)
   await send(opts.to, `You're invited to apply — ${opts.exchangeName}`, html, 'application invite email', opts.ctx)
@@ -150,7 +151,7 @@ export async function sendApplicationConfirmationEmail(opts: { to: string; appli
 export async function sendNewApplicationAlertEmail(opts: { to: string; applicantName: string; exchangeName: string; reviewUrl: string; ctx?: EmailLogContext }): Promise<void> {
   const html = layout(`
     <p>A new application has arrived for <strong>${esc(opts.exchangeName)}</strong> from <strong>${esc(opts.applicantName)}</strong>.</p>
-    <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#1F7A57;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
+    <p><a href="${opts.reviewUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Review applications</a></p>
   `, ORG_FOOTER)
   await send(opts.to, `New application — ${opts.exchangeName}`, html, 'new application alert email', opts.ctx)
 }
@@ -166,12 +167,17 @@ export async function sendInvitationEmail(opts: { to: string; applicantName: str
   await send(opts.to, `Bonne nouvelle — ta candidature pour ${opts.exchangeName} a été retenue !`, html, 'invitation email', opts.ctx)
 }
 
-// System-controlled button labels, keyed by the applicant's language. NEVER part
+// System-controlled button label, keyed by the applicant's language. NEVER part
 // of the organizer-editable body — appended by the renderer so an organizer
-// cannot break the response links.
-const GOOD_NEWS_BUTTONS: Record<'en' | 'fr', { yes: string; no: string; maybe: string }> = {
-  fr: { yes: 'Oui, nous confirmons', no: 'Non', maybe: 'Oui, mais nous avons des questions…' },
-  en: { yes: 'Yes, we confirm', no: 'No', maybe: 'Yes, but we have questions…' },
+// cannot break the response link.
+//
+// One button, not three: the yes / no / peut-être trio all landed on
+// /invite/<token>, which then asked the same question again. The `?r=` deep
+// links are gone from new sends, but app/invite/[token]/page.tsx still honours
+// the parameter — every acceptance email already in a parent's inbox carries it.
+const GOOD_NEWS_BUTTON: Record<'en' | 'fr', string> = {
+  fr: 'Répondre à l’invitation',
+  en: 'Respond to the invitation',
 }
 
 export async function sendGoodNewsEmail(opts: {
@@ -182,6 +188,10 @@ export async function sendGoodNewsEmail(opts: {
   body: string | null
   respondUrl: string
   language: 'en' | 'fr'
+  // Réglages → Programme values that fill the template's {{travel_dates}} &c.
+  // The caller has already refused to send if any of them is still missing
+  // (templateHasUnfilledPlaceholders in actions/applications-review.ts).
+  details?: GoodNewsValues | null
   // Free text typed by the organizer when they change their mind about an
   // application they had rejected. Organizer-authored → always escaped.
   personalNote?: string | null
@@ -190,18 +200,14 @@ export async function sendGoodNewsEmail(opts: {
   const { subject, bodyHtml } = renderGoodNews({
     subject: opts.subject, body: opts.body,
     studentName: opts.studentName, exchangeName: opts.exchangeName,
+    details: opts.details ?? null,
   })
   const noteHtml = opts.personalNote?.trim()
     ? `<p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${esc(opts.personalNote.trim()).replace(/\n/g, '<br>')}</p>`
     : ''
-  const labels = GOOD_NEWS_BUTTONS[opts.language]
-  const btn = (href: string, label: string, bg: string) =>
-    `<a href="${href}" style="display:block;text-align:center;background:${bg};color:#fff;text-decoration:none;padding:12px 16px;border-radius:9px;margin-bottom:8px;font-weight:600;">${esc(label)}</a>`
-  const buttons =
-    btn(`${opts.respondUrl}?r=yes`, labels.yes, '#1F7A57') +
-    btn(`${opts.respondUrl}?r=no`, labels.no, '#5C7268') +
-    btn(`${opts.respondUrl}?r=maybe`, labels.maybe, '#2456E6')
-  const html = layout(`${bodyHtml}${noteHtml}<div style="margin-top:20px;">${buttons}</div>`, APP_FOOTER_FR)
+  const button =
+    `<a href="${opts.respondUrl}" style="display:block;text-align:center;background:#2456E6;color:#fff;text-decoration:none;padding:12px 16px;border-radius:9px;font-weight:600;">${esc(GOOD_NEWS_BUTTON[opts.language])}</a>`
+  const html = layout(`${bodyHtml}${noteHtml}<div style="margin-top:20px;">${button}</div>`, APP_FOOTER_FR)
   return send(opts.to, subject, html, 'good news email', opts.ctx)
 }
 
@@ -214,7 +220,7 @@ export async function sendStudentSetupEmail(opts: {
   const html = layout(`
     <p>Bonjour,</p>
     <p>Tes parents ont confirmé ta participation à <strong>${esc(opts.exchangeName)}</strong> — bravo ! Crée ton accès pour commencer ton dossier :</p>
-    <p><a href="${opts.setupUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon accès</a></p>
+    <p><a href="${opts.setupUrl}" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Créer mon compte</a></p>
   `, STUDENT_FOOTER)
   await send(opts.to, `Crée ton accès — ${opts.exchangeName}`, html, 'student setup email', opts.ctx)
 }

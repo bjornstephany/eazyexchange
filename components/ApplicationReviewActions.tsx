@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { acceptApplication, rejectApplication } from '@/actions/applications-review'
+import { acceptApplication, rejectApplication, type AcceptBlock } from '@/actions/applications-review'
+import { GoodNewsBlockNotice } from '@/components/applications/GoodNewsBlockNotice'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -20,13 +21,29 @@ export function ApplicationReviewActions({ applicationId, status, response, note
   const [reinviting, setReinviting] = useState(false)
   const [personalNote, setPersonalNote] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [block, setBlock] = useState<AcceptBlock | null>(null)
   const router = useRouter()
   const t = useTranslations()
 
   async function run(fn: () => Promise<void>) {
-    setBusy(true); setError(null)
+    setBusy(true); setError(null); setBlock(null)
     try { await fn(); router.push('/applications') }
     catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)); setBusy(false) }
+  }
+
+  // Accept has one expected non-success: the « Bonne nouvelle » template still
+  // has blanks in it. It is a structured return rather than a throw (prod
+  // redacts thrown messages), so it stays on this screen with the fix spelled
+  // out instead of navigating away as a success would.
+  async function runAccept(fn: () => Promise<{ ok: true } | { ok: false; blocked: AcceptBlock }>) {
+    setBusy(true); setError(null); setBlock(null)
+    try {
+      const res = await fn()
+      if (!res.ok) { setBlock(res.blocked); setBusy(false); return }
+      router.push('/applications')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e)); setBusy(false)
+    }
   }
 
   function readOnly(label: string, hint?: string) {
@@ -77,7 +94,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
               onChange={e => setPersonalNote(e.target.value)}
             />
             <div className="flex gap-3">
-              <Button disabled={busy} onClick={() => run(() => acceptApplication(applicationId, { personalNote }))}>
+              <Button disabled={busy} onClick={() => runAccept(() => acceptApplication(applicationId, { personalNote }))}>
                 {t('organizer.applications.review.confirmInvite')}
               </Button>
               <Button variant="ghost" disabled={busy} onClick={() => setReinviting(false)}>
@@ -86,6 +103,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
             </div>
           </div>
         )}
+        {block && <GoodNewsBlockNotice block={block} />}
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
     )
@@ -98,7 +116,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
     <div className="space-y-3">
       {!rejecting ? (
         <div className="flex gap-3">
-          <Button disabled={busy} onClick={() => run(() => acceptApplication(applicationId))}>{t('organizer.applications.review.accept')}</Button>
+          <Button disabled={busy} onClick={() => runAccept(() => acceptApplication(applicationId))}>{t('organizer.applications.review.accept')}</Button>
           <Button variant="outline" disabled={busy} onClick={() => setRejecting(true)}>{t('organizer.applications.rejectCta')}</Button>
         </div>
       ) : (
@@ -114,6 +132,7 @@ export function ApplicationReviewActions({ applicationId, status, response, note
           </div>
         </div>
       )}
+      {block && <GoodNewsBlockNotice block={block} />}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   )

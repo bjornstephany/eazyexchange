@@ -3,10 +3,10 @@ import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
-const bulkAccept = vi.fn().mockResolvedValue({ succeeded: 2, failed: 0 })
+const bulkAccept = vi.fn().mockResolvedValue({ succeeded: 2, failed: 0, blocked: null })
 vi.mock('@/actions/applications-review', () => ({
   acceptApplications: (...a: unknown[]) => bulkAccept(...a),
-  rejectApplications: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+  rejectApplications: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0, blocked: null }),
 }))
 const setApplicationOpen = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/exchanges', () => ({ setApplicationOpen: (...a: unknown[]) => setApplicationOpen(...a) }))
@@ -34,6 +34,22 @@ describe('CandidaturesView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Accepter & inviter' }))
     expect(bulkAccept).toHaveBeenCalledWith(['1', '2'])
   })
+  // 30 blocked candidates have one cause and one fix, so the bar explains it
+  // once — and drops the failure tally, which would only repeat it more vaguely.
+  it('reports a blocked batch once, with the missing values', async () => {
+    bulkAccept.mockResolvedValueOnce({
+      succeeded: 0, failed: 2,
+      blocked: { missing: ['participation_cost'], literal: false },
+    })
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
+    fireEvent.click(screen.getAllByRole('checkbox')[1])
+    fireEvent.click(screen.getAllByRole('checkbox')[2])
+    fireEvent.click(screen.getByRole('button', { name: 'Accepter & inviter' }))
+    expect(await screen.findByText(/Bonne nouvelle » incomplet/)).toBeInTheDocument()
+    expect(screen.getByText('Participation aux frais')).toBeInTheDocument()
+    expect(screen.queryByText(/en échec/)).toBeNull()
+  })
+
   it('row click navigates to the detail', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
     fireEvent.click(screen.getByText('Léa Moreau'))

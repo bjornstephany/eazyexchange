@@ -27,7 +27,7 @@ const baseProps = {
   remindersEnabled: true,
   reminderCadence: 'normale' as const,
   goodNewsSubject: 'Bonne nouvelle',
-  goodNewsBody: 'Bonjour',
+  programDetails: null, goodNewsBody: 'Bonjour',
   events: [],
 }
 

@@ -507,6 +507,19 @@
         "other": "Divers"
       },
       "emptyTab": "Keine Bewerbungen in diesem Tab.",
+      "goodNewsBlock": {
+        "title": "„Bonne nouvelle“-E-Mail ist unvollständig",
+        "missingIntro": "Diese Angaben fehlen noch. Ohne sie erhielte die Familie eine E-Mail mit Lücken:",
+        "literal": "Die Vorlage enthält noch Text in eckigen Klammern, der ersetzt werden muss.",
+        "cta": "In den Einstellungen ergänzen",
+        "ctaTemplate": "Vorlage bearbeiten",
+        "fields": {
+          "travel_dates": "Reisedaten",
+          "participation_cost": "Kostenbeteiligung",
+          "payment_details": "Mitgliedschaft / Zahlung",
+          "confirmation_deadline": "Frist für die Zusage"
+        }
+      },
       "review": {
         "statusAccepted": "Angenommen — wartet auf Antwort",
         "statusEnrolled": "Eingeschrieben (hat Ja geantwortet)",
@@ -920,7 +933,7 @@
       "required": "Für das Absenden deiner Bewerbung ist ein Foto erforderlich."
     },
     "invite": {
-      "resultYes": "Danke — Ihr Kind erhält einen Link, um seinen Zugang einzurichten.",
+      "resultYes": "Danke — Ihr Kind erhält einen Link, um sein Konto einzurichten.",
       "resultNo": "Danke für Ihre Nachricht. Wir wünschen Ihrem Kind alles Gute.",
       "resultMaybe": "Danke — wir haben Ihre Fragen notiert, der Organisator meldet sich bei Ihnen.",
       "badge": "Bewerbung angenommen 🎉",
@@ -939,7 +952,7 @@
       "expiredTitle": "Diese Einladung ist abgelaufen",
       "expiredBody": "Wenden Sie sich an den Organisator, um eine neue Einladung zu erhalten.",
       "alreadyConfirmedTitle": "Teilnahme bereits bestätigt",
-      "alreadyConfirmedBody": "Danke — die Teilnahme am Austausch {exchange} ist bestätigt. Ihr Kind erhält einen Link per E-Mail, um seinen Zugang einzurichten.",
+      "alreadyConfirmedBody": "Danke — die Teilnahme am Austausch {exchange} ist bestätigt. Ihr Kind erhält einen Link per E-Mail, um sein Konto einzurichten.",
       "answeredTitle": "Diese Einladung wurde bereits beantwortet",
       "answeredBody": "Eine Antwort wurde bereits erfasst. Falls dies ein Fehler ist, wenden Sie sich an den Organisator."
     },

@@ -507,6 +507,19 @@
         "other": "Other"
       },
       "emptyTab": "No applications in this tab.",
+      "goodNewsBlock": {
+        "title": "« Bonne nouvelle » email is incomplete",
+        "missingIntro": "These details are still missing. Without them the family would receive an email with blanks in it:",
+        "literal": "The template still contains bracketed text to replace.",
+        "cta": "Fill them in under Settings",
+        "ctaTemplate": "Edit the template",
+        "fields": {
+          "travel_dates": "Travel dates",
+          "participation_cost": "Cost to families",
+          "payment_details": "Membership / payment",
+          "confirmation_deadline": "Confirmation deadline"
+        }
+      },
       "review": {
         "statusAccepted": "Accepted — awaiting response",
         "statusEnrolled": "Enrolled (said Yes)",
@@ -913,7 +926,7 @@
       "required": "A photo is required to submit your application."
     },
     "invite": {
-      "resultYes": "Thank you — your child will receive a link to set up their access.",
+      "resultYes": "Thank you — your child will receive a link to set up their account.",
       "resultNo": "Thank you for letting us know. We wish your child all the best.",
       "resultMaybe": "Thank you — we’ve noted your questions, the organizer will get back to you.",
       "badge": "Application accepted 🎉",
@@ -932,7 +945,7 @@
       "expiredTitle": "This invitation has expired",
       "expiredBody": "Contact the organizer to receive a new invitation.",
       "alreadyConfirmedTitle": "Participation already confirmed",
-      "alreadyConfirmedBody": "Thank you — participation in the {exchange} exchange is confirmed. Your child is receiving an email link to set up their access.",
+      "alreadyConfirmedBody": "Thank you — participation in the {exchange} exchange is confirmed. Your child is receiving an email link to set up their account.",
       "answeredTitle": "This invitation has already been answered",
       "answeredBody": "A response has already been recorded. If this is a mistake, contact the organizer."
     },
