@@ -16,7 +16,7 @@ async function requirePlatformAdmin(): Promise<void> {
 async function setStatus(userId: string, status: 'approved' | 'rejected') {
   await requirePlatformAdmin()
   // Service role: `status` and `reviewed_at` have no grant for authenticated,
-  // by design (migration 20260725160000).
+  // by design (migration 20260725154243).
   const admin = createAdminClient()
   const { error } = await admin
     .from('users')

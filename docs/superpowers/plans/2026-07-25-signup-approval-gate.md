@@ -1951,8 +1951,19 @@ and `/admin` both in the route table), `pnpm test:rls` 193 (162 pre-existing + 3
 | `b1f75b0` | 7 — `/admin` review queue |
 | `bf184c7` | 8 — `.env.example` + `CLAUDE.md` |
 
-**Task 9 (deploy) is NOT started.** Resume there. It needs Bjorn: the Vercel
-`ADMIN_EMAILS` value, and confirmation before merging to `main`.
+**Task 9 (deploy): Steps 1–6 DONE. Only Steps 7 (merge) and 8 (manual prod smoke)
+remain**, and both need Bjorn.
+
+| Step | State |
+|---|---|
+| 1 — `ADMIN_EMAILS` in Vercel | DONE. `bjornstephany@gmail.com` on Production, Preview, Development. |
+| 2 — staging apply | DONE. Ledger in sync. |
+| 3 — prod apply via MCP | DONE, on the second attempt — see deviation 9. |
+| 4 — ledger reconcile | DONE. Prod stamped **`20260725154243`**, not `20260725160000`; local file `git mv`'d, staging's ledger row renamed to match, and the `app/admin/actions.ts` comment updated. |
+| 5 — regenerate types | DONE, **no change**. The hand-written `types/supabase.ts` (deviation 4) matches the generator's output exactly — same `users` block, same `signup_allowlist` block, same table ordering. `npx tsc --noEmit` exits 0. |
+| 6 — read-only prod verify | DONE. `my_role()` carries `and status = 'approved'`; `authenticated` has UPDATE on exactly 6 columns (`full_name, email, locale, exchange_order, role_description, how_found_us`) and `anon` on none, so `status`/`reviewed_at`/`notes` are service-role-only; 2 users approved, `marvanemust@gmail.com` pending; 2 schools, **0 orphans**; 1 exchange. Supabase security advisors show nothing new beyond the deliberate `rls_enabled_no_policy` INFO on `signup_allowlist`. |
+| 7 — merge to `main` | **NOT DONE.** Full gate green on the branch: lint clean, 1791 tests / 229 files, build OK (`/admin` and `/pending` both in the route table), `test:rls` 193. Needs Bjorn's go-ahead. |
+| 8 — manual prod smoke | **NOT DONE.** Six browser steps, listed above. |
 
 ### Deviations from the plan as written
 
@@ -2003,3 +2014,14 @@ and `/admin` both in the route table), `pnpm test:rls` 193 (162 pre-existing + 3
    (split into pending/approved destinations), `app/(auth)/__tests__/signup.test.tsx`.
    Note the last one **deliberately reverses** its old assertion « does not render an
    Établissement field » — the picker is back on `/signup` by design.
+
+9. **The migration now deletes a leftover exchange before the orphan schools.** The first
+   prod `apply_migration` failed on `exchanges_school_a_id_fkey` and rolled the whole
+   thing back — school `c015a2be` was still referenced by exchange `b55ac773` ("test",
+   2026-07-23). The 2026-07-23 purge deleted that account's users but left its exchange
+   behind, and `exchanges.school_a_id` is NO ACTION. The exchange carried no
+   applications, enrollments, form templates or email-log rows — only 2 info cards and
+   1 `program_details` row, both ON DELETE CASCADE — so Bjorn chose to delete it too.
+   A `delete from public.exchanges where id = 'b55ac773…'` now sits just above the school
+   delete. It is a no-op everywhere but prod, so staging (which applied the migration
+   before this line existed) is not out of step schema-wise.

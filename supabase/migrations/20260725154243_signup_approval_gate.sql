@@ -142,6 +142,14 @@ end $$;
 
 -- Orphan schools from earlier testing, by explicit id — NOT by a
 -- "zero members" predicate, which is order-dependent against the stub above.
+--
+-- The 2026-07-23 purge deleted the users but left one of their exchanges
+-- behind, and exchanges.school_a_id is NO ACTION, so the school delete below
+-- fails until it goes. It carries no applications, enrollments, form templates
+-- or email log rows — only 2 info cards and 1 program_details row, both
+-- ON DELETE CASCADE.
+delete from public.exchanges where id = 'b55ac773-d4b4-4b57-abb0-57f2db3990c1';
+
 delete from public.schools where id in (
   'c015a2be-071f-4ac3-8285-ecac22e68f31',
   'aa666ac1-12cd-48b4-a06e-a86fb41dd4f9',
