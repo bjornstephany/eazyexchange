@@ -41,7 +41,13 @@ export function InviteByEmailForm({
     try {
       const res = await sendApplicationInvitations(exchangeId, emails)
       if (!res.ok) {
-        setError('notOpen' in res ? t('notOpenError') : t('tooManyError'))
+        // This function has no catch: the rate limit used to throw, so hitting
+        // it reached the error boundary and the send appeared to do nothing.
+        setError(
+          'notOpen' in res ? t('notOpenError')
+            : 'rateLimited' in res ? t('rateLimitedError')
+              : t('tooManyError'),
+        )
         return
       }
       setSummary(t('result', {

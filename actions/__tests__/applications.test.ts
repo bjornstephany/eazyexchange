@@ -220,10 +220,16 @@ describe('startApplication', () => {
     await expect(startApplication('slug', { email: 'nope', first_name: 'A', last_name: 'B', language: 'en' }))
       .resolves.toEqual({ invalidEmail: true })
   })
-  it('rejects when the exchange is closed', async () => {
+  it('returns notFound instead of throwing for an unknown apply slug', async () => {
+    scenario.exchange = null
+    await expect(startApplication('nope', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
+      .resolves.toEqual({ notFound: true })
+    expect(scenario.inserted).toBeNull()
+  })
+  it('returns closed instead of throwing when the exchange is closed', async () => {
     scenario.exchange.application_open = false
     await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
-      .rejects.toThrow('closed')
+      .resolves.toEqual({ closed: true })
   })
   it('creates a draft and returns its resume token', async () => {
     const res = await startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' })
@@ -238,10 +244,10 @@ describe('startApplication', () => {
     expect(arg.to).toBe('a@b.co')
     expect(arg.resumeUrl).toContain('/apply/resume/')
   })
-  it('rejects when the rate limit is exceeded', async () => {
+  it('returns rateLimited instead of throwing when the cap is exceeded', async () => {
     scenario.rateLimitAllowed = false
     await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
-      .rejects.toThrow('Too many attempts')
+      .resolves.toEqual({ rateLimited: true })
     expect(scenario.inserted).toBeNull()
   })
   it('still resolves with a token when the fire-and-forget resume email rejects', async () => {
@@ -297,7 +303,7 @@ describe('startApplication', () => {
     scenario.application = { id: 'app-9', status: 'draft', resume_token: 'tok-existing' }
     scenario.rateLimitAllowed = false
     await expect(startApplication('slug', { email: 'a@b.co', first_name: 'A', last_name: 'B', language: 'en' }))
-      .rejects.toThrow('Too many attempts')
+      .resolves.toEqual({ rateLimited: true })
     expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
 
@@ -341,16 +347,16 @@ describe('startApplication', () => {
 describe('saveApplicationDraft', () => {
   it('refuses to write a non-draft application', async () => {
     scenario.application.status = 'submitted'
-    await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('locked')
+    expect(await saveApplicationDraft('tok', { first_name: 'A' })).toEqual({ ok: false, reason: 'locked' })
   })
   it('refuses to write through an expired resume link', async () => {
     scenario.application.status = 'draft'
     scenario.application.resume_token_expires_at = PAST
-    await expect(saveApplicationDraft('tok', { first_name: 'A' })).rejects.toThrow('expired')
+    expect(await saveApplicationDraft('tok', { first_name: 'A' })).toEqual({ ok: false, reason: 'expired' })
   })
   it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
     const res = await saveApplicationDraft('tok', { lived_abroad: 'x'.repeat(151) })
-    expect(res).toEqual({ ok: false, overLimit: ['lived_abroad'] })
+    expect(res).toEqual({ ok: false, reason: 'too_long', fields: ['lived_abroad'] })
     expect(scenario.updated).toBeNull()
   })
   it('returns ok:true after a successful draft save', async () => {
@@ -400,29 +406,43 @@ describe('sendApplicationResumeLink', () => {
   })
   it('refuses once the application has been submitted', async () => {
     scenario.application = { email: 'a@b.co', status: 'submitted', resume_token_expires_at: null }
-    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('already been submitted')
+    expect(await sendApplicationResumeLink('tok')).toEqual({ ok: false, reason: 'locked' })
     expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
   it('refuses through an expired resume link', async () => {
     scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: PAST }
-    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('expired')
+    expect(await sendApplicationResumeLink('tok')).toEqual({ ok: false, reason: 'expired' })
     expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
   })
   it('rejects when the rate limit is exceeded', async () => {
     scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: null }
     scenario.rateLimitAllowed = false
-    await expect(sendApplicationResumeLink('tok')).rejects.toThrow('Too many attempts')
+    expect(await sendApplicationResumeLink('tok')).toEqual({ ok: false, reason: 'rate_limited' })
     expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('returns not_found for a token that matches nothing', async () => {
+    scenario.application = null
+    expect(await sendApplicationResumeLink('nope')).toEqual({ ok: false, reason: 'not_found' })
+    expect(sendApplicationResumeEmail).not.toHaveBeenCalled()
+  })
+
+  it('returns ok:true once the mail is away', async () => {
+    scenario.application = { email: 'a@b.co', status: 'draft', resume_token_expires_at: null }
+    expect(await sendApplicationResumeLink('tok')).toEqual({ ok: true })
   })
 })
 
 describe('submitApplication', () => {
-  it('rejects when required fields are missing', async () => {
-    await expect(submitApplication('tok', { first_name: 'A' })).rejects.toThrow('required')
+  it('reports missing required fields as a value, flagging them', async () => {
+    const res = await submitApplication('tok', { first_name: 'A' })
+    expect(res).toMatchObject({ ok: false, reason: 'missing_fields' })
+    expect('fields' in res && res.fields?.length).toBeTruthy()
   })
   it('rejects a complete submission that has no photo', async () => {
     scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: null }
-    await expect(submitApplication('tok', completeAppData())).rejects.toThrow('required')
+    expect(await submitApplication('tok', completeAppData()))
+      .toMatchObject({ ok: false, reason: 'missing_fields' })
     expect(scenario.updated).toBeNull()
   })
   it('submits a complete application that has a photo', async () => {
@@ -435,13 +455,13 @@ describe('submitApplication', () => {
     // The address that would otherwise 422 the whole acceptance send later.
     scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
     const res = await submitApplication('tok', { ...completeAppData(), father_email: 'marie@gmial' })
-    expect(res).toEqual({ ok: false, invalidFormat: ['father_email'] })
+    expect(res).toEqual({ ok: false, reason: 'bad_format', fields: ['father_email'] })
     expect(scenario.updated).toBeNull()
   })
   it('rejects a malformed phone with a structured result', async () => {
     scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
     const res = await submitApplication('tok', { ...completeAppData(), cell_phone: 'io' })
-    expect(res).toEqual({ ok: false, invalidFormat: ['cell_phone'] })
+    expect(res).toEqual({ ok: false, reason: 'bad_format', fields: ['cell_phone'] })
     expect(scenario.updated).toBeNull()
   })
   it('accepts a spaced French mobile number', async () => {
@@ -451,7 +471,7 @@ describe('submitApplication', () => {
   })
   it('rejects an over-limit profile answer with a structured result and writes nothing', async () => {
     const res = await submitApplication('tok', { ...completeAppData(), sports: 'x'.repeat(151) })
-    expect(res).toEqual({ ok: false, overLimit: ['sports'] })
+    expect(res).toEqual({ ok: false, reason: 'too_long', fields: ['sports'] })
     expect(scenario.updated).toBeNull()
   })
   it('returns ok:true on a successful submission', async () => {
@@ -463,7 +483,7 @@ describe('submitApplication', () => {
     scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
     scenario.enrolledElsewhere = { id: 'app-other', enrolled_user_id: 'user-x' }
     const res = await submitApplication('tok', completeAppData())
-    expect(res).toEqual({ ok: false, registered: true })
+    expect(res).toEqual({ ok: false, reason: 'registered' })
     expect(scenario.updated).toBeNull()
   })
 })

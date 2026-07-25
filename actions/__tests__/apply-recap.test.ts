@@ -6,10 +6,10 @@ vi.mock('@/lib/email', () => ({
   sendNewApplicationAlertEmail: vi.fn(),
 }))
 vi.mock('@/lib/exchange-guard', () => ({ assertExchangeWritable: vi.fn(async () => {}) }))
+const checkRateLimit = vi.fn(async () => 'allowed' as 'allowed' | 'limited' | 'error')
 vi.mock('@/lib/rate-limit', () => ({
   clientIp: async () => '1.2.3.4',
-  enforceRateLimit: vi.fn(async () => {}),
-  enforceRateLimitStrict: vi.fn(async () => {}),
+  checkRateLimit: (...a: unknown[]) => checkRateLimit(...(a as [])),
 }))
 // The real renderer is exercised by lib/pdf/__tests__/application-recap.test.ts;
 // here it is stubbed so the action's control flow is what's under test.
@@ -33,13 +33,13 @@ vi.mock('@/lib/supabase/admin', () => ({
 }))
 
 import { downloadApplicationRecap } from '../apply'
-import { enforceRateLimit } from '@/lib/rate-limit'
 
 const FUTURE = new Date(Date.now() + 1e9).toISOString()
 const PAST = new Date(Date.now() - 1e9).toISOString()
 
 beforeEach(() => {
   vi.clearAllMocks()
+  checkRateLimit.mockResolvedValue('allowed')
   renderApplicationRecapPdf.mockResolvedValue(Buffer.from('%PDF-fake'))
   download.mockResolvedValue({
     data: { arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer },
@@ -82,7 +82,22 @@ describe('downloadApplicationRecap', () => {
 
   it('rate-limits by client IP before touching the database', async () => {
     await downloadApplicationRecap('tok')
-    expect(enforceRateLimit).toHaveBeenCalledWith('recap_ip:1.2.3.4', 20, 3600)
+    expect(checkRateLimit).toHaveBeenCalledWith('recap_ip:1.2.3.4', 20, 3600)
+  })
+
+  // Was a throw, so prod showed the applicant an opaque digest.
+  it('returns rate_limited as a value instead of throwing', async () => {
+    checkRateLimit.mockResolvedValue('limited')
+    expect(await downloadApplicationRecap('tok')).toEqual({ ok: false, reason: 'rate_limited' })
+    expect(renderApplicationRecapPdf).not.toHaveBeenCalled()
+  })
+
+  it('fails OPEN when the rate-limit check itself errors', async () => {
+    checkRateLimit.mockResolvedValue('error')
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const res = await downloadApplicationRecap('tok')
+    expect(res.ok).toBe(true)
+    spy.mockRestore()
   })
 
   it('passes the row through to the renderer, honoring the stored locale', async () => {

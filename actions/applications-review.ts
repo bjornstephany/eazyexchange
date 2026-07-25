@@ -6,7 +6,7 @@ import { randomToken, resumeTokenExpiry } from '@/lib/tokens'
 import { parseInviteEmails, MAX_INVITE_BATCH } from '@/lib/invite-emails'
 import { applicantName as buildApplicantName, parentRecipients } from '@/lib/application-form'
 import { signApplicationPhotoUrls } from '@/lib/application-photos'
-import { enforceRateLimit } from '@/lib/rate-limit'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { sendGoodNewsEmail, sendApplicationRejectionEmail, sendApplicationInviteEmail } from '@/lib/email'
 import { templateHasUnfilledPlaceholders, templateHasLiteralPlaceholders } from '@/lib/good-news-template'
 import {
@@ -420,6 +420,7 @@ export async function rejectApplications(ids: string[], note: string, sendEmail:
 export type SendInvitationsResult =
   | { ok: false; notOpen: true }
   | { ok: false; tooMany: true }
+  | { ok: false; rateLimited: true }
   | { ok: true; sent: number; skippedExchange: number; skippedElsewhere: number; invalid: number }
 
 // Bulk-invite students by email from the portal. Admin client (allowlisted):
@@ -453,8 +454,12 @@ export async function sendApplicationInvitations(
     return { ok: true, sent: 0, skippedExchange: 0, skippedElsewhere: 0, invalid: invalid.length }
   }
 
-  // Per-organizer cap on bulk sends from our domain.
-  await enforceRateLimit(`invite_send:${user.id}`, 10, 3600)
+  // Per-organizer cap on bulk sends from our domain. Structured, not thrown:
+  // the dialog has no catch, so a throw here reached the error boundary and the
+  // organizer just saw the send do nothing.
+  const rate = await checkRateLimit(`invite_send:${user.id}`, 10, 3600)
+  if (rate === 'error') console.error('[rate-limit] check failed, allowing request')
+  if (rate === 'limited') return { ok: false, rateLimited: true }
 
   // School-wide dedup: one email = one application per school.
   const { data: existing } = await admin

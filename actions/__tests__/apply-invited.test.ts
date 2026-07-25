@@ -8,8 +8,7 @@ vi.mock('@/lib/email', () => ({
 vi.mock('@/lib/exchange-guard', () => ({ assertExchangeWritable: vi.fn(async () => {}) }))
 vi.mock('@/lib/rate-limit', () => ({
   clientIp: async () => '1.2.3.4',
-  enforceRateLimit: vi.fn(async () => {}),
-  enforceRateLimitStrict: vi.fn(async () => {}),
+  checkRateLimit: vi.fn(async () => 'allowed'),
 }))
 
 let appRow: any

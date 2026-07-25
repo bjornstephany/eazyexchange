@@ -65,10 +65,13 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
     setReminding(true); setError(null)
     try {
       await saveApplicationDraft(token, data)
-      await sendApplicationResumeLink(token)
+      const res = await sendApplicationResumeLink(token)
+      // Expected outcomes are codes, never messages: a thrown message is an
+      // opaque digest in production. See lib/apply/result.ts.
+      if (!res.ok) { setError(t(`errors.${res.reason}`)); return }
       setRemindSent(true)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('form.unexpected'))
+    } catch {
+      setError(t('errors.failed'))
     } finally { setReminding(false) }
   }
 
@@ -79,7 +82,13 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
     const flagged = [...miss, ...over, ...badFormat]
     setMissing(flagged)
     if (flagged.length) {
-      setError(miss.length ? t('form.missing') : over.length ? t('form.tooLong') : t('form.badFormat'))
+      // Same keys the server returns for the same conditions — the applicant
+      // must not get two different sentences depending on which side caught it.
+      setError(
+        miss.length ? t('errors.missing_fields')
+          : over.length ? t('errors.too_long')
+            : t('errors.bad_format'),
+      )
       document.getElementById(`field-${flagged[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
       return
     }
@@ -87,24 +96,20 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
     try {
       const res = await submitApplication(token, data)
       if (!res.ok) {
-        if ('registered' in res) {
-          setError(t('form.registered'))
-          setSubmitting(false)
-          return
+        // One code per outcome, one message per code — the server re-runs every
+        // gate the client did, plus the ones only it can see (a stale tab, a
+        // closed exchange, a payload that never went through the form).
+        setError(t(`errors.${res.reason}`))
+        if (res.fields?.length) {
+          setMissing(res.fields)
+          document.getElementById(`field-${res.fields[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         }
-        // The server re-runs the same gates; only the two it can disagree with
-        // the client on come back structured (a stale tab, or a payload that
-        // never went through the form).
-        const flaggedByServer = 'overLimit' in res ? res.overLimit : res.invalidFormat
-        setMissing(flaggedByServer)
-        setError('overLimit' in res ? t('form.tooLong') : t('form.badFormat'))
-        document.getElementById(`field-${flaggedByServer[0]}`)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         setSubmitting(false)
         return
       }
       clearResumeToken(slug); setDone(true)
     }
-    catch (err: unknown) { setError(err instanceof Error ? err.message : t('form.unexpected')); setSubmitting(false) }
+    catch { setError(t('errors.failed')); setSubmitting(false) }
   }
 
   if (done) return (

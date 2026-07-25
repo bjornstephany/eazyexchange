@@ -167,6 +167,7 @@
         "currentPasswordIncorrect": "La contraseña actual no es correcta.",
         "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
         "passwordLeaked": "Esta contraseña aparece en filtraciones de datos conocidas — elija otra.",
+        "unavailable": "Servicio no disponible temporalmente. Vuelva a intentarlo en unos minutos.",
         "tooManyAttempts": "Demasiados intentos. Espere un momento y vuelva a intentarlo."
       }
     },
@@ -472,6 +473,7 @@
         "sending": "Enviando…",
         "close": "Cerrar",
         "notOpenError": "Primero abre las candidaturas y fija una fecha límite.",
+        "rateLimitedError": "Demasiados envíos. Espera un momento antes de volver a intentarlo.",
         "tooManyError": "Demasiadas direcciones (máx. 200 por envío).",
         "result": "{sent} enviadas · {skipped} ya en la lista · {invalid} no válidas"
       },
@@ -849,6 +851,22 @@
     }
   },
   "apply": {
+    "errors": {
+      "not_found": "Este enlace ya no es válido — pide un nuevo enlace a tu organizador.",
+      "expired": "Este enlace ha caducado — pide un nuevo enlace a tu organizador.",
+      "locked": "Tu candidatura ya se ha enviado — ya no se puede modificar.",
+      "not_submitted": "Tu candidatura aún no se ha enviado.",
+      "closed": "Las candidaturas están cerradas para este intercambio.",
+      "rate_limited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+      "too_long": "Algunas respuestas superan el límite de caracteres.",
+      "bad_format": "Comprueba el formato de los correos y teléfonos señalados.",
+      "missing_fields": "Por favor, rellena todos los campos obligatorios.",
+      "registered": "Esta dirección de correo ya está asociada a una candidatura. Inicia sesión en tu cuenta.",
+      "no_file": "No has seleccionado ningún archivo.",
+      "not_an_image": "Elige una imagen (JPEG, PNG o WebP).",
+      "file_rejected": "Este archivo no se acepta — imagen JPEG, PNG o WebP de 10 MB como máximo.",
+      "failed": "Se ha producido un error. Inténtalo de nuevo."
+    },
     "form": {
       "yes": "Sí",
       "no": "No",
@@ -862,11 +880,6 @@
       "resend": "Reenviar el enlace",
       "reassure": "Progreso guardado automáticamente. Te hemos enviado un enlace por correo por si cambias de dispositivo.",
       "submitting": "Enviando…",
-      "missing": "Por favor, rellena todos los campos obligatorios.",
-      "tooLong": "Algunas respuestas superan el límite de caracteres.",
-      "badFormat": "Comprueba el formato de los correos y teléfonos señalados.",
-      "unexpected": "Se ha producido un error.",
-      "registered": "Esta dirección de correo ya está asociada a una candidatura. Inicia sesión en tu cuenta.",
       "done": "¡Gracias! Tu candidatura ha sido enviada.",
       "remind": "Te hemos enviado un correo con un enlace para retomar tu candidatura.",
       "parentHelper": "Rellena al menos un progenitor por completo."
@@ -877,13 +890,7 @@
       "footer": "Tus respuestas, tal como se enviaron a través de EazyExchange.",
       "photoAlt": "Foto del candidato",
       "label": "Descargar mis respuestas (PDF)",
-      "preparing": "Preparando…",
-      "errors": {
-        "not_found": "Este enlace ya no es válido — pide un nuevo enlace a tu organizador.",
-        "expired": "Este enlace ha caducado — pide un nuevo enlace a tu organizador.",
-        "not_submitted": "Tu candidatura aún no se ha enviado.",
-        "unexpected": "La descarga ha fallado. Inténtalo de nuevo."
-      }
+      "preparing": "Preparando…"
     },
     "page": {
       "badge": "Candidatura",

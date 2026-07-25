@@ -167,6 +167,7 @@
         "currentPasswordIncorrect": "Mot de passe actuel incorrect.",
         "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
         "passwordLeaked": "Ce mot de passe apparaît dans des fuites de données connues — choisissez-en un autre.",
+        "unavailable": "Service momentanément indisponible. Réessayez dans quelques minutes.",
         "tooManyAttempts": "Trop de tentatives. Patientez un moment avant de réessayer."
       }
     },
@@ -472,6 +473,7 @@
         "sending": "Envoi…",
         "close": "Fermer",
         "notOpenError": "Ouvrez d’abord les candidatures et fixez une date limite.",
+        "rateLimitedError": "Trop d’envois. Patientez un moment avant de réessayer.",
         "tooManyError": "Trop d’adresses (200 maximum par envoi).",
         "result": "{sent} envoyée·s · {skipped} déjà dans la liste · {invalid} invalide·s"
       },
@@ -841,6 +843,22 @@
     }
   },
   "apply": {
+    "errors": {
+      "not_found": "Ce lien n’est plus valide — demande un nouveau lien à ton organisateur.",
+      "expired": "Ce lien a expiré — demande un nouveau lien à ton organisateur.",
+      "locked": "Ta candidature a déjà été envoyée — elle n’est plus modifiable.",
+      "not_submitted": "Ta candidature n’a pas encore été envoyée.",
+      "closed": "Les candidatures sont fermées pour cet échange.",
+      "rate_limited": "Trop de tentatives. Patiente quelques minutes avant de réessayer.",
+      "too_long": "Certaines réponses dépassent la limite de caractères.",
+      "bad_format": "Vérifie le format des e-mails et numéros de téléphone signalés.",
+      "missing_fields": "Merci de remplir tous les champs obligatoires.",
+      "registered": "Cette adresse e-mail est déjà associée à une candidature. Connecte-toi à ton compte.",
+      "no_file": "Aucun fichier sélectionné.",
+      "not_an_image": "Choisis une image (JPEG, PNG ou WebP).",
+      "file_rejected": "Ce fichier n’est pas accepté — image JPEG, PNG ou WebP de 10 Mo maximum.",
+      "failed": "Une erreur est survenue. Réessaie."
+    },
     "form": { "yes": "Oui", "no": "Non" },
     "recap": {
       "title": "Récapitulatif de ma candidature",
@@ -848,13 +866,7 @@
       "footer": "Tes réponses, telles qu’envoyées via EazyExchange.",
       "photoAlt": "Photo du candidat",
       "label": "Télécharger mes réponses (PDF)",
-      "preparing": "Préparation…",
-      "errors": {
-        "not_found": "Ce lien n’est plus valide — demande un nouveau lien à ton organisateur.",
-        "expired": "Ce lien a expiré — demande un nouveau lien à ton organisateur.",
-        "not_submitted": "Ta candidature n’a pas encore été envoyée.",
-        "unexpected": "Le téléchargement a échoué. Réessaie."
-      }
+      "preparing": "Préparation…"
     },
     "page": {
       "badge": "Candidature",
@@ -902,11 +914,6 @@
       "resend": "Renvoyer le lien",
       "reassure": "Progression enregistrée automatiquement. Nous t’avons envoyé un lien par e-mail au cas où tu changes d’appareil.",
       "submitting": "Envoi…",
-      "missing": "Veuillez remplir tous les champs obligatoires.",
-      "tooLong": "Certaines réponses dépassent la limite de caractères.",
-      "badFormat": "Vérifiez le format des e-mails et numéros de téléphone signalés.",
-      "unexpected": "Une erreur est survenue.",
-      "registered": "Cette adresse e-mail est déjà associée à une candidature. Connecte-toi à ton compte.",
       "done": "Merci ! Ta candidature a été envoyée.",
       "remind": "Nous t’avons envoyé un e-mail avec un lien pour reprendre ta candidature.",
       "parentHelper": "Remplissez au moins un parent en entier."

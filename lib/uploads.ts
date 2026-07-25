@@ -21,13 +21,25 @@ export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 // 10 MB
 // Value for an <input type="file"> `accept` attribute.
 export const ALLOWED_UPLOAD_ACCEPT = ALLOWED_UPLOAD_MIME_TYPES.join(',')
 
+// The outcome as a code, for callers that report through their own copy layer
+// (the localized application funnel maps these to `apply.errors.*`).
+export function uploadFileIssue(
+  file: { type: string; size: number },
+): 'unsupported_type' | 'too_large' | null {
+  if (!(ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(file.type)) return 'unsupported_type'
+  if (file.size > MAX_UPLOAD_BYTES) return 'too_large'
+  return null
+}
+
 // Returns a human-readable error message if the file is not allowed, or null if
-// it passes. Takes the minimal shape so it's trivially unit-testable.
+// it passes. Takes the minimal shape so it's trivially unit-testable. Kept for
+// the organizer-facing document slots, which surface the string directly.
 export function validateUploadFile(file: { type: string; size: number }): string | null {
-  if (!(ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(file.type)) {
+  const issue = uploadFileIssue(file)
+  if (issue === 'unsupported_type') {
     return 'Unsupported file type. Please upload a PDF, JPEG, PNG, or WebP file.'
   }
-  if (file.size > MAX_UPLOAD_BYTES) {
+  if (issue === 'too_large') {
     return 'File is too large. Maximum size is 10 MB.'
   }
   return null

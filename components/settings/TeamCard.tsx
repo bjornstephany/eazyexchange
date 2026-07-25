@@ -29,11 +29,14 @@ export function TeamCard({ team, isOwner }: {
   async function handleInvite() {
     setBusy(true); setError(null); setFlash(null)
     try {
-      await inviteOrganizer(invite)
+      const res = await inviteOrganizer(invite)
+      // Expected refusals (rate limit, duplicate, bad address) are values now —
+      // a thrown message here was an opaque digest in production.
+      if (!res.ok) { setError(res.message); setBusy(false); return }
       setInvite('')
       setFlash(t('settings.team.inviteSuccess'))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : c('errors.generic'))
+    } catch {
+      setError(c('errors.generic'))
     }
     setBusy(false)
   }

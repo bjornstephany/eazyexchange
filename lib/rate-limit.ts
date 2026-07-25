@@ -11,16 +11,21 @@ export async function clientIp(): Promise<string> {
   return h.get('x-real-ip')?.trim() || 'unknown'
 }
 
-// Throws RATE_LIMIT_MESSAGE when `key` exceeds `limit` calls per `windowSeconds`.
-// Backed by check_rate_limit() in Postgres (atomic fixed window).
-export const RATE_LIMIT_MESSAGE =
-  'Too many attempts. Please wait a little while and try again.'
-export const RATE_LIMIT_UNAVAILABLE_MESSAGE =
-  'This service is temporarily unavailable. Please try again in a few minutes.'
-
-// Exported for callers that report expected outcomes as structured return
-// values rather than throws (prod redacts thrown Server Action messages). The
-// enforce* wrappers below are the throwing form and are unchanged.
+// The only form. Reports the outcome as a value; the caller decides what that
+// means and supplies its own copy. Backed by check_rate_limit() in Postgres
+// (atomic fixed window).
+//
+// There used to be throwing wrappers here (enforceRateLimit /
+// enforceRateLimitStrict). They were removed: production redacts thrown Server
+// Action messages to an opaque digest, so every caller that hit a cap showed
+// the user a hex string — and the message they threw was English, on surfaces
+// that are otherwise translated into five languages. Do not reintroduce them.
+//
+// Each caller keeps the failure mode its key needs:
+//   - form-entry caps fail OPEN on 'error' (a DB blip must not block a
+//     legitimate applicant),
+//   - mail-sending caps fail CLOSED on 'error' (losing the cap would mean
+//     unlimited mail from our sending domain).
 export async function checkRateLimit(
   key: string,
   limit: number,
@@ -34,37 +39,4 @@ export async function checkRateLimit(
   })
   if (error) return 'error'
   return allowed === false ? 'limited' : 'allowed'
-}
-
-// Fails OPEN on an unexpected DB error: a transient blip must never block a
-// legitimate applicant. Use ONLY for limits that gate form entry — anything
-// that sends email uses enforceRateLimitStrict.
-export async function enforceRateLimit(
-  key: string,
-  limit: number,
-  windowSeconds: number,
-): Promise<void> {
-  const outcome = await checkRateLimit(key, limit, windowSeconds)
-  if (outcome === 'error') {
-    // Don't include the key — it can contain an applicant email (PII).
-    console.error('[rate-limit] check failed, allowing request')
-    return
-  }
-  if (outcome === 'limited') throw new Error(RATE_LIMIT_MESSAGE)
-}
-
-// Fails CLOSED: for the mail-sending keys, a DB blip removing the cap would
-// mean unlimited mail from our sending domain (reputation + cost) — refuse
-// instead of allowing.
-export async function enforceRateLimitStrict(
-  key: string,
-  limit: number,
-  windowSeconds: number,
-): Promise<void> {
-  const outcome = await checkRateLimit(key, limit, windowSeconds)
-  if (outcome === 'error') {
-    console.error('[rate-limit] check failed, BLOCKING mail-sending request')
-    throw new Error(RATE_LIMIT_UNAVAILABLE_MESSAGE)
-  }
-  if (outcome === 'limited') throw new Error(RATE_LIMIT_MESSAGE)
 }
