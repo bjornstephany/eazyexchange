@@ -5,7 +5,6 @@ pick items off the top when starting new work.
 
 ## Queue
 
-- revoke the `schools.name` column grant from `20260701000001` — defence-in-depth now that no server action writes it; costs a migration + staging/prod apply + `pnpm test:rls` (deferred from the 2026-07-24 settings audit)
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — delete this line if still unwanted)
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)
 - Google search appearance: add favicon + fix meta description getting cut off in results
@@ -22,6 +21,9 @@ Flagged during the 2026-07-14 applications refactor, deliberately not fixed ther
 
 ## Done
 
+- [2026-07-25] revoke-schools-name-grant — `authenticated` has no UPDATE on
+  `schools` at all (`20260725122126`); the dead "organizers update their school"
+  policy dropped with it. `claim_school()` is the only writer of the name.
 - [#13 merged 2026-07-14] split-applications-trust-lines — split actions/applications.ts into apply.ts / applications-review.ts / invitations.ts by trust model; retired the CLAUDE.md tripwire.
 - [#12 merged 2026-07-14] landingnav-focus-management — focus trap/restore + keyboard cycling for the landing language menu.
 - [#11 merged 2026-07-14] reminder-apostrophe-tests — locked French typographic apostrophes in reminder/email/landing copy.
