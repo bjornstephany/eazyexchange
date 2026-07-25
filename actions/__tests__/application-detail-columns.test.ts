@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn(async () => {}) }))
 vi.mock('@/lib/email', () => ({
-  sendGoodNewsEmail: vi.fn(),
+  sendGoodNewsEmail: vi.fn(async () => true),
   sendApplicationRejectionEmail: vi.fn(),
   sendApplicationInviteEmail: vi.fn(),
 }))

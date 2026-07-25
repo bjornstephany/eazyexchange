@@ -5,44 +5,27 @@
 import { travelPeriodFr } from '@/lib/forms/fillable/render'
 import { travelOrderProblem, TRAVEL_ORDER_MESSAGE } from '@/lib/exchange/travel-dates'
 
-export type FirstExchangeCard = { title: string; body: string }
-
-// The structured program details collected in step 2. Destination and the two
-// travel dates are required — they feed three of the four fillable forms and
-// both generated Info cards. The rest is optional: an organizer signing up in
-// September may genuinely not know the receiving school yet, and the library
-// drawer's add-time prompt collects whatever is still blank.
+// Everything onboarding asks for, and nothing else. The six detail columns that
+// used to sit behind « Informations complémentaires (facultatif) » were never
+// optional — every one is required by a standard fillable form — so they moved
+// to the add-a-form prompt (lib/forms/add-requirements.ts), which asks for
+// exactly the missing ones at the moment a form needs them. Two more are now
+// derived server-side and never asked at all: sending_school_name from
+// schools.name, and sending_city from the school's registry commune.
 export type FirstExchangeDetails = {
   destination: string
   travel_start: string
   travel_end: string
-  chaperones: string
-  association_name: string
-  sending_school_name: string
-  receiving_school_name: string
-  proviseur_name: string
-  sending_city: string
 }
 
 export const EMPTY_FIRST_EXCHANGE_DETAILS: FirstExchangeDetails = {
-  destination: '', travel_start: '', travel_end: '', chaperones: '',
-  association_name: '', sending_school_name: '', receiving_school_name: '',
-  proviseur_name: '', sending_city: '',
+  destination: '', travel_start: '', travel_end: '',
 }
 
 // completeFirstExchange returns this for expected outcomes instead of throwing
-// (Next.js redacts thrown Server Action messages in production).
-export type CompleteFirstExchangeResult =
-  | { ok: true }
-  | { ok: false; error: 'invalid' | 'limit'; message: string }
-
-// Free-text card titles still typed by hand. Destination and Dates clés are
-// generated from the structured details, so they are no longer prompted.
-export const ONBOARDING_CARD_PROMPTS: readonly string[] = [
-  'Hébergement',
-  'Contact organisateur',
-  'À prévoir',
-]
+// (Next.js redacts thrown Server Action messages in production). There is no
+// success arm: success redirects, so it is never observed by the caller.
+export type FirstExchangeProblem = { error: 'invalid' | 'limit'; message: string }
 
 export const CARD_INVALID_MESSAGE =
   'Chaque information renseignée doit avoir un titre.'
@@ -60,18 +43,12 @@ export function detailsProblem(d: FirstExchangeDetails): string | null {
 }
 
 // The two Info cards students see, derived from the structured values rather
-// than typed a second time.
-export function generatedCards(d: FirstExchangeDetails): FirstExchangeCard[] {
+// than typed a second time. These are the only cards onboarding creates — the
+// three free-text prompts it used to offer are optional by nature and belong in
+// Communication → Infos, which can add them at any time.
+export function generatedCards(d: FirstExchangeDetails): { title: string; body: string }[] {
   return [
     { title: 'Destination', body: d.destination.trim() },
     { title: 'Dates clés', body: `Le voyage se déroulera ${travelPeriodFr(d.travel_start, d.travel_end)}.` },
   ]
-}
-
-// Trim both fields; keep only cards the organizer actually filled in (non-empty
-// body). Cards left blank are dropped rather than created.
-export function filledCards(cards: FirstExchangeCard[]): FirstExchangeCard[] {
-  return cards
-    .map(c => ({ title: c.title.trim(), body: c.body.trim() }))
-    .filter(c => c.body.length > 0)
 }

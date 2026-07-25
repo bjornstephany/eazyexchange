@@ -8,6 +8,9 @@ let scenario: {
   upsertError: { message: string } | null
 }
 
+/** Rows handed to exchange_program_details.upsert, newest last. */
+const upserted: any[] = []
+
 function makeClient() {
   return {
     auth: { getUser: async () => ({ data: { user: { id: scenario.userId } } }) },
@@ -15,7 +18,10 @@ function makeClient() {
       const builder: any = {
         select: () => builder,
         eq: () => builder,
-        upsert: async () => ({ error: scenario.upsertError }),
+        upsert: async (row: any) => {
+          if (table === 'exchange_program_details') upserted.push(row)
+          return { error: scenario.upsertError }
+        },
         single: async () => {
           if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role, org_role: 'owner' }, error: null }
           return { data: null, error: null }
@@ -37,16 +43,19 @@ function makeClient() {
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { saveProgramDetails, getProgramDetails } from '../fillable'
+import { saveProgramDetails, getProgramDetails, type ProgramDetailsInput } from '../fillable'
 import { TRAVEL_ORDER_MESSAGE } from '@/lib/exchange/travel-dates'
 
-const validInput = {
+const validInput: ProgramDetailsInput = {
   destination: 'le Minnesota, USA',
   travel_start: '2026-10-17', travel_end: '2026-11-02',
   chaperones: ['Polly STEPHANY'],
   association_name: 'AGESSIA', sending_school_name: 'Lycée Georges Duby',
   receiving_school_name: 'Edina High School', proviseur_name: 'Mme MIRON HUGHES',
   sending_city: 'Luynes', absence_dates: ['le jeudi 19 octobre 2026'],
+  participation_cost: '850 € par élève',
+  payment_details: 'https://helloasso.com/x',
+  confirmation_deadline: '2026-09-15',
 }
 
 describe('program details actions', () => {
@@ -55,6 +64,7 @@ describe('program details actions', () => {
       userId: 'u1', role: 'organizer', profileSchool: 'school-1',
       exchangeSchools: { a: 'school-1', b: null }, upsertError: null,
     }
+    upserted.length = 0
   })
 
   it('rejects a student caller', async () => {
@@ -100,5 +110,45 @@ describe('program details actions', () => {
   it('getProgramDetails also enforces the scope check', async () => {
     scenario.exchangeSchools = { a: 'school-2', b: null }
     await expect(getProgramDetails('ex-1')).rejects.toThrow('Unauthorized')
+  })
+})
+
+describe('saveProgramDetails — acceptance-email columns', () => {
+  beforeEach(() => {
+    scenario = {
+      userId: 'u1', role: 'organizer', profileSchool: 'school-1',
+      exchangeSchools: { a: 'school-1', b: null }, upsertError: null,
+    }
+    upserted.length = 0
+  })
+
+  it('writes all three new columns', async () => {
+    const res = await saveProgramDetails('ex-1', validInput)
+    expect(res).toEqual({ ok: true })
+    expect(upserted[0]).toMatchObject({
+      participation_cost: '850 € par élève',
+      payment_details: 'https://helloasso.com/x',
+      confirmation_deadline: '2026-09-15',
+    })
+  })
+
+  it('stores a blank value as null rather than an empty string', async () => {
+    await saveProgramDetails('ex-1', { ...validInput, participation_cost: '   ', confirmation_deadline: '' })
+    expect(upserted[0]).toMatchObject({
+      participation_cost: null,
+      confirmation_deadline: null,
+    })
+  })
+
+  it('rejects an overlong participation cost without writing', async () => {
+    const res = await saveProgramDetails('ex-1', { ...validInput, participation_cost: 'x'.repeat(201) })
+    expect(res).toEqual({ ok: false, message: expect.any(String) })
+    expect(upserted).toHaveLength(0)
+  })
+
+  it('rejects an overlong payment detail without writing', async () => {
+    const res = await saveProgramDetails('ex-1', { ...validInput, payment_details: 'y'.repeat(201) })
+    expect(res).toEqual({ ok: false, message: expect.any(String) })
+    expect(upserted).toHaveLength(0)
   })
 })

@@ -6,13 +6,18 @@ import { loadMessages } from '@/lib/i18n/messages'
 import { StudentTopBar } from '@/components/student/StudentTopBar'
 import { StudentTabs } from '@/components/student/StudentTabs'
 import { getStudentContext } from '@/actions/student-context'
+import { shellDestination } from '@/lib/auth/shell-destination'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const user = await getAuthUser()
   if (!user) redirect('/login')
 
   const profile = await getProfile()
-  if (profile?.role !== 'student') redirect('/dashboard')
+  // A missing profile leaves the shells entirely rather than bouncing to the
+  // organizer one, which used to loop into a blank tab. See shell-destination.ts.
+  if (!profile || profile.role !== 'student') {
+    redirect(shellDestination(profile?.role, 'student')!)
+  }
 
   const ctx = await getStudentContext()
 

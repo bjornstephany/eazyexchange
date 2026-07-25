@@ -75,13 +75,17 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => supabaseClient
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => supabaseClient }))
 vi.mock('next/headers', () => ({ headers: async () => ({ get: () => null }) }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+let events: any[] = []
+vi.mock('@/lib/communication/events', () => ({
+  recordCommunicationEvent: vi.fn(async (_client: unknown, entry: any) => { events.push(entry) }),
+}))
 vi.mock('@/lib/email', () => ({
   sendApplicationResumeEmail: vi.fn(async () => {}),
   sendApplicationConfirmationEmail: vi.fn(async () => {}),
   sendNewApplicationAlertEmail: vi.fn(async () => {}),
   sendInvitationEmail: vi.fn(async () => {}),
   sendApplicationRejectionEmail: vi.fn(async () => {}),
-  sendGoodNewsEmail: vi.fn(async () => {}),
+  sendGoodNewsEmail: vi.fn(async () => true),
 }))
 
 import { revalidatePath } from 'next/cache'
@@ -91,6 +95,7 @@ import { acceptApplications, rejectApplications, acceptApplication } from '../ap
 beforeEach(() => {
   vi.clearAllMocks()
   updates = []
+  events = []
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1', good_news_subject: null, good_news_body: null },
     profile: { id: 'user-1', school_id: 's-1', role: 'organizer' },
@@ -215,5 +220,36 @@ describe('acceptApplication (single, change-of-mind)', () => {
     expect(sendGoodNewsEmail).toHaveBeenCalledWith(
       expect.objectContaining({ personalNote: null }),
     )
+  })
+})
+
+describe('accept records a good_news_sent event with the real send outcome', () => {
+  it('records ok per accepted application, named and application-scoped', async () => {
+    await acceptApplications(['app-ok', 'app-noparent'])
+    expect(events).toHaveLength(2)
+    expect(events).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        exchangeId: 'ex-1', kind: 'good_news_sent',
+        applicationId: 'app-ok', subject: 'A B', status: 'ok',
+      }),
+      expect.objectContaining({
+        applicationId: 'app-noparent', subject: 'C D', status: 'ok',
+      }),
+    ]))
+  })
+
+  // A history that says "sent" for a mail that bounced is worse than no
+  // history: the send result has to be awaited, not fire-and-forget.
+  it('records failed when the send returns false', async () => {
+    vi.mocked(sendGoodNewsEmail).mockResolvedValue(false)
+    await acceptApplications(['app-ok'])
+    expect(events[0]).toMatchObject({ kind: 'good_news_sent', status: 'failed' })
+  })
+
+  // rejectApplications(ids, note, sendEmail) — positional, per
+  // actions/applications-review.ts:317.
+  it('a rejection records nothing', async () => {
+    await rejectApplications(['app-ok'], 'non', true)
+    expect(events).toHaveLength(0)
   })
 })

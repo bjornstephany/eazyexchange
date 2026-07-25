@@ -24,6 +24,8 @@ export default function LoginPage() {
       setError('Ce lien d’invitation est invalide ou a expiré — demandez à votre organisateur de vous le renvoyer.')
     } else if (err === 'signup_failed') {
       setError('Nous n’avons pas pu terminer la création de votre compte. Réessayez de vous inscrire.')
+    } else if (err === 'profile_missing') {
+      setError('Nous n’avons pas pu charger votre compte. Reconnectez-vous — si le problème persiste, contactez-nous.')
     } else if (err === 'oauth_failed') {
       setError('La connexion avec Google a échoué. Veuillez réessayer.')
     } else if (err === 'not_invited') {

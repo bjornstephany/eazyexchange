@@ -12,6 +12,7 @@ export const RETENTION_DAYS = {
   enrolledFormAnswers: 365,       // exchanges.archived_at
   uploadedDocuments: 91,          // exchanges.archived_at
   emailSendLog: 365,              // created_at
+  communicationEvents: 365,       // created_at — mirrors emailSendLog
   auditLog: 730,                  // created_at
   errorReportsResolved: 90,       // last_seen_at, status='resolved'
   rateLimits: 7,                  // window_start

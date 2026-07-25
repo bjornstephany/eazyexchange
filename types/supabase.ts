@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       applications: {
@@ -220,6 +195,61 @@ export type Database = {
           target_type?: string
         }
         Relationships: []
+      }
+      communication_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string | null
+          created_at: string
+          exchange_id: string
+          id: string
+          kind: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id?: string | null
+          created_at?: string
+          exchange_id: string
+          id?: string
+          kind: string
+          status?: string
+          subject?: string
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string | null
+          created_at?: string
+          exchange_id?: string
+          id?: string
+          kind?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_events_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: false
+            referencedRelation: "exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_slots: {
         Row: {
@@ -467,8 +497,11 @@ export type Database = {
           absence_dates: string[]
           association_name: string | null
           chaperones: string[]
+          confirmation_deadline: string | null
           destination: string | null
           exchange_id: string
+          participation_cost: string | null
+          payment_details: string | null
           proviseur_name: string | null
           receiving_school_name: string | null
           sending_city: string | null
@@ -481,8 +514,11 @@ export type Database = {
           absence_dates?: string[]
           association_name?: string | null
           chaperones?: string[]
+          confirmation_deadline?: string | null
           destination?: string | null
           exchange_id: string
+          participation_cost?: string | null
+          payment_details?: string | null
           proviseur_name?: string | null
           receiving_school_name?: string | null
           sending_city?: string | null
@@ -495,8 +531,11 @@ export type Database = {
           absence_dates?: string[]
           association_name?: string | null
           chaperones?: string[]
+          confirmation_deadline?: string | null
           destination?: string | null
           exchange_id?: string
+          participation_cost?: string | null
+          payment_details?: string | null
           proviseur_name?: string | null
           receiving_school_name?: string | null
           sending_city?: string | null
@@ -1228,9 +1267,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

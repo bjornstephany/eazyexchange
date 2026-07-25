@@ -14,6 +14,7 @@ import {
 import { ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { assertExchangeWritable } from '@/lib/exchange-guard'
 import { validateInfoCard, type InfoCardError } from '@/lib/exchange/info-card'
+import { recordCommunicationEvent } from '@/lib/communication/events'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAppUrl } from '@/lib/app-url'
 import { createAndSendOrganizerInvite } from '@/lib/team/invite'
@@ -298,8 +299,25 @@ export async function getExchangeProgressSummaries(): Promise<Record<string, Exc
   return Object.fromEntries(entries)
 }
 
-export type InfoCard = { id: string; title: string; body: string; position: number }
+export type InfoCard = {
+  id: string; title: string; body: string; position: number
+  // Drive the Infos status line (« publiée le … » vs « modifiée le … »).
+  createdAt: string; updatedAt: string
+}
 export type InfoCardResult = { ok: true; card: InfoCard } | { ok: false; error: InfoCardError }
+
+const INFO_CARD_COLUMNS = 'id, title, body, position, created_at, updated_at'
+
+type InfoCardRow = {
+  id: string; title: string; body: string; position: number
+  created_at: string; updated_at: string
+}
+function toInfoCard(row: InfoCardRow): InfoCard {
+  return {
+    id: row.id, title: row.title, body: row.body, position: row.position,
+    createdAt: row.created_at, updatedAt: row.updated_at,
+  }
+}
 
 export async function getInfoCards(exchangeId: string): Promise<InfoCard[]> {
   const supabase = await createClient()
@@ -308,19 +326,19 @@ export async function getInfoCards(exchangeId: string): Promise<InfoCard[]> {
 
   const { data, error } = await supabase
     .from('exchange_info_cards')
-    .select('id, title, body, position')
+    .select(INFO_CARD_COLUMNS)
     .eq('exchange_id', exchangeId)
     .order('position', { ascending: true })
     .order('created_at', { ascending: true })
   if (error) throw error
-  return (data ?? []) as InfoCard[]
+  return ((data ?? []) as InfoCardRow[]).map(toInfoCard)
 }
 
 export async function addInfoCard(
   exchangeId: string, input: { title: string; body: string },
 ): Promise<InfoCardResult> {
   const supabase = await createClient()
-  await requireOrganizer()
+  const { user } = await requireOrganizer()
   await assertExchangeInScope(supabase, exchangeId)
   await assertExchangeWritable(supabase, exchangeId)
 
@@ -339,25 +357,30 @@ export async function addInfoCard(
   const { data, error } = await supabase
     .from('exchange_info_cards')
     .insert({ exchange_id: exchangeId, title: validated.value.title, body: validated.value.body, position: nextPosition })
-    .select('id, title, body, position')
+    .select(INFO_CARD_COLUMNS)
     .single()
   if (error) throw error
+
+  await recordCommunicationEvent(supabase, {
+    exchangeId, actorId: user.id, kind: 'info_published', subject: validated.value.title,
+  })
   revalidatePath('/communication')
-  return { ok: true, card: data as InfoCard }
+  return { ok: true, card: toInfoCard(data as InfoCardRow) }
 }
 
 export async function updateInfoCard(
   cardId: string, input: { title: string; body: string },
 ): Promise<InfoCardResult> {
   const supabase = await createClient()
-  await requireOrganizer()
+  const { user } = await requireOrganizer()
 
   // Resolve the card's exchange, then scope + writable-guard it.
   const { data: existing } = await supabase
-    .from('exchange_info_cards').select('exchange_id').eq('id', cardId).maybeSingle()
+    .from('exchange_info_cards').select('exchange_id, title').eq('id', cardId).maybeSingle()
   if (!existing) throw new Error('Info card not found')
-  await assertExchangeInScope(supabase, existing.exchange_id as string)
-  await assertExchangeWritable(supabase, existing.exchange_id as string)
+  const exchangeId = existing.exchange_id as string
+  await assertExchangeInScope(supabase, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const validated = validateInfoCard(input)
   if (!validated.ok) return validated
@@ -366,24 +389,36 @@ export async function updateInfoCard(
     .from('exchange_info_cards')
     .update({ title: validated.value.title, body: validated.value.body, updated_at: new Date().toISOString() })
     .eq('id', cardId)
-    .select('id, title, body, position')
+    .select(INFO_CARD_COLUMNS)
     .single()
   if (error) throw error
+
+  await recordCommunicationEvent(supabase, {
+    exchangeId, actorId: user.id, kind: 'info_updated', subject: validated.value.title,
+  })
   revalidatePath('/communication')
-  return { ok: true, card: data as InfoCard }
+  return { ok: true, card: toInfoCard(data as InfoCardRow) }
 }
 
 export async function deleteInfoCard(cardId: string): Promise<void> {
   const supabase = await createClient()
-  await requireOrganizer()
+  const { user } = await requireOrganizer()
 
+  // Read the title BEFORE the delete — Historique keeps a record of cards that
+  // no longer exist, which is the whole point of denormalizing `subject`.
   const { data: existing } = await supabase
-    .from('exchange_info_cards').select('exchange_id').eq('id', cardId).maybeSingle()
+    .from('exchange_info_cards').select('exchange_id, title').eq('id', cardId).maybeSingle()
   if (!existing) throw new Error('Info card not found')
-  await assertExchangeInScope(supabase, existing.exchange_id as string)
-  await assertExchangeWritable(supabase, existing.exchange_id as string)
+  const exchangeId = existing.exchange_id as string
+  const title = (existing.title as string) ?? ''
+  await assertExchangeInScope(supabase, exchangeId)
+  await assertExchangeWritable(supabase, exchangeId)
 
   const { error } = await supabase.from('exchange_info_cards').delete().eq('id', cardId)
   if (error) throw error
+
+  await recordCommunicationEvent(supabase, {
+    exchangeId, actorId: user.id, kind: 'info_deleted', subject: title,
+  })
   revalidatePath('/communication')
 }
