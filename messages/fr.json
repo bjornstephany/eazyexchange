@@ -507,6 +507,19 @@
         "other": "Autre"
       },
       "emptyTab": "Aucune candidature dans cet onglet.",
+      "goodNewsBlock": {
+        "title": "E-mail « Bonne nouvelle » incomplet",
+        "missingIntro": "Ces informations manquent encore. Sans elles, la famille recevrait un e-mail à trous :",
+        "literal": "Le modèle contient encore du texte entre crochets à remplacer.",
+        "cta": "Compléter dans Réglages",
+        "ctaTemplate": "Modifier le modèle",
+        "fields": {
+          "travel_dates": "Dates du séjour",
+          "participation_cost": "Participation aux frais",
+          "payment_details": "Adhésion / paiement",
+          "confirmation_deadline": "Date limite de confirmation"
+        }
+      },
       "review": {
         "statusAccepted": "Accepté — en attente de réponse",
         "statusEnrolled": "Inscrit(e) (a répondu Oui)",
@@ -913,7 +926,7 @@
       "required": "Une photo est requise pour envoyer ta candidature."
     },
     "invite": {
-      "resultYes": "Merci — votre enfant recevra un lien pour créer son accès.",
+      "resultYes": "Merci — votre enfant recevra un lien pour créer son compte.",
       "resultNo": "Merci de nous avoir prévenus. Nous souhaitons le meilleur à votre enfant.",
       "resultMaybe": "Merci — nous avons noté vos questions, l’organisateur reviendra vers vous.",
       "badge": "Candidature acceptée 🎉",
@@ -932,7 +945,7 @@
       "expiredTitle": "Cette invitation a expiré",
       "expiredBody": "Contactez l’organisateur pour recevoir une nouvelle invitation.",
       "alreadyConfirmedTitle": "Participation déjà confirmée",
-      "alreadyConfirmedBody": "Merci — la participation à l’échange {exchange} est confirmée. Votre enfant reçoit un lien par e-mail pour créer son accès.",
+      "alreadyConfirmedBody": "Merci — la participation à l’échange {exchange} est confirmée. Votre enfant reçoit un lien par e-mail pour créer son compte.",
       "answeredTitle": "Cette invitation a déjà reçu une réponse",
       "answeredBody": "Une réponse a déjà été enregistrée. Si c’est une erreur, contactez l’organisateur."
     },

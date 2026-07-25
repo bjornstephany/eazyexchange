@@ -4,6 +4,10 @@ let scenario: {
   exchange: any | null
   applications: Record<string, any>
   profile: any
+  /** The exchange_program_details row that fills the acceptance email's
+   *  {{travel_dates}} &c. Null models an organizer who never filled Réglages,
+   *  which the send guard must refuse. */
+  details: any | null
 }
 
 /** Every row written by an update, keyed by application id — lets a test
@@ -23,7 +27,10 @@ function builder(table: string) {
       const data =
         table === 'applications'
           ? ids.map(id => scenario.applications[id]).filter(Boolean)
-          : ids.includes(scenario.exchange?.id) ? [scenario.exchange] : []
+          : table === 'exchange_program_details'
+            ? (scenario.details && ids.includes(scenario.exchange?.id)
+                ? [{ ...scenario.details, exchange_id: scenario.exchange.id }] : [])
+            : ids.includes(scenario.exchange?.id) ? [scenario.exchange] : []
       return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected)
     },
     order: () => b,
@@ -99,6 +106,14 @@ beforeEach(() => {
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1', good_news_subject: null, good_news_body: null },
     profile: { id: 'user-1', school_id: 's-1', role: 'organizer' },
+    // Complete by default: these tests are about the review engine, not the
+    // send guard, and an incomplete row would block every one of them.
+    details: {
+      travel_start: '2027-04-12', travel_end: '2027-04-26',
+      participation_cost: '850 € par élève',
+      payment_details: 'https://helloasso.example/adhesion',
+      confirmation_deadline: '2027-01-15',
+    },
     applications: {
       'app-ok': { id: 'app-ok', exchange_id: 'ex-1', school_id: 's-1', status: 'submitted', email: 'stu@b.co', language: 'fr', data: { first_name: 'A', last_name: 'B', father_email: 'dad@b.co', mother_email: 'mom@b.co' } },
       'app-noparent': { id: 'app-noparent', exchange_id: 'ex-1', school_id: 's-1', status: 'submitted', email: 'stu2@b.co', language: 'fr', data: { first_name: 'C', last_name: 'D' } },
@@ -109,14 +124,14 @@ beforeEach(() => {
 describe('acceptApplications', () => {
   it('accepts each id and reports partial failure', async () => {
     const res = await acceptApplications(['app-ok', 'app-bad'])
-    expect(res).toEqual({ succeeded: 1, failed: 1 })
+    expect(res).toEqual({ succeeded: 1, failed: 1, blocked: null })
     // Application status feeds the dashboard rollups — an accept must
     // invalidate the router cache for /dashboard too.
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard')
   })
 
   it('empty input is a no-op', async () => {
-    expect(await acceptApplications([])).toEqual({ succeeded: 0, failed: 0 })
+    expect(await acceptApplications([])).toEqual({ succeeded: 0, failed: 0, blocked: null })
   })
 
   // The batch fetches every application in one read and writes them
@@ -134,7 +149,7 @@ describe('acceptApplications', () => {
       ...scenario.applications['app-ok'], id: 'app-foreign', school_id: 's-2',
     }
     const res = await acceptApplications(['app-ok', 'app-foreign'])
-    expect(res).toEqual({ succeeded: 1, failed: 1 })
+    expect(res).toEqual({ succeeded: 1, failed: 1, blocked: null })
     expect(updates.map(u => u.id)).toEqual(['app-ok'])
   })
 
@@ -143,14 +158,14 @@ describe('acceptApplications', () => {
     scenario.applications['app-invited'] = { ...scenario.applications['app-ok'], id: 'app-invited', status: 'invited' }
     scenario.applications['app-done'] = { ...scenario.applications['app-ok'], id: 'app-done', status: 'accepted' }
     const res = await acceptApplications(['app-ok', 'app-invited', 'app-done'])
-    expect(res).toEqual({ succeeded: 1, failed: 2 })
+    expect(res).toEqual({ succeeded: 1, failed: 2, blocked: null })
     expect(updates.map(u => u.id)).toEqual(['app-ok'])
   })
 
   it('refuses the whole batch when the exchange is archived', async () => {
     scenario.exchange = { ...scenario.exchange, archived_at: '2026-01-01T00:00:00Z' }
     const res = await acceptApplications(['app-ok', 'app-noparent'])
-    expect(res).toEqual({ succeeded: 0, failed: 2 })
+    expect(res).toEqual({ succeeded: 0, failed: 2, blocked: null })
     expect(updates).toEqual([])
   })
 })
@@ -158,12 +173,12 @@ describe('acceptApplications', () => {
 describe('rejectApplications', () => {
   it('rejects each id with the shared note', async () => {
     const res = await rejectApplications(['app-ok'], 'note', false)
-    expect(res).toEqual({ succeeded: 1, failed: 0 })
+    expect(res).toEqual({ succeeded: 1, failed: 0, blocked: null })
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard')
   })
 
   it('empty input is a no-op', async () => {
-    expect(await rejectApplications([], 'note', false)).toEqual({ succeeded: 0, failed: 0 })
+    expect(await rejectApplications([], 'note', false)).toEqual({ succeeded: 0, failed: 0, blocked: null })
   })
 })
 
@@ -219,6 +234,91 @@ describe('acceptApplication (single, change-of-mind)', () => {
     await acceptApplications(['app-ok'])
     expect(sendGoodNewsEmail).toHaveBeenCalledWith(
       expect.objectContaining({ personalNote: null }),
+    )
+  })
+})
+
+// The « Bonne nouvelle » email is the entire point of accepting: shipping one
+// that still says « [à compléter] » to a family is the failure this guard
+// exists to prevent. A blocked accept must therefore write NOTHING — no status
+// change, no invite token, no email, no history entry — so the organizer can
+// fill Réglages and retry against an untouched application.
+describe('accept refuses a template with unfilled placeholders', () => {
+  it('blocks and touches nothing when Réglages was never filled', async () => {
+    scenario.details = null
+    const res = await acceptApplication('app-ok')
+    expect(res.ok).toBe(false)
+    expect(updates).toEqual([])
+    expect(sendGoodNewsEmail).not.toHaveBeenCalled()
+    expect(events).toEqual([])
+  })
+
+  it('names every missing value so the organizer knows what to fill', async () => {
+    scenario.details = null
+    const res = await acceptApplication('app-ok')
+    expect(res).toEqual({
+      ok: false,
+      blocked: {
+        missing: ['travel_dates', 'participation_cost', 'payment_details', 'confirmation_deadline'],
+        literal: false,
+      },
+    })
+  })
+
+  it('names only the values actually missing', async () => {
+    scenario.details = { ...scenario.details, participation_cost: null, payment_details: '  ' }
+    const res = await acceptApplication('app-ok')
+    expect(res).toEqual({
+      ok: false,
+      blocked: { missing: ['participation_cost', 'payment_details'], literal: false },
+    })
+  })
+
+  it('blocks a hand-typed placeholder even with Réglages complete', async () => {
+    scenario.exchange = {
+      ...scenario.exchange,
+      good_news_body: 'Bonjour, le séjour coûte [montant à confirmer].',
+    }
+    const res = await acceptApplication('app-ok')
+    expect(res).toEqual({ ok: false, blocked: { missing: [], literal: true } })
+    expect(updates).toEqual([])
+  })
+
+  // The organizer who abandoned the tokens and typed the values into the body
+  // is done — refusing them because three columns are empty would be a lie.
+  it('allows a custom body that hard-codes the values, Réglages empty', async () => {
+    scenario.details = null
+    scenario.exchange = {
+      ...scenario.exchange,
+      good_news_body: 'Départ le 12 avril, 850 € — réponse avant le 15 janvier.',
+    }
+    const res = await acceptApplication('app-ok')
+    expect(res).toEqual({ ok: true })
+    expect(sendGoodNewsEmail).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports a bulk block once, not once per candidate', async () => {
+    scenario.details = null
+    const res = await acceptApplications(['app-ok', 'app-noparent'])
+    expect(res.succeeded).toBe(0)
+    expect(res.failed).toBe(2)
+    expect(res.blocked?.missing).toContain('participation_cost')
+    expect(updates).toEqual([])
+  })
+
+  // Rejections send a different email, one with no template and no placeholders.
+  it('never blocks a rejection', async () => {
+    scenario.details = null
+    const res = await rejectApplications(['app-ok'], 'non', false)
+    expect(res).toMatchObject({ succeeded: 1, failed: 0 })
+  })
+
+  it('hands the details through to the email when they are complete', async () => {
+    await acceptApplication('app-ok')
+    expect(sendGoodNewsEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({ participation_cost: '850 € par élève' }),
+      }),
     )
   })
 })

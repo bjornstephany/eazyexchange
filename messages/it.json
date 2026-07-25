@@ -507,6 +507,19 @@
         "other": "Altro"
       },
       "emptyTab": "Nessuna candidatura in questa scheda.",
+      "goodNewsBlock": {
+        "title": "L’e-mail « Bonne nouvelle » è incompleta",
+        "missingIntro": "Mancano ancora queste informazioni. Senza di esse la famiglia riceverebbe un’e-mail con degli spazi vuoti:",
+        "literal": "Il modello contiene ancora del testo tra parentesi quadre da sostituire.",
+        "cta": "Completare nelle Impostazioni",
+        "ctaTemplate": "Modificare il modello",
+        "fields": {
+          "travel_dates": "Date del soggiorno",
+          "participation_cost": "Partecipazione alle spese",
+          "payment_details": "Iscrizione / pagamento",
+          "confirmation_deadline": "Termine per la conferma"
+        }
+      },
       "review": {
         "statusAccepted": "Accettato — in attesa di risposta",
         "statusEnrolled": "Iscritto/a (ha risposto Sì)",
@@ -920,7 +933,7 @@
       "required": "È richiesta una foto per inviare la tua candidatura."
     },
     "invite": {
-      "resultYes": "Grazie — vostro figlio/a riceverà un link per creare il suo accesso.",
+      "resultYes": "Grazie — vostro figlio/a riceverà un link per creare il suo account.",
       "resultNo": "Grazie per averci avvisati. Auguriamo il meglio a vostro figlio/a.",
       "resultMaybe": "Grazie — abbiamo annotato le vostre domande, l'organizzatore vi ricontatterà.",
       "badge": "Candidatura accettata 🎉",
@@ -939,7 +952,7 @@
       "expiredTitle": "Questo invito è scaduto",
       "expiredBody": "Contattate l'organizzatore per ricevere un nuovo invito.",
       "alreadyConfirmedTitle": "Partecipazione già confermata",
-      "alreadyConfirmedBody": "Grazie — la partecipazione allo scambio {exchange} è confermata. Vostro figlio/a riceve un link via e-mail per creare il suo accesso.",
+      "alreadyConfirmedBody": "Grazie — la partecipazione allo scambio {exchange} è confermata. Vostro figlio/a riceve un link via e-mail per creare il suo account.",
       "answeredTitle": "Questo invito ha già ricevuto una risposta",
       "answeredBody": "Una risposta è già stata registrata. Se si tratta di un errore, contattate l'organizzatore."
     },

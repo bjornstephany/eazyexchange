@@ -6,6 +6,7 @@ import { InfoCardsCard } from './InfoCardsCard'
 import { GoodNewsCard } from './GoodNewsCard'
 import { ReminderSettingsCard } from '@/components/exchanges/ReminderSettingsCard'
 import type { CommunicationEvent } from '@/lib/communication/history'
+import type { GoodNewsValues } from '@/lib/exchange/good-news-fields'
 import { HistoryCard } from './HistoryCard'
 
 export type CommunicationProps = {
@@ -17,6 +18,7 @@ export type CommunicationProps = {
   reminderCadence: ReminderCadence
   goodNewsSubject: string
   goodNewsBody: string
+  programDetails: GoodNewsValues | null
   events: CommunicationEvent[]
 }
 
@@ -67,6 +69,7 @@ export function CommunicationView(props: CommunicationProps) {
               exchangeName={props.exchangeName}
               initialSubject={props.goodNewsSubject}
               initialBody={props.goodNewsBody}
+              details={props.programDetails}
               readOnly={props.archived}
             />
           )}

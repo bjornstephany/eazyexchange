@@ -11,7 +11,7 @@ describe('sendGoodNewsEmail', () => {
     process.env.RESEND_API_KEY = 'test-key'
   })
 
-  it('sends to the parent array with rendered subject/body and three deep-linked buttons (fr)', async () => {
+  it('sends to the parent array with rendered subject/body and one response button (fr)', async () => {
     await sendGoodNewsEmail({
       to: ['dad@x.fr', 'mom@x.fr'],
       studentName: 'Marie Dupont',
@@ -26,13 +26,40 @@ describe('sendGoodNewsEmail', () => {
     expect(call.subject).toBe('Bravo Marie Dupont')
     expect(call.html).toContain('Marie Dupont')
     expect(call.html).toContain('France-Canada 2026')
-    // Three deep-linked buttons, GET links (no scripts in email).
-    expect(call.html).toContain('https://app.test/invite/tok123?r=yes')
-    expect(call.html).toContain('https://app.test/invite/tok123?r=no')
-    expect(call.html).toContain('https://app.test/invite/tok123?r=maybe')
-    // French button labels.
-    expect(call.html).toContain('Oui, nous confirmons')
-    expect(call.html).toContain('Oui, mais nous avons des questions')
+    // One button to the response page, which presents the three choices itself.
+    expect(call.html).toContain('href="https://app.test/invite/tok123"')
+    expect(call.html).toContain('Répondre à l’invitation')
+    expect(call.html).not.toContain('?r=')
+    expect(call.html).not.toContain('Oui, nous confirmons')
+  })
+
+  it('paints the response button in the brand blue', async () => {
+    await sendGoodNewsEmail({
+      to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',
+      subject: null, body: null,
+      respondUrl: 'https://app.test/invite/t', language: 'fr',
+    })
+    const { html } = sendMock.mock.calls[0][0]
+    expect(html).toContain('background:#2456E6')
+    expect(html).not.toContain('#1F7A57')
+  })
+
+  it('fills the template from the program details it is handed', async () => {
+    await sendGoodNewsEmail({
+      to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',
+      subject: null, body: null,
+      respondUrl: 'https://app.test/invite/t', language: 'fr',
+      details: {
+        travel_start: '2027-04-12', travel_end: '2027-04-26',
+        participation_cost: '850 € par élève',
+        payment_details: 'https://helloasso.example/adhesion',
+        confirmation_deadline: '2027-01-15',
+      },
+    })
+    const { html } = sendMock.mock.calls[0][0]
+    expect(html).toContain('850 € par élève')
+    expect(html).toContain('du 12 avr. 2027 au 26 avr. 2027')
+    expect(html).not.toContain('{{')
   })
 
   it('renders an escaped personal note block when one is supplied', async () => {
@@ -68,15 +95,14 @@ describe('sendGoodNewsEmail', () => {
     expect(html).not.toContain('<img src=x>')
   })
 
-  it('uses English button labels when language is en', async () => {
+  it('uses the English button label when language is en', async () => {
     await sendGoodNewsEmail({
       to: ['dad@x.fr'], studentName: 'M', exchangeName: 'E',
       subject: null, body: null,
       respondUrl: 'https://app.test/invite/t', language: 'en',
     })
     const { html } = sendMock.mock.calls[0][0]
-    expect(html).toContain('Yes, we confirm')
-    expect(html).toContain('Yes, but we have questions')
+    expect(html).toContain('Respond to the invitation')
   })
 })
 
@@ -85,7 +111,7 @@ describe('sendStudentSetupEmail', () => {
     sendMock.mockClear()
     process.env.RESEND_API_KEY = 'test-key'
   })
-  it('sends a French set-your-access email linking to the setup URL', async () => {
+  it('sends a French set-your-account email linking to the setup URL', async () => {
     await sendStudentSetupEmail({
       to: 'student@x.fr',
       exchangeName: 'France-Canada 2026',
@@ -95,6 +121,6 @@ describe('sendStudentSetupEmail', () => {
     expect(to).toBe('student@x.fr')
     expect(subject).toContain('France-Canada 2026')
     expect(html).toContain('https://app.test/auth/confirm?token_hash=h&type=magiclink&next=%2Faccept-invite')
-    expect(html).toContain('Créer mon accès')
+    expect(html).toContain('Créer mon compte')
   })
 })

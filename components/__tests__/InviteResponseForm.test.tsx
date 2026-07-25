@@ -22,7 +22,7 @@ describe('InviteResponseForm (parent-facing, French)', () => {
     renderWithIntl(<InviteResponseForm token="t" studentName="Léa" exchangeName="X" preselect={null} />)
     await user.click(screen.getByRole('button', { name: /nous confirmons/i }))
     expect(respondToInvitation).toHaveBeenCalledWith('t', 'yes', '')
-    expect(await screen.findByText(/recevra un lien pour créer son accès/i)).toBeInTheDocument()
+    expect(await screen.findByText(/recevra un lien pour créer son compte/i)).toBeInTheDocument()
   })
   it('renders the structured error message and does not confirm', async () => {
     ;(respondToInvitation as any).mockResolvedValue({ ok: false, error: 'expired', message: 'Cette invitation a expiré.' })

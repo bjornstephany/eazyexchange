@@ -11,6 +11,7 @@ const { updateGoodNewsTemplate } = vi.hoisted(() => ({
 vi.mock('@/actions/settings', () => ({ updateGoodNewsTemplate }))
 
 import { GoodNewsCard } from '@/components/communication/GoodNewsCard'
+import { DEFAULT_GOOD_NEWS_BODY as DEFAULT_BODY } from '@/lib/good-news-template'
 
 const g = fr.organizer.settings.goodNews
 const STUDENT_CHIP = `[[${g.tokens.studentName}]]`
@@ -21,6 +22,14 @@ const baseProps = {
   exchangeName: 'France-Canada 2026',
   initialSubject: 'Bonne nouvelle pour {{student_name}}',
   initialBody: 'Bonjour,\n\n{{student_name}} part pour {{exchange_name}}.',
+  // Complete by default: these tests are about the editor, and an incomplete
+  // row would add the unfilled-placeholder warning to every one of them.
+  details: {
+    travel_start: '2027-04-12', travel_end: '2027-04-26',
+    participation_cost: '850 € par élève',
+    payment_details: 'https://helloasso.example/adhesion',
+    confirmation_deadline: '2027-01-15',
+  },
   readOnly: false,
 }
 
@@ -95,6 +104,39 @@ describe('GoodNewsCard', () => {
   it('the preview still substitutes real values', () => {
     renderWithIntl(<GoodNewsCard {...baseProps} />)
     expect(screen.getByText('Bonne nouvelle pour Marie Dupont')).toBeTruthy()
+  })
+
+  // The send-side guard is a hard block. Surfacing the identical warning while
+  // the organizer types is what keeps that humane: they meet it in the editor,
+  // not against a candidate they were trying to accept.
+  it('warns live when Réglages has not been filled', () => {
+    renderWithIntl(<GoodNewsCard {...baseProps} details={null} initialBody={DEFAULT_BODY} />)
+    expect(screen.getByText(/Bonne nouvelle » incomplet/)).toBeTruthy()
+    expect(screen.getByText('Participation aux frais')).toBeTruthy()
+  })
+
+  it('stays quiet once the details are complete', () => {
+    renderWithIntl(<GoodNewsCard {...baseProps} initialBody={DEFAULT_BODY} />)
+    expect(screen.queryByText(/incomplet/)).toBeNull()
+  })
+
+  it('warns about a hand-typed placeholder without offering a link to this page', () => {
+    renderWithIntl(<GoodNewsCard {...baseProps} initialBody={'Le séjour coûte [montant à confirmer].'} />)
+    expect(screen.getByText(/entre crochets/)).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Modifier le modèle' })).toBeNull()
+  })
+
+  // The editor renders tokens as [[chips]], which the placeholder scan would
+  // read as blanks — it has to run on the stored mustache form.
+  it('does not mistake its own editor chips for placeholders', () => {
+    renderWithIntl(<GoodNewsCard {...baseProps} />)
+    expect(screen.queryByText(/incomplet/)).toBeNull()
+  })
+
+  it('previews one response button, matching the email', () => {
+    renderWithIntl(<GoodNewsCard {...baseProps} />)
+    expect(screen.getByText('Répondre à l’invitation')).toBeTruthy()
+    expect(screen.queryByText('Oui, nous confirmons')).toBeNull()
   })
 
   it('read-only hides insert chips, reset and save', () => {

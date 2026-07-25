@@ -8,6 +8,12 @@ import { applicantName as buildApplicantName, parentRecipients } from '@/lib/app
 import { signApplicationPhotoUrls } from '@/lib/application-photos'
 import { enforceRateLimit } from '@/lib/rate-limit'
 import { sendGoodNewsEmail, sendApplicationRejectionEmail, sendApplicationInviteEmail } from '@/lib/email'
+import { templateHasUnfilledPlaceholders, templateHasLiteralPlaceholders } from '@/lib/good-news-template'
+import {
+  missingGoodNewsFields,
+  type GoodNewsField,
+  type GoodNewsValues,
+} from '@/lib/exchange/good-news-fields'
 import { revalidatePath } from 'next/cache'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { getAppUrl } from '@/lib/app-url'
@@ -134,7 +140,17 @@ type ReviewOp =
   | { kind: 'accept'; personalNote: string | null }
   | { kind: 'reject'; note: string; sendEmail: boolean }
 
-type ReviewOutcome = { ok: true } | { ok: false; error: Error }
+// Why an accept was refused before it started. `missing` names the Réglages →
+// Programme values that are still empty; `literal` says the template also (or
+// instead) carries placeholder text the organizer typed by hand, which no
+// amount of filling Réglages will fix. Both are needed: they send the organizer
+// to two different screens.
+export type AcceptBlock = { missing: GoodNewsField[]; literal: boolean }
+
+type ReviewOutcome =
+  | { ok: true }
+  | { ok: false; error: Error }
+  | { ok: false; blocked: AcceptBlock }
 
 type ReviewRow = {
   id: string
@@ -192,6 +208,41 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
     for (const ex of (exchanges ?? []) as ReviewExchange[]) exchangeById.set(ex.id, ex)
   }
 
+  // The values that fill the acceptance email's {{travel_dates}} &c. Read for
+  // accepts only — a reject sends a different email that has no placeholders.
+  // RLS scopes this the same way it scopes the exchanges read above.
+  const detailsById = new Map<string, GoodNewsValues>()
+  const blockByExchange = new Map<string, AcceptBlock>()
+  if (op.kind === 'accept' && exchangeIds.length > 0) {
+    const { data: details } = await supabase
+      .from('exchange_program_details')
+      .select('exchange_id, travel_start, travel_end, participation_cost, payment_details, confirmation_deadline')
+      .in('exchange_id', exchangeIds)
+    for (const d of (details ?? []) as (GoodNewsValues & { exchange_id: string })[]) {
+      detailsById.set(d.exchange_id, d)
+    }
+    // One pre-flight per exchange, not per application: the template and the
+    // details are the same for every candidate in the batch, so a blocked
+    // exchange blocks all of them with one answer.
+    for (const exchangeId of exchangeIds) {
+      const exchange = exchangeById.get(exchangeId)
+      const d = detailsById.get(exchangeId) ?? null
+      const unfilled = templateHasUnfilledPlaceholders({
+        subject: exchange?.good_news_subject ?? null,
+        body: exchange?.good_news_body ?? null,
+        details: d,
+      })
+      if (!unfilled) continue
+      blockByExchange.set(exchangeId, {
+        missing: missingGoodNewsFields(d),
+        literal: templateHasLiteralPlaceholders({
+          subject: exchange?.good_news_subject ?? null,
+          body: exchange?.good_news_body ?? null,
+        }),
+      })
+    }
+  }
+
   const reviewedAt = new Date().toISOString()
   const outcomes = await Promise.all(
     ids.map(async (id): Promise<ReviewOutcome> => {
@@ -208,6 +259,14 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
           if (!ACCEPTABLE_STATUSES.includes(app.status)) {
             throw new Error('Only a submitted application can be accepted')
           }
+          // Refuse BEFORE any write. The « Bonne nouvelle » email is the whole
+          // point of accepting, so an accept whose email would carry
+          // « [à compléter] » to a family is not a partial success to be
+          // patched up later — nothing happens at all, and the organizer is
+          // told exactly what to fill in.
+          const blocked = blockByExchange.get(app.exchange_id)
+          if (blocked) return { ok: false, blocked }
+
           // Every accepted application gets its own invite token — this is why
           // the batch cannot collapse into a single multi-row UPDATE.
           const inviteToken = randomToken()
@@ -238,6 +297,7 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
             exchangeName: exchange?.name ?? '',
             subject: exchange?.good_news_subject ?? null,
             body: exchange?.good_news_body ?? null,
+            details: detailsById.get(app.exchange_id) ?? null,
             respondUrl: `${APP_URL}/invite/${inviteToken}`,
             language: app.language === 'fr' ? 'fr' : 'en',
             personalNote: op.personalNote,
@@ -298,33 +358,55 @@ async function reviewApplications(ids: string[], op: ReviewOp): Promise<ReviewOu
 // `opts.personalNote` is the "change your mind" message an organizer may attach
 // when re-inviting a candidate they had rejected. Empty/whitespace collapses to
 // null so the email renders no note block.
+//
+// A refused-because-incomplete accept is a STRUCTURED return, not a throw:
+// production replaces thrown Server Action messages with an opaque digest, and
+// the organizer has to be told which values are missing. Genuine failures (not
+// found, unauthorized, archived) still throw — those are unexpected.
 export async function acceptApplication(
   applicationId: string,
   opts?: { personalNote?: string },
-): Promise<void> {
+): Promise<{ ok: true } | { ok: false; blocked: AcceptBlock }> {
   const [outcome] = await reviewApplications([applicationId], {
     kind: 'accept', personalNote: opts?.personalNote?.trim() || null,
   })
-  if (outcome && !outcome.ok) throw outcome.error
+  if (outcome && !outcome.ok) {
+    if ('blocked' in outcome) return { ok: false, blocked: outcome.blocked }
+    throw outcome.error
+  }
+  return { ok: true }
 }
 
 export async function rejectApplication(applicationId: string, note: string, sendEmail: boolean): Promise<void> {
   const [outcome] = await reviewApplications([applicationId], { kind: 'reject', note, sendEmail })
-  if (outcome && !outcome.ok) throw outcome.error
+  // A reject can never be blocked — only the accept path sends the templated email.
+  if (outcome && !outcome.ok && 'error' in outcome) throw outcome.error
 }
 
 // ---- Bulk organizer actions (dashboard Candidatures view) ----
 
 // Per-id failures never abort the batch: a mixed selection partially succeeds
 // and the view reports the tally.
-function tally(outcomes: ReviewOutcome[]): { succeeded: number; failed: number } {
+//
+// A block is reported once for the whole batch, not once per candidate: the
+// template and the Réglages values are per exchange, so 30 blocked candidates
+// have one cause and one fix. Where a selection spans exchanges the first block
+// wins — the organizer fixes it, retries, and meets the next one if any.
+function tally(outcomes: ReviewOutcome[]): BulkReviewResult {
   let succeeded = 0
   let failed = 0
-  for (const o of outcomes) o.ok ? succeeded++ : failed++
-  return { succeeded, failed }
+  let blocked: AcceptBlock | null = null
+  for (const o of outcomes) {
+    if (o.ok) { succeeded++; continue }
+    failed++
+    if ('blocked' in o && !blocked) blocked = o.blocked
+  }
+  return { succeeded, failed, blocked }
 }
 
-export async function acceptApplications(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+export type BulkReviewResult = { succeeded: number; failed: number; blocked: AcceptBlock | null }
+
+export async function acceptApplications(ids: string[]): Promise<BulkReviewResult> {
   // Bulk accept carries no personal note — one message cannot fit 30 families.
   return tally(await reviewApplications(ids, { kind: 'accept', personalNote: null }))
 }

@@ -4,6 +4,7 @@ import { getAuthUser, getProfile } from '@/lib/supabase/request'
 import { getExchanges, getInfoCards } from '@/actions/exchanges'
 import { getCommunicationSettings } from '@/actions/settings'
 import { getCommunicationEvents } from '@/actions/communication'
+import { getProgramDetails } from '@/actions/fillable'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { CommunicationView } from '@/components/communication/CommunicationView'
 
@@ -26,10 +27,14 @@ export default async function CommunicationPage() {
   // dashboard (the rail tab itself only renders when an exchange is active).
   if (!active) redirect('/dashboard')
 
-  const [infoCards, comms, events] = await Promise.all([
+  // programDetails feeds the « Bonne nouvelle » editor's live warning: the
+  // template's {{travel_dates}} &c. are filled from that row at send time, and
+  // a missing value is what blocks an accept.
+  const [infoCards, comms, events, programDetails] = await Promise.all([
     getInfoCards(active.id),
     getCommunicationSettings(active.id),
     getCommunicationEvents(active.id),
+    getProgramDetails(active.id),
   ])
 
   return (
@@ -42,6 +47,7 @@ export default async function CommunicationPage() {
       reminderCadence={comms.reminderCadence}
       goodNewsSubject={comms.goodNewsSubject}
       goodNewsBody={comms.goodNewsBody}
+      programDetails={programDetails}
       events={events}
     />
   )

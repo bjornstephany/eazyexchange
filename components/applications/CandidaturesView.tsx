@@ -6,13 +6,14 @@ import type { AppRow } from '@/lib/dashboard/rollup'
 import { applicantStatusPill, frShortDate } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
 import { TAB_KEYS, matchesTab, type TabKey } from '@/lib/applications/tabs'
-import { acceptApplications, rejectApplications } from '@/actions/applications-review'
+import { acceptApplications, rejectApplications, type AcceptBlock } from '@/actions/applications-review'
 import { setApplicationOpen } from '@/actions/exchanges'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
 import { InviteByEmailDialog } from '@/components/applications/InviteByEmailDialog'
 import { InvitationPanel, type InvitationControls } from '@/components/applications/InvitationPanel'
 import { OpenApplicationsDialog } from '@/components/applications/OpenApplicationsDialog'
+import { GoodNewsBlockNotice } from '@/components/applications/GoodNewsBlockNotice'
 
 // Invited/started rows are organizer-sent invitations still in the funnel; they
 // are shown for tracking but never bulk-selectable for accept/reject.
@@ -49,6 +50,9 @@ export function CandidaturesView({
   const [note, setNote] = useState('')
   const [sendEmail, setSendEmail] = useState(true)
   const [bulkResult, setBulkResult] = useState<{ succeeded: number; failed: number } | null>(null)
+  // A whole batch refused because the acceptance email is incomplete — one
+  // cause, one fix, so it is reported once rather than per candidate.
+  const [bulkBlock, setBulkBlock] = useState<AcceptBlock | null>(null)
 
   // data.sex holds the radio token from lib/application-form.ts. Legacy
   // applications predate the choice list and hold free text — render those
@@ -107,7 +111,10 @@ export function CandidaturesView({
     try {
       const result = await acceptApplications(selected)
       resetBulkUi()
-      setBulkResult(result.failed > 0 ? result : null)
+      setBulkBlock(result.blocked)
+      // A block already explains every failure in the batch; showing the tally
+      // as well would just repeat it in vaguer words.
+      setBulkResult(result.failed > 0 && !result.blocked ? result : null)
     } finally {
       setBusy(false)
     }
@@ -118,6 +125,7 @@ export function CandidaturesView({
     try {
       const result = await rejectApplications(selected, note, sendEmail)
       resetBulkUi()
+      setBulkBlock(null)
       setBulkResult(result.failed > 0 ? result : null)
     } finally {
       setBusy(false)
@@ -272,6 +280,12 @@ export function CandidaturesView({
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {bulkBlock && (
+            <div className="mb-3">
+              <GoodNewsBlockNotice block={bulkBlock} />
             </div>
           )}
 

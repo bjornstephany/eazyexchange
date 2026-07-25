@@ -4,7 +4,7 @@ import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
-const acceptApplication = vi.fn().mockResolvedValue(undefined)
+const acceptApplication = vi.fn().mockResolvedValue({ ok: true })
 const rejectApplication = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/applications-review', () => ({
   acceptApplication: (...a: unknown[]) => acceptApplication(...a),
@@ -57,6 +57,42 @@ describe('ApplicationReviewActions', () => {
     renderWithIntl(<ApplicationReviewActions applicationId="a1" exchangeId="ex1" status="enrolled" response="yes" note={null} />)
     expect(screen.getByText('Inscrit(e) (a répondu Oui)')).toBeInTheDocument()
     expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  // The accept is refused before anything is written, so the organizer stays on
+  // this screen and is told what to fill rather than being navigated away as a
+  // success would.
+  it('keeps the organizer here and names the missing values when the accept is blocked', async () => {
+    acceptApplication.mockResolvedValueOnce({
+      ok: false,
+      blocked: { missing: ['participation_cost', 'confirmation_deadline'], literal: false },
+    })
+    renderWithIntl(<ApplicationReviewActions applicationId="a1" exchangeId="ex1" status="submitted" response={null} note={null} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Accepter' }))
+    expect(await screen.findByText(/Bonne nouvelle » incomplet/)).toBeInTheDocument()
+    expect(screen.getByText('Participation aux frais')).toBeInTheDocument()
+    expect(screen.getByText('Date limite de confirmation')).toBeInTheDocument()
+    // Not listed: the two values that ARE filled.
+    expect(screen.queryByText('Dates du séjour')).toBeNull()
+    expect(screen.getByRole('link', { name: /Réglages/ })).toBeInTheDocument()
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('points a hand-typed placeholder at the template editor, not at Réglages', async () => {
+    acceptApplication.mockResolvedValueOnce({
+      ok: false, blocked: { missing: [], literal: true },
+    })
+    renderWithIntl(<ApplicationReviewActions applicationId="a1" exchangeId="ex1" status="submitted" response={null} note={null} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Accepter' }))
+    expect(await screen.findByText(/entre crochets/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Modifier le modèle' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Réglages/ })).toBeNull()
+  })
+
+  it('navigates away as before when the accept succeeds', async () => {
+    renderWithIntl(<ApplicationReviewActions applicationId="a1" exchangeId="ex1" status="submitted" response={null} note={null} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Accepter' }))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/applications'))
   })
 
   it('is read-only for an application that was never submitted', () => {
