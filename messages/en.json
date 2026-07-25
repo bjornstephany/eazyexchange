@@ -425,9 +425,7 @@
         "maybeDesc": "“Maybe” replies to follow up with families.",
         "maybeCta": "Send reminder"
       },
-      "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late.",
-      "progressDossiers": "{done} / {total} files validated",
-      "progressCandidatures": "{done} / {total} applications processed"
+      "subline": "{a, plural, one {# application} other {# applications}} to review, {r, plural, one {# file} other {# files}} to verify, {l, plural, one {# student} other {# students}} late."
     },
     "applications": {
       "questionsHeading": "Family’s questions",
@@ -614,9 +612,7 @@
         "mandatory": "Mandatory",
         "dependsOnSituation": "depends on situation",
         "complete": "Complete",
-        "toRedo": "To redo",
-        "missingCount": "{count, plural, one {# missing} other {# missing}}",
-        "toVerifyCount": "{count} to review"
+        "toRedo": "To redo"
       },
       "progress": {
         "notRequestedDoc": "Not requested yet",

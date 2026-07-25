@@ -92,6 +92,33 @@ describe('message catalog parity', () => {
     expect(fl['organizer.billing.cgv']).toContain('<cgv>')
   })
 
+  // The five existing apostrophe guards (landing content, fillable definitions,
+  // dossier sublines, lib/email.ts, the reminder edge function) never covered
+  // the catalogues, which is how 14 ASCII apostrophes accumulated in fr.
+  it('fr uses typographic apostrophes only', () => {
+    const offenders = Object.entries(leaves(fr))
+      .filter(([, v]) => /\p{L}'\p{L}/u.test(v))
+      .map(([k]) => k)
+    expect(offenders).toEqual([])
+  })
+
+  // Quote convention per locale. Deterministic, and it is the tell that catches
+  // a French fragment pasted into a non-French value — the shape of the original
+  // mixed-language bug. The French EXAMPLES inside the programDetails hints are
+  // quoted with each locale's own marks, so they do not trip this.
+  it('each locale uses its own quote characters', () => {
+    for (const locale of ['en', 'de'] as const) {
+      const offenders = Object.entries(leaves(catalogs[locale]))
+        .filter(([, v]) => /[«»]/.test(v)).map(([k]) => k)
+      expect(offenders, `${locale} must not use guillemets`).toEqual([])
+    }
+    for (const locale of ['fr', 'es', 'it'] as const) {
+      const offenders = Object.entries(leaves(catalogs[locale]))
+        .filter(([, v]) => /„/.test(v)).map(([k]) => k)
+      expect(offenders, `${locale} must not use German quotes`).toEqual([])
+    }
+  })
+
   it('the French-example hints name the constraint in every non-fr locale', () => {
     const constraint: Record<string, string> = {
       en: 'written in French', es: 'en francés', it: 'in francese', de: 'auf Französisch',

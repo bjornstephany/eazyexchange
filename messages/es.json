@@ -425,9 +425,7 @@
         "maybeDesc": "Respuestas «Quizás» para hacer seguimiento con las familias.",
         "maybeCta": "Enviar recordatorio"
       },
-      "subline": "{a, plural, one {# candidatura} other {# candidaturas}} por examinar, {r, plural, one {# expediente} other {# expedientes}} por verificar, {l, plural, one {# alumno} other {# alumnos}} con retraso.",
-      "progressDossiers": "{done} / {total} expedientes validados",
-      "progressCandidatures": "{done} / {total} candidaturas procesadas"
+      "subline": "{a, plural, one {# candidatura} other {# candidaturas}} por examinar, {r, plural, one {# expediente} other {# expedientes}} por verificar, {l, plural, one {# alumno} other {# alumnos}} con retraso."
     },
     "applications": {
       "questionsHeading": "Preguntas de la familia",
@@ -614,9 +612,7 @@
         "mandatory": "Obligatorio",
         "dependsOnSituation": "según situación",
         "complete": "Completo",
-        "toRedo": "Por rehacer",
-        "missingCount": "{count, plural, one {# faltante} other {# faltantes}}",
-        "toVerifyCount": "{count} por verificar"
+        "toRedo": "Por rehacer"
       },
       "progress": {
         "notRequestedDoc": "Aún no solicitado",

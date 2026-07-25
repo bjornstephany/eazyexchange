@@ -172,7 +172,7 @@
     },
     "dataPrivacy": {
       "heading": "Données & confidentialité",
-      "subtitle": "Supprimez ou exportez les données d'une personne sur demande (RGPD).",
+      "subtitle": "Supprimez ou exportez les données d’une personne sur demande (RGPD).",
       "students": "Élèves",
       "applicants": "Candidats",
       "empty": "Aucune personne pour le moment.",
@@ -186,7 +186,7 @@
       "deleted": "Données supprimées.",
       "export": "Exporter",
       "exporting": "Export…",
-      "exportError": "L'export a échoué. Réessayez."
+      "exportError": "L’export a échoué. Réessayez."
     },
     "billing": {
       "per": "/ an",
@@ -368,8 +368,8 @@
       "startTitle": "Commencez votre échange",
       "startBody": "Commencez votre échange en invitant vos élèves à postuler.",
       "inviteCta": "Aller aux candidatures",
-      "overviewTitle": "Vue d'ensemble",
-      "progressLabel": "Progression de l'échange",
+      "overviewTitle": "Vue d’ensemble",
+      "progressLabel": "Progression de l’échange",
       "filterBadge": "Filtre : {label} ✕",
       "tableHeaderStudent": "Élève",
       "tableHeaderApplication": "Candidature",
@@ -384,7 +384,7 @@
       "nextDeadlineSuffix": " — prochaine date limite le {date}.",
       "formsAndDocsHeading": "Formulaires & documents",
       "dueSuffix": " · date limite {date}",
-      "autoReminderHint": "Relances automatiques quotidiennes à l'approche de la date limite.",
+      "autoReminderHint": "Relances automatiques quotidiennes à l’approche de la date limite.",
       "pills": {
         "complete": "Complet",
         "accepted": "Accepté(e)",
@@ -425,9 +425,7 @@
         "maybeDesc": "Réponses « Peut-être » à relancer.",
         "maybeCta": "Relancer"
       },
-      "subline": "{a, plural, one {# candidature} other {# candidatures}} à examiner, {r, plural, one {# dossier} other {# dossiers}} à vérifier, {l, plural, one {# élève} other {# élèves}} en retard.",
-      "progressDossiers": "{done} / {total} dossiers validés",
-      "progressCandidatures": "{done} / {total} candidatures traitées"
+      "subline": "{a, plural, one {# candidature} other {# candidatures}} à examiner, {r, plural, one {# dossier} other {# dossiers}} à vérifier, {l, plural, one {# élève} other {# élèves}} en retard."
     },
     "applications": {
       "questionsHeading": "Questions de la famille",
@@ -473,8 +471,8 @@
         "sendCta": "Envoyer les invitations",
         "sending": "Envoi…",
         "close": "Fermer",
-        "notOpenError": "Ouvrez d'abord les candidatures et fixez une date limite.",
-        "tooManyError": "Trop d'adresses (200 maximum par envoi).",
+        "notOpenError": "Ouvrez d’abord les candidatures et fixez une date limite.",
+        "tooManyError": "Trop d’adresses (200 maximum par envoi).",
         "result": "{sent} envoyée·s · {skipped} déjà dans la liste · {invalid} invalide·s"
       },
       "tabs": {
@@ -490,7 +488,7 @@
       "acceptCta": "Accepter & inviter",
       "rejectCta": "Refuser",
       "sending": "Envoi…",
-      "notePlaceholder": "Note pour l'élève (facultatif)",
+      "notePlaceholder": "Note pour l’élève (facultatif)",
       "notifyByEmail": "Prévenir par e-mail",
       "confirmRejectCta": "Confirmer le refus",
       "bulkResult": "{s, plural, one {# traitée} other {# traitées}} · {f} en échec",
@@ -614,9 +612,7 @@
         "mandatory": "Obligatoire",
         "dependsOnSituation": "selon situation",
         "complete": "Complet",
-        "toRedo": "À refaire",
-        "missingCount": "{count, plural, one {# manquant} other {# manquants}}",
-        "toVerifyCount": "{count} à vérifier"
+        "toRedo": "À refaire"
       },
       "progress": {
         "notRequestedDoc": "Pas encore demandé",
@@ -952,8 +948,8 @@
     "sections": {
       "student": { "title": "Élève" },
       "parents": { "title": "Parents" },
-      "hosting": { "title": "Conditions d'accueil" },
-      "profile": { "title": "Profil de l'élève" }
+      "hosting": { "title": "Conditions d’accueil" },
+      "profile": { "title": "Profil de l’élève" }
     },
     "fields": {
       "last_name": { "label": "Nom" },
@@ -1016,19 +1012,19 @@
       "smoking_home": { "label": "Fume-t-on à la maison ?" },
       "own_room": { "label": "Chambre individuelle pour le correspondant ?" },
       "accept_opposite_sex": { "label": "Accepteriez-vous un échange mixte ?" },
-      "lived_abroad": { "label": "Si vous avez déjà vécu à l'étranger, décrivez où et quand" },
+      "lived_abroad": { "label": "Si vous avez déjà vécu à l’étranger, décrivez où et quand" },
       "countries_with_parents": { "label": "Quels pays avez-vous visités avec vos parents ?" },
       "countries_without_parents": { "label": "Quels pays avez-vous visités sans vos parents, et combien de temps ?" },
       "sports": { "label": "Sports pratiqués et heures par semaine" },
       "activities": { "label": "Activités, clubs ou loisirs et heures par semaine" },
-      "instruments": { "label": "Jouez-vous d'un instrument ou chantez-vous ?" },
+      "instruments": { "label": "Jouez-vous d’un instrument ou chantez-vous ?" },
       "family_activities": { "label": "Activités familiales le week-end / pendant les vacances" },
       "spare_time": { "label": "Que préférez-vous faire pendant votre temps libre ?" },
-      "adjectives": { "label": "Trois adjectifs qu'un ami proche utiliserait pour vous décrire" },
+      "adjectives": { "label": "Trois adjectifs qu’un ami proche utiliserait pour vous décrire" },
       "recharge": { "label": "Comment vous ressourcez-vous — entouré ou seul ? Expliquez" },
       "todo_list": { "label": "Trois choses sur votre liste de choses à faire dans la vie" },
       "ideal_partner": { "label": "Comment serait votre correspondant idéal ?" },
-      "share_when_hosting": { "label": "Que souhaiteriez-vous partager avec votre correspondant en l'accueillant ?" },
+      "share_when_hosting": { "label": "Que souhaiteriez-vous partager avec votre correspondant en l’accueillant ?" },
       "anything_else": { "label": "Souhaitez-vous ajouter autre chose ?" }
     }
   }

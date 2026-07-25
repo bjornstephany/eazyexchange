@@ -21,7 +21,7 @@ export const DEFAULT_GOOD_NEWS_SUBJECT =
 
 export const DEFAULT_GOOD_NEWS_BODY = `Bonjour,
 
-Nous avons le plaisir de vous annoncer que la candidature de {{student_name}} pour l'échange {{exchange_name}} a été retenue !
+Nous avons le plaisir de vous annoncer que la candidature de {{student_name}} pour l’échange {{exchange_name}} a été retenue !
 
 Cette confirmation vaudra engagement définitif de votre famille. Merci de bien vouloir prendre connaissance des informations suivantes :
 
@@ -31,7 +31,7 @@ Cette confirmation vaudra engagement définitif de votre famille. Merci de bien 
 • Passeport : vérifiez que celui de votre enfant est valide au-delà de la date de retour.
 • Date limite de confirmation : {{confirmation_deadline}}
 
-Merci d'indiquer votre décision à l'aide du bouton ci-dessous.`
+Merci d’indiquer votre décision à l’aide du bouton ci-dessous.`
 
 function escapeHtml(s: string): string {
   return s

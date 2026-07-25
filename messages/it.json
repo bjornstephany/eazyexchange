@@ -425,9 +425,7 @@
         "maybeDesc": "Risposte « Forse » da ricontattare.",
         "maybeCta": "Sollecita"
       },
-      "subline": "{a, plural, one {# candidatura} other {# candidature}} da esaminare, {r, plural, one {# fascicolo} other {# fascicoli}} da verificare, {l, plural, one {# studente} other {# studenti}} in ritardo.",
-      "progressDossiers": "{done} / {total} fascicoli convalidati",
-      "progressCandidatures": "{done} / {total} candidature elaborate"
+      "subline": "{a, plural, one {# candidatura} other {# candidature}} da esaminare, {r, plural, one {# fascicolo} other {# fascicoli}} da verificare, {l, plural, one {# studente} other {# studenti}} in ritardo."
     },
     "applications": {
       "questionsHeading": "Domande della famiglia",
@@ -614,9 +612,7 @@
         "mandatory": "Obbligatorio",
         "dependsOnSituation": "in base alla situazione",
         "complete": "Completo",
-        "toRedo": "Da rifare",
-        "missingCount": "{count, plural, one {# mancante} other {# mancanti}}",
-        "toVerifyCount": "{count} da verificare"
+        "toRedo": "Da rifare"
       },
       "progress": {
         "notRequestedDoc": "Non ancora richiesto",

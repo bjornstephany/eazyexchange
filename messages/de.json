@@ -425,9 +425,7 @@
         "maybeDesc": "„Vielleicht“-Antworten zum Nachfassen bei den Familien.",
         "maybeCta": "Erinnern"
       },
-      "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand.",
-      "progressDossiers": "{done} / {total} Dossiers validiert",
-      "progressCandidatures": "{done} / {total} Bewerbungen bearbeitet"
+      "subline": "{a, plural, one {# Bewerbung} other {# Bewerbungen}} zu prüfen, {r, plural, one {# Dossier} other {# Dossiers}} zu überprüfen, {l, plural, one {# Schüler} other {# Schüler}} im Rückstand."
     },
     "applications": {
       "questionsHeading": "Fragen der Familie",
@@ -614,9 +612,7 @@
         "mandatory": "Obligatorisch",
         "dependsOnSituation": "je nach Situation",
         "complete": "Vollständig",
-        "toRedo": "Zu wiederholen",
-        "missingCount": "{count, plural, one {# fehlend} other {# fehlend}}",
-        "toVerifyCount": "{count} zu prüfen"
+        "toRedo": "Zu wiederholen"
       },
       "progress": {
         "notRequestedDoc": "Noch nicht angefordert",

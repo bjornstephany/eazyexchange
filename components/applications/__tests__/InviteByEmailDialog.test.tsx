@@ -26,6 +26,6 @@ describe('InviteByEmailDialog', () => {
     renderWithIntl(<InviteByEmailDialog exchangeId="ex1" open onOpenChange={() => {}} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'a@x.co' } })
     fireEvent.click(screen.getByText('Envoyer les invitations'))
-    await screen.findByText("Ouvrez d'abord les candidatures et fixez une date limite.")
+    await screen.findByText("Ouvrez d’abord les candidatures et fixez une date limite.")
   })
 })
