@@ -1,12 +1,10 @@
 import Link from 'next/link'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { asAppTranslator, type AppTranslator } from '@/lib/i18n/messages'
+import { shortDate } from '@/lib/dates'
+import type { Locale } from '@/lib/i18n/config'
 import { dossierSubline, type Dossier, type DossierItem } from '@/lib/student/dossier'
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-}
 
 function actionLabel(status: DossierItem['status'], t: AppTranslator, c: AppTranslator): string {
   if (status === 'rejected') return t('dossier.actions.fix')
@@ -14,8 +12,8 @@ function actionLabel(status: DossierItem['status'], t: AppTranslator, c: AppTran
   return t('dossier.actions.start')
 }
 
-function TodoCard({ item, showTag, t, c }: {
-  item: DossierItem; showTag: boolean; t: AppTranslator; c: AppTranslator
+function TodoCard({ item, showTag, t, c, locale }: {
+  item: DossierItem; showTag: boolean; t: AppTranslator; c: AppTranslator; locale: Locale
 }) {
   const isFix = item.status === 'rejected'
   return (
@@ -33,8 +31,8 @@ function TodoCard({ item, showTag, t, c }: {
         ) : item.deadline ? (
           <p className={`mt-1 text-[12.5px] ${item.overdue ? 'font-medium text-danger-text' : 'text-muted-foreground'}`}>
             {item.overdue
-              ? t('dossier.card.overdue', { date: formatDate(item.deadline) })
-              : t('dossier.card.deadline', { date: formatDate(item.deadline) })}
+              ? t('dossier.card.overdue', { date: shortDate(item.deadline, locale) })
+              : t('dossier.card.deadline', { date: shortDate(item.deadline, locale) })}
           </p>
         ) : null}
       </div>
@@ -61,6 +59,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 export async function DossierView({ dossier, firstName }: { dossier: Dossier; firstName: string }) {
   const t = asAppTranslator(await getTranslations('student'))
   const c = asAppTranslator(await getTranslations('common'))
+  const locale = (await getLocale()) as Locale
   const { total, todo, review, done, todoCount, reviewCount, doneCount, sentCount, pct, nextDeadline, multiExchange } = dossier
   const allApproved = total > 0 && doneCount === total
   const allSent = total > 0 && todoCount === 0 && reviewCount > 0
@@ -112,7 +111,7 @@ export async function DossierView({ dossier, firstName }: { dossier: Dossier; fi
               <span className="font-mono text-[12px] text-muted-foreground">{t('dossier.progress', { sent: sentCount, total })}</span>
             </div>
             {nextDeadline && (
-              <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">{t('dossier.nextDeadline', { date: formatDate(nextDeadline) })}</p>
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">{t('dossier.nextDeadline', { date: shortDate(nextDeadline, locale) })}</p>
             )}
           </div>
 
@@ -120,7 +119,7 @@ export async function DossierView({ dossier, firstName }: { dossier: Dossier; fi
             <section className="mb-7">
               <SectionHeader>{t('dossier.sections.todo', { n: todoCount })}</SectionHeader>
               <div className="flex flex-col gap-2.5">
-                {todo.map(item => <TodoCard key={item.id} item={item} showTag={multiExchange} t={t} c={c} />)}
+                {todo.map(item => <TodoCard key={item.id} item={item} showTag={multiExchange} t={t} c={c} locale={locale} />)}
               </div>
             </section>
           )}
