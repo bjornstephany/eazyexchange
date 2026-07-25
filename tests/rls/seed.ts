@@ -5,7 +5,7 @@ export type Fixtures = {
   suffix: string
   schoolA: string; schoolB: string; schoolC: string
   orgA: string; orgB: string; studentA: string; studentB: string
-  orgC: string; studentC: string; studentSharedA: string
+  orgC: string; studentC: string; studentSharedA: string; orgPending: string
   exchangeA: string; applySlugA: string
   exchangeShared: string; templateShared: string
   templateA: string; fieldA: string; fieldA2: string; slotA: string; slotA2: string
@@ -25,7 +25,7 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
     suffix,
     schoolA: id(), schoolB: id(), schoolC: id(),
     orgA: id(), orgB: id(), studentA: id(), studentB: id(),
-    orgC: id(), studentC: id(), studentSharedA: id(),
+    orgC: id(), studentC: id(), studentSharedA: id(), orgPending: id(),
     exchangeA: id(), applySlugA: `rls-matrix-${suffix}`,
     exchangeShared: id(), templateShared: id(),
     templateA: id(), fieldA: id(), fieldA2: id(), slotA: id(), slotA2: id(),
@@ -42,7 +42,7 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
 
   const authRows = [
     fx.orgA, fx.orgB, fx.studentA, fx.studentB,
-    fx.orgC, fx.studentC, fx.studentSharedA,
+    fx.orgC, fx.studentC, fx.studentSharedA, fx.orgPending,
   ].map((uid) => ({
     id: uid,
     instance_id: '00000000-0000-0000-0000-000000000000',
@@ -52,18 +52,32 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
   }))
   await sql`insert into auth.users ${sql(authRows)}`
 
+  // Every row states its status explicitly: the column defaults to 'pending'
+  // and set_initial_user_status() cannot auto-approve the first organizer of a
+  // brand-new school, so without this the entire matrix would be gated out.
   await sql`insert into users ${sql([
-    { id: fx.orgA, school_id: fx.schoolA, role: 'organizer', org_role: 'owner', full_name: 'Org A', email: `${fx.orgA}@rls.test` },
-    { id: fx.orgB, school_id: fx.schoolB, role: 'organizer', org_role: 'owner', full_name: 'Org B', email: `${fx.orgB}@rls.test` },
-    { id: fx.studentA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant A', email: `${fx.studentA}@rls.test` },
-    { id: fx.studentB, school_id: fx.schoolB, role: 'student', org_role: 'admin', full_name: 'Étudiant B', email: `${fx.studentB}@rls.test` },
+    { id: fx.orgA, school_id: fx.schoolA, role: 'organizer', org_role: 'owner', full_name: 'Org A', email: `${fx.orgA}@rls.test`, status: 'approved' },
+    { id: fx.orgB, school_id: fx.schoolB, role: 'organizer', org_role: 'owner', full_name: 'Org B', email: `${fx.orgB}@rls.test`, status: 'approved' },
+    { id: fx.studentA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant A', email: `${fx.studentA}@rls.test`, status: 'approved' },
+    { id: fx.studentB, school_id: fx.schoolB, role: 'student', org_role: 'admin', full_name: 'Étudiant B', email: `${fx.studentB}@rls.test`, status: 'approved' },
     // School C is school A's partner on the shared exchange; studentSharedA is a
     // second school-A student enrolled there (so studentA's own enrollment count
     // stays 1 for the W1 allow cases). See the partner-boundary block in matrix.test.ts.
-    { id: fx.orgC, school_id: fx.schoolC, role: 'organizer', org_role: 'owner', full_name: 'Org C', email: `${fx.orgC}@rls.test` },
-    { id: fx.studentC, school_id: fx.schoolC, role: 'student', org_role: 'admin', full_name: 'Étudiant C', email: `${fx.studentC}@rls.test` },
-    { id: fx.studentSharedA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant partagé A', email: `${fx.studentSharedA}@rls.test` },
+    { id: fx.orgC, school_id: fx.schoolC, role: 'organizer', org_role: 'owner', full_name: 'Org C', email: `${fx.orgC}@rls.test`, status: 'approved' },
+    { id: fx.studentC, school_id: fx.schoolC, role: 'student', org_role: 'admin', full_name: 'Étudiant C', email: `${fx.studentC}@rls.test`, status: 'approved' },
+    { id: fx.studentSharedA, school_id: fx.schoolA, role: 'student', org_role: 'admin', full_name: 'Étudiant partagé A', email: `${fx.studentSharedA}@rls.test`, status: 'approved' },
+    // Same school as orgA, same role, same everything — the ONLY difference is
+    // status. Every denial asserted for this persona is therefore attributable
+    // to the gate and nothing else.
+    { id: fx.orgPending, school_id: fx.schoolA, role: 'organizer', org_role: 'admin', full_name: 'Org en attente', email: `${fx.orgPending}@rls.test`, status: 'pending' },
   ])}`
+
+  // set_initial_user_status() auto-approves any organizer joining a school that
+  // already has an approved organizer, and orgA — inserted by the very same
+  // statement — is visible to the trigger. That rule is right for real
+  // colleague invites, so force the persona back rather than weaken it. A real
+  // self-signup is unaffected: its school is brand new and has no members.
+  await sql`update users set status = 'pending' where id = ${fx.orgPending}`
 
   await sql`insert into exchanges (id, name, year, school_a_id, school_b_id, apply_slug, application_open)
     values (${fx.exchangeA}, ${'RLS Échange A ' + suffix}, 2026, ${fx.schoolA}, null, ${fx.applySlugA}, true)`
@@ -153,7 +167,7 @@ export async function cleanupFixtures(sql: postgres.Sql, fx: Fixtures): Promise<
   // auth.users delete cascades the public.users profiles and feedback.
   await sql`delete from auth.users where id in (
     ${fx.orgA}, ${fx.orgB}, ${fx.studentA}, ${fx.studentB},
-    ${fx.orgC}, ${fx.studentC}, ${fx.studentSharedA}
+    ${fx.orgC}, ${fx.studentC}, ${fx.studentSharedA}, ${fx.orgPending}
   )`
   await sql`delete from schools where id in (${fx.schoolA}, ${fx.schoolB}, ${fx.schoolC})`
 }
