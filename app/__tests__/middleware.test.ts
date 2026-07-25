@@ -5,7 +5,7 @@ let user: { id: string } | null
 // The users-row the middleware's isAuthRoute branch will find. null models an
 // orphaned/stale session: a JWT that still verifies locally (getClaims) but has
 // no backing users row (account deleted or DB reset).
-let profileRow: { role: string; full_name: string | null } | null
+let profileRow: { role: string; full_name: string | null; status: string } | null
 vi.mock('@/lib/supabase/middleware', () => ({
   updateSession: async (request: NextRequest) => ({
     supabaseResponse: NextResponse.next({ request }),
@@ -23,7 +23,10 @@ vi.mock('@/lib/supabase/middleware', () => ({
 
 import { middleware, config } from '@/middleware'
 
-beforeEach(() => { user = null; profileRow = { role: 'organizer', full_name: 'Org' } })
+beforeEach(() => {
+  user = null
+  profileRow = { role: 'organizer', full_name: 'Org', status: 'approved' }
+})
 
 function req(path: string) {
   return new NextRequest(new URL(`http://localhost${path}`))
@@ -96,9 +99,32 @@ describe('middleware', () => {
 
   it('redirects a logged-in student from / to /my-forms', async () => {
     user = { id: 'u2' }
-    profileRow = { role: 'student', full_name: 'Stu' }
+    profileRow = { role: 'student', full_name: 'Stu', status: 'approved' }
     const res = await middleware(req('/'))
     expect(res.headers.get('location')).toContain('/my-forms')
+  })
+
+  // The signup approval gate: not approved means /pending is the only page.
+  it('redirects a pending organizer from / to /pending', async () => {
+    user = { id: 'u3' }
+    profileRow = { role: 'organizer', full_name: 'Org', status: 'pending' }
+    const res = await middleware(req('/'))
+    expect(res.headers.get('location')).toContain('/pending')
+  })
+
+  it('redirects a rejected organizer off /login to /pending', async () => {
+    user = { id: 'u4' }
+    profileRow = { role: 'organizer', full_name: 'Org', status: 'rejected' }
+    const res = await middleware(req('/login'))
+    expect(res.headers.get('location')).toContain('/pending')
+  })
+
+  // /pending must never be bounced back to itself — that loop is a blank tab.
+  it('lets a pending organizer reach /pending itself (no redirect)', async () => {
+    user = { id: 'u3' }
+    profileRow = { role: 'organizer', full_name: 'Org', status: 'pending' }
+    const res = await middleware(req('/pending'))
+    expect(res.headers.get('location')).toBeNull()
   })
 
   it('does NOT redirect an orphaned session off / (landing page must render)', async () => {
