@@ -398,6 +398,11 @@ describe('lifecycleActionCards', () => {
   it('returns nothing when all is quiet', () => {
     expect(lifecycleActionCards([app('enrolled')], ROLLUPS, 3, t)).toEqual([])
   })
+  it('deep-links the to-review card to the Applications page, To review tab', () => {
+    const cards = lifecycleActionCards([app('submitted')], [], 3, t)
+    expect(cards.map(c => c.filterKey)).toEqual(['toreview'])
+    expect(cards[0].href).toBe('/applications?tab=toreview')
+  })
 })
 
 describe('progressSummary', () => {

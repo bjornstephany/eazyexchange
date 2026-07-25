@@ -1,14 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
-import { NextIntlClientProvider } from 'next-intl'
-import fr from '@/messages/fr.json'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
-vi.mock('@/components/dashboard/InviteModal', () => ({
-  InviteModal: ({ open }: { open: boolean }) => (open ? <div>invite-modal</div> : null),
-}))
 
 import { OverviewView } from '@/components/dashboard/OverviewView'
 import type { AppRow, DossierRollup, EnrolledStudent } from '@/lib/dashboard/rollup'
@@ -55,10 +50,17 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 
-  it('action card click applies its filter', () => {
+  it('the review card is a deep link to the Applications page, not a table filter', () => {
     renderWithIntl(<OverviewView {...base} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Examiner' }))
-    expect(screen.queryByText('Camille Laurent')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Examiner' })).toHaveAttribute('href', '/applications?tab=toreview')
+    expect(screen.queryByRole('button', { name: 'Examiner' })).toBeNull()
+  })
+
+  it('filter-style action cards still filter the table', () => {
+    renderWithIntl(<OverviewView {...base} />)
+    // `base` is late with missing docs, so the « Relancer » card is a button.
+    fireEvent.click(screen.getByRole('button', { name: 'Relancer' }))
+    expect(screen.getByRole('button', { name: /Filtre :/ })).toBeInTheDocument()
   })
 
   it('hides rejected/declined rows behind the « Afficher » toggle', () => {
@@ -152,29 +154,16 @@ describe('OverviewView — unified lifecycle table', () => {
     expect(screen.getByText('Camille Laurent')).toBeInTheDocument()
   })
 
-  it('CTA opens the invite modal', () => {
+  it('empty state offers exactly one CTA: a link to the Applications page', () => {
     renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
-    fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
-    expect(screen.getByText('invite-modal')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Aller aux candidatures' })).toHaveAttribute('href', '/applications')
+    expect(screen.queryByRole('link', { name: /Préparer les formulaires & documents/ })).toBeNull()
+    expect(screen.getByText('Commencez votre échange en invitant vos élèves à postuler.')).toBeInTheDocument()
   })
 
-  it('empty state offers both CTAs: invite (primary) and prepare forms & documents (link to /forms)', () => {
-    renderWithIntl(<OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />)
-    expect(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Préparer les formulaires & documents' })).toHaveAttribute('href', '/forms')
-  })
-
-  it('keeps the invite modal mounted when opening applications flips neverOpened', () => {
-    const { rerender } = renderWithIntl(
-      <OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen={false} applicationDeadline={null} />
-    )
-    fireEvent.click(screen.getByRole('button', { name: /Inviter vos élèves à postuler/ }))
-    expect(screen.getByText('invite-modal')).toBeInTheDocument()
-    rerender(
-      <NextIntlClientProvider locale="fr" messages={fr}>
-        <OverviewView {...base} apps={[]} students={[]} rollups={[]} applicationOpen applicationDeadline="2026-09-01" />
-      </NextIntlClientProvider>
-    )
-    expect(screen.getByText('invite-modal')).toBeInTheDocument()
+  it('gives the lifecycle table a column gap so the pill never touches the next column', () => {
+    const { container } = renderWithIntl(<OverviewView {...base} />)
+    const header = container.querySelector('.grid-cols-\\[1\\.7fr_1\\.15fr_1fr_1fr_1fr_22px\\]')
+    expect(header?.className).toContain('gap-x-5')
   })
 })
