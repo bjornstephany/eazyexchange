@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const sendMock = vi.fn(async () => ({ error: null }))
+type SendPayload = { to: string[]; subject: string; html: string }
+const sendMock = vi.fn(async (_payload: SendPayload) => ({ error: null }))
 vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
 vi.mock('@/lib/email-log', () => ({ logEmailSend: vi.fn() }))
 
@@ -19,7 +20,7 @@ describe('sendSignupRequestEmail', () => {
       schoolLabel: 'Lycée Jean Moulin', roleDescription: 'Professeure',
       howFoundUs: 'Recommandation', viaGoogle: false,
     })
-    const call = sendMock.mock.calls[0][0] as unknown as { to: string[]; html: string }
+    const call = sendMock.mock.calls[0][0]
     expect(call.to).toEqual(['owner@example.com'])
     expect(call.html).toContain('Lycée Jean Moulin')
     expect(call.html).toContain('/admin')
@@ -31,7 +32,7 @@ describe('sendSignupRequestEmail', () => {
       fullName: '<script>alert(1)</script>', email: 'x@y.fr',
       schoolLabel: 'A', roleDescription: 'B', howFoundUs: 'C', viaGoogle: false,
     })
-    const call = sendMock.mock.calls[0][0] as unknown as { html: string }
+    const call = sendMock.mock.calls[0][0]
     expect(call.html).not.toContain('<script>')
     expect(call.html).toContain('&lt;script&gt;')
   })
@@ -42,7 +43,7 @@ describe('sendSignupRequestEmail', () => {
       fullName: 'G User', email: 'g@y.fr',
       schoolLabel: '—', roleDescription: '—', howFoundUs: '—', viaGoogle: true,
     })
-    const call = sendMock.mock.calls[0][0] as unknown as { html: string }
+    const call = sendMock.mock.calls[0][0]
     expect(call.html).toContain('via Google')
   })
 
@@ -61,7 +62,7 @@ describe('sendSignupFailureEmail', () => {
   it('reports a failed provision without leaking the reason to the user', async () => {
     const { sendSignupFailureEmail } = await import('../email')
     await sendSignupFailureEmail({ email: 'm.dupont@ac-lyon.fr', reason: 'school_insert_failed' })
-    const call = sendMock.mock.calls[0][0] as unknown as { subject: string; html: string }
+    const call = sendMock.mock.calls[0][0]
     expect(call.subject).toMatch(/échec/i)
     expect(call.html).toContain('school_insert_failed')
   })

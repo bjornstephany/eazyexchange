@@ -9,7 +9,9 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({ auth: { verifyOtp: async () => verifyResult } }),
 }))
 
-const provisionOrganizer = vi.fn(async (_u: unknown) => ({ ok: true }) as { ok: boolean; reason?: string })
+const provisionOrganizer = vi.fn(
+  async (_u: unknown) => ({ ok: true, status: 'approved' }) as { ok: boolean; status?: string; reason?: string },
+)
 vi.mock('@/lib/auth/provision', () => ({ provisionOrganizer: (u: unknown) => provisionOrganizer(u) }))
 
 import { GET } from '@/app/auth/confirm/route'
@@ -33,6 +35,13 @@ describe('GET /auth/confirm', () => {
     const dest = await getRedirect('token_hash=h&type=signup&next=/dashboard')
     expect(provisionOrganizer).toHaveBeenCalledTimes(1)
     expect(dest).toBe('/dashboard')
+  })
+
+  // `next` points at /onboarding, which the approval gate bounces anyway.
+  it('overrides next with /pending for a signup that landed pending', async () => {
+    provisionOrganizer.mockResolvedValueOnce({ ok: true, status: 'pending' })
+    const dest = await getRedirect('token_hash=h&type=signup&next=/onboarding')
+    expect(dest).toBe('/pending')
   })
 
   it('redirects to signup_failed when provisioning fails', async () => {
