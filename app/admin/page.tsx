@@ -12,8 +12,6 @@ type Row = {
   email: string
   full_name: string
   status: 'pending' | 'approved' | 'rejected'
-  role_description: string | null
-  how_found_us: string | null
   created_at: string
   reviewed_at: string | null
   notes: string | null
@@ -30,7 +28,7 @@ export default async function AdminPage() {
   const admin = createAdminClient()
   const { data } = await admin
     .from('users')
-    .select('id, email, full_name, status, role_description, how_found_us, created_at, reviewed_at, notes, schools(name)')
+    .select('id, email, full_name, status, created_at, reviewed_at, notes, schools(name)')
     .eq('role', 'organizer')
     .order('created_at', { ascending: false })
   const rows = (data ?? []) as unknown as Row[]
@@ -48,11 +46,11 @@ export default async function AdminPage() {
               <div className="text-[15px] text-[#10203F]">
                 <div className="font-semibold">{r.full_name || '—'}</div>
                 <div className="text-[#5B6B8C]">{r.email}</div>
-                <div className="text-[#5B6B8C]">{r.schools?.name || <em>établissement non renseigné (Google)</em>}</div>
+                {/* Blank for every pending row, whatever the provider: the
+                    establishment is captured at /onboarding, after approval.
+                    Kept in the query because a reviewed row does show it. */}
+                <div className="text-[#5B6B8C]">{r.schools?.name || <em>établissement pas encore renseigné</em>}</div>
                 <div className="mt-1 text-[13px] text-[#8A97B2]">
-                  Rôle : {r.role_description || '—'} · Nous a connus par : {r.how_found_us || '—'}
-                </div>
-                <div className="text-[13px] text-[#8A97B2]">
                   Inscrit le {new Date(r.created_at).toLocaleDateString('fr-FR')}
                   {r.reviewed_at && ` · examiné le ${new Date(r.reviewed_at).toLocaleDateString('fr-FR')}`}
                 </div>

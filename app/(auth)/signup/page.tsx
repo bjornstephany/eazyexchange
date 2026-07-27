@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { MailCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
@@ -9,33 +10,19 @@ import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
-import { SchoolCombobox } from '@/app/onboarding/SchoolCombobox'
-import { searchPublicSchools } from '@/actions/public-schools'
-import type { SchoolOption } from '@/lib/schools/registry'
-import { confirmSignupCode, resendSignupCode } from './actions'
+import { resendSignupEmail } from './actions'
 
 const RESEND_COOLDOWN = 45
 
-const CODE_ERRORS: Record<'invalid_code' | 'expired' | 'provision_failed', string> = {
-  invalid_code: 'Code incorrect. Vérifiez les 6 chiffres et réessayez.',
-  expired: 'Ce code a expiré. Demandez-en un nouveau.',
-  provision_failed: 'Une erreur est survenue lors de la création de votre compte. Réessayez.',
-}
-
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
-  const [school, setSchool] = useState<SchoolOption | null>(null)
-  const [roleDescription, setRoleDescription] = useState('')
-  const [howFoundUs, setHowFoundUs] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [confirmEmail, setConfirmEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [codeError, setCodeError] = useState<string | null>(null)
-  const [verifying, setVerifying] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
   const [resendNote, setResendNote] = useState<string | null>(null)
   const supabase = createClient()
@@ -52,23 +39,17 @@ export default function SignupPage() {
     const name = fullName.trim()
     const cleanEmail = normalizeEmail(email)
     if (!name) { setError('Veuillez remplir tous les champs.'); return }
-    if (!school) { setError('Veuillez sélectionner votre établissement.'); return }
-    if (!roleDescription.trim()) { setError('Veuillez indiquer votre rôle.'); return }
-    if (!howFoundUs.trim()) { setError('Dites-nous comment vous nous avez connus.'); return }
     if (!isValidEmail(cleanEmail)) { setError('Veuillez saisir une adresse e-mail valide.'); return }
     setLoading(true)
+    // Full name is all provisionOrganizer reads. The establishment is captured
+    // at /onboarding step 1, where it is validated against school_registry —
+    // asking for it here as well duplicated that, and the approval gate
+    // (every self-signup lands pending) is what actually keeps fake schools out.
     const { error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
-        data: {
-          full_name: name,
-          school_uai: school.uai,
-          school_name: school.name,
-          school_country: 'FR',
-          role_description: roleDescription.trim(),
-          how_found_us: howFoundUs.trim(),
-        },
+        data: { full_name: name },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
       },
     })
@@ -79,37 +60,22 @@ export default function SignupPage() {
     setLoading(false)
   }
 
-  async function handleConfirmCode(e: React.FormEvent) {
-    e.preventDefault()
-    setCodeError(null)
-    if (code.length !== 6) { setCodeError('Saisissez le code à 6 chiffres.'); return }
-    setVerifying(true)
-    const res = await confirmSignupCode(confirmEmail, code)
-    // Success redirects server-side; only failures resolve to a value here.
-    if (res && !res.ok) {
-      setCodeError(CODE_ERRORS[res.error] ?? CODE_ERRORS.invalid_code)
-      setVerifying(false)
-    }
-  }
-
   async function handleResend() {
-    setCodeError(null)
+    setResendError(null)
     setResendNote(null)
-    const res = await resendSignupCode(confirmEmail)
+    const res = await resendSignupEmail(confirmEmail)
     if (res.ok) {
-      setResendNote('Un nouveau code a été envoyé.')
+      setResendNote('Un nouvel e-mail vient d’être envoyé.')
       setCooldown(RESEND_COOLDOWN)
     } else {
-      setCodeError('Impossible de renvoyer le code pour le moment. Réessayez dans un instant.')
+      setResendError('Impossible de renvoyer l’e-mail pour le moment. Réessayez dans un instant.')
     }
   }
 
   function handleRestart() {
     setSubmitted(false)
-    setCode('')
-    setCodeError(null)
+    setResendError(null)
     setResendNote(null)
-    setVerifying(false)
     setCooldown(0)
   }
 
@@ -118,31 +84,22 @@ export default function SignupPage() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-[#EEF1F7] px-4 py-10">
         <Logo href="/" />
         <AuthCard maxWidth={460} className="flex flex-col gap-4">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E7EDFD] text-[#2456E6]">
+            <MailCheck className="h-6 w-6" aria-hidden />
+          </span>
           <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Vérifiez votre e-mail</h3>
           <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">
-            Nous avons envoyé un code à 6 chiffres à{' '}
-            <span className="font-semibold text-[#10203F]">{confirmEmail}</span>. Saisissez-le
-            ci-dessous pour finaliser la création de votre compte.
+            Nous venons d’envoyer un e-mail à{' '}
+            <span className="font-semibold text-[#10203F]">{confirmEmail}</span>. Ouvrez-le et
+            cliquez sur <span className="font-semibold text-[#10203F]">« Confirmer mon inscription »</span>{' '}
+            pour finaliser la création de votre compte.
           </p>
-          <form onSubmit={handleConfirmCode} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="code" className="text-[13px] font-semibold text-[#42506E]">Code de confirmation</Label>
-              <Input
-                id="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
-                className="h-11 rounded-[10px] border-[#C4CDE0] text-center font-mono text-lg tracking-[0.4em]"
-              />
-            </div>
-            {codeError && <p className="text-sm text-[#C0392B]">{codeError}</p>}
-            <Button type="submit" disabled={verifying || code.length !== 6} className="h-11 w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">
-              {verifying ? 'Vérification…' : 'Confirmer'}
-            </Button>
-          </form>
+          <p className="m-0 rounded-[10px] bg-[#F4F6FB] px-3.5 py-3 text-[13px] leading-relaxed text-[#5B6B8C]">
+            Rien reçu au bout de deux minutes ? Vérifiez vos courriers indésirables, puis
+            renvoyez l’e-mail ci-dessous.
+          </p>
+          {resendError && <p className="m-0 text-sm text-[#C0392B]">{resendError}</p>}
+          {resendNote && <p className="m-0 text-[13px] font-medium text-[#22A06B]">{resendNote}</p>}
           <div className="flex items-center justify-between text-[13px]">
             <button
               type="button"
@@ -150,13 +107,12 @@ export default function SignupPage() {
               disabled={cooldown > 0}
               className="font-medium text-[#2456E6] hover:underline disabled:cursor-not-allowed disabled:text-[#8A97B2] disabled:no-underline"
             >
-              {cooldown > 0 ? `Renvoyer le code (${cooldown}s)` : 'Renvoyer le code'}
+              {cooldown > 0 ? `Renvoyer l’e-mail (${cooldown}s)` : 'Renvoyer l’e-mail'}
             </button>
             <button type="button" onClick={handleRestart} className="font-medium text-[#8A97B2] hover:text-[#42506E] hover:underline">
               Recommencer
             </button>
           </div>
-          {resendNote && <p className="m-0 text-[13px] font-medium text-[#22A06B]">{resendNote}</p>}
         </AuthCard>
       </div>
     )
@@ -177,15 +133,6 @@ export default function SignupPage() {
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
               <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
-            </div>
-            <SchoolCombobox value={school} onSelect={setSchool} search={searchPublicSchools} />
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="roleDescription" className="text-[13px] font-semibold text-[#42506E]">Votre rôle</Label>
-              <Input id="roleDescription" value={roleDescription} onChange={e => setRoleDescription(e.target.value)} required placeholder="Professeure d’allemand" className="h-11 rounded-[10px] border-[#C4CDE0]" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="howFoundUs" className="text-[13px] font-semibold text-[#42506E]">Comment nous avez-vous connus ?</Label>
-              <Input id="howFoundUs" value={howFoundUs} onChange={e => setHowFoundUs(e.target.value)} required placeholder="Recommandation d’un collègue" className="h-11 rounded-[10px] border-[#C4CDE0]" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-[13px] font-semibold text-[#42506E]">E-mail</Label>

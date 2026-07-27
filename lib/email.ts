@@ -372,30 +372,22 @@ function adminRecipients(): string[] {
 export async function sendSignupRequestEmail(opts: {
   fullName: string
   email: string
-  schoolLabel: string
-  roleDescription: string
-  howFoundUs: string
-  viaGoogle: boolean
 }): Promise<void> {
   const to = adminRecipients()
   if (to.length === 0) return
 
-  const note = opts.viaGoogle
-    ? `<p style="font-size:13px;color:#5C7268;">Inscription via Google — aucun détail fourni.</p>`
-    : ''
+  // Name and address are all signup collects. The establishment is not known
+  // yet — it is captured at /onboarding, after approval — so there is nothing
+  // provider-specific left to flag either.
   const html = layout(`
     <p><strong>Nouvelle demande d’accès</strong></p>
-    ${note}
     <p style="font-size:14px;">
       <strong>${esc(opts.fullName)}</strong><br>
-      ${esc(opts.email)}<br>
-      ${esc(opts.schoolLabel)}<br>
-      <span style="color:#5C7268;">Rôle : ${esc(opts.roleDescription)}</span><br>
-      <span style="color:#5C7268;">Nous a connus par : ${esc(opts.howFoundUs)}</span>
+      ${esc(opts.email)}
     </p>
     <p><a href="${APP_URL}/admin" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Examiner la demande</a></p>
   `, ADMIN_FOOTER)
-  await send(to, `Nouvelle demande d’accès — ${opts.schoolLabel}`, html, 'signup request email')
+  await send(to, 'Nouvelle demande d’accès', html, 'signup request email')
 }
 
 // Provisioning failed after the user confirmed their email: no users row, no
