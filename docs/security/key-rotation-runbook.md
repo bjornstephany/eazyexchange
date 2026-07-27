@@ -15,6 +15,7 @@ turns it into a drill.
 | RESEND_API_KEY | Resend → API Keys | Vercel env, `.env.local` |
 | STRIPE_SECRET_KEY | Stripe → Developers → API keys | Vercel env |
 | STRIPE_WEBHOOK_SECRET | Stripe → the `/api/stripe/webhook` endpoint | Vercel env |
+| SUPABASE_ACCESS_TOKEN (sbp_…) | Supabase → Account → Access Tokens | `~/.claude-secrets.sh`, `~/.supabase/access-token` — **developer machine only** |
 
 The `send-reminders` edge function uses Supabase-injected credentials — no
 manual update on rotation.
@@ -58,12 +59,55 @@ browser tabs until they reload — deactivate old only after a full redeploy.
    in-between fail signature verification and are retried by Stripe).
 3. Confirm the next event shows 200 in Stripe's delivery log.
 
+## Supabase Management API token (sbp_… personal access token)
+
+Not an app secret — nothing in Vercel or the running app uses it, so **rotating it
+cannot cause downtime**. It is the credential the Supabase **CLI** and the
+**MCP server** use to act on the account: `apply_migration`, `generate_typescript_types`,
+`db push`, `projects list`. Treat it as account-level: it can reach every project,
+prod included.
+
+It lives in exactly two places on the dev machine, both mode 600:
+
+- `~/.claude-secrets.sh` — one `export SUPABASE_ACCESS_TOKEN=…` line, sourced by the shell.
+- `~/.supabase/access-token` — the CLI's own store; the entire file is the token.
+
+Both must be updated together, or the CLI and the MCP server end up on different
+tokens and one of them starts returning `Unauthorized`.
+
+1. Supabase Dashboard → **Account → Access Tokens** → *Generate new token*. There is
+   no API for this: PATs can only be minted and revoked in the dashboard.
+2. Write it to both files without letting it reach a shell history or a transcript:
+   ```bash
+   IFS= read -rs NEWTOK            # paste, press Enter — input stays hidden
+   cp -p ~/.claude-secrets.sh ~/.claude-secrets.sh.bak-$(date +%Y%m%d%H%M%S)
+   NEWTOK="$NEWTOK" awk '/^export SUPABASE_ACCESS_TOKEN=/ {print "export SUPABASE_ACCESS_TOKEN=" ENVIRON["NEWTOK"]; next} {print}' \
+     ~/.claude-secrets.sh > /tmp/s && mv /tmp/s ~/.claude-secrets.sh && chmod 600 ~/.claude-secrets.sh
+   printf '%s' "$NEWTOK" > ~/.supabase/access-token && chmod 600 ~/.supabase/access-token
+   unset NEWTOK
+   ```
+3. Verify **before** revoking: `source ~/.claude-secrets.sh && pnpm exec supabase projects list`.
+4. **Restart the Claude Code session** — the MCP server reads its env at launch, so a
+   running session keeps using the old token and will 401 the moment you revoke it.
+   Confirm with an MCP `list_migrations`.
+5. Revoke the old token in the dashboard. Then delete the `.bak-*` files — they still
+   contain live-format dead tokens.
+
+Because it is developer-local, the usual "exposure" is a token pasted into a
+terminal or a transcript rather than a committed file. Check both:
+`git log -S <fragment> --oneline` **and** `grep -rl <fragment> ~/.claude/projects/`.
+
 ## After any rotation
 
 - Confirm nothing was committed: `git log -S <old-key-fragment> --oneline` is empty.
+- For developer-local secrets, also check transcripts: `grep -rl <fragment> ~/.claude/projects/`.
 - Note date + reason in this file's log below.
 
 ## Rotation log
 
 - 2026-06-28 — service-role JWT + Resend key (reactive: exposure during review).
   Migrated to sb_secret_/sb_publishable_ key format; legacy JWTs deactivated.
+- 2026-07-28 — Supabase Management API token (reactive: the token was printed into
+  a Claude transcript on 2026-07-27 while fixing MCP auth). Confirmed never
+  committed — absent from tracked files and from `git log -S`. No app impact:
+  the PAT is CLI/MCP-only and touches no Vercel env.
