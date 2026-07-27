@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { provisionOrganizerFromOAuth } from '@/lib/auth/provision'
+import { provisionOrganizer } from '@/lib/auth/provision'
 import { safeNextPath } from '@/lib/auth/safe-next'
 
 // OAuth (Google) callback for the SSR/PKCE flow. Distinct from /auth/confirm,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
   // No profile — a brand-new Google user.
   if (intent === 'organizer_signup') {
-    const result = await provisionOrganizerFromOAuth(user)
+    const result = await provisionOrganizer(user)
     if (!result.ok) return redirect('/login?error=signup_failed')
     return redirect('/dashboard')
   }

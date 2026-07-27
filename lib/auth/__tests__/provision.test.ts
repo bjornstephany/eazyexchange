@@ -6,12 +6,6 @@ interface AdminOpts {
   usersInsertError?: unknown
   // The status set_initial_user_status() assigned, read back by the insert.
   insertedStatus?: 'pending' | 'approved'
-  // Rows school_registry returns for the exact (uai, name) probe and the
-  // UAI-only fallback. null on both models a UAI the registry does not carry.
-  registry?: { uai: string; name: string } | null
-  // A PostgREST error on the registry probes — what a bad service-role key
-  // produces. Distinct from `registry: null`, which is a genuine miss.
-  registryError?: unknown
 }
 
 let admin: ReturnType<typeof makeAdmin>
@@ -22,8 +16,6 @@ function makeAdmin(opts: AdminOpts = {}) {
     schoolInsert = { data: { id: 'school-1' }, error: null },
     usersInsertError = null,
     insertedStatus = 'pending',
-    registry = { uai: '0690123X', name: 'Lycée Jean Moulin' },
-    registryError = null,
   } = opts
   const calls = {
     schoolsInserted: [] as unknown[],
@@ -55,20 +47,8 @@ function makeAdmin(opts: AdminOpts = {}) {
           delete: () => ({ eq: async (_col: string, id: string) => { calls.schoolsDeleted.push(id); return { error: null } } }),
         }
       }
-      if (table === 'school_registry') {
-        const probe = async () => ({
-          data: registryError ? null : registry,
-          error: registryError,
-        })
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: probe }) }) }),
-              order: () => ({ limit: () => ({ maybeSingle: probe }) }),
-            }),
-          }),
-        }
-      }
+      // school_registry is deliberately absent: provisioning no longer reads it.
+      // A stray probe must blow up loudly rather than pass on a permissive mock.
       throw new Error('unexpected table ' + table)
     },
   }
@@ -95,19 +75,12 @@ vi.mock('@/lib/email', () => ({
   sendSignupFailureEmail: (o: Record<string, unknown>) => sendSignupFailureEmail(o),
 }))
 
-import { provisionOrganizer, provisionOrganizerFromOAuth } from '@/lib/auth/provision'
+import { provisionOrganizer } from '@/lib/auth/provision'
 
 const baseUser = {
   id: 'u1',
   email: 'Org@Example.com',
-  user_metadata: {
-    full_name: '  Jane Doe  ',
-    school_uai: '0690123X',
-    school_name: 'Lycée Jean Moulin',
-    school_country: 'FR',
-    role_description: '  Professeure  ',
-    how_found_us: '  Recommandation  ',
-  },
+  user_metadata: { full_name: '  Jane Doe  ' },
 }
 
 beforeEach(() => {
@@ -119,29 +92,43 @@ beforeEach(() => {
 })
 
 describe('provisionOrganizer', () => {
-  it('creates the registry-resolved school and a pending organizer profile', async () => {
+  // The school is created blank on every path. /onboarding step 1 names it
+  // through claim_school(), which re-validates against school_registry — so
+  // provisioning has no school to resolve and no registry to read.
+  it('creates a blank school and a pending organizer profile', async () => {
     const result = await provisionOrganizer(baseUser)
     expect(result).toEqual({ ok: true, status: 'pending' })
-    expect(admin.calls.schoolsInserted).toEqual([
-      { name: 'Lycée Jean Moulin', uai: '0690123X', country: 'FR' },
-    ])
+    expect(admin.calls.schoolsInserted).toEqual([{ name: '', uai: null, country: 'FR' }])
     expect(admin.calls.usersInserted).toEqual([
       {
         id: 'u1', school_id: 'school-1', role: 'organizer', org_role: 'owner',
         full_name: 'Jane Doe', email: 'org@example.com',
-        role_description: 'Professeure', how_found_us: 'Recommandation',
       },
     ])
+  })
+
+  it('creates the same blank school for a Google identity', async () => {
+    const result = await provisionOrganizer({
+      id: 'g1', email: 'Org@Example.com', user_metadata: { full_name: '  Jane Google  ' },
+    })
+    expect(result).toEqual({ ok: true, status: 'pending' })
+    expect(admin.calls.schoolsInserted).toEqual([{ name: '', uai: null, country: 'FR' }])
+    expect(admin.calls.usersInserted[0]).toMatchObject({ full_name: 'Jane Google' })
+  })
+
+  it('falls back to the name field when full_name is absent', async () => {
+    const result = await provisionOrganizer({
+      id: 'g1', email: 'a@b.com', user_metadata: { name: 'From Name' },
+    })
+    expect(result).toEqual({ ok: true, status: 'pending' })
+    expect(admin.calls.usersInserted[0]).toMatchObject({ full_name: 'From Name' })
   })
 
   it('notifies the platform admins about a pending request', async () => {
     await provisionOrganizer(baseUser)
     expect(sendSignupRequestEmail).toHaveBeenCalledTimes(1)
-    expect(sendSignupRequestEmail.mock.calls[0][0]).toMatchObject({
-      email: 'org@example.com',
-      schoolLabel: 'Lycée Jean Moulin',
-      roleDescription: 'Professeure',
-      viaGoogle: false,
+    expect(sendSignupRequestEmail.mock.calls[0][0]).toEqual({
+      fullName: 'Jane Doe', email: 'org@example.com',
     })
   })
 
@@ -158,48 +145,6 @@ describe('provisionOrganizer', () => {
     expect(result).toEqual({ ok: true, status: 'approved' })
     expect(admin.calls.schoolsInserted).toEqual([])
     expect(admin.calls.usersInserted).toEqual([])
-  })
-
-  it('refuses a UAI the registry does not carry', async () => {
-    admin = makeAdmin({ registry: null })
-    const result = await provisionOrganizer(baseUser)
-    expect(result).toEqual({ ok: false, reason: 'unknown_school' })
-    expect(admin.calls.schoolsInserted).toEqual([])
-  })
-
-  it('alerts when the UAI is genuinely absent from the registry', async () => {
-    admin = makeAdmin({ registry: null })
-    await provisionOrganizer(baseUser)
-    expect(sendSignupFailureEmail).toHaveBeenCalledWith({
-      email: 'org@example.com', reason: 'unknown_school',
-    })
-  })
-
-  // The failure that actually happened in production on 2026-07-27: a stale
-  // service-role key made every registry probe 401. Reading only `.data` made
-  // that indistinguishable from "no such school", so the one branch that sends
-  // no alert swallowed a total outage.
-  it('distinguishes a failed registry lookup from an unknown school', async () => {
-    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
-    const result = await provisionOrganizer(baseUser)
-    expect(result).toEqual({ ok: false, reason: 'school_lookup_failed' })
-    expect(admin.calls.schoolsInserted).toEqual([])
-  })
-
-  it('alerts when the registry lookup fails', async () => {
-    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
-    await provisionOrganizer(baseUser)
-    expect(sendSignupFailureEmail).toHaveBeenCalledWith({
-      email: 'org@example.com', reason: 'school_lookup_failed',
-    })
-  })
-
-  it('still provisions when no school was picked', async () => {
-    const result = await provisionOrganizer({
-      id: 'u1', email: 'a@b.com', user_metadata: { full_name: 'A' },
-    })
-    expect(result).toEqual({ ok: true, status: 'pending' })
-    expect(admin.calls.schoolsInserted).toEqual([{ name: '', uai: null, country: 'FR' }])
   })
 
   it('rolls back the school and alerts when the profile insert fails', async () => {
@@ -238,7 +183,7 @@ describe('provisionOrganizer', () => {
   // response — precisely when the alert matters most. send() already swallows
   // its own errors, so awaiting cannot fail the signup.
   it('waits for the failure alert to be delivered before returning', async () => {
-    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    admin = makeAdmin({ schoolInsert: { data: null, error: { message: 'boom' } } })
     await provisionOrganizer(baseUser)
     expect(delivered.failure).toBe(true)
   })
@@ -250,54 +195,11 @@ describe('provisionOrganizer', () => {
 
   it('logs the failure reason without leaking the address', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    admin = makeAdmin({ schoolInsert: { data: null, error: { message: 'boom' } } })
     await provisionOrganizer(baseUser)
     const logged = spy.mock.calls.map((c) => c.join(' ')).join('\n')
-    expect(logged).toContain('school_lookup_failed')
+    expect(logged).toContain('school_insert_failed')
     expect(logged).not.toContain('org@example.com')
     spy.mockRestore()
-  })
-})
-
-const oauthUser = {
-  id: 'g1',
-  email: 'Org@Example.com',
-  user_metadata: { full_name: '  Jane Google  ' },
-}
-
-describe('provisionOrganizerFromOAuth', () => {
-  it('creates a school with an empty name and an organizer profile from the Google identity', async () => {
-    const result = await provisionOrganizerFromOAuth(oauthUser)
-    expect(result).toEqual({ ok: true, status: 'pending' })
-    expect(admin.calls.schoolsInserted).toEqual([{ name: '', uai: null, country: 'FR' }])
-    expect(admin.calls.usersInserted).toEqual([
-      {
-        id: 'g1', school_id: 'school-1', role: 'organizer', org_role: 'owner',
-        full_name: 'Jane Google', email: 'org@example.com',
-        role_description: null, how_found_us: null,
-      },
-    ])
-  })
-
-  it('flags the request as a Google signup with no details', async () => {
-    await provisionOrganizerFromOAuth(oauthUser)
-    expect(sendSignupRequestEmail.mock.calls[0][0]).toMatchObject({
-      viaGoogle: true, schoolLabel: '—', roleDescription: '—', howFoundUs: '—',
-    })
-  })
-
-  it('falls back to the name field when full_name is absent', async () => {
-    const result = await provisionOrganizerFromOAuth({
-      id: 'g1', email: 'a@b.com', user_metadata: { name: 'From Name' },
-    })
-    expect(result).toEqual({ ok: true, status: 'pending' })
-    expect(admin.calls.usersInserted[0]).toMatchObject({ full_name: 'From Name' })
-  })
-
-  it('is idempotent when a profile already exists', async () => {
-    admin = makeAdmin({ existingUser: { id: 'g1' } })
-    const result = await provisionOrganizerFromOAuth(oauthUser)
-    expect(result).toEqual({ ok: true, status: 'approved' })
-    expect(admin.calls.usersInserted).toEqual([])
   })
 })
