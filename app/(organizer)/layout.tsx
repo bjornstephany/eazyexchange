@@ -86,6 +86,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
           isTrial={isTrial}
           remaining={remaining}
           orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
+          tourState={profile.tour_state}
         >
           {showGrace && (
             <PaymentWarningBanner body={tBilling('grace.body')} cta={tBilling('grace.cta')} />

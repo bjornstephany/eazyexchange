@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Locale } from '@/lib/i18n/config'
+import type { TourState } from '@/types/db'
 
 // React.cache dedupes per server request (RSC render or action invocation).
 // Vitest runs the stable React 18 build, which has no `cache` export — fall
@@ -23,6 +24,9 @@ export type Profile = {
   // Personal sidebar order for exchanges (ids the organizer dragged into
   // place). Display-only: unknown ids are ignored at sort time.
   exchange_order: string[] | null
+  // Progress through the optional guided tour. Rides along here so the shell
+  // costs no extra query to decide whether to offer it.
+  tour_state: TourState
   schools: {
     name: string
     country: string
@@ -47,7 +51,7 @@ export const getProfile = requestCache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('users')
-    .select('id, role, school_id, full_name, email, org_role, status, locale, exchange_order, schools(name, country, subscription_status, plan, grace_until)')
+    .select('id, role, school_id, full_name, email, org_role, status, locale, exchange_order, tour_state, schools(name, country, subscription_status, plan, grace_until)')
     .eq('id', user.id)
     .single<Profile>()
   return data ?? null

@@ -1061,48 +1061,45 @@ export type Database = {
           email: string
           exchange_order: string[]
           full_name: string
-          how_found_us: string | null
           id: string
           locale: string
           notes: string | null
           org_role: string
           reviewed_at: string | null
           role: string
-          role_description: string | null
           school_id: string
           status: string
+          tour_state: string
         }
         Insert: {
           created_at?: string
           email: string
           exchange_order?: string[]
           full_name: string
-          how_found_us?: string | null
           id: string
           locale?: string
           notes?: string | null
           org_role?: string
           reviewed_at?: string | null
           role: string
-          role_description?: string | null
           school_id: string
           status?: string
+          tour_state?: string
         }
         Update: {
           created_at?: string
           email?: string
           exchange_order?: string[]
           full_name?: string
-          how_found_us?: string | null
           id?: string
           locale?: string
           notes?: string | null
           org_role?: string
           reviewed_at?: string | null
           role?: string
-          role_description?: string | null
           school_id?: string
           status?: string
+          tour_state?: string
         }
         Relationships: [
           {

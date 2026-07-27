@@ -9,7 +9,6 @@ pick items off the top when starting new work.
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)
 - Google search appearance: add favicon + fix meta description getting cut off in results
 - password reset flow (with code entry) — no reset flow exists today; build one using the same single-tab 6-digit-code pattern as signup confirmation (spec: docs/superpowers/specs/2026-07-23-single-tab-signup-confirmation-design.md)
-- optional modern click-through professional onboarding tour explaining the features to new users
 - messages/fr.json: 14 pre-existing straight apostrophes violate the typographic-`’` convention (lines ~159, 344, 347, 348, 363, 430, 431, 447, 895, 896, 959, 964, 967, 971 as of 2026-07-24) — found by the onboarding-overhaul apostrophe guard, left alone there to keep that branch's diff in scope
 
 ## Known pre-existing bugs
@@ -21,6 +20,11 @@ Flagged during the 2026-07-14 applications refactor, deliberately not fixed ther
 
 ## Done
 
+- [2026-07-27] onboarding-tour — optional anchored spotlight tour of the six
+  organizer tabs, offered once on `/applications` and replayable from the account
+  menu. State in `users.tour_state`
+  (`20260727195338`). Spec:
+  `docs/superpowers/specs/2026-07-27-onboarding-tour-design.md`.
 - [2026-07-25] revoke-schools-name-grant — `authenticated` has no UPDATE on
   `schools` at all (`20260725122126`); the dead "organizers update their school"
   policy dropped with it. `claim_school()` is the only writer of the name.
