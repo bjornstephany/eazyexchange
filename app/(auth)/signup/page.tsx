@@ -9,9 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
-import { SchoolCombobox } from '@/app/onboarding/SchoolCombobox'
-import { searchPublicSchools } from '@/actions/public-schools'
-import type { SchoolOption } from '@/lib/schools/registry'
 import { confirmSignupCode, resendSignupCode } from './actions'
 
 const RESEND_COOLDOWN = 45
@@ -24,9 +21,6 @@ const CODE_ERRORS: Record<'invalid_code' | 'expired' | 'provision_failed', strin
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
-  const [school, setSchool] = useState<SchoolOption | null>(null)
-  const [roleDescription, setRoleDescription] = useState('')
-  const [howFoundUs, setHowFoundUs] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -52,23 +46,17 @@ export default function SignupPage() {
     const name = fullName.trim()
     const cleanEmail = normalizeEmail(email)
     if (!name) { setError('Veuillez remplir tous les champs.'); return }
-    if (!school) { setError('Veuillez sélectionner votre établissement.'); return }
-    if (!roleDescription.trim()) { setError('Veuillez indiquer votre rôle.'); return }
-    if (!howFoundUs.trim()) { setError('Dites-nous comment vous nous avez connus.'); return }
     if (!isValidEmail(cleanEmail)) { setError('Veuillez saisir une adresse e-mail valide.'); return }
     setLoading(true)
+    // Full name is all provisionOrganizer reads. The establishment is captured
+    // at /onboarding step 1, where it is validated against school_registry —
+    // asking for it here as well duplicated that, and the approval gate
+    // (every self-signup lands pending) is what actually keeps fake schools out.
     const { error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
-        data: {
-          full_name: name,
-          school_uai: school.uai,
-          school_name: school.name,
-          school_country: 'FR',
-          role_description: roleDescription.trim(),
-          how_found_us: howFoundUs.trim(),
-        },
+        data: { full_name: name },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
       },
     })
@@ -177,15 +165,6 @@ export default function SignupPage() {
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="fullName" className="text-[13px] font-semibold text-[#42506E]">Nom complet</Label>
               <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required className="h-11 rounded-[10px] border-[#C4CDE0]" />
-            </div>
-            <SchoolCombobox value={school} onSelect={setSchool} search={searchPublicSchools} />
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="roleDescription" className="text-[13px] font-semibold text-[#42506E]">Votre rôle</Label>
-              <Input id="roleDescription" value={roleDescription} onChange={e => setRoleDescription(e.target.value)} required placeholder="Professeure d’allemand" className="h-11 rounded-[10px] border-[#C4CDE0]" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="howFoundUs" className="text-[13px] font-semibold text-[#42506E]">Comment nous avez-vous connus ?</Label>
-              <Input id="howFoundUs" value={howFoundUs} onChange={e => setHowFoundUs(e.target.value)} required placeholder="Recommandation d’un collègue" className="h-11 rounded-[10px] border-[#C4CDE0]" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-[13px] font-semibold text-[#42506E]">E-mail</Label>
