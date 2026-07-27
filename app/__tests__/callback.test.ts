@@ -34,9 +34,9 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }))
 
-const provisionOrganizerFromOAuth = vi.fn(async (_u: unknown) => ({ ok: true }) as { ok: boolean })
+const provisionOrganizer = vi.fn(async (_u: unknown) => ({ ok: true }) as { ok: boolean })
 vi.mock('@/lib/auth/provision', () => ({
-  provisionOrganizerFromOAuth: (u: unknown) => provisionOrganizerFromOAuth(u),
+  provisionOrganizer: (u: unknown) => provisionOrganizer(u),
 }))
 
 import { GET } from '@/app/auth/callback/route'
@@ -51,7 +51,7 @@ async function getRedirect(qs: string): Promise<string> {
 
 beforeEach(() => {
   redirect.mockClear(); signOut.mockClear(); deleteUser.mockClear()
-  provisionOrganizerFromOAuth.mockClear(); usersUpdated.length = 0
+  provisionOrganizer.mockClear(); usersUpdated.length = 0
   exchangeResult = { data: { user: { id: 'u1', email: 'a@b.com', user_metadata: { full_name: 'Stu Dent' } } }, error: null }
   profile = null
   profileError = null
@@ -88,12 +88,12 @@ describe('GET /auth/callback', () => {
 
   it('provisions a new organizer when intent=organizer_signup and no profile exists', async () => {
     const dest = await getRedirect('code=x&intent=organizer_signup&next=/dashboard')
-    expect(provisionOrganizerFromOAuth).toHaveBeenCalledTimes(1)
+    expect(provisionOrganizer).toHaveBeenCalledTimes(1)
     expect(dest).toBe('/dashboard')
   })
 
   it('redirects signup_failed when provisioning fails', async () => {
-    provisionOrganizerFromOAuth.mockResolvedValueOnce({ ok: false })
+    provisionOrganizer.mockResolvedValueOnce({ ok: false })
     expect(await getRedirect('code=x&intent=organizer_signup')).toBe('/login?error=signup_failed')
   })
 
