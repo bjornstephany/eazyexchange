@@ -105,7 +105,7 @@ beforeEach(() => {
   events = []
   scenario = {
     exchange: { id: 'ex-1', name: 'France-Canada', school_id: 's-1', good_news_subject: null, good_news_body: null },
-    profile: { id: 'user-1', school_id: 's-1', role: 'organizer' },
+    profile: { id: 'user-1', school_id: 's-1', role: 'organizer', status: 'approved' },
     // Complete by default: these tests are about the review engine, not the
     // send guard, and an incomplete row would block every one of them.
     details: {

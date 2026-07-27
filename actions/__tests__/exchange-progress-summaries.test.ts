@@ -24,7 +24,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) },
     from: (t: string) => {
-      if (t === 'users') return table(null, { school_id: 's1', role: scenario.role })
+      if (t === 'users') return table(null, { school_id: 's1', role: scenario.role, status: 'approved' })
       if (t === 'exchanges') return table(scenario.exchanges, { school_a_id: 's1', school_b_id: null })
       // form_templates / exchange_enrollments: empty → no rollups, candidature path.
       return table([])

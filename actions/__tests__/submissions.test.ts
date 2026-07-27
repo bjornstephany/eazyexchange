@@ -21,7 +21,8 @@ function makeClient() {
           if (table === 'exchanges') return { data: { archived_at: null }, error: null }
           return { data: null, error: null }
         },
-        single: async () => ({ data: { id: 's1' }, error: null }),
+        // Catch-all: also stands in for the users row getProfile reads, hence status.
+        single: async () => ({ data: { id: 's1', status: 'approved' }, error: null }),
         upsert: async (rows: any, options?: any) => {
           upsertCalls.push({ table, rows, options })
           return { data: null, error: null }

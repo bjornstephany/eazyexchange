@@ -39,7 +39,7 @@ function makeClient() {
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => makeClient() }))
 vi.mock('@/lib/supabase/request', () => ({
   getAuthUser: async () => ({ id: scenario.userId }),
-  getProfile: async () => ({ school_id: scenario.profileSchool, role: scenario.role }),
+  getProfile: async () => ({ school_id: scenario.profileSchool, role: scenario.role, status: 'approved' }),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 

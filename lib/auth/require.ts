@@ -10,6 +10,14 @@ export type AuthCtx = { user: User; profile: Profile }
 export async function requireUser(): Promise<User> {
   const user = await getAuthUser()
   if (!user) throw new Error('Unauthenticated')
+  // The approval gate, app-side. RLS denies a non-approved account every row it
+  // could want (my_role() returns null), but the service-role paths — team
+  // invites, application review, billing — run outside RLS, so the shared
+  // preamble has to carry the same gate or those actions execute for a signup
+  // that has not been approved. A missing profile keeps its old behavior: the
+  // role checks below and the layouts already send orphan sessions to /login.
+  const profile = await getProfile()
+  if (profile && profile.status !== 'approved') throw new Error('Unauthorized')
   return user
 }
 

@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user } }) } }),
 }))
 
-let profile: { school_id: string } | null
+let profile: { school_id: string; status?: string } | null
 let school: Record<string, unknown> | null
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
@@ -59,7 +59,7 @@ const ACTIVE_STARTER = {
 beforeEach(() => {
   retrieveSub.mockClear(); createPortalSession.mockClear()
   user = { id: 'u1' }
-  profile = { school_id: 'sch_1' }
+  profile = { school_id: 'sch_1', status: 'approved' }
   school = { ...ACTIVE_STARTER }
   configured = true
   stripeThrows = false
@@ -73,6 +73,13 @@ describe('GET /billing/upgrade', () => {
   it('sends an anonymous visitor to /login', async () => {
     user = null
     expect(await location('plan=growth')).toBe('http://localhost/login')
+  })
+
+  // Service role: RLS is not in this path, so the status check has to be.
+  it.each(['pending', 'rejected'])('sends a %s account to /pending', async (status) => {
+    profile = { school_id: 'sch_1', status }
+    expect(await location('plan=growth')).toBe('http://localhost/pending')
+    expect(createPortalSession).not.toHaveBeenCalled()
   })
 
   it('sends a bad plan query back to /billing', async () => {

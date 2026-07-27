@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 let user: { id: string } | null
-let profile: { school_id: string; role: string } | null
+let profile: { school_id: string; role: string; status?: string } | null
 let school: Record<string, unknown> | null
 let exchangeCount: number
 
@@ -45,7 +45,7 @@ const PAID_STARTER = {
 
 beforeEach(() => {
   user = { id: 'u1' }
-  profile = { school_id: 'sch_1', role: 'organizer' }
+  profile = { school_id: 'sch_1', role: 'organizer', status: 'approved' }
   school = { ...PAID_STARTER }
   exchangeCount = 0
 })
@@ -122,7 +122,15 @@ describe('/billing', () => {
   })
 
   it('sends a non-organizer to /my-forms', async () => {
-    profile = { school_id: 'sch_1', role: 'student' }
+    profile = { school_id: 'sch_1', role: 'student', status: 'approved' }
     await expect(renderPage()).rejects.toThrow('REDIRECT:/my-forms')
+  })
+
+  // This page sits outside the (organizer) group, so it never inherited that
+  // layout's approval gate: a pending signup could type the URL and get the
+  // plan selector — and from there a live Stripe checkout.
+  it.each(['pending', 'rejected'])('sends a %s account to /pending', async (status) => {
+    profile = { school_id: 'sch_1', role: 'organizer', status }
+    await expect(renderPage()).rejects.toThrow('REDIRECT:/pending')
   })
 })

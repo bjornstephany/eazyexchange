@@ -19,7 +19,7 @@ function makeClient() {
         insert: async () => ({ error: null }),
         delete: () => ({ eq: async () => ({ error: null }) }),
         single: async () => {
-          if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role }, error: null }
+          if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role, status: 'approved' }, error: null }
           if (table === 'form_fields') return { data: { order: 0 }, error: null }
           if (table === 'document_slots') return { data: { order: 0 }, error: null }
           return { data: null, error: null }

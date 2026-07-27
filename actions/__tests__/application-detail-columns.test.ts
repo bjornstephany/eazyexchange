@@ -9,7 +9,7 @@ vi.mock('@/lib/email', () => ({
 }))
 vi.mock('@/lib/supabase/request', () => ({
   getAuthUser: async () => ({ id: 'org-1' }),
-  getProfile: async () => ({ id: 'org-1', role: 'organizer', school_id: 'school-1' }),
+  getProfile: async () => ({ id: 'org-1', role: 'organizer', school_id: 'school-1', status: 'approved' }),
 }))
 
 // Every column list handed to .select(), in call order.

@@ -136,6 +136,71 @@ describe('middleware', () => {
     expect(res.headers.get('location')).toBeNull()
   })
 
+  // The gate is the middleware's job, not each page's. The layouts of the
+  // (organizer) and (student) groups bounce a non-approved account too, but a
+  // route outside those groups — /billing was one — used to render for them.
+  describe('non-approved accounts get /pending on every gated route', () => {
+    beforeEach(() => {
+      user = { id: 'u3' }
+      profileRow = { role: 'organizer', full_name: 'Org', status: 'pending' }
+    })
+
+    it.each([
+      '/billing',
+      '/billing/return',
+      '/admin',
+      '/dashboard',
+      '/applications',
+      '/settings',
+      '/onboarding',
+      '/my-forms',
+    ])('redirects a pending organizer off %s to /pending', async (path) => {
+      const res = await middleware(req(path))
+      expect(res.headers.get('location')).toContain('/pending')
+    })
+
+    it('redirects a rejected account off /billing too', async () => {
+      profileRow = { role: 'organizer', full_name: 'Org', status: 'rejected' }
+      const res = await middleware(req('/billing'))
+      expect(res.headers.get('location')).toContain('/pending')
+    })
+
+    // The service-role money path: no RLS in front of it, so the redirect here
+    // is the only thing between a non-approved account and a live Stripe
+    // checkout session against their own school.
+    it.each(['/billing/checkout?plan=growth', '/billing/portal', '/billing/upgrade?plan=growth'])(
+      'redirects a pending organizer off %s to /pending',
+      async (path) => {
+        const res = await middleware(req(path))
+        expect(res.headers.get('location')).toContain('/pending')
+      },
+    )
+
+    // Public means public: a logged-in pending user is no more and no less
+    // privileged than the anonymous visitor sitting next to them.
+    it.each(['/legal/cgv', '/apply/some-slug', '/invite/tok123', '/join/tok123', '/api/health'])(
+      'still serves the public route %s',
+      async (path) => {
+        const res = await middleware(req(path))
+        expect(res.headers.get('location')).toBeNull()
+      },
+    )
+
+    it('leaves an approved organizer alone on /billing', async () => {
+      profileRow = { role: 'organizer', full_name: 'Org', status: 'approved' }
+      const res = await middleware(req('/billing'))
+      expect(res.headers.get('location')).toBeNull()
+    })
+
+    // Same reasoning as the /login and / cases above: an orphaned session has
+    // no status to judge, and bouncing it loops into a blank tab.
+    it('does not bounce an orphaned session (no users row) off a gated route', async () => {
+      profileRow = null
+      const res = await middleware(req('/dashboard'))
+      expect(res.headers.get('location')).toBeNull()
+    })
+  })
+
   it('lets the unauthenticated keep-warm pinger reach /api/health (no redirect)', async () => {
     const res = await middleware(req('/api/health'))
     expect(res.headers.get('location')).toBeNull()

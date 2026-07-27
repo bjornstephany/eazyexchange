@@ -14,7 +14,7 @@ vi.mock('@/lib/email', () => ({
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn(async () => {}) }))
 vi.mock('@/lib/supabase/request', () => ({
   getAuthUser: async () => ({ id: 'org-1' }),
-  getProfile: async () => ({ id: 'org-1', role: 'organizer', school_id: 'school-1' }),
+  getProfile: async () => ({ id: 'org-1', role: 'organizer', school_id: 'school-1', status: 'approved' }),
 }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({}) }))
 vi.mock('@/lib/exchange-guard', () => ({ assertExchangeWritable: vi.fn(async () => {}) }))

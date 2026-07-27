@@ -16,6 +16,7 @@ function makeClient() {
         return { select: () => ({ eq: () => ({ single: async () => ({ data: {
           school_id: 's-own', role: opts.role ?? 'organizer',
           org_role: opts.orgRole ?? 'owner', full_name: 'Owner', email: 'owner@s.fr',
+          status: 'approved',
         } }) }) }) }
       }
       if (table === 'schools') {

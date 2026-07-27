@@ -61,7 +61,7 @@ function makeClient() {
           if (table === 'users') {
             return {
               data: {
-                id: 'organizer-1', role: 'organizer', school_id: 'school-1',
+                id: 'organizer-1', role: 'organizer', school_id: 'school-1', status: 'approved',
                 full_name: 'Jane Doe', email: 'jane@example.com', org_role: 'owner',
                 locale: 'fr', schools: null,
               },

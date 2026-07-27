@@ -23,7 +23,7 @@ function makeClient() {
           select: () => u, eq: () => u,
           single: async () => ({
             data: {
-              id: 'u1', role: scenario.role, school_id: 's-1', full_name: 'x',
+              id: 'u1', role: scenario.role, school_id: 's-1', full_name: 'x', status: 'approved',
               email: 'a@b.com', org_role: 'owner', locale: 'fr',
               schools: { name: '', country: 'FR' },
             },

@@ -13,7 +13,7 @@ vi.mock('@/lib/supabase/request', () => ({
   getAuthUser: async () => ({ id: 'owner-1' }),
   getProfile: async () => ({
     role: 'organizer', school_id: 's-1', full_name: 'Owner', email: 'owner@s.fr',
-    org_role: callerRole,
+    org_role: callerRole, status: 'approved',
   }),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
