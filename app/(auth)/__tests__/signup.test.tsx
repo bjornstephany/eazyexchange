@@ -17,18 +17,16 @@ const { searchPublicSchools } = vi.hoisted(() => ({
 }))
 vi.mock('@/actions/public-schools', () => ({ searchPublicSchools }))
 
-const { confirmSignupCode, resendSignupCode } = vi.hoisted(() => ({
-  confirmSignupCode: vi.fn(async (_email: string, _code: string) => ({ ok: false, error: 'invalid_code' as const })),
-  resendSignupCode: vi.fn(async (_email: string) => ({ ok: true as const })),
+const { resendSignupEmail } = vi.hoisted(() => ({
+  resendSignupEmail: vi.fn(async (_email: string) => ({ ok: true as const })),
 }))
-vi.mock('@/app/(auth)/signup/actions', () => ({ confirmSignupCode, resendSignupCode }))
+vi.mock('@/app/(auth)/signup/actions', () => ({ resendSignupEmail }))
 
 import SignupPage from '@/app/(auth)/signup/page'
 
 beforeEach(() => {
   signUp.mockClear()
-  confirmSignupCode.mockClear()
-  resendSignupCode.mockClear()
+  resendSignupEmail.mockClear()
   searchPublicSchools.mockReset()
   searchPublicSchools.mockResolvedValue([LYCEE])
 })
@@ -48,7 +46,7 @@ async function fillForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/mot de passe/i), 'supersecret')
 }
 
-async function reachCodeStep(user: ReturnType<typeof userEvent.setup>) {
+async function reachConfirmStep(user: ReturnType<typeof userEvent.setup>) {
   await fillForm(user)
   await user.click(screen.getByRole('button', { name: /créer mon compte/i }))
 }
@@ -63,10 +61,10 @@ describe('SignupPage (French)', () => {
     expect(screen.getByLabelText(/comment nous avez-vous connus/i)).toBeInTheDocument()
   })
 
-  it('submits signUp with the intake metadata and shows the code step', async () => {
+  it('submits signUp with the intake metadata and shows the check-your-email step', async () => {
     const user = userEvent.setup()
     render(<SignupPage />)
-    await reachCodeStep(user)
+    await reachConfirmStep(user)
 
     expect(signUp).toHaveBeenCalledTimes(1)
     const arg = signUp.mock.calls[0][0]
@@ -79,7 +77,7 @@ describe('SignupPage (French)', () => {
       role_description: 'Professeure',
       how_found_us: 'Recommandation',
     })
-    expect(await screen.findByLabelText(/code de confirmation/i)).toBeInTheDocument()
+    expect(await screen.findByText(/vérifiez votre e-mail/i)).toBeInTheDocument()
     expect(screen.getByText(/jane@example.com/)).toBeInTheDocument()
   })
 
@@ -113,22 +111,36 @@ describe('SignupPage (French)', () => {
     expect(await screen.findByText(/adresse e-mail valide/i)).toBeInTheDocument()
   })
 
-  it('submits the 6-digit code to confirmSignupCode', async () => {
+  // Confirmation is one click on the link in the email (handled by
+  // app/auth/confirm/route.ts) — there is no code to type. The screen exists
+  // only to point at that email, so the instruction is the load-bearing part.
+  it('tells the user to click the confirmation button in the email, with no code input', async () => {
     const user = userEvent.setup()
     render(<SignupPage />)
-    await reachCodeStep(user)
-    await user.type(await screen.findByLabelText(/code de confirmation/i), '123456')
-    await user.click(screen.getByRole('button', { name: /confirmer/i }))
-    expect(confirmSignupCode).toHaveBeenCalledWith('jane@example.com', '123456')
+    await reachConfirmStep(user)
+
+    expect(await screen.findByText(/confirmer mon inscription/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/code de confirmation/i)).not.toBeInTheDocument()
   })
 
-  it('renders a structured error inline when the code is wrong', async () => {
-    confirmSignupCode.mockResolvedValueOnce({ ok: false, error: 'invalid_code' })
+  // The resend is rate-limited client-side on top of Supabase's own limits;
+  // offering it immediately would just burn the user's Supabase quota.
+  it('holds the resend behind a countdown', async () => {
     const user = userEvent.setup()
     render(<SignupPage />)
-    await reachCodeStep(user)
-    await user.type(await screen.findByLabelText(/code de confirmation/i), '000000')
-    await user.click(screen.getByRole('button', { name: /confirmer/i }))
-    expect(await screen.findByText(/code incorrect/i)).toBeInTheDocument()
+    await reachConfirmStep(user)
+
+    const resend = await screen.findByRole('button', { name: /renvoyer l’e-mail \(\d+s\)/i })
+    expect(resend).toBeDisabled()
+    await user.click(resend)
+    expect(resendSignupEmail).not.toHaveBeenCalled()
+  })
+
+  it('« Recommencer » returns to the signup form', async () => {
+    const user = userEvent.setup()
+    render(<SignupPage />)
+    await reachConfirmStep(user)
+    await user.click(await screen.findByRole('button', { name: /recommencer/i }))
+    expect(screen.getByRole('button', { name: /créer mon compte/i })).toBeInTheDocument()
   })
 })

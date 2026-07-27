@@ -146,46 +146,64 @@ The default template (`{{ .ConfirmationURL }}` → `GET /auth/v1/verify`) bypass
 - **Diagnose:** Supabase auth logs — `GET /verify` entries = default template (broken); `POST /verify` = the app's `verifyOtp` route (correct).
 - **Free-tier prerequisite:** template editing requires custom SMTP first (Resend: host `smtp.resend.com`, port 465, user `resend`, password = Resend API key). Set both via the dashboard or `PATCH https://api.supabase.com/v1/projects/<ref>/config/auth`.
 
-### Confirm signup email template (6-digit code, single-tab flow)
+### Confirm signup email template (one-click confirmation button)
 
-Organizer signup confirmation is a **6-digit code entered in the original tab**
-(`app/(auth)/signup/page.tsx` → `confirmSignupCode`), not a link that opens a new
-tab. The **Confirm signup** template MUST surface `{{ .Token }}` as the dominant
-CTA, keeping the `/auth/confirm` link only as a small fallback for anyone who
-closes the signup tab:
+Organizer signup confirmation is **one click on a button in the email**. The
+signup tab shows a "Vérifiez votre e-mail" screen with no code input
+(`app/(auth)/signup/page.tsx`); the button verifies, provisions and lands the
+organizer on `/onboarding` (or `/pending` behind the approval gate) via
+`app/auth/confirm/route.ts`. The **Confirm signup** template MUST therefore link
+to `/auth/confirm`, and must NOT ask for a code:
 
 ```html
-<h2>Confirmez votre inscription</h2>
-<p>Votre code de confirmation :</p>
-<p style="font-size:32px;font-weight:700;letter-spacing:6px;margin:16px 0;">{{ .Token }}</p>
-<p>Saisissez ce code dans l’onglet où vous vous êtes inscrit·e.</p>
+<h2 style="margin:0 0 12px;font-size:20px;color:#10203F;">Confirmez votre inscription</h2>
+<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#5B6B8C;">
+  Bienvenue sur EazyExchange. Un seul clic suffit pour activer votre compte.
+</p>
+<p style="margin:0 0 24px;">
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding"
+     style="display:inline-block;background:#2456E6;color:#ffffff;text-decoration:none;
+            font-size:16px;font-weight:600;padding:14px 28px;border-radius:11px;">
+    Confirmer mon inscription
+  </a>
+</p>
 <hr style="border:none;border-top:1px solid #E4E9F2;margin:24px 0;">
+<p style="font-size:13px;line-height:1.6;color:#8A97B2;">
+  Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br>
+  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding
+</p>
 <p style="font-size:13px;color:#8A97B2;">
-  Vous avez fermé cet onglet ?
-  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard">Confirmez ici</a>.
+  Vous n’êtes pas à l’origine de cette inscription ? Ignorez cet e-mail.
 </p>
 ```
 
 Apply via the Management API (Supabase PAT in `$SUPABASE_PAT`; Cloudflare blocks
-the python-urllib UA, so force a curl UA). The confirmation template field is
-`mailer_templates_confirmation_content`:
+the python-urllib UA, so force a curl UA). Both the body and the subject change —
+the subject must no longer mention a code:
 
 ```bash
 curl -A curl/8.0 -X PATCH \
   "https://api.supabase.com/v1/projects/rgisrqlbcjdoetoybaqd/config/auth" \
   -H "Authorization: Bearer $SUPABASE_PAT" \
   -H "Content-Type: application/json" \
-  -d '{"mailer_templates_confirmation_content": "<the HTML above, JSON-escaped>"}'
+  -d '{"mailer_templates_confirmation_content": "<the HTML above, JSON-escaped>",
+       "mailer_subjects_confirmation": "Confirmez votre inscription EazyExchange"}'
 ```
 
+- **The button is the whole flow, not a fallback.** Nothing else confirms a
+  signup: there is no code path any more (`confirmSignupCode` was removed). A
+  template that reverts to `{{ .Token }}` leaves organizers with a code and
+  nowhere to type it.
+- **`next=/onboarding`, not `/dashboard`.** A fresh signup has no school, so
+  `/dashboard` is a hop the layout gate can only bounce. `app/auth/confirm/route.ts`
+  overrides `next` with `/pending` when provisioning lands pending.
 - **Prod-only, manually verified:** staging uses Supabase default templates and
   sends no email, so this change cannot be exercised on previews.
-- **Fallback stays load-bearing:** the `/auth/confirm?...&type=signup` link must
-  remain in the template — it is the escape hatch for a closed signup tab, and it
-  is exercised by `app/auth/confirm/route.ts` (unchanged).
-- **`type: 'signup'` caveat:** if `confirmSignupCode`'s `verifyOtp({ type: 'signup' })`
-  is rejected for a plain 6-digit token on the live project, switch it to
-  `type: 'email'` (see the note in `app/(auth)/signup/actions.ts`).
+- **`mailer_otp_length` (6) is now irrelevant to signup** — it only governs the
+  reauthentication OTP. Leave it at 6.
+- **The link opens a new tab.** That is the accepted trade-off of the click-based
+  flow: the tab the organizer signed up in stays on the "Vérifiez votre e-mail"
+  screen, and the confirmed session lives in the tab the email opened.
 
 ### Other manual dashboard steps (pointers)
 
