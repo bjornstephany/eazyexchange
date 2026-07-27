@@ -9,6 +9,9 @@ interface AdminOpts {
   // Rows school_registry returns for the exact (uai, name) probe and the
   // UAI-only fallback. null on both models a UAI the registry does not carry.
   registry?: { uai: string; name: string } | null
+  // A PostgREST error on the registry probes — what a bad service-role key
+  // produces. Distinct from `registry: null`, which is a genuine miss.
+  registryError?: unknown
 }
 
 let admin: ReturnType<typeof makeAdmin>
@@ -20,6 +23,7 @@ function makeAdmin(opts: AdminOpts = {}) {
     usersInsertError = null,
     insertedStatus = 'pending',
     registry = { uai: '0690123X', name: 'Lycée Jean Moulin' },
+    registryError = null,
   } = opts
   const calls = {
     schoolsInserted: [] as unknown[],
@@ -52,11 +56,15 @@ function makeAdmin(opts: AdminOpts = {}) {
         }
       }
       if (table === 'school_registry') {
+        const probe = async () => ({
+          data: registryError ? null : registry,
+          error: registryError,
+        })
         return {
           select: () => ({
             eq: () => ({
-              eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: registry, error: null }) }) }) }),
-              order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: registry, error: null }) }) }),
+              eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: probe }) }) }),
+              order: () => ({ limit: () => ({ maybeSingle: probe }) }),
             }),
           }),
         }
@@ -69,8 +77,19 @@ function makeAdmin(opts: AdminOpts = {}) {
 
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => admin }))
 
-const sendSignupRequestEmail = vi.fn(async (_opts: Record<string, unknown>) => {})
-const sendSignupFailureEmail = vi.fn(async (_opts: Record<string, unknown>) => {})
+// The mocks take real async time on purpose: a fire-and-forget (`void`) call
+// would still be in flight when provisionOrganizer returns, so `delivered`
+// distinguishes an awaited send from a dropped one. On serverless the dropped
+// one never arrives — which is how a broken service-role key stayed silent.
+const delivered = { request: false, failure: false }
+const sendSignupRequestEmail = vi.fn(async (_opts: Record<string, unknown>) => {
+  await new Promise((r) => setTimeout(r, 5))
+  delivered.request = true
+})
+const sendSignupFailureEmail = vi.fn(async (_opts: Record<string, unknown>) => {
+  await new Promise((r) => setTimeout(r, 5))
+  delivered.failure = true
+})
 vi.mock('@/lib/email', () => ({
   sendSignupRequestEmail: (o: Record<string, unknown>) => sendSignupRequestEmail(o),
   sendSignupFailureEmail: (o: Record<string, unknown>) => sendSignupFailureEmail(o),
@@ -95,6 +114,8 @@ beforeEach(() => {
   admin = makeAdmin()
   sendSignupRequestEmail.mockClear()
   sendSignupFailureEmail.mockClear()
+  delivered.request = false
+  delivered.failure = false
 })
 
 describe('provisionOrganizer', () => {
@@ -146,6 +167,33 @@ describe('provisionOrganizer', () => {
     expect(admin.calls.schoolsInserted).toEqual([])
   })
 
+  it('alerts when the UAI is genuinely absent from the registry', async () => {
+    admin = makeAdmin({ registry: null })
+    await provisionOrganizer(baseUser)
+    expect(sendSignupFailureEmail).toHaveBeenCalledWith({
+      email: 'org@example.com', reason: 'unknown_school',
+    })
+  })
+
+  // The failure that actually happened in production on 2026-07-27: a stale
+  // service-role key made every registry probe 401. Reading only `.data` made
+  // that indistinguishable from "no such school", so the one branch that sends
+  // no alert swallowed a total outage.
+  it('distinguishes a failed registry lookup from an unknown school', async () => {
+    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    const result = await provisionOrganizer(baseUser)
+    expect(result).toEqual({ ok: false, reason: 'school_lookup_failed' })
+    expect(admin.calls.schoolsInserted).toEqual([])
+  })
+
+  it('alerts when the registry lookup fails', async () => {
+    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    await provisionOrganizer(baseUser)
+    expect(sendSignupFailureEmail).toHaveBeenCalledWith({
+      email: 'org@example.com', reason: 'school_lookup_failed',
+    })
+  })
+
   it('still provisions when no school was picked', async () => {
     const result = await provisionOrganizer({
       id: 'u1', email: 'a@b.com', user_metadata: { full_name: 'A' },
@@ -177,6 +225,37 @@ describe('provisionOrganizer', () => {
     const result = await provisionOrganizer({ id: 'u1', email: 'a@b.com', user_metadata: {} })
     expect(result).toEqual({ ok: false, reason: 'missing_metadata' })
     expect(admin.calls.schoolsInserted).toEqual([])
+  })
+
+  it('alerts when metadata is missing', async () => {
+    await provisionOrganizer({ id: 'u1', email: 'a@b.com', user_metadata: {} })
+    expect(sendSignupFailureEmail).toHaveBeenCalledWith({
+      email: 'a@b.com', reason: 'missing_metadata',
+    })
+  })
+
+  // A `void` send is dropped when the serverless function freezes after the
+  // response — precisely when the alert matters most. send() already swallows
+  // its own errors, so awaiting cannot fail the signup.
+  it('waits for the failure alert to be delivered before returning', async () => {
+    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    await provisionOrganizer(baseUser)
+    expect(delivered.failure).toBe(true)
+  })
+
+  it('waits for the admin notification to be delivered before returning', async () => {
+    await provisionOrganizer(baseUser)
+    expect(delivered.request).toBe(true)
+  })
+
+  it('logs the failure reason without leaking the address', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    admin = makeAdmin({ registryError: { message: 'Invalid API key' } })
+    await provisionOrganizer(baseUser)
+    const logged = spy.mock.calls.map((c) => c.join(' ')).join('\n')
+    expect(logged).toContain('school_lookup_failed')
+    expect(logged).not.toContain('org@example.com')
+    spy.mockRestore()
   })
 })
 
