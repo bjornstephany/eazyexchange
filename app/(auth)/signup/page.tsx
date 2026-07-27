@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { MailCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeEmail, isValidEmail } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
@@ -9,15 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
-import { confirmSignupCode, resendSignupCode } from './actions'
+import { resendSignupEmail } from './actions'
 
 const RESEND_COOLDOWN = 45
-
-const CODE_ERRORS: Record<'invalid_code' | 'expired' | 'provision_failed', string> = {
-  invalid_code: 'Code incorrect. Vérifiez les 6 chiffres et réessayez.',
-  expired: 'Ce code a expiré. Demandez-en un nouveau.',
-  provision_failed: 'Une erreur est survenue lors de la création de votre compte. Réessayez.',
-}
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -27,9 +22,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [confirmEmail, setConfirmEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [codeError, setCodeError] = useState<string | null>(null)
-  const [verifying, setVerifying] = useState(false)
+  const [resendError, setResendError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
   const [resendNote, setResendNote] = useState<string | null>(null)
   const supabase = createClient()
@@ -67,37 +60,22 @@ export default function SignupPage() {
     setLoading(false)
   }
 
-  async function handleConfirmCode(e: React.FormEvent) {
-    e.preventDefault()
-    setCodeError(null)
-    if (code.length !== 6) { setCodeError('Saisissez le code à 6 chiffres.'); return }
-    setVerifying(true)
-    const res = await confirmSignupCode(confirmEmail, code)
-    // Success redirects server-side; only failures resolve to a value here.
-    if (res && !res.ok) {
-      setCodeError(CODE_ERRORS[res.error] ?? CODE_ERRORS.invalid_code)
-      setVerifying(false)
-    }
-  }
-
   async function handleResend() {
-    setCodeError(null)
+    setResendError(null)
     setResendNote(null)
-    const res = await resendSignupCode(confirmEmail)
+    const res = await resendSignupEmail(confirmEmail)
     if (res.ok) {
-      setResendNote('Un nouveau code a été envoyé.')
+      setResendNote('Un nouvel e-mail vient d’être envoyé.')
       setCooldown(RESEND_COOLDOWN)
     } else {
-      setCodeError('Impossible de renvoyer le code pour le moment. Réessayez dans un instant.')
+      setResendError('Impossible de renvoyer l’e-mail pour le moment. Réessayez dans un instant.')
     }
   }
 
   function handleRestart() {
     setSubmitted(false)
-    setCode('')
-    setCodeError(null)
+    setResendError(null)
     setResendNote(null)
-    setVerifying(false)
     setCooldown(0)
   }
 
@@ -106,31 +84,22 @@ export default function SignupPage() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-[#EEF1F7] px-4 py-10">
         <Logo href="/" />
         <AuthCard maxWidth={460} className="flex flex-col gap-4">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E7EDFD] text-[#2456E6]">
+            <MailCheck className="h-6 w-6" aria-hidden />
+          </span>
           <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">Vérifiez votre e-mail</h3>
           <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">
-            Nous avons envoyé un code à 6 chiffres à{' '}
-            <span className="font-semibold text-[#10203F]">{confirmEmail}</span>. Saisissez-le
-            ci-dessous pour finaliser la création de votre compte.
+            Nous venons d’envoyer un e-mail à{' '}
+            <span className="font-semibold text-[#10203F]">{confirmEmail}</span>. Ouvrez-le et
+            cliquez sur <span className="font-semibold text-[#10203F]">« Confirmer mon inscription »</span>{' '}
+            pour finaliser la création de votre compte.
           </p>
-          <form onSubmit={handleConfirmCode} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="code" className="text-[13px] font-semibold text-[#42506E]">Code de confirmation</Label>
-              <Input
-                id="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
-                className="h-11 rounded-[10px] border-[#C4CDE0] text-center font-mono text-lg tracking-[0.4em]"
-              />
-            </div>
-            {codeError && <p className="text-sm text-[#C0392B]">{codeError}</p>}
-            <Button type="submit" disabled={verifying || code.length !== 6} className="h-11 w-full rounded-[11px] bg-[#2456E6] text-base font-semibold hover:bg-[#1D48C7]">
-              {verifying ? 'Vérification…' : 'Confirmer'}
-            </Button>
-          </form>
+          <p className="m-0 rounded-[10px] bg-[#F4F6FB] px-3.5 py-3 text-[13px] leading-relaxed text-[#5B6B8C]">
+            Rien reçu au bout de deux minutes ? Vérifiez vos courriers indésirables, puis
+            renvoyez l’e-mail ci-dessous.
+          </p>
+          {resendError && <p className="m-0 text-sm text-[#C0392B]">{resendError}</p>}
+          {resendNote && <p className="m-0 text-[13px] font-medium text-[#22A06B]">{resendNote}</p>}
           <div className="flex items-center justify-between text-[13px]">
             <button
               type="button"
@@ -138,13 +107,12 @@ export default function SignupPage() {
               disabled={cooldown > 0}
               className="font-medium text-[#2456E6] hover:underline disabled:cursor-not-allowed disabled:text-[#8A97B2] disabled:no-underline"
             >
-              {cooldown > 0 ? `Renvoyer le code (${cooldown}s)` : 'Renvoyer le code'}
+              {cooldown > 0 ? `Renvoyer l’e-mail (${cooldown}s)` : 'Renvoyer l’e-mail'}
             </button>
             <button type="button" onClick={handleRestart} className="font-medium text-[#8A97B2] hover:text-[#42506E] hover:underline">
               Recommencer
             </button>
           </div>
-          {resendNote && <p className="m-0 text-[13px] font-medium text-[#22A06B]">{resendNote}</p>}
         </AuthCard>
       </div>
     )
