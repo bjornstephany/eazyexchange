@@ -23,7 +23,7 @@ function makeClient() {
           return { error: scenario.upsertError }
         },
         single: async () => {
-          if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role, org_role: 'owner' }, error: null }
+          if (table === 'users') return { data: { school_id: scenario.profileSchool, role: scenario.role, org_role: 'owner', status: 'approved' }, error: null }
           return { data: null, error: null }
         },
         maybeSingle: async () => {

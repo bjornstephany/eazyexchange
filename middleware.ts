@@ -36,13 +36,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Logged-in users hitting the auth routes or the marketing page (/) get sent
-  // to their app. Handling / here (not in app/page.tsx) keeps the landing page
-  // fully static so anonymous visitors are served from the CDN with no cold start.
-  if (user && (isAuthRoute || pathname === '/')) {
-    // Fetch role + setup state to redirect correctly
+  // Everything below needs the users row: the approval gate on every gated
+  // route, and the destination for someone who landed on an auth route or /.
+  // Public routes are exempt — a logged-in visitor reading /legal or opening an
+  // /apply link is no more privileged than the anonymous one beside them, and
+  // paying a users lookup there would tax the CDN-served landing page.
+  const needsProfile = !!user && (!isPublicRoute || pathname === '/')
+  if (needsProfile) {
     const { data: profile } = await supabase
-      .from('users').select('role, full_name, status').eq('id', user.id)
+      .from('users').select('role, full_name, status').eq('id', user!.id)
       .single<{ role: string; full_name: string | null; status: string }>()
 
     // An orphaned/stale session: getClaims() verifies the JWT locally so `user`
@@ -50,28 +52,36 @@ export async function middleware(request: NextRequest) {
     // reset while the browser kept a still-valid access token). getUser() in the
     // server layouts rejects such a session, so redirecting it to /my-forms or
     // /dashboard bounces straight back to /login → infinite loop → blank screen.
-    // Let the request reach the auth route so the user can re-authenticate.
+    // Let the request through so the user can re-authenticate.
     if (!profile) {
       return supabaseResponse
     }
 
-    // Not approved: /pending is the only page they get. Checked before the
-    // accept-invite and role-destination branches below, which would otherwise
-    // hand them a shell the layout has to bounce again.
+    // THE approval gate for the whole app surface. The (organizer) and
+    // (student) layouts repeat it for their own groups, but a route outside
+    // both — /billing and its service-role checkout, /admin — inherited nothing
+    // and rendered for a pending signup. Gating here means a route is covered
+    // the moment it exists, instead of the day someone remembers to add a
+    // check. Non-approved means /pending, full stop.
     if (profile.status !== 'approved') {
       return NextResponse.redirect(new URL('/pending', request.url))
     }
 
-    // A freshly-invited user has a session (set by /auth/confirm) but an empty
-    // full_name. Let them finish setup on /accept-invite instead of bouncing them
-    // to a dashboard for an account that isn't configured yet.
-    const setupComplete = !!profile?.full_name
-    if (pathname.startsWith('/accept-invite') && !setupComplete) {
-      return supabaseResponse
-    }
+    // Logged-in users hitting the auth routes or the marketing page (/) get sent
+    // to their app. Handling / here (not in app/page.tsx) keeps the landing page
+    // fully static so anonymous visitors are served from the CDN with no cold start.
+    if (isAuthRoute || pathname === '/') {
+      // A freshly-invited user has a session (set by /auth/confirm) but an empty
+      // full_name. Let them finish setup on /accept-invite instead of bouncing them
+      // to a dashboard for an account that isn't configured yet.
+      const setupComplete = !!profile.full_name
+      if (pathname.startsWith('/accept-invite') && !setupComplete) {
+        return supabaseResponse
+      }
 
-    const dest = profile?.role === 'organizer' ? '/dashboard' : '/my-forms'
-    return NextResponse.redirect(new URL(dest, request.url))
+      const dest = profile.role === 'organizer' ? '/dashboard' : '/my-forms'
+      return NextResponse.redirect(new URL(dest, request.url))
+    }
   }
 
   return supabaseResponse

@@ -16,7 +16,7 @@ function makeClient() {
         single: async () => ({
           data: {
             id: 'u1', role: scenario.role, school_id: 's-1', full_name: 'Marie B.',
-            email: 'a@b.com', org_role: 'owner', locale: 'fr',
+            email: 'a@b.com', org_role: 'owner', locale: 'fr', status: 'approved',
             schools: { name: '', country: 'FR' },
           },
         }),

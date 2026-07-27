@@ -10,7 +10,7 @@ function makeClient() {
         select: () => b, eq: () => b,
         update: (row: any) => { scenario.updated = row; return { eq: async () => ({ error: null }) } },
         single: async () => table === 'users'
-          ? { data: { school_id: scenario.school, role: scenario.role } }
+          ? { data: { school_id: scenario.school, role: scenario.role, status: 'approved' } }
           : { data: null },
         maybeSingle: async () => table === 'exchanges'
           ? { data: {

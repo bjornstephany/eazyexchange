@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 let user: { id: string } | null
-let profile: { role: string; org_role: string | null } | null
+let profile: { role: string; org_role: string | null; status?: string } | null
 
 vi.mock('@/lib/supabase/request', () => ({
   getAuthUser: async () => user,
@@ -12,7 +12,7 @@ import { requireUser, requireOrganizer, requireStudent } from '../require'
 
 beforeEach(() => {
   user = { id: 'u1' }
-  profile = { role: 'organizer', org_role: 'owner' }
+  profile = { role: 'organizer', org_role: 'owner', status: 'approved' }
 })
 
 describe('requireUser', () => {
@@ -21,6 +21,22 @@ describe('requireUser', () => {
     await expect(requireUser()).rejects.toThrow('Unauthenticated')
   })
   it('returns the user', async () => {
+    await expect(requireUser()).resolves.toEqual({ id: 'u1' })
+  })
+
+  // The approval gate, app-side. RLS already denies a non-approved account
+  // every row it would want, but the service-role paths (billing, team
+  // invites, application review) run outside RLS — so the shared preamble has
+  // to carry the same gate or those actions execute for a pending signup.
+  it.each(['pending', 'rejected'])('throws Unauthorized for a %s account', async (status) => {
+    profile = { role: 'organizer', org_role: 'owner', status }
+    await expect(requireUser()).rejects.toThrow('Unauthorized')
+  })
+
+  // An orphaned session (valid JWT, no users row) keeps its old behavior: the
+  // role checks and the layouts already send it back to /login.
+  it('leaves a missing profile to the role checks', async () => {
+    profile = null
     await expect(requireUser()).resolves.toEqual({ id: 'u1' })
   })
 })
@@ -36,7 +52,7 @@ describe('requireOrganizer', () => {
     await expect(requireOrganizer()).rejects.toThrow('Unauthorized')
   })
   it('throws Unauthorized for a student', async () => {
-    profile = { role: 'student', org_role: null }
+    profile = { role: 'student', org_role: null, status: 'approved' }
     await expect(requireOrganizer()).rejects.toThrow('Unauthorized')
   })
   it('returns user and profile for an organizer', async () => {
@@ -45,12 +61,12 @@ describe('requireOrganizer', () => {
     expect(ctx.profile.role).toBe('organizer')
   })
   it('owner check rejects an admin with the exact French message', async () => {
-    profile = { role: 'organizer', org_role: 'admin' }
+    profile = { role: 'organizer', org_role: 'admin', status: 'approved' }
     await expect(requireOrganizer({ orgRole: 'owner' }))
       .rejects.toThrow('Réservé au propriétaire du compte.')
   })
   it('owner check treats null org_role as admin', async () => {
-    profile = { role: 'organizer', org_role: null }
+    profile = { role: 'organizer', org_role: null, status: 'approved' }
     await expect(requireOrganizer({ orgRole: 'owner' }))
       .rejects.toThrow('Réservé au propriétaire du compte.')
   })
@@ -64,7 +80,7 @@ describe('requireStudent', () => {
     await expect(requireStudent()).rejects.toThrow('Unauthorized')
   })
   it('returns user and profile for a student', async () => {
-    profile = { role: 'student', org_role: null }
+    profile = { role: 'student', org_role: null, status: 'approved' }
     const ctx = await requireStudent()
     expect(ctx.profile.role).toBe('student')
   })

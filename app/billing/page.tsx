@@ -31,10 +31,16 @@ export default async function BillingPage({
 
   // Own profile + own school: RLS covers both reads — no service role needed.
   const { data: profile } = await supabase
-    .from('users').select('school_id, role').eq('id', user.id).maybeSingle()
+    .from('users').select('school_id, role, status').eq('id', user.id).maybeSingle()
   if (!profile || profile.role !== 'organizer') {
     redirect(shellDestination(profile?.role as ProfileRole | undefined, 'organizer')!)
   }
+
+  // This page sits outside the (organizer) group, so it inherits none of that
+  // layout's gating. Middleware bounces a non-approved account before it gets
+  // here; this is the same check at the page it protects, because the next
+  // click from here is a live Stripe checkout.
+  if (profile.status !== 'approved') redirect('/pending')
 
   const { data: school } = await supabase
     .from('schools')

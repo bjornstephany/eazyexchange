@@ -13,7 +13,7 @@ function makeClient() {
     from(table: string) {
       if (table === 'users') {
         return { select: () => ({ eq: () => ({ single: async () => ({
-          data: { school_id: 's1', role: 'organizer' }, error: null,
+          data: { school_id: 's1', role: 'organizer', status: 'approved' }, error: null,
         }) }) }) }
       }
       if (table === 'exchanges') {

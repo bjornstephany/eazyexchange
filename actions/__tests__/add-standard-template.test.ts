@@ -26,7 +26,7 @@ function makeClient() {
       if (table === 'users') {
         return {
           select: () => ({ eq: () => ({
-            single: async () => ({ data: { school_id: 's1', role: scenario.role }, error: null }),
+            single: async () => ({ data: { school_id: 's1', role: scenario.role, status: 'approved' }, error: null }),
             // activateTemplateRecord's conditional branch (unused here)
             in: () => ({ eq: () => ({ eq: async () => ({ data: [] }) }) }),
           }) }),

@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
 
   const admin = createAdminClient()
   const { data: profile } = await admin
-    .from('users').select('school_id').eq('id', user.id).maybeSingle()
+    .from('users').select('school_id, status').eq('id', user.id).maybeSingle()
   if (!profile) return NextResponse.redirect(new URL('/login', request.url))
+  // Service role: RLS is not in this path (see /billing/checkout).
+  if (profile.status !== 'approved') return NextResponse.redirect(new URL('/pending', request.url))
 
   const { data: school } = await admin
     .from('schools')

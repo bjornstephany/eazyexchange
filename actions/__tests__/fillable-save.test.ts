@@ -25,7 +25,7 @@ function makeClient() {
           return { eq: async () => ({ error: null }) }
         },
         single: async () => {
-          if (table === 'users') return { data: { role: 'student', school_id: 's-1' }, error: null }
+          if (table === 'users') return { data: { role: 'student', school_id: 's-1', status: 'approved' }, error: null }
           return { data: null, error: null }
         },
         maybeSingle: async () => {

@@ -47,7 +47,7 @@ const from = vi.fn((table: string) => {
     return {
       select: (cols: string) => ({
         eq: () => ({
-          single: async () => ({ data: { school_id: 'school-1', role } }),
+          single: async () => ({ data: { school_id: 'school-1', role, status: 'approved' } }),
         }),
         in: () => ({ eq: () => ({ eq: () => Promise.resolve({ data: enrolledUsers }) }) }),
       }),

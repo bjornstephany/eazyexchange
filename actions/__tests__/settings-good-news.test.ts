@@ -38,7 +38,7 @@ import { updateGoodNewsTemplate } from '../settings'
 beforeEach(() => {
   scenario = {
     exchange: { id: 'ex-1', name: 'E', year: 2026, archived_at: null, school_a_id: 's-1', school_b_id: null, good_news_subject: null, good_news_body: null },
-    profile: { id: 'user-1', school_id: 's-1', role: 'organizer', org_role: 'owner', email: 'o@x.fr', full_name: 'O' },
+    profile: { id: 'user-1', school_id: 's-1', role: 'organizer', org_role: 'owner', email: 'o@x.fr', full_name: 'O', status: 'approved' },
     updated: null,
   }
 })
