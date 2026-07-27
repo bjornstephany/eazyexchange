@@ -16,6 +16,25 @@ function metaString(meta: Record<string, unknown> | undefined, key: string): str
   return typeof v === 'string' ? v.trim() : ''
 }
 
+function normalizedEmail(user: ProvisionUser): string {
+  return (user.email ?? '').trim().toLowerCase()
+}
+
+// Single exit for every provisioning failure, because none of them is visible
+// otherwise: the user only ever sees a generic « Réessayez », and these are
+// structured returns by design, so they never reach error_reports either.
+//
+// The email is awaited, not fire-and-forget. send() swallows its own errors and
+// returns a boolean, so awaiting cannot fail a signup — whereas a `void` call is
+// dropped when the serverless function freezes after the response, i.e. exactly
+// when the alert matters. The log line carries the reason only, never the
+// address.
+async function failProvisioning(email: string, reason: string): Promise<ProvisionResult> {
+  console.error(`[provision] failed: ${reason}`)
+  if (email) await sendSignupFailureEmail({ email, reason })
+  return { ok: false, reason }
+}
+
 // Shared account-creation core. Idempotent; rolls back the school if the
 // profile insert fails so a partial failure leaves no debris.
 //
@@ -27,8 +46,8 @@ async function createOrganizerAccount(
   fullName: string,
   school: { name: string; uai: string | null; country: string },
 ): Promise<ProvisionResult> {
-  const email = (user.email ?? '').trim().toLowerCase()
-  if (!fullName || !email) return { ok: false, reason: 'missing_metadata' }
+  const email = normalizedEmail(user)
+  if (!fullName || !email) return failProvisioning(email, 'missing_metadata')
 
   const admin = createAdminClient()
 
@@ -41,8 +60,7 @@ async function createOrganizerAccount(
     .insert({ name: school.name, uai: school.uai, country: school.country })
     .select('id').single()
   if (schoolError || !created) {
-    void sendSignupFailureEmail({ email, reason: 'school_insert_failed' })
-    return { ok: false, reason: 'school_insert_failed' }
+    return failProvisioning(email, 'school_insert_failed')
   }
 
   const { data: profile, error: profileError } = await admin.from('users').insert({
@@ -58,14 +76,15 @@ async function createOrganizerAccount(
 
   if (profileError || !profile) {
     await admin.from('schools').delete().eq('id', created.id)
-    void sendSignupFailureEmail({ email, reason: 'profile_insert_failed' })
-    return { ok: false, reason: 'profile_insert_failed' }
+    return failProvisioning(email, 'profile_insert_failed')
   }
 
   const status = profile.status as 'pending' | 'approved'
   if (status === 'pending') {
-    // Fire-and-forget: a notification failure must never fail the signup.
-    void sendSignupRequestEmail({
+    // Awaited for the same reason as the failure alert: send() cannot throw, and
+    // a dropped notification means an organizer waits on /pending that nobody
+    // knows about.
+    await sendSignupRequestEmail({
       fullName,
       email,
       schoolLabel: school.name || '—',
@@ -83,9 +102,14 @@ async function createOrganizerAccount(
 // uses: exact (uai, name) pair first, then the lowest id for that UAI.
 // Returns null when nothing was picked (the Google path), which provisions a
 // blank school so /onboarding step 1 can capture it after approval.
+//
+// 'unknown' and 'lookup_failed' are deliberately separate. Reading only `.data`
+// collapsed them, and on 2026-07-27 a stale service-role key 401'd both probes:
+// a total outage was reported as "we don't know that school", the one outcome
+// that looked like the user's fault and sent no alert.
 async function resolveSchool(
   meta: Record<string, unknown> | undefined,
-): Promise<{ name: string; uai: string | null; country: string } | null | 'unknown'> {
+): Promise<{ name: string; uai: string | null; country: string } | null | 'unknown' | 'lookup_failed'> {
   const uai = metaString(meta, 'school_uai')
   const country = metaString(meta, 'school_country') || 'FR'
   if (!uai) return null
@@ -104,6 +128,8 @@ async function resolveSchool(
     .order('id').limit(1).maybeSingle()
   if (byUai.data) return { name: byUai.data.name, uai: byUai.data.uai, country }
 
+  // Only a clean miss on both probes means the registry genuinely lacks the UAI.
+  if (exact.error || byUai.error) return 'lookup_failed'
   return 'unknown'
 }
 
@@ -113,7 +139,12 @@ async function resolveSchool(
 export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
   const fullName = metaString(user.user_metadata, 'full_name')
   const school = await resolveSchool(user.user_metadata)
-  if (school === 'unknown') return { ok: false, reason: 'unknown_school' }
+  if (school === 'unknown' || school === 'lookup_failed') {
+    return failProvisioning(
+      normalizedEmail(user),
+      school === 'unknown' ? 'unknown_school' : 'school_lookup_failed',
+    )
+  }
   return createOrganizerAccount(user, fullName, school ?? { name: '', uai: null, country: 'FR' })
 }
 
