@@ -282,6 +282,56 @@
         "settings": "Ajustes",
         "signOut": "Cerrar sesión"
       },
+      "tour": {
+        "menuItem": "Visita guiada",
+        "invite": {
+          "title": "Descubra EazyExchange en 2 minutos",
+          "body": "Un recorrido rápido por cada pestaña, para saber dónde está todo.",
+          "start": "Empezar",
+          "later": "Más tarde"
+        },
+        "controls": {
+          "skip": "Omitir",
+          "prev": "Anterior",
+          "next": "Siguiente",
+          "finish": "Finalizar",
+          "progress": "{current} / {total}"
+        },
+        "steps": {
+          "welcome": {
+            "title": "Bienvenido a EazyExchange",
+            "body": "Un recorrido rápido por las pestañas de su espacio. Puede interrumpirlo cuando quiera y retomarlo desde el menú de su cuenta."
+          },
+          "applications": {
+            "title": "Candidaturas",
+            "body": "Aquí llegan los expedientes de inscripción. Los revisa, los acepta o los rechaza, y los alumnos aceptados se incorporan al programa."
+          },
+          "files": {
+            "title": "Archivos",
+            "body": "Sus formularios y los documentos por recopilar. Aquí crea lo que cada familia deberá rellenar o subir."
+          },
+          "students": {
+            "title": "Alumnos",
+            "body": "La lista de alumnos inscritos y el avance de cada uno, expediente por expediente."
+          },
+          "communication": {
+            "title": "Comunicación",
+            "body": "Sus mensajes y sus recordatorios. Los recordatorios automáticos también se configuran desde esta pestaña."
+          },
+          "dashboard": {
+            "title": "Resumen",
+            "body": "La visión general: lo que está completo, lo que falta y lo que va con retraso, en todo el programa."
+          },
+          "settings": {
+            "title": "Ajustes",
+            "body": "Su cuenta, su centro, su equipo y su suscripción."
+          },
+          "finish": {
+            "title": "Listo",
+            "body": "Ya sabe moverse. Para volver a ver este recorrido, abra el menú de su cuenta, arriba a la derecha."
+          }
+        }
+      },
       "archivedBadge": "Archivado",
       "studentSearch": {
         "placeholder": "Buscar un alumno…"

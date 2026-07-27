@@ -14,6 +14,9 @@ export type TemplateKind = 'online' | 'pdf' | 'doc' | 'fillable'
 export type TemplateStatus = 'draft' | 'active'
 export type TemplateAudience = 'all' | 'conditional'
 export type SubmissionStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
+// Where an account sits in the optional organizer guided tour. One-way ladder:
+// pending → dismissed → completed (see lib/tour/state.ts).
+export type TourState = 'pending' | 'dismissed' | 'completed'
 
 // One e-signature inside a fillable submission. signed_at is null while the
 // submission is a draft; the submit action stamps it server-side (UTC ISO).
@@ -48,6 +51,7 @@ export type ExchangeProgramDetails = Tables<'exchange_program_details'>
 export type UserProfile = Override<Tables<'users'>, {
   role: Role
   org_role: OrgRole
+  tour_state: TourState
 }>
 export type ExchangeEnrollment = Tables<'exchange_enrollments'>
 export type FormTemplate = Override<Tables<'form_templates'>, {

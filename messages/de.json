@@ -282,6 +282,56 @@
         "settings": "Einstellungen",
         "signOut": "Abmelden"
       },
+      "tour": {
+        "menuItem": "Geführte Tour",
+        "invite": {
+          "title": "Entdecken Sie EazyExchange in 2 Minuten",
+          "body": "Ein kurzer Rundgang durch jeden Tab, damit Sie wissen, wo alles liegt.",
+          "start": "Starten",
+          "later": "Später"
+        },
+        "controls": {
+          "skip": "Überspringen",
+          "prev": "Zurück",
+          "next": "Weiter",
+          "finish": "Fertig",
+          "progress": "{current} / {total}"
+        },
+        "steps": {
+          "welcome": {
+            "title": "Willkommen bei EazyExchange",
+            "body": "Ein kurzer Rundgang durch die Tabs Ihres Bereichs. Sie können jederzeit abbrechen und ihn über Ihr Kontomenü wieder aufnehmen."
+          },
+          "applications": {
+            "title": "Bewerbungen",
+            "body": "Hier gehen die Anmeldeunterlagen ein. Sie prüfen sie, nehmen an oder lehnen ab, und angenommene Schüler treten dem Programm bei."
+          },
+          "files": {
+            "title": "Dateien",
+            "body": "Ihre Formulare und die Dokumente, die Sie einsammeln. Hier erstellen Sie, was jede Familie ausfüllen oder hochladen muss."
+          },
+          "students": {
+            "title": "Schüler",
+            "body": "Alle angemeldeten Schüler und der Fortschritt jedes einzelnen, Unterlage für Unterlage."
+          },
+          "communication": {
+            "title": "Kommunikation",
+            "body": "Ihre Nachrichten und Erinnerungen. Auch die automatischen Erinnerungen stellen Sie in diesem Tab ein."
+          },
+          "dashboard": {
+            "title": "Übersicht",
+            "body": "Das Gesamtbild: was vollständig ist, was fehlt und was überfällig ist, für das ganze Programm."
+          },
+          "settings": {
+            "title": "Einstellungen",
+            "body": "Ihr Konto, Ihre Schule, Ihr Team und Ihr Abonnement."
+          },
+          "finish": {
+            "title": "Das war alles",
+            "body": "Sie kennen sich jetzt aus. Um diese Tour erneut zu sehen, öffnen Sie oben rechts Ihr Kontomenü."
+          }
+        }
+      },
       "archivedBadge": "Archiviert",
       "studentSearch": {
         "placeholder": "Schüler suchen…"

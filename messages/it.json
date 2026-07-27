@@ -282,6 +282,56 @@
         "settings": "Impostazioni",
         "signOut": "Disconnetti"
       },
+      "tour": {
+        "menuItem": "Visita guidata",
+        "invite": {
+          "title": "Scopra EazyExchange in 2 minuti",
+          "body": "Un giro rapido di ogni scheda, per sapere dove si trova tutto.",
+          "start": "Iniziare",
+          "later": "Più tardi"
+        },
+        "controls": {
+          "skip": "Salta",
+          "prev": "Indietro",
+          "next": "Avanti",
+          "finish": "Fine",
+          "progress": "{current} / {total}"
+        },
+        "steps": {
+          "welcome": {
+            "title": "Benvenuto in EazyExchange",
+            "body": "Un giro rapido delle schede del suo spazio. Può interromperlo in qualsiasi momento e riprenderlo dal menu del suo account."
+          },
+          "applications": {
+            "title": "Candidature",
+            "body": "Qui arrivano i fascicoli di iscrizione. Li esamina, li accetta o li rifiuta, e gli studenti accettati entrano nel programma."
+          },
+          "files": {
+            "title": "File",
+            "body": "I suoi moduli e i documenti da raccogliere. Qui crea ciò che ogni famiglia dovrà compilare o caricare."
+          },
+          "students": {
+            "title": "Studenti",
+            "body": "L’elenco degli studenti iscritti e l’avanzamento di ognuno, fascicolo per fascicolo."
+          },
+          "communication": {
+            "title": "Comunicazione",
+            "body": "I suoi messaggi e i suoi solleciti. Anche i promemoria automatici si impostano da questa scheda."
+          },
+          "dashboard": {
+            "title": "Panoramica",
+            "body": "Il quadro d’insieme: ciò che è completo, ciò che manca e ciò che è in ritardo, per tutto il programma."
+          },
+          "settings": {
+            "title": "Impostazioni",
+            "body": "Il suo account, il suo istituto, il suo team e il suo abbonamento."
+          },
+          "finish": {
+            "title": "È tutto",
+            "body": "Ora sa orientarsi. Per rivedere questo giro, apra il menu del suo account, in alto a destra."
+          }
+        }
+      },
       "archivedBadge": "Archiviato",
       "studentSearch": {
         "placeholder": "Cerca uno studente…"

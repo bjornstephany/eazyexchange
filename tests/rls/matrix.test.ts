@@ -65,6 +65,11 @@ describe.each([
       tx`update users set exchange_order = array[${fx.exchangeA}]::uuid[] where id = ${fx.orgA}`))
   })
 
+  it('users: cannot change a school A organizer tour_state', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update users set tour_state = 'completed' where id = ${fx.orgA}`))
+  })
+
   it('exchanges: cannot read exchange A', async () => {
     expect(await readRows(uid(), (tx) => tx`select id from exchanges where id = ${fx.exchangeA}`)).toHaveLength(0)
   })
@@ -325,6 +330,19 @@ describe('own-school allow', () => {
   it('organizer A can set their own exchange_order', async () => {
     expect(await writeOutcome(sql, fx.orgA, (tx) =>
       tx`update users set exchange_order = array[${fx.exchangeA}]::uuid[] where id = ${fx.orgA}`)).toBe(1)
+  })
+
+  it('organizer A can set their own tour_state', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update users set tour_state = 'completed' where id = ${fx.orgA}`)).toBe(1)
+  })
+
+  // The grant stays column-scoped: adding tour_state must not have widened the
+  // UPDATE grant back to the whole row. `status` is the approval gate, so a
+  // regression here would let a pending signup approve itself.
+  it('organizer A still cannot set their own status', async () => {
+    expectBlocked(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update users set status = 'approved' where id = ${fx.orgA}`))
   })
 
   // Constraint (not RLS) coverage for the i18n Phase 3 widening: the funnel

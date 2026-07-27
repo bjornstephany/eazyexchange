@@ -7,6 +7,12 @@ export type SidebarNavItem = {
   label: string
   active: boolean
   icon: React.ReactNode
+  /**
+   * Anchor id for the guided tour (components/tour). Emitted as `data-tour`.
+   * These live in the layout, which is why the tour can change route without
+   * ever losing the element it is pointing at.
+   */
+  tourId?: string
 }
 
 export function SidebarNav({
@@ -23,6 +29,7 @@ export function SidebarNav({
           key={item.href}
           href={item.href}
           prefetch={true}
+          data-tour={item.tourId}
           // Collapsed rows have no text, so the accessible name comes from
           // title/aria-label instead.
           title={collapsed ? item.label : undefined}

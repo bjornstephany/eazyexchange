@@ -127,19 +127,25 @@ because a progress rollup means nothing until students exist.
 Also here, and the reason this file is pure:
 
 ```ts
-// Steps whose anchor is absent are skipped, in the direction of travel.
-// Returns null when there is nothing left that way.
-export function nextVisibleStep(
-  from: number,
-  direction: 1 | -1,
-  isPresent: (anchor: string | null) => boolean,
-): number | null
+// Indices into TOUR_STEPS whose anchor is on screen, plus the unanchored ones.
+export function visibleStepIndices(isPresent: (anchor: string) => boolean): number[]
 ```
 
-The skip path is real, not defensive dressing: `OrganizerShell` renders the four
+Resolved **once**, when the tour starts, which buys two things: the only DOM read
+happens inside a click handler rather than during render (nothing SSR-unsafe),
+and « n / total » counts steps the organizer will actually reach instead of
+advertising a total that silently shrinks.
+
+The filter is real, not defensive dressing: `OrganizerShell` renders the four
 session-scoped tabs only when an exchange exists (`navItems` is gated on
 `active`). Onboarding now guarantees a first exchange, but an organizer whose
-only exchange is unreachable would otherwise get a bubble pinned to nothing.
+only exchange is unreachable would otherwise get a bubble pinned to nothing —
+they get a 4-step tour (welcome, Aperçu, Réglages, finish) instead.
+
+`TOUR_STEPS` is declared `as const satisfies readonly TourStep[]` rather than
+with a `: readonly TourStep[]` annotation, which would widen `id` to `string`.
+`TourStepId` has to stay a literal union or next-intl rejects the dynamic key in
+`t(`steps.${id}.title`)`.
 
 **`lib/tour/state.ts`** — monotonicity, so a replay cannot downgrade a record:
 
@@ -179,7 +185,9 @@ context (mirroring the existing `ShellUiContext` precedent). Owns:
   rect: `box-shadow: 0 0 0 9999px rgb(15 23 42 / 0.55)`. No four-rectangle math,
   no SVG mask.
 - Puts a second full-screen fixed layer *under* it to swallow clicks on the app
-  behind, so a mis-click during the tour cannot navigate.
+  behind, so a mis-click during the tour cannot navigate. Deliberately **inert**
+  rather than dismiss-on-outside-click: a mis-click should not end the tour
+  either. Passer and Escape are the exits, and both are advertised.
 - Anchors `<Popover.Content side="right" align="start" sideOffset={12}
   collisionPadding={16}>` to that same div via `<Popover.Anchor asChild>`. One
   div is both the spotlight and the anchor — no invisible duplicate to keep in
@@ -326,11 +334,38 @@ BACKLOG.md                           (retire the queue line)
 package.json / lock                  (@radix-ui/react-popover)
 ```
 
-New production dependency: `@radix-ui/react-popover` — same vendor as the four
-Radix packages already in the tree, and it joins the weekly
-`pnpm audit --prod` surface.
+New production dependency: `@radix-ui/react-popover`, **pinned to exactly
+1.1.17** (no caret) — the same vintage as the `react-dialog` already in the tree.
+This is not fussiness: 1.1.19+ resolve a transitive
+`@radix-ui/react-use-layout-effect@1.1.4` that is not published, so
+`pnpm add @radix-ui/react-popover` at latest fails outright with
+`ERR_PNPM_NO_MATCHING_VERSION`. Revisit the pin when upstream republishes; the
+weekly `pnpm audit --prod` covers the package meanwhile (currently clean).
 
-## Manual steps (no code can do these)
+## Deploy state
 
-None. Unlike the Stripe portal and Google OAuth work, this feature needs no
-dashboard configuration — the migration and the deploy are the whole rollout.
+The migration is applied and stamped on **staging** (`20260727195338`), and the
+RLS matrix passes against it. **It is NOT yet applied to production**: the
+Supabase MCP returned `Unauthorized` for both `apply_migration` and
+`generate_typescript_types` this session, and hand-rolling prod DDL through the
+Management API is not the sanctioned path.
+
+Two consequences, in order:
+
+1. **Do not deploy the app to production before the migration.** `getProfile()`
+   now selects `tour_state`; against a prod schema without that column the select
+   fails and the organizer shell breaks for everyone — not just the tour.
+2. `types/supabase.ts` carries the three `tour_state` lines transplanted from a
+   real staging generation (verified: the only other difference between a staging
+   and a prod generation is a `graphql_public` block, which is a generator-option
+   difference, not schema drift). Regenerate it verbatim via MCP once auth is
+   restored, as the canonical Database step requires.
+
+## Manual steps
+
+- **Apply `20260727195338_users_tour_state.sql` to prod** via MCP
+  `apply_migration` (name `users_tour_state`), then `list_migrations` to confirm
+  the stamp matches the filename, then regenerate `types/supabase.ts`.
+
+No dashboard configuration is needed — unlike the Stripe portal and Google OAuth
+work, the migration and the deploy are the whole rollout.

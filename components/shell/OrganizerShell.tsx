@@ -13,6 +13,10 @@ import { useSidebarCollapsed } from './useSidebarCollapsed'
 import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
+import { TourProvider } from '@/components/tour/TourProvider'
+import { TourInviteCard } from '@/components/tour/TourInviteCard'
+import { TourMenuItem } from '@/components/tour/TourMenuItem'
+import type { TourState } from '@/types/db'
 
 export type ExchangeOption = { id: string; name: string; year: number; archived: boolean }
 
@@ -48,6 +52,9 @@ export function OrganizerShell({
   isTrial = false,
   remaining = Infinity,
   orgRole = 'admin',
+  // Defaults to 'completed' so the many existing shell tests (and any caller
+  // that does not care) never render the invitation card.
+  tourState = 'completed',
   children,
 }: {
   exchanges: ExchangeOption[]
@@ -58,6 +65,7 @@ export function OrganizerShell({
   isTrial?: boolean
   remaining?: number
   orgRole?: 'owner' | 'admin'
+  tourState?: TourState
   children: React.ReactNode
 }) {
   const t = useTranslations('organizer')
@@ -90,19 +98,19 @@ export function OrganizerShell({
 
   // Session-scoped tabs only exist once there is an exchange to scope them to.
   const navItems: SidebarNavItem[] = [
-    { href: '/dashboard', label: t('shell.nav.dashboard'), active: pathname === '/dashboard', icon: <IconOverview /> },
+    { href: '/dashboard', label: t('shell.nav.dashboard'), active: pathname === '/dashboard', icon: <IconOverview />, tourId: 'nav-dashboard' },
     ...(active
       ? [
-          { href: '/applications', label: t('shell.nav.applications'), active: pathname.startsWith('/applications'), icon: <IconApplications /> },
-          { href: '/forms', label: t('shell.nav.files'), active: pathname.startsWith('/forms') || pathname.startsWith('/documents'), icon: <IconForms /> },
-          { href: '/students', label: t('shell.nav.students'), active: pathname.startsWith('/students'), icon: <IconStudents /> },
-          { href: '/communication', label: t('shell.nav.communication'), active: pathname.startsWith('/communication'), icon: <IconCommunication /> },
+          { href: '/applications', label: t('shell.nav.applications'), active: pathname.startsWith('/applications'), icon: <IconApplications />, tourId: 'nav-applications' },
+          { href: '/forms', label: t('shell.nav.files'), active: pathname.startsWith('/forms') || pathname.startsWith('/documents'), icon: <IconForms />, tourId: 'nav-files' },
+          { href: '/students', label: t('shell.nav.students'), active: pathname.startsWith('/students'), icon: <IconStudents />, tourId: 'nav-students' },
+          { href: '/communication', label: t('shell.nav.communication'), active: pathname.startsWith('/communication'), icon: <IconCommunication />, tourId: 'nav-communication' },
         ]
       : []),
   ]
 
   const settingsItem: SidebarNavItem[] = [
-    { href: '/settings', label: t('shell.accountMenu.settings'), active: isSettings, icon: <IconSettings /> },
+    { href: '/settings', label: t('shell.accountMenu.settings'), active: isSettings, icon: <IconSettings />, tourId: 'nav-settings' },
   ]
 
   useEffect(() => {
@@ -131,6 +139,7 @@ export function OrganizerShell({
   }
 
   return (
+    <TourProvider initialState={tourState}>
     <div className="flex h-screen overflow-hidden bg-background">
       <Suspense fallback={null}>
         <NewExchangeAutoOpen onOpen={handleNewExchange} />
@@ -233,6 +242,7 @@ export function OrganizerShell({
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
+                  <TourMenuItem onStarted={() => setMenuOpen(false)} />
                   <button
                     type="button"
                     onClick={handleSignOut}
@@ -247,6 +257,7 @@ export function OrganizerShell({
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
           <div className="mx-auto max-w-6xl">
+            <TourInviteCard />
             <ShellUiContext.Provider value={shellUi}>
               {children}
             </ShellUiContext.Provider>
@@ -262,5 +273,6 @@ export function OrganizerShell({
       />
       <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
+    </TourProvider>
   )
 }
