@@ -21,8 +21,10 @@
 // Run (staging):
 //   set -a; source .env.staging; set +a
 //   node scripts/seed-demo.mjs          # or: pnpm seed:staging
+import { writeFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS } from './seed-cast.mjs'
+import { STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS } from './seed-cast.mjs'
+import { buildManifest } from './lib/manifest.mjs'
 
 const SEED_DOMAIN = 'seed.example.com'
 const SCHOOL_NAME = 'Lycée Démo (seed)'
@@ -417,6 +419,24 @@ for (const a of APPLICANTS) {
 
 const { count: applicationCount } = await db
   .from('applications').select('id', { count: 'exact', head: true }).eq('exchange_id', exchange.id)
+
+// The /dev page reads this instead of querying the database.
+writeFileSync(
+  '.seed-manifest.json',
+  JSON.stringify(
+    buildManifest({
+      password: PASSWORD,
+      domain: SEED_DOMAIN,
+      school: SCHOOL_NAME,
+      exchange: EXCHANGE_NAME,
+      students: STUDENTS,
+      highlights: HIGHLIGHTS,
+      labels: SHAPE_LABELS,
+    }),
+    null,
+    2,
+  ) + '\n',
+)
 
 const roster = STUDENTS.map((s) => `  ${s.slug}  ${s.name} — ${SHAPE_LABELS[s.shape]}`).join('\n')
 
