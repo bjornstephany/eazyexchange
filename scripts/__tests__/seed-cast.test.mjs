@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { STUDENTS, APPLICANTS, TEMPLATES, SHAPES, HIGHLIGHTS, SHAPE_LABELS } from '../seed-cast.mjs'
+import {
+  STUDENTS,
+  SMOKE_STUDENTS,
+  APPLICANTS,
+  TEMPLATES,
+  SHAPES,
+  HIGHLIGHTS,
+  SHAPE_LABELS,
+} from '../seed-cast.mjs'
 
 describe('seed cast', () => {
   it('has 20 students', () => {
@@ -67,5 +75,27 @@ describe('seed cast', () => {
     expect(new Set(APPLICANTS.map((a) => a.status))).toEqual(
       new Set(['invited', 'draft', 'submitted', 'rejected', 'accepted', 'declined']),
     )
+  })
+})
+
+describe('reserved smoke cast', () => {
+  it('reserves exactly two students', () => {
+    expect(SMOKE_STUDENTS).toHaveLength(2)
+    expect(SMOKE_STUDENTS.map((s) => s.slug)).toEqual(['smoke-01', 'smoke-02'])
+  })
+
+  it('leaves them untouched so a reset is a no-op on a fresh seed', () => {
+    for (const s of SMOKE_STUDENTS) {
+      expect(s.shape).toBe('untouched')
+    }
+  })
+
+  it('keeps them out of the twenty human-facing students and the highlight set', () => {
+    const human = STUDENTS.map((s) => s.slug)
+    for (const s of SMOKE_STUDENTS) {
+      expect(human).not.toContain(s.slug)
+      expect(HIGHLIGHTS).not.toContain(s.slug)
+    }
+    expect(STUDENTS).toHaveLength(20)
   })
 })

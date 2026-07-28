@@ -63,6 +63,18 @@ export const STUDENTS = [
   { slug: 'eleve-20', name: 'Malo Guérin', shape: 'one-rejected' },
 ]
 
+// Two students reserved for the automated smoke suite. They exist for the same
+// reason `pnpm dev` never auto-reseeds: one local Supabase stack is shared by
+// every worktree, so a run that approved a seeded student's form would both
+// change another session's world and fail on its second run, finding the form
+// already approved. Two rather than one so a Playwright retry or a second
+// worker never contends on the same row. `untouched` means the reset is a no-op
+// on a freshly seeded world.
+export const SMOKE_STUDENTS = [
+  { slug: 'smoke-01', name: 'Smoke Un (tests)', shape: 'untouched' },
+  { slug: 'smoke-02', name: 'Smoke Deux (tests)', shape: 'untouched' },
+]
+
 // Surfaced first on /dev — one student per interesting extreme, so the common
 // cases are one click away without scrolling the roster.
 export const HIGHLIGHTS = ['eleve-01', 'eleve-05', 'eleve-10', 'eleve-15']

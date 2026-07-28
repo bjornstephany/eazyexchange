@@ -64,3 +64,31 @@ describe('buildManifest', () => {
     })
   })
 })
+
+describe('buildManifest — reserved smoke accounts', () => {
+  const withSmoke = {
+    ...base,
+    smokeStudents: [{ slug: 'smoke-01', name: 'Smoke Un', shape: 'untouched' }],
+  }
+
+  it('appends them after the human students and flags them', () => {
+    const m = buildManifest(withSmoke)
+    expect(m.accounts.at(-1)).toMatchObject({
+      email: 'smoke-01@seed.example.com',
+      role: 'student',
+      smoke: true,
+      highlight: false,
+    })
+  })
+
+  it('marks every other account as not reserved', () => {
+    const m = buildManifest(withSmoke)
+    for (const a of m.accounts.slice(0, -1)) {
+      expect(a.smoke).toBe(false)
+    }
+  })
+
+  it('defaults to no reserved accounts when none are passed', () => {
+    expect(buildManifest(base).accounts.some((a) => a.smoke)).toBe(false)
+  })
+})

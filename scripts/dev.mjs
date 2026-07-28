@@ -178,7 +178,7 @@ const appUrl = `http://localhost:${port}`
 const manifest = existsSync('.seed-manifest.json')
   ? JSON.parse(readFileSync('.seed-manifest.json', 'utf8'))
   : null
-const students = manifest?.accounts.filter((a) => a.role === 'student').length ?? 0
+const students = manifest?.accounts.filter((a) => a.role === 'student' && !a.smoke).length ?? 0
 
 process.stdout.write(
   `\n  ${appUrl}\n` +

@@ -48,7 +48,8 @@ export default async function DevPage({
   }
 
   const organizers = manifest.accounts.filter((a) => a.role === 'organizer')
-  const students = manifest.accounts.filter((a) => a.role === 'student')
+  const students = manifest.accounts.filter((a) => a.role === 'student' && !a.smoke)
+  const reserved = manifest.accounts.filter((a) => a.role === 'student' && a.smoke)
   const highlighted = students.filter((s) => s.highlight)
   const rest = students.filter((s) => !s.highlight)
 
@@ -93,6 +94,23 @@ export default async function DevPage({
           ))}
         </div>
       </details>
+
+      {reserved.length > 0 && (
+        <div className="mt-6 opacity-50">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Réservés aux tests automatisés
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Le dossier de ces comptes est réécrit à chaque <code>pnpm ship</code>. Ne cliquez pas
+            ici pour explorer l’application.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            {reserved.map((a) => (
+              <AccountButton key={a.email} account={a} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="mt-10 text-sm text-slate-500">
         <a className="underline" href="http://127.0.0.1:54324" target="_blank" rel="noreferrer">

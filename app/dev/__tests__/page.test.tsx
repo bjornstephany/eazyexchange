@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render as renderDom } from '@testing-library/react'
 
 // vi.mock is hoisted above every const in this file, so anything its factories
 // close over has to be created inside vi.hoisted.
@@ -74,5 +75,29 @@ describe('/dev', () => {
     h.readManifest.mockReturnValue(null)
     await expect(render()).resolves.toBeTruthy()
     expect(h.notFound).not.toHaveBeenCalled()
+  })
+})
+
+describe('/dev — reserved smoke accounts', () => {
+  it('lists them in their own section and keeps them out of the student count', async () => {
+    h.readManifest.mockReturnValue({
+      ...h.manifest,
+      accounts: [
+        ...h.manifest.accounts.map((a) => ({ ...a, smoke: false })),
+        {
+          email: 'smoke-01@seed.example.com',
+          name: 'Smoke Un',
+          role: 'student' as const,
+          note: 'réservé aux tests automatisés',
+          highlight: false,
+          smoke: true,
+        },
+      ],
+    })
+    const { container } = renderDom((await render()) as React.ReactElement)
+    expect(container.textContent).toContain('Réservés aux tests automatisés')
+    expect(container.textContent).toContain('smoke-01@seed.example.com')
+    // One human student in the fixture — the reserved one must not be counted.
+    expect(container.textContent).toContain('1 élèves')
   })
 })

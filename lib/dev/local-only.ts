@@ -7,6 +7,10 @@ export type SeedAccount = {
   role: 'organizer' | 'student'
   note: string
   highlight: boolean
+  // Reserved for the automated smoke suite (scripts/seed-cast.mjs
+  // SMOKE_STUDENTS). Clicking one by hand is harmless but its dossier is
+  // rewritten by the next `pnpm ship`.
+  smoke?: boolean
 }
 
 export type SeedManifest = {

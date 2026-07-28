@@ -6,9 +6,26 @@
 // The two organizer display names are copied from the createAuthUser calls in
 // seed-demo.mjs. If those change, this follows them.
 
-export function buildManifest({ password, domain, school, exchange, students, highlights, labels }) {
+export function buildManifest({
+  password,
+  domain,
+  school,
+  exchange,
+  students,
+  smokeStudents = [],
+  highlights,
+  labels,
+}) {
   const highlighted = new Set(highlights)
   const at = (slug) => `${slug}@${domain}`
+  const student = (s, smoke) => ({
+    email: at(s.slug),
+    name: s.name,
+    role: 'student',
+    note: smoke ? 'réservé aux tests automatisés' : (labels[s.shape] ?? s.shape),
+    highlight: !smoke && highlighted.has(s.slug),
+    smoke,
+  })
 
   return {
     version: 1,
@@ -16,15 +33,10 @@ export function buildManifest({ password, domain, school, exchange, students, hi
     school,
     exchange,
     accounts: [
-      { email: at('orga'), name: 'Claire Organisatrice', role: 'organizer', note: 'owner', highlight: true },
-      { email: at('orga-2'), name: 'Marc Collaborateur', role: 'organizer', note: 'admin', highlight: false },
-      ...students.map((s) => ({
-        email: at(s.slug),
-        name: s.name,
-        role: 'student',
-        note: labels[s.shape] ?? s.shape,
-        highlight: highlighted.has(s.slug),
-      })),
+      { email: at('orga'), name: 'Claire Organisatrice', role: 'organizer', note: 'owner', highlight: true, smoke: false },
+      { email: at('orga-2'), name: 'Marc Collaborateur', role: 'organizer', note: 'admin', highlight: false, smoke: false },
+      ...students.map((s) => student(s, false)),
+      ...smokeStudents.map((s) => student(s, true)),
     ],
   }
 }
