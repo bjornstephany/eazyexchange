@@ -18,6 +18,7 @@ export async function generateMetadata({
   return {
     title: `${doc.title} · Eazyexchange`,
     description: doc.intro ?? doc.title,
+    alternates: { canonical: `/legal/${slug}` },
   }
 }
 

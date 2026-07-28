@@ -9,6 +9,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       // Everything below is either authenticated, token-gated, or an API
       // route — none of it should be crawled or indexed.
+      // Keep this list in sync with the app router segments: anything
+      // reachable but not public 302s to /login for an anonymous crawler, and
+      // Google files every one of those under "Page with redirect".
       disallow: [
         '/api/',
         '/auth/',
@@ -26,6 +29,14 @@ export default function robots(): MetadataRoute.Robots {
         '/applications',
         '/settings',
         '/my-forms',
+        '/infos',
+        '/communication',
+        '/admin',
+        '/pending',
+        // Not a route — but the middleware redirects every unmatched path to
+        // /login rather than 404ing, so a stale or guessed URL is a redirect
+        // too. /login itself is noindex (see app/(auth)/login/layout.tsx);
+        // it stays crawlable so that signal is actually read.
       ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
