@@ -8,6 +8,12 @@ import { OverviewView } from '@/components/dashboard/OverviewView'
 import { EmptyDashboard } from '@/components/dashboard/EmptyDashboard'
 
 export default async function DashboardPage() {
+  // Conditional so TypeScript does not treat the rest of the function as
+  // unreachable (an unconditional throw fails `tsc`, and then the BUILD catches
+  // the break, not the browser suite — which proves nothing about the specs).
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('deliberate break — proving the smoke job catches it')
+  }
   const exchanges = await getExchanges()
   const cookieStore = await cookies()
   const active = resolveActiveExchange(exchanges, cookieStore.get(ACTIVE_EXCHANGE_COOKIE)?.value)
