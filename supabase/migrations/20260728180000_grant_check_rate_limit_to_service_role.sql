@@ -1,0 +1,22 @@
+-- check_rate_limit() is called only by the service-role admin client
+-- (lib/rate-limit.ts -> createAdminClient). The migration that created it
+-- (20260630000004_rate_limit_and_enrolling.sql) revoked EXECUTE from
+-- public/anon/authenticated and noted that "the admin (service-role) client
+-- bypasses these grants".
+--
+-- It does not. service_role is an ordinary Postgres role and function EXECUTE
+-- grants apply to it exactly as they do to anyone else. The revoke appeared to
+-- work only because older projects create functions carrying PostgreSQL's
+-- default PUBLIC EXECUTE, which service_role inherited through PUBLIC.
+--
+-- Newer Supabase stacks — including every fresh `supabase start`, and so every
+-- local stack and every CI run — revoke that default. The function's ACL is
+-- then {postgres=X/postgres} and every call from the app fails with
+-- "permission denied for function check_rate_limit". lib/rate-limit.ts fails
+-- CLOSED on error for mail-sending caps, so the anonymous application funnel
+-- refuses to start an application at all.
+--
+-- Granting service_role explicitly states the intent the original comment
+-- already had. It is idempotent and a no-op on any project where the implicit
+-- PUBLIC grant is still in place.
+grant execute on function public.check_rate_limit(text, int, int) to service_role;
