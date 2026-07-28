@@ -62,3 +62,9 @@ ds-bundle/
 
 # per-worktree dev port (pnpm wt)
 .wtport
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
