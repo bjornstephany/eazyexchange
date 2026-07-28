@@ -21,7 +21,10 @@
 // Run (staging):
 //   set -a; source .env.staging; set +a
 //   node scripts/seed-demo.mjs          # or: pnpm seed:staging
+import { writeFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS } from './seed-cast.mjs'
+import { buildManifest } from './lib/manifest.mjs'
 
 const SEED_DOMAIN = 'seed.example.com'
 const SCHOOL_NAME = 'Lycée Démo (seed)'
@@ -139,61 +142,9 @@ async function wipe() {
   }
 }
 
-// --- the cast ---------------------------------------------------------------
-
-// Enrolled students, each pinned to one form-completion shape so every state
-// the organizer dashboard can render is on screen at once.
-const STUDENTS = [
-  { slug: 'eleve-01', name: 'Camille Bernard', shape: 'untouched' },
-  { slug: 'eleve-02', name: 'Louis Moreau', shape: 'untouched' },
-  { slug: 'eleve-03', name: 'Emma Petit', shape: 'all-approved' },
-  { slug: 'eleve-04', name: 'Hugo Lefebvre', shape: 'all-submitted' },
-  { slug: 'eleve-05', name: 'Léa Roux', shape: 'mixed' },
-  { slug: 'eleve-06', name: 'Gabriel Fournier', shape: 'mixed' },
-  { slug: 'eleve-07', name: 'Chloé Girard', shape: 'one-rejected' },
-  { slug: 'eleve-08', name: 'Raphaël Bonnet', shape: 'half-done' },
-  { slug: 'eleve-09', name: 'Alice Dupont', shape: 'half-done' },
-  { slug: 'eleve-10', name: 'Noah Lambert', shape: 'overdue' },
-  { slug: 'eleve-11', name: 'Jade Mercier', shape: 'overdue' },
-  { slug: 'eleve-12', name: 'Arthur Vincent', shape: 'all-approved' },
-]
-
-// Applicants who have NOT been enrolled — the funnel side of the app.
-const APPLICANTS = [
-  { slug: 'cand-invite', name: 'Sacha Blanc', status: 'invited' },
-  { slug: 'cand-draft-1', name: 'Manon Faure', status: 'draft' },
-  { slug: 'cand-draft-2', name: 'Théo Garnier', status: 'draft' },
-  { slug: 'cand-soumis-1', name: 'Inès Chevalier', status: 'submitted' },
-  { slug: 'cand-soumis-2', name: 'Nathan Robin', status: 'submitted' },
-  { slug: 'cand-soumis-3', name: 'Lina Marchand', status: 'submitted' },
-  { slug: 'cand-refuse', name: 'Enzo Perrin', status: 'rejected' },
-  { slug: 'cand-accepte', name: 'Zoé Dumont', status: 'accepted' },
-  { slug: 'cand-decline', name: 'Adam Leroy', status: 'declined' },
-]
-
-// Forms the exchange asks for. Deadlines are spread on purpose: one already
-// past (so "overdue" is reachable), one in three days (so the final-week
-// reminder pacing is reachable), the rest comfortably ahead.
-const TEMPLATES = [
-  { key: 'medical', name: 'Autorisation médicale', kind: 'fillable', deadline: 14 },
-  { key: 'decharge', name: 'Décharge de responsabilité', kind: 'fillable', deadline: 14 },
-  { key: 'absence', name: "Demande d'absence", kind: 'fillable', deadline: 3 },
-  { key: 'famille', name: "Engagement de famille d'accueil", kind: 'fillable', deadline: 21 },
-  { key: 'passeport', name: 'Copie du passeport', kind: 'pdf', deadline: -4 },
-  { key: 'esta', name: 'Autorisation ESTA', kind: 'pdf', deadline: 30 },
-]
-
-// Which submission status each shape gives the Nth form. `null` = the student
-// never opened it, so no submission row exists at all.
-const SHAPES = {
-  untouched: [null, null, null, null, null, null],
-  'all-approved': ['approved', 'approved', 'approved', 'approved', 'approved', 'approved'],
-  'all-submitted': ['submitted', 'submitted', 'submitted', 'submitted', 'submitted', 'submitted'],
-  mixed: ['approved', 'submitted', 'draft', null, 'approved', null],
-  'one-rejected': ['approved', 'rejected', 'submitted', 'approved', null, null],
-  'half-done': ['approved', 'approved', 'draft', null, null, null],
-  overdue: [null, null, null, null, null, 'draft'],
-}
+// The cast (STUDENTS / APPLICANTS / TEMPLATES / SHAPES) lives in
+// ./seed-cast.mjs — this file executes on import, so keeping the data in a
+// side-effect-free module is what lets tests assert on it.
 
 // A complete, valid application. Realistic enough that review screens, the
 // good-news email and the generated PDFs all have something to render.
@@ -469,6 +420,26 @@ for (const a of APPLICANTS) {
 const { count: applicationCount } = await db
   .from('applications').select('id', { count: 'exact', head: true }).eq('exchange_id', exchange.id)
 
+// The /dev page reads this instead of querying the database.
+writeFileSync(
+  '.seed-manifest.json',
+  JSON.stringify(
+    buildManifest({
+      password: PASSWORD,
+      domain: SEED_DOMAIN,
+      school: SCHOOL_NAME,
+      exchange: EXCHANGE_NAME,
+      students: STUDENTS,
+      highlights: HIGHLIGHTS,
+      labels: SHAPE_LABELS,
+    }),
+    null,
+    2,
+  ) + '\n',
+)
+
+const roster = STUDENTS.map((s) => `  ${s.slug}  ${s.name} — ${SHAPE_LABELS[s.shape]}`).join('\n')
+
 console.log(`
 Seeded ${where}.
 
@@ -482,10 +453,6 @@ Seeded ${where}.
 Logins (password: ${PASSWORD})
   organizer     ${email('orga')}       owner
   collaborator  ${email('orga-2')}     admin
-  students      ${email('eleve-01')} … ${email('eleve-12')}
 
-  eleve-01  nothing started        eleve-07  one form rejected
-  eleve-03  everything approved    eleve-08  half done
-  eleve-04  everything submitted   eleve-10  overdue
-  eleve-05  mixed states           eleve-12  everything approved
+${roster}
 ${isLocal(url) ? '\n  All email lands in Inbucket: http://127.0.0.1:54324\n' : ''}`)
