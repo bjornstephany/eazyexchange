@@ -52,7 +52,7 @@ describe('anon read RPCs (W3)', () => {
 // the service role bypassed grants. It does not, and on any stack where
 // PostgreSQL's default PUBLIC EXECUTE has been revoked (every fresh
 // `supabase start`) that left service_role with no way to call it at all.
-// 20260728180000 grants it explicitly.
+// 20260728192537 grants it explicitly.
 describe('check_rate_limit grants', () => {
   it('service_role can execute it', async () => {
     const rows = await sql.begin(async (tx) => {

@@ -73,7 +73,7 @@ Three pre-existing defects, each blocking the suite and each fixed here.
    and `/dev` organizer sign-in landed on `/pending`.
 
 2. **`check_rate_limit` was never granted to `service_role`**
-   (migration `20260728180000`). `20260630000004` revoked EXECUTE from
+   (migration `20260728192537`). `20260630000004` revoked EXECUTE from
    `public, anon, authenticated` on the stated belief that "the admin
    (service-role) client bypasses these grants". It does not. That only appeared
    to work because older projects carry PostgreSQL's default PUBLIC EXECUTE,
@@ -83,10 +83,18 @@ Three pre-existing defects, each blocking the suite and each fixed here.
    caps. The anonymous application funnel refused every application, locally and
    in CI. Ships with RLS matrix cases in `tests/rls/rpc.test.ts`.
 
-   **Not yet applied to staging or prod.** On prod the implicit grant is
-   presumably still in place (the funnel works there), which makes this
-   migration a no-op — but it must still be applied staging-first, per
-   `CLAUDE.md`.
+   **Applied 2026-07-28: staging, then prod.** Both hosted projects already had
+   an **explicit** `service_role=X` grant — Supabase's default privileges granted
+   it at function-creation time, and `revoke … from public, anon, authenticated`
+   never removed it. So the migration is a true no-op on both; its value is
+   making the intent explicit so fresh environments (local, CI) match. Prod's ACL
+   is byte-identical before and after (`{postgres=X/postgres,service_role=X/postgres}`,
+   `anon`/`authenticated` still denied), so no type regeneration was needed.
+
+   Prod's ledger stamped `20260728192537`, not the filename's `20260728180000`;
+   the file was `git mv`d to the stamped version and staging's and the local
+   stack's ledger rows were updated to match. All three ledgers and the 68 local
+   files now agree in both directions.
 
 3. **Middleware redirects resolve to `localhost`** regardless of bind address
    (`d3a9723`). `NextResponse.redirect(new URL(dest, request.url))` emitted
