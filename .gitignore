@@ -32,6 +32,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# written by `pnpm seed`; lists the local test accounts and their password
+.seed-manifest.json
+
 # vercel
 .vercel
 
@@ -59,3 +62,9 @@ ds-bundle/
 
 # per-worktree dev port (pnpm wt)
 .wtport
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

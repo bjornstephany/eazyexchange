@@ -10,6 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:rls": "vitest run --config vitest.rls.config.ts",
+    "prepare": "node scripts/install-hooks.mjs",
+    "ship": "node scripts/ship.mjs",
+    "smoke": "playwright test",
     "seed": "node scripts/seed-demo.mjs",
     "seed:staging": "bash -c 'test -f .env.staging || { echo \"No .env.staging in $PWD — run this from the main checkout.\"; exit 1; }; set -a; source .env.staging; set +a; node scripts/seed-demo.mjs'",
     "sync:schools": "node scripts/sync-school-registry.mjs",
@@ -42,6 +45,7 @@
   },
   "devDependencies": {
     "@expo-google-fonts/noto-sans": "^0.4.2",
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

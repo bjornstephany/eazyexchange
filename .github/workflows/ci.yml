@@ -39,11 +39,67 @@ jobs:
       - run: supabase start   # applies supabase/migrations to the local stack
       - run: pnpm test:rls
 
+  # Ring 3: the enforcing copy of `pnpm ship`'s browser suite. Runs in parallel
+  # with unit and rls, so CI wall-clock barely moves.
+  #
+  # `build` is new to CI (the unit job runs tsc, not build), so this job has to
+  # supply what the build reads. The Supabase values are the local stack's fixed
+  # public constants — the same ones in scripts/lib/local-target.mjs, which every
+  # `supabase start` prints on every machine. The Stripe values are placeholders:
+  # the smoke never reaches Stripe, and lib/billing/stripe.ts constructs the
+  # client lazily.
+  #
+  # NEXT_PUBLIC_APP_URL is localhost, not 127.0.0.1, and must stay that way:
+  # NEXT_PUBLIC_* are inlined at build time, and playwright.config.ts serves and
+  # browses on localhost because Next resolves middleware redirect hosts to
+  # localhost. A mismatch makes every client-side navigation cross-origin.
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      ADMIN_EMAILS: admin@example.com
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      STRIPE_PRICE_STARTER: price_placeholder_starter
+      STRIPE_PRICE_GROWTH: price_placeholder_growth
+      STRIPE_PRICE_SCALE: price_placeholder_scale
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start   # applies supabase/migrations AND supabase/config.toml
+      - run: pnpm seed
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm exec playwright test
+      # A smoke failure with no trace is a smoke failure investigated by
+      # re-running it locally — which is slower than reading the report.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   # Sole path to production once vercel.json sets git.deploymentEnabled.main: false.
-  # Builds on Vercel's infra (env vars live there), not in Actions. Gated on both
-  # check jobs so a red test or RLS leak blocks the deploy.
+  # Builds on Vercel's infra (env vars live there), not in Actions. Gated on all
+  # three check jobs so a red test, an RLS leak or a broken critical path in the
+  # browser blocks the deploy.
   deploy:
-    needs: [unit, rls]
+    needs: [unit, rls, smoke]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:

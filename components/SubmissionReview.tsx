@@ -44,7 +44,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
 
       {!showReject ? (
         <div className="flex gap-3">
-          <Button onClick={handleApprove} disabled={loading !== null}>
+          <Button data-testid="approve-submission" onClick={handleApprove} disabled={loading !== null}>
             {loading === 'approve' ? 'Approving…' : 'Approve'}
           </Button>
           <Button variant="outline" onClick={() => setShowReject(true)} disabled={loading !== null}>
