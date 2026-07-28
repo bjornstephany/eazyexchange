@@ -28,7 +28,10 @@ export function ErrorState({
 }: { error: Error; reset: () => void; home: { href: string; label: string } }) {
   const c = asAppTranslator(useTranslations('common'))
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 bg-background px-4 text-center">
+    <div
+      data-testid="error-state"
+      className="flex min-h-[60vh] flex-col items-center justify-center gap-6 bg-background px-4 text-center"
+    >
       <div className="flex items-center">
         <span className="h-12 w-12 flex-none rounded-full bg-navy" />
         <span className="w-24 border-t-[3px] border-dashed border-[#AEB7CB]" />
