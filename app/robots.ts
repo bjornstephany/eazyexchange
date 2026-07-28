@@ -33,6 +33,11 @@ export default function robots(): MetadataRoute.Robots {
         '/communication',
         '/admin',
         '/pending',
+        // Local-only quick-access page. It 404s outside development, so a
+        // crawler would never reach it — but the segment exists in the app
+        // router, and this list is the record of every segment that is not
+        // meant to be crawled.
+        '/dev',
         // Not a route — but the middleware redirects every unmatched path to
         // /login rather than 404ing, so a stale or guessed URL is a redirect
         // too. /login itself is noindex (see app/(auth)/login/layout.tsx);
