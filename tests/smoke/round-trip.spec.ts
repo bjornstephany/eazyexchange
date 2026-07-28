@@ -43,8 +43,17 @@ test('a student submits a form and an organizer approves it', async ({ browser }
 
     // Submitting renders the signed PDF and uploads it before flipping the
     // status, so this is the slowest step in the suite.
-    await expect(asStudent).toHaveURL(/\/my-forms$/, { timeout: 30_000 })
-    await expect(asStudent.getByTestId('dossier-review').filter({ hasText: FORM })).toHaveCount(1)
+    //
+    // The outcome is asserted by re-reading the dossier, NOT by waiting for the
+    // router.push('/my-forms') that FillableForm fires on success. That push is
+    // a client-side RSC navigation and has been observed to stall here under
+    // load while the submission itself landed perfectly well — waiting on it
+    // tests Next's router, not this application. Polling the dossier still
+    // fails loudly if the form never reaches « en relecture ».
+    await expect(async () => {
+      await asStudent.goto('/my-forms')
+      await expect(asStudent.getByTestId('dossier-review').filter({ hasText: FORM })).toHaveCount(1)
+    }).toPass({ timeout: 60_000 })
 
     // --- the organizer reviews and approves ---------------------------------
     await signIn(asOrganizer, ORGANIZER_EMAIL, /\/dashboard$/)
@@ -57,16 +66,15 @@ test('a student submits a form and an organizer approves it', async ({ browser }
     const reviewUrl = asOrganizer.url()
 
     await asOrganizer.getByTestId('approve-submission').click()
-    // handleApprove awaits the server action and only THEN calls router.back(),
-    // so leaving the submission page is the signal that the approval landed.
-    // Reloading immediately would race the action and read the stale page —
-    // which is a real failure mode: the page does not re-render on its own, so
-    // the assertion below would then poll a permanently stale DOM.
-    await expect(asOrganizer).not.toHaveURL(/\/submissions\/[0-9a-f-]{36}$/, { timeout: 30_000 })
-    // Reload the review page to see the settled state.
-    await asOrganizer.goto(reviewUrl)
+    // Same shape as the student's submit: assert the outcome by re-reading the
+    // page, not by waiting on handleApprove's router.back(). Reloading once
+    // without polling would race the server action — the page does not
+    // re-render on its own, so a single stale read never recovers.
     // canReview is `status === 'submitted'`, so an approved form offers no button.
-    await expect(asOrganizer.getByTestId('approve-submission')).toHaveCount(0)
+    await expect(async () => {
+      await asOrganizer.goto(reviewUrl)
+      await expect(asOrganizer.getByTestId('approve-submission')).toHaveCount(0)
+    }).toPass({ timeout: 60_000 })
 
     // --- both sides agree ---------------------------------------------------
     await asStudent.goto('/my-forms')

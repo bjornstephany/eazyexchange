@@ -19,10 +19,10 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { readEnvFile } from './lib/env-file.mjs'
 import { resolvePort } from './lib/port.mjs'
+import { stackIsUp } from './lib/stack.mjs'
 import {
   isLocalSupabaseUrl,
   LOCAL_API_URL,
-  LOCAL_ANON_KEY,
   LOCAL_INBOX_URL,
   LOCAL_SERVICE_KEY,
   LOCAL_STUDIO_URL,
@@ -78,22 +78,6 @@ if (!remote && !isLocalSupabaseUrl(supabaseUrl)) {
 }
 
 // --- 3. the stack -----------------------------------------------------------
-
-async function stackIsUp() {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 2000)
-  try {
-    const res = await fetch(`${LOCAL_API_URL}/rest/v1/`, {
-      headers: { apikey: LOCAL_ANON_KEY },
-      signal: controller.signal,
-    })
-    return res.ok
-  } catch {
-    return false
-  } finally {
-    clearTimeout(timer)
-  }
-}
 
 if (!remote) {
   if (await stackIsUp()) {
