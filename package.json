@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:rls": "vitest run --config vitest.rls.config.ts",
+    "prepare": "node scripts/install-hooks.mjs",
     "ship": "node scripts/ship.mjs",
     "smoke": "playwright test",
     "seed": "node scripts/seed-demo.mjs",

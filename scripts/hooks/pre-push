@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Ring 1 of the ship gate: the checks cheap enough to run on EVERY push,
+# including a README fix. Roughly ninety seconds — build (54s) and the browser
+# smoke live in `pnpm ship` instead, because a hook that costs four minutes
+# turns --no-verify into muscle memory.
+#
+# THIS FILE IS THE CANONICAL COPY. .git/hooks/pre-push is an installed artefact,
+# written by scripts/install-hooks.mjs (run by `pnpm wt` and by pnpm's
+# `prepare`). Edit this one.
+#
+# Fires on every `git push`. Emergency override: git push --no-verify
+set -uo pipefail
+
+fail() {
+  echo "" >&2
+  echo "❌ pre-push FAILED at: $1 — push aborted (main auto-deploys to prod)." >&2
+  echo "   Reproduce it with:  $2" >&2
+  echo "   Emergency override: git push --no-verify" >&2
+  exit 1
+}
+
+echo "🔍 pre-push: lint · test · tsc --noEmit · test:rls"
+
+pnpm lint              || fail "lint"      "pnpm lint"
+pnpm test              || fail "unit tests" "pnpm test"
+pnpm exec tsc --noEmit || fail "types"     "pnpm exec tsc --noEmit"
+
+# test:rls needs the local Supabase stack, and the dominant local failure is
+# Docker Desktop being closed on Windows. Blocking a documentation push on that
+# would buy no safety: CI runs test:rls unconditionally and `deploy` is gated on
+# it, so nothing unverified can reach production either way.
+if node scripts/stack-up.mjs; then
+  pnpm test:rls || fail "RLS matrix" "pnpm test:rls"
+else
+  echo ""
+  echo "⚠️  ─────────────────────────────────────────────────────────────"
+  echo "⚠️   RLS tests SKIPPED — the local Supabase stack is down."
+  echo "⚠️   Start Docker Desktop on Windows, then \`pnpm dev\`, to run"
+  echo "⚠️   them here. CI runs \`pnpm test:rls\` unconditionally and the"
+  echo "⚠️   deploy job is gated on it."
+  echo "⚠️  ─────────────────────────────────────────────────────────────"
+  echo ""
+fi
+
+echo "✅ pre-push checks passed."

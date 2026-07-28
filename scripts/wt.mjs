@@ -5,7 +5,7 @@
  * The worktree itself is created by the EnterWorktree tool, which switches the
  * running session into it (one session = one worktree = one branch, without
  * having to start a second session). EnterWorktree gives you the directory and
- * the branch; this script adds the three things it does not know about:
+ * the branch; this script adds the four things it does not know about:
  *
  *   1. .env.local / .env.staging  — symlinked from the main checkout, which is
  *      the only place they exist (they are gitignored, so a fresh worktree has
@@ -13,6 +13,9 @@
  *   2. .wtport                    — a deterministic dev port, so two worktrees
  *      can never race for 3000 and leave you testing the wrong branch.
  *   3. node_modules               — a worktree starts empty.
+ *   4. .git/hooks/pre-push        — the ship gate's ring 1, which lives in
+ *      version control at scripts/hooks/pre-push and would otherwise exist
+ *      only on the laptop that first wrote it.
  *
  * Run it once, from inside the worktree, right after EnterWorktree.
  */
@@ -71,6 +74,9 @@ console.log(`→ dev port pinned to ${port}`)
 
 console.log('→ pnpm install')
 execFileSync('pnpm', ['install', '--silent'], { stdio: 'inherit', cwd: here })
+
+console.log('→ installing the pre-push hook')
+execFileSync('node', ['scripts/install-hooks.mjs'], { stdio: 'inherit', cwd: here })
 
 console.log(`
 ✓ ready — ${branch} in ${here}
