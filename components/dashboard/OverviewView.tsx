@@ -125,7 +125,7 @@ export function OverviewView(props: OverviewProps) {
           </Link>
         </div>
       ) : (
-        <div>
+        <div data-testid="overview">
       <div className="mb-[22px]">
         <h1 className="font-display text-[26px] font-bold tracking-tight">{t('dashboard.overviewTitle')}</h1>
         <p className="text-sm text-muted-foreground">{subline}</p>
@@ -189,6 +189,7 @@ export function OverviewView(props: OverviewProps) {
             {filteredRows.map((row) => (
               <div
                 key={row.key}
+                data-testid="lifecycle-row"
                 onClick={() =>
                   row.kind === 'applicant'
                     ? router.push(`/applications?id=${row.app.id}`)

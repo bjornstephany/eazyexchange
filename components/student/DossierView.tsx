@@ -17,7 +17,7 @@ function TodoCard({ item, showTag, t, c, locale }: {
 }) {
   const isFix = item.status === 'rejected'
   return (
-    <div className={`flex items-center gap-4 rounded-[14px] border bg-card px-5 py-4 ${isFix ? 'border-[#F0C9C3]' : ''}`}>
+    <div data-testid="dossier-todo" className={`flex items-center gap-4 rounded-[14px] border bg-card px-5 py-4 ${isFix ? 'border-[#F0C9C3]' : ''}`}>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="font-display text-[15px] font-semibold text-navy">{item.name}</span>
@@ -65,7 +65,7 @@ export async function DossierView({ dossier, firstName }: { dossier: Dossier; fi
   const allSent = total > 0 && todoCount === 0 && reviewCount > 0
 
   return (
-    <div>
+    <div data-testid="dossier">
       <div className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t('shell.tabs.dossier')}</div>
       <h1 className="mb-1.5 font-display text-[30px] font-bold leading-[1.1] tracking-tight text-navy">{t('dossier.greeting', { name: firstName })}</h1>
       <p className="mb-6 text-[14.5px] leading-relaxed text-muted-foreground">{dossierSubline(dossier, t)}</p>
@@ -129,7 +129,7 @@ export async function DossierView({ dossier, firstName }: { dossier: Dossier; fi
               <SectionHeader>{t('dossier.sections.review', { n: reviewCount })}</SectionHeader>
               <div className="flex flex-col gap-2.5">
                 {review.map(item => (
-                  <div key={item.id} className="flex items-center gap-3.5 rounded-[14px] border bg-card px-5 py-3.5">
+                  <div key={item.id} data-testid="dossier-review" className="flex items-center gap-3.5 rounded-[14px] border bg-card px-5 py-3.5">
                     <span className="min-w-0 flex-1">
                       <span className="font-display text-[14px] font-semibold text-navy">{item.name}</span>
                       <span className="ml-2 text-[12.5px] text-muted-foreground">{t('dossier.card.reviewNote')}</span>
@@ -146,7 +146,7 @@ export async function DossierView({ dossier, firstName }: { dossier: Dossier; fi
               <SectionHeader>{t('dossier.sections.done', { n: doneCount })}</SectionHeader>
               <div className="overflow-hidden rounded-[14px] border bg-card">
                 {done.map(item => (
-                  <div key={item.id} className="flex items-center gap-3 border-b px-5 py-3 last:border-b-0">
+                  <div key={item.id} data-testid="dossier-done" className="flex items-center gap-3 border-b px-5 py-3 last:border-b-0">
                     <span className="flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full bg-success text-[12px] font-bold text-success-text">✓</span>
                     <span className="flex-1 text-[13.5px] text-foreground">{item.name}</span>
                     <span className="font-mono text-[11px] text-placeholder">{t('dossier.card.approved')}</span>
