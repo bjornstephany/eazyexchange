@@ -10,7 +10,13 @@ import { LOCAL_API_URL, LOCAL_ANON_KEY, LOCAL_SERVICE_KEY } from './scripts/lib/
 // server-action error redaction is live and /dev correctly 404s, so the suite
 // must sign in through /login like a real user.
 const port = resolvePort(existsSync('.wtport') ? readFileSync('.wtport', 'utf8') : null)
-const baseURL = `http://127.0.0.1:${port}`
+// `localhost`, deliberately, NOT 127.0.0.1. middleware.ts redirects with
+// `new URL(dest, request.url)`, and Next resolves request.url's host to
+// `localhost` whatever address the server is bound to. Browsing on 127.0.0.1
+// therefore makes every middleware redirect cross-origin: the RSC prefetch of
+// `/` is blocked by CORS, and client-side router.push navigations stall or fall
+// back to a full page load. Same host on both sides and it is all same-origin.
+const baseURL = `http://localhost:${port}`
 
 // Pinned to the local stack rather than inherited from .env.local: the smoke
 // submits forms and approves them, and it must be impossible to aim it at a
@@ -44,7 +50,7 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm exec next start --port ${port} --hostname 127.0.0.1`,
+    command: `pnpm exec next start --port ${port} --hostname localhost`,
     url: `${baseURL}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,

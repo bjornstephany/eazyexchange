@@ -231,6 +231,7 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
           ) : (
             <>
               <input
+                data-testid={`sig-name-${b.key}`}
                 aria-label={t('forms.fillable.fullNameFor', { role: b.roleLabel })}
                 placeholder={t('forms.fillable.fullName')}
                 value={s.full_name}
@@ -239,6 +240,7 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
               />
               <label className="flex cursor-pointer items-center gap-2 text-[13px]">
                 <input type="checkbox" checked={s.approved}
+                  data-testid={`sig-approve-${b.key}`}
                   aria-label={t('forms.fillable.approvedFor', { role: b.roleLabel })}
                   onChange={e => setSig(b.key, { approved: e.target.checked })}
                   className="h-4 w-4 rounded border-border" />
@@ -268,7 +270,7 @@ export function FillableForm({ assignmentId, def, values, initialData, readOnly,
             <Button variant="outline" onClick={() => handleSave(false)} disabled={loading !== null}>
               {loading === 'draft' ? t('forms.saving') : t('forms.saveDraft')}
             </Button>
-            <Button onClick={() => handleSave(true)} disabled={loading !== null} className="bg-brand hover:bg-brand-hover">
+            <Button data-testid="fillable-submit" onClick={() => handleSave(true)} disabled={loading !== null} className="bg-brand hover:bg-brand-hover">
               {loading === 'submit' ? t('forms.sending') : t('forms.fillable.submit')}
             </Button>
           </div>
