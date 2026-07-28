@@ -20,6 +20,11 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/accept-invite') || pathname.startsWith('/signup')
   const isPublicRoute =
     pathname === '/' ||
+    // Local-only quick-access page. Public so it renders with no session AND
+    // while logged in as someone else — switching accounts is its whole job.
+    // It guards itself: app/dev/page.tsx 404s outside development or against a
+    // non-local database.
+    pathname.startsWith('/dev') ||
     // CGU / CGV / confidentialité / mentions légales. These are linked from the
     // signup consent line and the landing footer — both seen by visitors with no
     // account — and advertised to anonymous crawlers by robots.ts / sitemap.ts.
