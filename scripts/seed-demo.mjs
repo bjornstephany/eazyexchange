@@ -23,8 +23,9 @@
 //   node scripts/seed-demo.mjs          # or: pnpm seed:staging
 import { writeFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS } from './seed-cast.mjs'
+import { STUDENTS, SMOKE_STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS } from './seed-cast.mjs'
 import { buildManifest } from './lib/manifest.mjs'
+import { applyStudentShape, dayFactory } from './lib/student-shape.mjs'
 
 const SEED_DOMAIN = 'seed.example.com'
 const SCHOOL_NAME = 'Lycée Démo (seed)'
@@ -79,8 +80,7 @@ const where = isLocal(url) ? 'LOCAL' : `STAGING (${stagingRef})`
 
 // --- helpers ----------------------------------------------------------------
 
-const DAY = 86_400_000
-const day = (offset) => new Date(Date.now() + offset * DAY).toISOString()
+const day = dayFactory()
 const dayOnly = (offset) => day(offset).slice(0, 10)
 const email = (slug) => `${slug}@${SEED_DOMAIN}`
 
@@ -223,14 +223,23 @@ const school = await insertOne('schools', {
 
 const organizerId = await createAuthUser('orga', 'Claire Organisatrice')
 const collaboratorId = await createAuthUser('orga-2', 'Marc Collaborateur')
+// `status: 'approved'` is explicit and load-bearing, exactly as it is in
+// tests/rls/seed.ts. set_initial_user_status() only auto-approves a student, an
+// allowlisted address, or someone joining a school that ALREADY has an approved
+// organizer — a seeded owner matches none of those, because their school is
+// brand new. Left to the 'pending' default they are invisible to my_role(),
+// which silently denies every organizer RLS policy: /dev sign-in lands on
+// /pending, and the seed's own approvals match zero rows without erroring.
 await insert('users', [
   {
     id: organizerId, school_id: school.id, role: 'organizer', org_role: 'owner',
     full_name: 'Claire Organisatrice', email: email('orga'), locale: 'fr',
+    status: 'approved',
   },
   {
     id: collaboratorId, school_id: school.id, role: 'organizer', org_role: 'admin',
     full_name: 'Marc Collaborateur', email: email('orga-2'), locale: 'fr',
+    status: 'approved',
   },
 ])
 
@@ -270,6 +279,16 @@ await insert('exchange_info_cards', [
     body: `Réunion d'information le ${dayOnly(10)} à 18h au CDI.` },
 ])
 
+// Signed in here rather than after the loop: applyStudentShape performs each
+// student's approvals inline, the way the app does them — as the organizer,
+// through RLS and the review guard.
+const asOrganizer = createClient(url, anonKey, { auth: { persistSession: false } })
+const { error: signInError } = await asOrganizer.auth.signInWithPassword({
+  email: email('orga'),
+  password: PASSWORD,
+})
+if (signInError) throw new Error(`organizer sign-in: ${signInError.message}`)
+
 // Templates. The insert trigger assigns them to enrolled students, so these
 // must exist before the enrollments below.
 const templates = []
@@ -295,13 +314,9 @@ for (const t of TEMPLATES) {
   templates.push(row)
 }
 
-// Review outcomes are collected while building students, then applied at the
-// end through an authenticated organizer client.
-const pendingReviews = []
-
 // Enrolled students. Enrollment fans out one assignment per template; the
 // submissions below are then written onto those assignments.
-for (const s of STUDENTS) {
+for (const s of [...STUDENTS, ...SMOKE_STUDENTS]) {
   const userId = await createAuthUser(s.slug, s.name)
   await insert('users', [{
     id: userId, school_id: school.id, role: 'student',
@@ -320,74 +335,15 @@ for (const s of STUDENTS) {
 
   await insert('exchange_enrollments', [{ exchange_id: exchange.id, user_id: userId }])
 
-  const { data: assignments, error } = await db
-    .from('assignments')
-    .select('id, template_id')
-    .eq('student_id', userId)
-  if (error) throw new Error(`assignments ${s.slug}: ${error.message}`)
-
-  const byTemplate = new Map(assignments.map((a) => [a.template_id, a.id]))
-  const shape = SHAPES[s.shape]
-
-  // trg_guard_submission_review rejects review columns from any caller that is
-  // not an organizer of the school — the service role included, since
-  // auth.uid() is null for it. So every submission is inserted in the state a
-  // student could have produced, and the reviewed ones are then moved by a real
-  // organizer session below (see reviewAsOrganizer).
-  const submissions = []
-  const toReview = []
-  templates.forEach((t, i) => {
-    const status = shape[i]
-    if (!status) return
-    const assignmentId = byTemplate.get(t.id)
-    const reviewed = status === 'approved' || status === 'rejected'
-    submissions.push({
-      assignment_id: assignmentId,
-      status: reviewed ? 'submitted' : status,
-      submitted_at: status === 'draft' ? null : day(-6 + i),
-    })
-    if (reviewed) toReview.push({ assignmentId, status, at: day(-2 + i) })
+  await applyStudentShape({
+    db,
+    asOrganizer,
+    organizerId,
+    studentId: userId,
+    shape: SHAPES[s.shape],
+    templateIds: templates.map((t) => t.id),
+    day,
   })
-  if (submissions.length) await insert('submissions', submissions)
-  pendingReviews.push(...toReview)
-
-  // Back-date the reminder clock on the untouched forms so the pacing logic in
-  // send-reminders has something to act on rather than starting from zero.
-  const reminded = assignments
-    .filter((a) => !submissions.some((sub) => sub.assignment_id === a.id))
-    .map((a) => a.id)
-  if (reminded.length) {
-    const { error: err } = await db
-      .from('assignments')
-      .update({ last_reminded_at: day(-8) })
-      .in('id', reminded)
-    if (err) throw new Error(`last_reminded_at ${s.slug}: ${err.message}`)
-  }
-}
-
-// Approvals and rejections, done the way the app does them: as the organizer,
-// through RLS and the review guard. Anything wrong with the seeded shape fails
-// here rather than producing rows the app could never have created.
-const asOrganizer = createClient(url, anonKey, { auth: { persistSession: false } })
-const { error: signInError } = await asOrganizer.auth.signInWithPassword({
-  email: email('orga'),
-  password: PASSWORD,
-})
-if (signInError) throw new Error(`organizer sign-in: ${signInError.message}`)
-
-for (const r of pendingReviews) {
-  const { error } = await asOrganizer
-    .from('submissions')
-    .update({
-      status: r.status,
-      reviewer_id: organizerId,
-      reviewed_at: r.at,
-      review_note: r.status === 'rejected'
-        ? 'Document illisible, merci de le renvoyer.'
-        : null,
-    })
-    .eq('assignment_id', r.assignmentId)
-  if (error) throw new Error(`review ${r.assignmentId}: ${error.message}`)
 }
 
 // Applicants still in the funnel.
@@ -430,6 +386,7 @@ writeFileSync(
       school: SCHOOL_NAME,
       exchange: EXCHANGE_NAME,
       students: STUDENTS,
+      smokeStudents: SMOKE_STUDENTS,
       highlights: HIGHLIGHTS,
       labels: SHAPE_LABELS,
     }),
@@ -448,6 +405,7 @@ Seeded ${where}.
   Apply page  /apply/demo-2026
   Forms       ${templates.length}  (one overdue, one due in 3 days)
   Students    ${STUDENTS.length} enrolled, every completion state covered
+  Reserved    ${SMOKE_STUDENTS.map((s) => s.slug).join(', ')} — automated smoke only, do not click
   Applicants  ${applicationCount} rows — invited / draft / submitted / rejected / accepted / declined / enrolled
 
 Logins (password: ${PASSWORD})
