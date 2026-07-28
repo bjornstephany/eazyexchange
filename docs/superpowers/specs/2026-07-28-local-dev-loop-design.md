@@ -95,8 +95,11 @@ express.
 | New shape | What it covers |
 |---|---|
 | `just-started` | exactly one draft — the "opened it once and stopped" case reminders target |
-| `awaiting-review` | everything submitted, nothing reviewed — the organizer's real inbox state |
-| `overdue-partial` | some approved, the past-deadline form untouched — mixed urgency in one row |
+| `one-missing` | five approved, the sixth never opened — chasing a single last form, the most common real organizer state |
+| `overdue-partial` | progress on some forms while the past-deadline one sits untouched — mixed urgency in one row |
+
+(An `awaiting-review` shape was considered and dropped: it would have been
+byte-identical to the existing `all-submitted`.)
 
 Two of the twenty are deliberate layout landmines: one very long hyphenated name
 and one with heavy accents, so overflow and encoding bugs surface in the seed
@@ -157,7 +160,7 @@ sequence. Every step is near-instant when already satisfied.
 1. Resolve port from .wtport                             (exists today)
 2. GUARD: refuse to boot unless the Supabase URL is local
 3. Stack down?         → pnpm exec supabase start
-4. Migrations behind?  → pnpm exec supabase migration up --local
+4. Always              → pnpm exec supabase migration up --local
 5. World absent?       → node scripts/seed-demo.mjs
 6. Override NEXT_PUBLIC_APP_URL from the pinned port, boot Next
 7. Print the banner: /dev URL, inbox, studio, what was seeded
@@ -174,9 +177,11 @@ declines. `pnpm dev --remote` remains for the rare deliberate case.
 reachable as `pnpm exec supabase`) already drives it — verified with
 `supabase status`.
 
-**Step 4** compares migration filenames in `supabase/migrations/` against
-`supabase_migrations.schema_migrations` using the `postgres` package already in
-dependencies. No new dependency.
+**Step 4 runs unconditionally.** `supabase migration up --local` is already
+idempotent — measured at 1.7s and printing "Local database is up to date" when
+there is nothing to apply. Computing a pending-migration diff first would add a
+database client, a ledger query and a comparison, all to skip a 1.7s no-op. The
+cheaper correct design is to let the CLI decide.
 
 **Flags:** `--reseed` (rebuild the world), `--reset` (drop, re-migrate, reseed),
 `--remote` (skip steps 2–5).
@@ -210,9 +215,9 @@ The orchestration is I/O, so tests target decisions rather than process spawns.
 
 | Test | Subject |
 |---|---|
-| `isLocal` predicate | remote URLs, localhost, 127.0.0.1, missing value |
+| `isLocalSupabaseUrl` predicate | remote URLs, localhost, 127.0.0.1, `::1`, missing/malformed value |
 | Port resolution | `.wtport` present / absent / malformed |
-| Pending-migration diff | filenames vs. applied ledger rows |
+| `.env` parsing | comments, quotes, blank lines, `=` inside a value |
 | Seed invariants | 20 students, unique slugs, every referenced shape defined, manifest shape |
 | `/dev` guards | production `NODE_ENV` → 404; remote Supabase URL → 404 |
 
