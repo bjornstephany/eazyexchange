@@ -282,6 +282,12 @@
         "settings": "Impostazioni",
         "signOut": "Disconnetti"
       },
+      "notifications": {
+        "trigger": "Notifiche",
+        "title": "Notifiche",
+        "empty": "Nulla in sospeso",
+        "badgeLabel": "{n, plural, one {# novità} other {# novità}}"
+      },
       "tour": {
         "menuItem": "Visita guidata",
         "invite": {

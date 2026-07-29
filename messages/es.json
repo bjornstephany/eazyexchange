@@ -282,6 +282,12 @@
         "settings": "Ajustes",
         "signOut": "Cerrar sesión"
       },
+      "notifications": {
+        "trigger": "Notificaciones",
+        "title": "Notificaciones",
+        "empty": "Nada pendiente",
+        "badgeLabel": "{n, plural, one {# novedad} other {# novedades}}"
+      },
       "tour": {
         "menuItem": "Visita guiada",
         "invite": {

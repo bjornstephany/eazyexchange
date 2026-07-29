@@ -282,6 +282,12 @@
         "settings": "Settings",
         "signOut": "Sign out"
       },
+      "notifications": {
+        "trigger": "Notifications",
+        "title": "Notifications",
+        "empty": "Nothing pending",
+        "badgeLabel": "{n, plural, one {# new item} other {# new items}}"
+      },
       "tour": {
         "menuItem": "Guided tour",
         "invite": {
