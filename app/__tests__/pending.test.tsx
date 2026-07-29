@@ -5,7 +5,11 @@ const getProfile = vi.fn()
 const redirect = vi.fn((url: string) => { throw new Error(`REDIRECT:${url}`) })
 
 vi.mock('@/lib/supabase/request', () => ({ getProfile: () => getProfile() }))
-vi.mock('next/navigation', () => ({ redirect: (url: string) => redirect(url) }))
+// useRouter: the page renders SignOutLink, a client component that needs it.
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => redirect(url),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}))
 
 import PendingPage from '../pending/page'
 
@@ -26,6 +30,15 @@ describe('/pending', () => {
     render(await PendingPage())
     expect(screen.queryByText(/en cours d’examen/i)).not.toBeInTheDocument()
     expect(screen.getByText(/contact@eazyexchange\.com/)).toBeInTheDocument()
+  })
+
+  // The only escape hatch: every other sign-out lives in the organizer/student
+  // shells, which a non-approved account can never reach. Without this, someone
+  // who signed up with the wrong address can never switch accounts.
+  it.each(['pending', 'rejected'])('offers a %s account a way to sign out', async (status) => {
+    getProfile.mockResolvedValue({ status, role: 'organizer' })
+    render(await PendingPage())
+    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument()
   })
 
   it('sends an approved organizer to the app', async () => {

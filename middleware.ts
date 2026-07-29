@@ -67,8 +67,16 @@ export async function middleware(request: NextRequest) {
     // both — /billing and its service-role checkout, /admin — inherited nothing
     // and rendered for a pending signup. Gating here means a route is covered
     // the moment it exists, instead of the day someone remembers to add a
-    // check. Non-approved means /pending, full stop.
+    // check. Non-approved means /pending for every app route.
+    //
+    // Except / — that's the marketing page, not the app. Redirecting it too
+    // trapped the account in a two-page loop: /pending's own logo links to /,
+    // which bounced straight back, so a pending organizer could reach neither
+    // the landing page nor the pricing nor (before the sign-out link on
+    // /pending) any way to leave. It leaks nothing: an unapproved account sees
+    // exactly the page the anonymous visitor beside them sees.
     if (profile.status !== 'approved') {
+      if (pathname === '/') return supabaseResponse
       return NextResponse.redirect(new URL('/pending', request.url))
     }
 

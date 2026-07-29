@@ -104,12 +104,15 @@ describe('middleware', () => {
     expect(res.headers.get('location')).toContain('/my-forms')
   })
 
-  // The signup approval gate: not approved means /pending is the only page.
-  it('redirects a pending organizer from / to /pending', async () => {
+  // The approval gate covers the app, not the marketing page. Bouncing a
+  // non-approved account off / trapped it in a two-page loop: /pending's own
+  // logo links to /, which redirected straight back to /pending — no landing
+  // page, no pricing, no way out. Public means public.
+  it.each(['pending', 'rejected'])('lets a %s organizer read the landing page /', async (status) => {
     user = { id: 'u3' }
-    profileRow = { role: 'organizer', full_name: 'Org', status: 'pending' }
+    profileRow = { role: 'organizer', full_name: 'Org', status }
     const res = await middleware(req('/'))
-    expect(res.headers.get('location')).toContain('/pending')
+    expect(res.headers.get('location')).toBeNull()
   })
 
   it('redirects a rejected organizer off /login to /pending', async () => {
@@ -178,7 +181,7 @@ describe('middleware', () => {
 
     // Public means public: a logged-in pending user is no more and no less
     // privileged than the anonymous visitor sitting next to them.
-    it.each(['/legal/cgv', '/apply/some-slug', '/invite/tok123', '/join/tok123', '/api/health'])(
+    it.each(['/', '/legal/cgv', '/apply/some-slug', '/invite/tok123', '/join/tok123', '/api/health'])(
       'still serves the public route %s',
       async (path) => {
         const res = await middleware(req(path))
