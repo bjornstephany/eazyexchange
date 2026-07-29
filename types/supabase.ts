@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_custom_questions: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          locale: string
+          normalized_label: string | null
+          options: Json | null
+          school_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          locale: string
+          normalized_label?: string | null
+          options?: Json | null
+          school_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          locale?: string
+          normalized_label?: string | null
+          options?: Json | null
+          school_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_custom_questions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           created_at: string
@@ -557,6 +598,7 @@ export type Database = {
       exchanges: {
         Row: {
           application_deadline: string | null
+          application_fields: Json | null
           application_open: boolean
           apply_slug: string | null
           archived_at: string | null
@@ -575,6 +617,7 @@ export type Database = {
         }
         Insert: {
           application_deadline?: string | null
+          application_fields?: Json | null
           application_open?: boolean
           apply_slug?: string | null
           archived_at?: string | null
@@ -593,6 +636,7 @@ export type Database = {
         }
         Update: {
           application_deadline?: string | null
+          application_fields?: Json | null
           application_open?: boolean
           apply_slug?: string | null
           archived_at?: string | null
@@ -1116,6 +1160,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      application_question_suggestions: {
+        Args: { p_locale: string }
+        Returns: {
+          label: string
+          options: Json
+          schools: number
+          type: string
+        }[]
+      }
       assignment_school: { Args: { aid: string }; Returns: string }
       assignment_student: { Args: { aid: string }; Returns: string }
       check_rate_limit: {
