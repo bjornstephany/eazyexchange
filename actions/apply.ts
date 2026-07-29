@@ -519,7 +519,7 @@ export async function downloadApplicationRecap(token: string, language?: Locale)
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name)')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name, application_fields)')
     .eq('resume_token', token)
     .maybeSingle()
   // Structured returns, not throws: prod redacts thrown Server Action messages.
@@ -564,6 +564,7 @@ export async function downloadApplicationRecap(token: string, language?: Locale)
     photoBytes,
     locale: effectiveLocale,
     t: await namespaceTranslator(effectiveLocale, 'apply'),
+    sections: resolveApplicationSections(parseApplicationFields(app.exchanges?.application_fields)),
   })
 
   return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }

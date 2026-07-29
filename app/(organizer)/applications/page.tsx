@@ -16,8 +16,14 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   if (!active) return <EmptyDashboard />
 
   if (id) {
-    const { application, photoUrl } = await getApplicationForReview(id)
-    return <ApplicationDetail application={application} photoUrl={photoUrl} exchangeName={active.name} year={active.year} />
+    const { application, photoUrl, applicationFields } = await getApplicationForReview(id)
+    return (
+      <ApplicationDetail
+        application={application} photoUrl={photoUrl}
+        exchangeName={active.name} year={active.year}
+        applicationFields={applicationFields}
+      />
+    )
   }
 
   const applications = await listApplications(active.id, { withPhotos: true })

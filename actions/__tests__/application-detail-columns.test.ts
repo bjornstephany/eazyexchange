@@ -42,11 +42,14 @@ beforeEach(() => { selectCalls = [] })
 describe('getApplicationForReview', () => {
   it('never selects the private funnel tokens', async () => {
     await getApplicationForReview('app-1')
-    expect(selectCalls).toHaveLength(1)
-    const cols = selectCalls[0]
-    expect(cols).not.toBe('*')
-    expect(cols).not.toContain('resume_token')
-    expect(cols).not.toContain('invite_token')
+    // One select for the application row, one for the exchange's own
+    // questionnaire (application_fields) — neither carries a funnel token.
+    expect(selectCalls).toHaveLength(2)
+    for (const cols of selectCalls) {
+      expect(cols).not.toBe('*')
+      expect(cols).not.toContain('resume_token')
+      expect(cols).not.toContain('invite_token')
+    }
   })
 
   it('selects every column the detail view consumes', async () => {

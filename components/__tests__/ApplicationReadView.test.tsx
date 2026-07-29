@@ -33,4 +33,17 @@ describe('ApplicationReadView', () => {
     renderWithIntl(await ApplicationReadView({ data: {}, photoUrl: null }))
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
+
+  it('renders a custom question verbatim and skips an emptied section', async () => {
+    const sections = [
+      { id: 'student', fields: [{ id: 'c_7f3a', type: 'textarea' as const, label: 'Sait nager ?' }] },
+      { id: 'parents', fields: [] },
+      { id: 'hosting', fields: [] },
+      { id: 'profile', fields: [] },
+    ]
+    renderWithIntl(await ApplicationReadView({ data: { c_7f3a: 'Oui' }, photoUrl: null, sections }))
+    expect(screen.getByText('Sait nager ?')).toBeInTheDocument()
+    expect(screen.getByText('Oui')).toBeInTheDocument()
+    expect(screen.queryByText('Parents')).not.toBeInTheDocument()
+  })
 })
