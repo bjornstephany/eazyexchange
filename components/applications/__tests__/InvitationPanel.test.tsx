@@ -49,8 +49,10 @@ describe('InvitationPanel', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Ouvert' }))
     expect(onToggleOpen).toHaveBeenCalled()
-    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-10-01' } })
-    expect(onDeadlineChange).toHaveBeenCalledWith('2026-10-01')
+    // The controls hand it 2026-09-01, so the calendar opens on September 2026.
+    fireEvent.click(screen.getByLabelText('Date limite'))
+    fireEvent.click(screen.getByRole('button', { name: '20' }))
+    expect(onDeadlineChange).toHaveBeenCalledWith('2026-09-20')
   })
 
   it('exposes the apply link and the invite-by-email entry point', () => {

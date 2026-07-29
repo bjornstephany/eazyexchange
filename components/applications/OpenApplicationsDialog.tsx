@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/ui/date-field'
 import { Label } from '@/components/ui/label'
 import { InviteByEmailForm } from '@/components/applications/InviteByEmailForm'
 
@@ -86,12 +87,11 @@ export function OpenApplicationsDialog({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="open-applications-deadline">{t('deadlineLabel')}</Label>
-          <Input
+          <DateField
             id="open-applications-deadline"
-            type="date"
             value={deadline}
             disabled={saving}
-            onChange={(e) => chooseDeadline(e.target.value)}
+            onChange={chooseDeadline}
             className="h-12"
           />
         </div>

@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { shortDate } from '@/lib/dates'
 import type { Locale } from '@/lib/i18n/config'
 import { Button } from '@/components/ui/button'
+import { DateField } from '@/components/ui/date-field'
 
 export type InvitationControls = {
   open: boolean
@@ -64,13 +65,12 @@ export function InvitationPanel({
         </button>
         <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
           <span id="candidatures-deadline-label">{t('deadlineLabel')}</span>
-          <input
-            aria-labelledby="candidatures-deadline-label"
-            type="date"
+          <DateField
+            ariaLabelledBy="candidatures-deadline-label"
             value={deadline}
             disabled={saving}
-            onChange={(e) => onDeadlineChange(e.target.value)}
-            className="h-[34px] rounded-[8px] border px-2.5 text-[13px]"
+            onChange={onDeadlineChange}
+            className="h-[34px] w-auto min-w-[150px] rounded-[8px] text-[13px]"
           />
         </label>
         <div className="flex items-center gap-2 sm:ml-auto">

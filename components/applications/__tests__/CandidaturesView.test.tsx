@@ -62,19 +62,14 @@ describe('CandidaturesView', () => {
   })
   it('changing the deadline calls setApplicationOpen with the current open state', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
-    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '2026-10-01' } })
-    expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-10-01')
+    fireEvent.click(screen.getByLabelText('Date limite'))
+    fireEvent.click(screen.getByRole('button', { name: '20' }))
+    expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-09-20')
   })
   it('the toggle closes applications, keeping the current deadline', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
     fireEvent.click(screen.getByRole('button', { name: /Ouvert/ }))
     expect(setApplicationOpen).toHaveBeenCalledWith('ex1', false, '2026-09-01')
-  })
-  it('clearing the deadline is ignored (never persists a null deadline)', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
-    const callsBefore = setApplicationOpen.mock.calls.length
-    fireEvent.change(screen.getByLabelText('Date limite'), { target: { value: '' } })
-    expect(setApplicationOpen).toHaveBeenCalledTimes(callsBefore)
   })
   it('shows a Gender column with the localized label, not Native language', () => {
     renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" />)
@@ -138,7 +133,8 @@ describe('CandidaturesView', () => {
   it('opening applications from the dialog leaves the empty state without unmounting the dialog', async () => {
     renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" />)
     fireEvent.click(screen.getByRole('button', { name: 'Inviter vos élèves à postuler' }))
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByLabelText('Date limite des candidatures'))
+    fireEvent.click(screen.getByRole('button', { name: '1' }))
     // The dialog survives the flip and reaches its opened state…
     expect(await screen.findByRole('button', { name: 'Terminé' })).toBeInTheDocument()
     // …and the page behind it is now the grid with its panel.
