@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/supabase/request'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
+import { SignOutLink } from '@/components/auth/SignOutLink'
 
 const SUPPORT_EMAIL = 'contact@eazyexchange.com'
 
@@ -50,6 +51,7 @@ export default async function PendingPage() {
             </p>
           </>
         )}
+        <SignOutLink />
       </AuthCard>
     </div>
   )
