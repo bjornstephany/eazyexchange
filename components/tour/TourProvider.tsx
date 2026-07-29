@@ -99,10 +99,13 @@ export function TourProvider({
   useEffect(() => {
     if (autoStarted.current) return
     if (initialState !== 'pending') return
-    // Only welcome and finish are on screen — no reachable exchange, so the
-    // shell renders none of the session-scoped tabs. « Voici un tour de vos
-    // onglets » followed by « c'est tout » is worse than no tour, so leave the
-    // state pending and let a later visit, one with an exchange, spend it.
+    // Unreachable from the real shell: OrganizerShell renders nav-dashboard
+    // and nav-settings unconditionally, so welcome + those two + finish alone
+    // already total 4 — the count here can never be as low as 2 with that
+    // shell mounted. This guards a TourProvider mounted without the shell
+    // (a future host page, or a test), where « Voici un tour de vos onglets »
+    // followed immediately by « c'est tout » would be worse than no tour at
+    // all — so leave the state pending and let a later visit spend it.
     if (visibleStepIndices(anchorPresent).length <= 2) return
     autoStarted.current = true
     start()

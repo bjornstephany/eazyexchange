@@ -83,7 +83,8 @@ describe('monthGrid', () => {
         expect(monthGrid('fr', 2026, 8)[0]![1], tz).toBe('2026-09-01')
       }
     } finally {
-      process.env.TZ = original
+      if (original === undefined) delete process.env.TZ
+      else process.env.TZ = original
     }
   })
 })
@@ -129,7 +130,8 @@ describe('todayISO', () => {
       expect(todayISO()).toBe('2026-09-02')
       vi.useRealTimers()
     } finally {
-      process.env.TZ = originalTZ
+      if (originalTZ === undefined) delete process.env.TZ
+      else process.env.TZ = originalTZ
       vi.useRealTimers()
     }
   })

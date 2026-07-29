@@ -1,17 +1,22 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent, within } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import { DateField } from '@/components/ui/date-field'
+
+// The same "12 septembre 2026" formatting date-field.tsx uses (via lib/dates'
+// longDate), computed independently here so the day-cell aria-label
+// assertions aren't circular.
+function longFr(iso: string) {
+  return new Intl.DateTimeFormat('fr', { day: 'numeric', month: 'long', year: 'numeric' })
+    .format(new Date(`${iso}T00:00:00`))
+}
 
 // Opens the popover and hands back the onChange spy. Default value puts the
 // view on September 2026, a month whose 1st is a Tuesday.
 function open(value = '2026-09-10') {
   const onChange = vi.fn()
   renderWithIntl(<DateField value={value} onChange={onChange} />)
-  const name = value
-    ? new Intl.DateTimeFormat('fr', { day: 'numeric', month: 'long', year: 'numeric' })
-        .format(new Date(`${value}T00:00:00`))
-    : 'Choisir une date'
+  const name = value ? longFr(value) : 'Choisir une date'
   fireEvent.click(screen.getByRole('button', { name }))
   return onChange
 }
@@ -27,14 +32,30 @@ describe('the trigger', () => {
     expect(screen.getByRole('button', { name: 'Choisir une date' })).toBeInTheDocument()
   })
 
-  it('carries the id and the external label, so <Label htmlFor> still pairs', () => {
+  it('carries the id, and combines the external label with the formatted date in the accessible name', () => {
+    renderWithIntl(
+      <>
+        <span id="lbl">Date limite</span>
+        <DateField value="2026-09-01" onChange={vi.fn()} id="fld" ariaLabelledBy="lbl" />
+      </>,
+    )
+    // Both the external <Label>'s text and the trigger's own date must reach
+    // a screen reader — a bare "Date limite" (the label alone) is the
+    // regression this guards: an <input type="date"> always announced both
+    // its label and its value, and losing the value here would be worse than
+    // the native picker it replaced.
+    const trigger = screen.getByRole('button', { name: 'Date limite 1 septembre 2026' })
+    expect(trigger).toHaveAttribute('id', 'fld')
+  })
+
+  it('falls back to just the label when there is no date yet', () => {
     renderWithIntl(
       <>
         <span id="lbl">Date limite</span>
         <DateField value="" onChange={vi.fn()} id="fld" ariaLabelledBy="lbl" />
       </>,
     )
-    expect(screen.getByLabelText('Date limite')).toHaveAttribute('id', 'fld')
+    expect(screen.getByRole('button', { name: 'Date limite Choisir une date' })).toBeInTheDocument()
   })
 })
 
@@ -70,7 +91,7 @@ describe('paging through months', () => {
 describe('picking a day', () => {
   it('reports the ISO date once and closes', () => {
     const onChange = open()
-    fireEvent.click(screen.getByRole('button', { name: '15' }))
+    fireEvent.click(screen.getByRole('button', { name: longFr('2026-09-15') }))
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith('2026-09-15')
     expect(screen.queryByRole('button', { name: 'Mois suivant' })).not.toBeInTheDocument()
@@ -79,7 +100,7 @@ describe('picking a day', () => {
   it('reports the month on screen, not the month the value came from', () => {
     const onChange = open()
     fireEvent.click(screen.getByRole('button', { name: 'Mois suivant' }))
-    fireEvent.click(screen.getByRole('button', { name: '3' }))
+    fireEvent.click(screen.getByRole('button', { name: longFr('2026-10-03') }))
     expect(onChange).toHaveBeenCalledWith('2026-10-03')
   })
 
@@ -91,6 +112,27 @@ describe('picking a day', () => {
     expect(screen.getByText(
       new Intl.DateTimeFormat('fr', { month: 'long', year: 'numeric' }).format(now),
     )).toBeInTheDocument()
+  })
+})
+
+describe('accessibility of the popover and its day cells', () => {
+  // Regression coverage for the review finding: Radix stamps role="dialog" on
+  // the popover with no accessible name, and a bare day number gives a
+  // screen reader no month or year to anchor on after paging.
+  it('names the popover dialog with the month on screen', () => {
+    open()
+    expect(screen.getByRole('dialog', { name: 'septembre 2026' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Mois suivant' }))
+    expect(screen.getByRole('dialog', { name: 'octobre 2026' })).toBeInTheDocument()
+  })
+
+  it('names each day cell with its full date, and marks the selected one aria-current="date"', () => {
+    open('2026-09-10')
+    const calendar = within(screen.getByRole('dialog'))
+    const selected = calendar.getByRole('button', { name: longFr('2026-09-10') })
+    expect(selected).toHaveAttribute('aria-current', 'date')
+    const other = calendar.getByRole('button', { name: longFr('2026-09-15') })
+    expect(other).not.toHaveAttribute('aria-current')
   })
 })
 

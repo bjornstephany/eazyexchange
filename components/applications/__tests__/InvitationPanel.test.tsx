@@ -3,6 +3,13 @@ import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import { InvitationPanel, type InvitationControls } from '@/components/applications/InvitationPanel'
 
+// The DateField day-cell's accessible name is the full date, not a bare
+// number — computed independently of lib/dates so this isn't circular.
+function longFr(iso: string) {
+  return new Intl.DateTimeFormat('fr', { day: 'numeric', month: 'long', year: 'numeric' })
+    .format(new Date(`${iso}T00:00:00`))
+}
+
 function controls(over: Partial<InvitationControls> = {}): InvitationControls {
   return {
     open: true,
@@ -50,8 +57,8 @@ describe('InvitationPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ouvert' }))
     expect(onToggleOpen).toHaveBeenCalled()
     // The controls hand it 2026-09-01, so the calendar opens on September 2026.
-    fireEvent.click(screen.getByLabelText('Date limite'))
-    fireEvent.click(screen.getByRole('button', { name: '20' }))
+    fireEvent.click(screen.getByRole('button', { name: `Date limite ${longFr('2026-09-01')}` }))
+    fireEvent.click(screen.getByRole('button', { name: longFr('2026-09-20') }))
     expect(onDeadlineChange).toHaveBeenCalledWith('2026-09-20')
   })
 

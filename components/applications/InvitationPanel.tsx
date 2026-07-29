@@ -70,7 +70,7 @@ export function InvitationPanel({
             value={deadline}
             disabled={saving}
             onChange={onDeadlineChange}
-            className="h-[34px] w-auto min-w-[150px] rounded-[8px] text-[13px]"
+            className="h-[34px] w-auto min-w-[150px] rounded-[8px] text-[13px] md:text-[13px]"
           />
         </label>
         <div className="flex items-center gap-2 sm:ml-auto">

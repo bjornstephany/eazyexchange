@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
@@ -33,6 +33,7 @@ export function DateField({
   const t = useTranslations('common.dateField')
   const [open, setOpen] = useState(false)
   const [view, setView] = useState(() => viewFor(value))
+  const textId = useId()
 
   // The month to show: the one the value is in, or the current one when empty.
   function viewFor(v: string) {
@@ -60,14 +61,24 @@ export function DateField({
           type="button"
           id={id}
           disabled={disabled}
-          aria-labelledby={ariaLabelledBy}
+          // The button's own text is suppressed from the accessible name
+          // whenever a caller pairs it via <Label htmlFor> or an explicit
+          // ariaLabelledBy (both a labelable <button>'s own label wins over
+          // subtree content) — so without this, a screen-reader user hears
+          // the label and never the selected date, which the <input
+          // type="date"> this replaced always announced. Appending textId
+          // keeps the external label (when there is one) AND the date in the
+          // computed name.
+          aria-labelledby={[ariaLabelledBy, textId].filter(Boolean).join(' ') || undefined}
           className={cn(
             'flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-left text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
             !value && 'text-muted-foreground',
             className,
           )}
         >
-          {value ? longDate(value, locale) : t('placeholder')}
+          <span id={textId}>
+            {parseISODate(value) ? longDate(value, locale) : t('placeholder')}
+          </span>
         </button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -75,6 +86,10 @@ export function DateField({
           align="start"
           sideOffset={6}
           collisionPadding={12}
+          // Radix stamps role="dialog" on this element; without aria-label it
+          // is an unnamed dialog (an axe violation on its own), and a screen
+          // reader has no way to tell which month it landed on after paging.
+          aria-label={monthLabel(locale, view.year, view.month)}
           // Above the dialog this field is sometimes used inside (z-50), below
           // the guided tour's dim layer (z-60 and up) — a tour in progress
           // swallows clicks anyway, and nothing should float over its wash.
@@ -119,7 +134,16 @@ export function DateField({
                 <button
                   key={iso}
                   type="button"
-                  aria-pressed={iso === value}
+                  aria-label={longDate(iso, locale)}
+                  // aria-current="date" is the ARIA state built for exactly
+                  // this: the selected day in a date picker. aria-pressed's
+                  // toggle-button semantics were the wrong fit, and
+                  // aria-selected needs a grid/gridcell/option/tab ancestry
+                  // this plain button doesn't have — asserting it here would
+                  // trade one ARIA violation for another (jsx-a11y's
+                  // role-supports-aria-props catches it: "not supported by
+                  // the role button").
+                  aria-current={iso === value ? 'date' : undefined}
                   onClick={() => {
                     onChange(iso)
                     setOpen(false)

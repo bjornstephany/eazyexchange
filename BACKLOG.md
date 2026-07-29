@@ -10,7 +10,9 @@ pick items off the top when starting new work.
 - Google search appearance: add favicon + fix meta description getting cut off in results
 - password reset flow (with code entry) — no reset flow exists today; build one using the same single-tab 6-digit-code pattern as signup confirmation (spec: docs/superpowers/specs/2026-07-23-single-tab-signup-confirmation-design.md)
 - messages/fr.json: 14 pre-existing straight apostrophes violate the typographic-`’` convention (lines ~159, 344, 347, 348, 363, 430, 431, 447, 895, 896, 959, 964, 967, 971 as of 2026-07-24) — found by the onboarding-overhaul apostrophe guard, left alone there to keep that branch's diff in scope
-- Migrate the remaining native `<input type="date">` fields (LibraryDrawer, template editors) to `components/ui/date-field` — the Candidatures deadlines moved 2026-07-29.
+- Migrate the remaining native `<input type="date">` fields (LibraryDrawer, template editors, `app/onboarding/OnboardingForm.tsx` trip start/end) to `components/ui/date-field` — the Candidatures deadlines moved 2026-07-29.
+- `DateField` has no text entry and no arrow-key roving focus, so reaching a far month costs one Enter per month plus up to 31 tabs, where `<input type="date">` let you type the date in ten keystrokes. Worth revisiting with arrow-key roving focus in the grid and a year stepper.
+- `components/shell/OrganizerShell.tsx`'s `NewExchangeAutoOpen` opens a modal Radix Dialog on `?new-exchange=1`. Nothing produces that parameter today, so it's unreachable — but now that the tour auto-starts, a `pending` organizer on such a URL would get both, and the dialog's trapped focus scope would pull focus out of the tour bubble (a plain div, not a Radix `FocusScope`). A `plan.length > 0` bail in `NewExchangeAutoOpen` would close it.
 
 ## Known pre-existing bugs
 

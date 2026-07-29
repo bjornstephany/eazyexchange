@@ -48,8 +48,10 @@ export function OpenApplicationsDialog({
       : `/apply/${applySlug}`
 
   async function chooseDeadline(next: string) {
-    // Clearing a date input fires onChange with ''. Persisting that would close
-    // the funnel behind the organizer's back — ignore it, same rule as the panel.
+    // DateField cannot emit '', so this guard is dead today — but it protects
+    // the persistence path below if that invariant ever changes, same rule as
+    // the panel: an empty deadline must never close the funnel behind the
+    // organizer's back.
     if (!next) return
     setDeadline(next)
     setSaving(true)
@@ -86,9 +88,12 @@ export function OpenApplicationsDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="open-applications-deadline">{t('deadlineLabel')}</Label>
+          <Label id="open-applications-deadline-label" htmlFor="open-applications-deadline">
+            {t('deadlineLabel')}
+          </Label>
           <DateField
             id="open-applications-deadline"
+            ariaLabelledBy="open-applications-deadline-label"
             value={deadline}
             disabled={saving}
             onChange={chooseDeadline}
