@@ -293,7 +293,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Bienvenue dans EazyExchange",
+            "title": "Bienvenue dans EazyExchange ! 🎉",
             "body": "Voici un tour rapide des onglets de votre espace. Vous pouvez l’interrompre à tout moment et le reprendre depuis le menu de votre compte."
           },
           "applications": {
@@ -321,7 +321,7 @@
             "body": "Votre compte, votre établissement, votre équipe et votre abonnement."
           },
           "finish": {
-            "title": "C’est tout",
+            "title": "C’est parti ! 🚀",
             "body": "Vous savez où aller. Pour revoir ce tour, ouvrez le menu de votre compte, en haut à droite."
           }
         }

@@ -293,7 +293,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Willkommen bei EazyExchange",
+            "title": "Willkommen bei EazyExchange! 🎉",
             "body": "Ein kurzer Rundgang durch die Tabs Ihres Bereichs. Sie können jederzeit abbrechen und ihn über Ihr Kontomenü wieder aufnehmen."
           },
           "applications": {
@@ -321,7 +321,7 @@
             "body": "Ihr Konto, Ihre Schule, Ihr Team und Ihr Abonnement."
           },
           "finish": {
-            "title": "Das war alles",
+            "title": "Alles bereit! 🚀",
             "body": "Sie kennen sich jetzt aus. Um diese Tour erneut zu sehen, öffnen Sie oben rechts Ihr Kontomenü."
           }
         }

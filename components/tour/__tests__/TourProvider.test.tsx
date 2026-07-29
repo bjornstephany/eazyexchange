@@ -72,12 +72,12 @@ beforeEach(() => {
 describe('the tour opens by itself', () => {
   it('opens for an organizer who has never seen it, without being asked', () => {
     renderShell()
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
   it('opens wherever they land, not only on /applications', () => {
     renderShell({ pathname: '/students' })
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
   it('does not open again once dismissed', () => {
@@ -113,7 +113,7 @@ describe('the tour opens by itself', () => {
 describe('walking the tour', () => {
   it('opens on the welcome step, unanchored, with no route change', () => {
     renderShell()
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
     expect(bubble().getByText('1 / 8')).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()
     // First step: nothing to go back to.
@@ -136,7 +136,7 @@ describe('walking the tour', () => {
     renderShell()
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
     fireEvent.click(screen.getByRole('button', { name: 'Précédent' }))
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
   it('offers Terminer on the last step and records completion', () => {
@@ -196,6 +196,6 @@ describe('the account menu entry', () => {
     renderShell({ tourState: 'completed', pathname: '/students' })
     fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
     fireEvent.click(screen.getByRole('button', { name: 'Visite guidée' }))
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 })

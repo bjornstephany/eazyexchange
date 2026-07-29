@@ -293,7 +293,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Bienvenido a EazyExchange",
+            "title": "¡Te damos la bienvenida a EazyExchange! 🎉",
             "body": "Un recorrido rápido por las pestañas de su espacio. Puede interrumpirlo cuando quiera y retomarlo desde el menú de su cuenta."
           },
           "applications": {
@@ -321,7 +321,7 @@
             "body": "Su cuenta, su centro, su equipo y su suscripción."
           },
           "finish": {
-            "title": "Listo",
+            "title": "¡Todo listo! 🚀",
             "body": "Ya sabe moverse. Para volver a ver este recorrido, abra el menú de su cuenta, arriba a la derecha."
           }
         }
