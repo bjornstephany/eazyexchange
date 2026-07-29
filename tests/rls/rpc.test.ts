@@ -72,3 +72,41 @@ describe('check_rate_limit grants', () => {
     ).rejects.toThrow(/permission denied/i)
   })
 })
+
+describe('application_question_suggestions', () => {
+  it('returns aggregates only — never a raw row shape', async () => {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['label', 'options', 'schools', 'type'])
+    }
+  })
+
+  it('hides a phrasing only one school has written', async () => {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    expect(rows.map((r) => r.label)).not.toContain('Sait nager ?')
+  })
+
+  it('surfaces a phrasing three independent schools converged on, merging spellings', async () => {
+    // schoolA already banked « Sait nager ? » (seeded as superuser, like
+    // fx.customQuestionA). Add B and C with different spellings the same way:
+    // the INSERT policy scopes a write to the caller's own school, so one
+    // organizer cannot write rows for three different schools in one
+    // statement — that RLS scoping is exactly what the deny cases above pin.
+    // This test's subject is the RPC's aggregation, not the insert path.
+    await sql`insert into application_custom_questions (school_id, label, locale, type) values
+      (${fx.schoolB}, 'sait nager?', 'fr', 'yesno'),
+      (${fx.schoolC}, 'SAIT NAGER ?', 'fr', 'yesno')`
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    const hit = rows.find((r) => String(r.label).toLowerCase().includes('sait nager'))
+    expect(hit).toBeDefined()
+    expect(Number(hit!.schools)).toBe(3)
+  })
+
+  it('is not callable anonymously', async () => {
+    await expect(runAs(sql, null, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)).rejects.toMatchObject({ code: '42501' })
+  })
+})
