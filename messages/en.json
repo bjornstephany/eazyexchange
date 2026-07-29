@@ -31,6 +31,11 @@
       "toVerify": "To review",
       "inProgress": "In progress",
       "missing": "Missing"
+    },
+    "dateField": {
+      "placeholder": "Pick a date",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month"
     }
   },
   "organizer": {
