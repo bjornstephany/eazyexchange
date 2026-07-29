@@ -11,6 +11,7 @@ import { SidebarNav, type SidebarNavItem } from './SidebarNav'
 import { ExchangeList } from './ExchangeList'
 import { useSidebarCollapsed } from './useSidebarCollapsed'
 import { NewExchangeModal } from './NewExchangeModal'
+import { useDismissable } from './useDismissable'
 import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
 import { TourProvider } from '@/components/tour/TourProvider'
@@ -76,7 +77,8 @@ export function OrganizerShell({
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
-  const menuRef = useRef<HTMLDivElement>(null)
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
+  const menuRef = useDismissable<HTMLDivElement>(menuOpen, closeMenu)
   const { collapsed, toggle } = useSidebarCollapsed()
 
   const isSettings = pathname.startsWith('/settings')
@@ -112,24 +114,6 @@ export function OrganizerShell({
   const settingsItem: SidebarNavItem[] = [
     { href: '/settings', label: t('shell.accountMenu.settings'), active: isSettings, icon: <IconSettings />, tourId: 'nav-settings' },
   ]
-
-  useEffect(() => {
-    if (!menuOpen) return
-    function handleOutside(e: Event) {
-      if (menuRef.current && e.target instanceof Node && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false)
-      }
-    }
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    document.addEventListener('pointerdown', handleOutside)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('pointerdown', handleOutside)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [menuOpen])
 
   async function handleSignOut() {
     const supabase = createClient()
