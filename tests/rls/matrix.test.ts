@@ -520,4 +520,14 @@ describe('question bank is write-only for its own school', () => {
          where id = ${fx.exchangeA}`)
     expect(outcome).toBe(1)
   })
+
+  // The bank table still carries anon's default table-level INSERT grant on
+  // prod (verified) — the RLS policy, which requires (select my_role()) =
+  // 'organizer', is the ONLY thing stopping an anonymous insert. Pin that
+  // directly rather than relying on the authenticated-persona deny cases above.
+  it('anon cannot insert into the bank (grant remains, RLS blocks it)', async () => {
+    expectBlocked(await writeOutcome(sql, null, (tx) =>
+      tx`insert into application_custom_questions (school_id, label, locale, type)
+         values (${fx.schoolA}, 'Injecté anon', 'fr', 'text')`))
+  })
 })
