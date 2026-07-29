@@ -5,6 +5,7 @@ import {
   invalidFormatApplicationFields, applicantInitials,
   parentRecipients,
 } from '../application-form'
+import type { AppSection } from '../application-form'
 
 describe('application catalog', () => {
   it('has four sections with stable ids', () => {
@@ -235,5 +236,119 @@ describe('applicantInitials', () => {
   it('falls back to the first letter of the email when both names are empty', () => {
     expect(applicantInitials({}, 'zoe@example.com')).toBe('Z')
     expect(applicantInitials(null, 'zoe@example.com')).toBe('Z')
+  })
+})
+
+// A questionnaire with one parent group half-removed, no photo, and the two
+// conditional questions gone — the shapes an organizer can actually produce.
+const TRIMMED: AppSection[] = [
+  { id: 'student', fields: [
+    { id: 'last_name', type: 'text', required: true },
+    { id: 'first_name', type: 'text', required: true },
+    { id: 'email', type: 'email', required: true },
+    { id: 'c_7f3a', type: 'textarea', label: 'Sait nager ?', required: true, maxLength: 150 },
+  ] },
+  { id: 'parents', fields: [
+    { id: 'mother_last_name', type: 'text', group: 'mother' },
+    { id: 'mother_email', type: 'email', group: 'mother' },
+  ] },
+  { id: 'hosting', fields: [] },
+  { id: 'profile', fields: [] },
+]
+
+function trimmedComplete(over: Record<string, string> = {}): Record<string, string> {
+  return {
+    last_name: 'Durand', first_name: 'Alix', email: 'alix@example.com',
+    c_7f3a: 'Oui', mother_last_name: 'Durand', mother_email: 'mere@example.com',
+    ...over,
+  }
+}
+
+describe('section-aware validation', () => {
+  it('a complete answer to a trimmed questionnaire submits', () => {
+    expect(missingRequiredApplication(trimmedComplete(), { hasPhoto: false, photoRequired: false, sections: TRIMMED }))
+      .toEqual([])
+  })
+
+  it('a removed question never appears as missing', () => {
+    const missing = missingRequiredApplication({}, { hasPhoto: false, photoRequired: false, sections: TRIMMED })
+    expect(missing).not.toContain('pets')
+    expect(missing).not.toContain('date_of_birth')
+  })
+
+  it('flags a blank custom required question', () => {
+    expect(missingRequiredApplication(trimmedComplete({ c_7f3a: '  ' }), { hasPhoto: false, photoRequired: false, sections: TRIMMED }))
+      .toContain('c_7f3a')
+  })
+
+  it('the parent rule falls back to the only remaining group', () => {
+    // The father group is gone entirely; the mother group must still be complete.
+    const missing = missingRequiredApplication(
+      trimmedComplete({ mother_email: '' }),
+      { hasPhoto: false, photoRequired: false, sections: TRIMMED },
+    )
+    expect(missing).toContain('mother_email')
+    expect(missing).not.toContain('father_email')
+  })
+
+  it('the parent rule is skipped entirely when every parent field is removed', () => {
+    const noParents = TRIMMED.map(s => (s.id === 'parents' ? { ...s, fields: [] } : s))
+    const data = trimmedComplete()
+    delete data.mother_last_name; delete data.mother_email
+    expect(missingRequiredApplication(data, { hasPhoto: false, photoRequired: false, sections: noParents }))
+      .toEqual([])
+  })
+
+  it('a partially filled remaining group is still invalid', () => {
+    expect(missingRequiredApplication(
+      trimmedComplete({ mother_last_name: '' }),
+      { hasPhoto: false, photoRequired: false, sections: TRIMMED },
+    )).toContain('mother_last_name')
+  })
+
+  it('does not demand a photo when the photo was removed', () => {
+    expect(missingRequiredApplication(trimmedComplete(), { hasPhoto: false, photoRequired: false, sections: TRIMMED }))
+      .not.toContain('photo')
+  })
+
+  it('still demands a photo when the questionnaire keeps it', () => {
+    expect(missingRequiredApplication(trimmedComplete(), { hasPhoto: false, photoRequired: true, sections: TRIMMED }))
+      .toContain('photo')
+  })
+
+  it('skips the conditional rules when their question was removed', () => {
+    // A stale answer of `other` / `separated` must not resurrect a question the
+    // organizer deleted.
+    expect(missingRequiredApplication(
+      trimmedComplete({ sex: 'other', family_status: 'separated' }),
+      { hasPhoto: false, photoRequired: false, sections: TRIMMED },
+    )).toEqual([])
+  })
+
+  it('keeps the conditional rules when the driver and dependent are both present', () => {
+    const withSex: AppSection[] = TRIMMED.map(s => (s.id === 'student' ? { ...s, fields: [
+      ...s.fields,
+      { id: 'sex', type: 'radio', required: true, options: [{ value: 'male' }, { value: 'other' }] },
+      { id: 'gender_other', type: 'text' },
+    ] } : s))
+    expect(missingRequiredApplication(
+      trimmedComplete({ sex: 'other' }),
+      { hasPhoto: false, photoRequired: false, sections: withSex },
+    )).toContain('gender_other')
+  })
+
+  it('format checks only the fields still present', () => {
+    expect(invalidFormatApplicationFields({ email: 'nope', father_email: 'also-nope' }, TRIMMED))
+      .toEqual(['email'])
+  })
+
+  it('length checks only the fields still present, custom ones included', () => {
+    expect(overLimitApplicationFields({ c_7f3a: 'x'.repeat(151), lived_abroad: 'y'.repeat(500) }, TRIMMED))
+      .toEqual(['c_7f3a'])
+  })
+
+  it('defaults to the built-in catalog when no sections are given', () => {
+    expect(requiredApplicationFieldIds()).toEqual(requiredApplicationFieldIds(APPLICATION_SECTIONS))
+    expect(parentGroupFields('father')).toHaveLength(8)
   })
 })

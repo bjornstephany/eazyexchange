@@ -125,56 +125,74 @@ export const APPLICATION_SECTIONS: AppSection[] = [
   },
 ]
 
-export function allApplicationFields(): AppField[] {
-  return APPLICATION_SECTIONS.flatMap(s => s.fields)
+// Every helper below takes the questionnaire it should validate against and
+// defaults to the built-in catalog. An exchange with a customized questionnaire
+// passes its RESOLVED sections (lib/application-fields.ts): the funnel form,
+// submitApplication's gates and the PDF recap must all see the same list, or a
+// removed question becomes permanently missing and blocks every submission.
+export function allApplicationFields(sections: AppSection[] = APPLICATION_SECTIONS): AppField[] {
+  return sections.flatMap(s => s.fields)
 }
 
-export function requiredApplicationFieldIds(): string[] {
-  return allApplicationFields().filter(f => f.required).map(f => f.id)
+export function requiredApplicationFieldIds(sections: AppSection[] = APPLICATION_SECTIONS): string[] {
+  return allApplicationFields(sections).filter(f => f.required).map(f => f.id)
 }
 
-export function parentGroupFields(group: 'father' | 'mother'): AppField[] {
-  return allApplicationFields().filter(f => f.group === group)
+export function parentGroupFields(
+  group: 'father' | 'mother', sections: AppSection[] = APPLICATION_SECTIONS,
+): AppField[] {
+  return allApplicationFields(sections).filter(f => f.group === group)
 }
 
 export function missingRequiredApplication(
   data: Record<string, string>,
-  opts?: { hasPhoto?: boolean },
+  opts?: { hasPhoto?: boolean; photoRequired?: boolean; sections?: AppSection[] },
 ): string[] {
+  const sections = opts?.sections ?? APPLICATION_SECTIONS
+  const present = new Set(allApplicationFields(sections).map(f => f.id))
   const empty = (id: string) => (data[id] ?? '').trim() === ''
-  const missing = requiredApplicationFieldIds().filter(empty)
+  const missing = requiredApplicationFieldIds(sections).filter(empty)
 
-  // Parents: at least one parent (father or mother) filled in completely; a
-  // partially filled group is invalid either way. The missing ids are the
-  // empty fields of every group that needs attention.
-  const father = parentGroupFields('father')
-  const mother = parentGroupFields('mother')
-  const fatherEmpty = father.filter(f => empty(f.id)).map(f => f.id)
-  const motherEmpty = mother.filter(f => empty(f.id)).map(f => f.id)
-  const fatherPartial = fatherEmpty.length > 0 && fatherEmpty.length < father.length
-  const motherPartial = motherEmpty.length > 0 && motherEmpty.length < mother.length
-  if (fatherPartial) missing.push(...fatherEmpty)
-  if (motherPartial) missing.push(...motherEmpty)
-  if (fatherEmpty.length === father.length && motherEmpty.length === mother.length) {
-    missing.push(...fatherEmpty, ...motherEmpty)
+  // Parents: at least one parent group filled in completely; a partially filled
+  // group is invalid either way. « Complete » means *all fields of that group
+  // still present are filled* — if the organizer removed a whole group the rule
+  // falls back to the other, and if they removed every parent field it is
+  // skipped entirely rather than making the form unsubmittable.
+  const groups = (['father', 'mother'] as const)
+    .map(g => parentGroupFields(g, sections))
+    .filter(g => g.length > 0)
+  if (groups.length > 0) {
+    const emptyOf = (g: AppField[]) => g.filter(f => empty(f.id)).map(f => f.id)
+    for (const g of groups) {
+      const e = emptyOf(g)
+      if (e.length > 0 && e.length < g.length) missing.push(...e)
+    }
+    if (groups.every(g => emptyOf(g).length === g.length)) {
+      for (const g of groups) missing.push(...emptyOf(g))
+    }
   }
 
   // Where the exchange partner will be housed only applies when the family is
-  // separated / recomposed; the field is hidden from the form otherwise.
-  const fs = (data.family_status ?? '').trim()
-  if ((fs === 'separated' || fs === 'step_family') && empty('separation_housing_address')) {
-    missing.push('separation_housing_address')
+  // separated / recomposed; the field is hidden from the form otherwise. Both
+  // conditional rules are skipped when their question is no longer in the
+  // questionnaire — a stale answer must never resurrect a deleted question.
+  if (present.has('separation_housing_address')) {
+    const fs = (data.family_status ?? '').trim()
+    if ((fs === 'separated' || fs === 'step_family') && empty('separation_housing_address')) {
+      missing.push('separation_housing_address')
+    }
   }
 
-  // The gender "specify" field only applies when gender is "other"; the field
-  // is hidden from the form otherwise.
-  if ((data.sex ?? '').trim() === 'other' && empty('gender_other')) {
+  // The gender "specify" field only applies when gender is "other".
+  if (present.has('gender_other') && (data.sex ?? '').trim() === 'other' && empty('gender_other')) {
     missing.push('gender_other')
   }
 
   // The photo lives on the applications row (photo_path), not in `data`;
-  // callers that know whether one exists say so explicitly.
-  if (opts?.hasPhoto === false) missing.push('photo')
+  // callers that know whether one exists say so explicitly. `photoRequired`
+  // reports whether this exchange's questionnaire still asks for one at all —
+  // it defaults to true so every pre-existing call site is unchanged.
+  if ((opts?.photoRequired ?? true) && opts?.hasPhoto === false) missing.push('photo')
 
   return missing
 }
@@ -183,8 +201,10 @@ export function missingRequiredApplication(
 // values are checked: an empty required field is missingRequiredApplication's
 // business, and the optional parent group must not light up red when left
 // blank. Drafts are never run through this — they are partial by design.
-export function invalidFormatApplicationFields(data: Record<string, string>): string[] {
-  return allApplicationFields()
+export function invalidFormatApplicationFields(
+  data: Record<string, string>, sections: AppSection[] = APPLICATION_SECTIONS,
+): string[] {
+  return allApplicationFields(sections)
     .filter((f) => {
       if (f.type !== 'email' && f.type !== 'tel') return false
       // String() coercion mirrors hasOverlongAnswer: client payloads aren't
@@ -199,8 +219,10 @@ export function invalidFormatApplicationFields(data: Record<string, string>): st
 // Ids of fields whose answer exceeds their per-field maxLength. Pure server-side
 // backstop of the client-side maxLength attribute; String() coercion mirrors
 // hasOverlongAnswer (client payloads aren't runtime-typed).
-export function overLimitApplicationFields(data: Record<string, string>): string[] {
-  return allApplicationFields()
+export function overLimitApplicationFields(
+  data: Record<string, string>, sections: AppSection[] = APPLICATION_SECTIONS,
+): string[] {
+  return allApplicationFields(sections)
     .filter(f => f.maxLength != null && String(data[f.id] ?? '').length > f.maxLength)
     .map(f => f.id)
 }
