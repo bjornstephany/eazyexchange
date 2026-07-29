@@ -327,16 +327,29 @@ This is the only refactor in scope. Nothing else in the shell is touched.
 
 ### 5. i18n
 
-New keys under `organizer.shell.notifications.*` in all five locale files
-(`messages/{en,fr,de,es,it}.json`):
+**The three row labels are not new keys.** They reuse the dashboard's existing
+action-card titles verbatim:
+
+| kind | existing key |
+|---|---|
+| `applications_to_review` | `organizer.dashboard.actionCards.toReviewTitle` |
+| `submissions_to_review` | `organizer.dashboard.actionCards.reviewTitle` |
+| `late` | `organizer.dashboard.actionCards.lateTitle` |
+
+All three are already plural-aware on `{n}` and already translated in all five
+locales (« # candidature à examiner » / « # dossier à vérifier » / « # élève en
+retard »). Reusing them is what makes the bell and the dashboard say the same
+words about the same numbers — the counting-grain decision above is worthless
+without it.
+
+Only four genuinely new keys, under `organizer.shell.notifications.*` in all five
+locale files (`messages/{en,fr,de,es,it}.json`, enforced by
+`messages/__tests__/parity.test.ts`):
 
 - `trigger` — the button's accessible name
-- `badgeLabel` — `{n} nouveautés`, plural-aware
+- `badgeLabel` — plural-aware on `{n}`, for the badge's assistive-tech label
 - `title` — panel heading
 - `empty` — « Rien en attente »
-- `kinds.applicationsToReview` / `kinds.submissionsToReview` / `kinds.late` —
-  each plural-aware on `{n}` (« 1 candidature à examiner » / « 3 candidatures à
-  examiner »)
 
 The existing apostrophe/accent guard applies; French uses typographic apostrophes
 per `20260716121027_normalize_standard_apostrophes.sql` and the i18n sweep.
