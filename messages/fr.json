@@ -589,6 +589,76 @@
         "sendRejectionEmail": "Envoyer un e-mail de refus au candidat"
       }
     },
+    "questionnaire": {
+      "card": {
+        "title": "Questionnaire de candidature",
+        "template": "Modèle : {name}",
+        "templateStandard": "Questionnaire standard",
+        "summary": "{n} questions · 4 sections",
+        "locked": "Verrouillé — {n} candidatures reçues",
+        "edit": "Modifier",
+        "view": "Consulter",
+        "reset": "Réinitialiser",
+        "resetTitle": "Revenir au questionnaire standard ?",
+        "resetBody": "Toutes vos modifications seront perdues et le questionnaire redeviendra celui du modèle standard.",
+        "resetConfirm": "Réinitialiser"
+      },
+      "page": {
+        "title": "Questionnaire de candidature",
+        "back": "← Candidatures",
+        "intro": "Ajoutez ou retirez des questions. Chaque modification est enregistrée aussitôt.",
+        "lockedNotice": "Ce questionnaire est verrouillé : {n} candidatures ont déjà été reçues. Il reste consultable.",
+        "sectionCount": "{n} questions",
+        "add": "＋ Ajouter une question",
+        "lockedTooltip": "Recueillie avant le formulaire — elle sert à envoyer l’invitation.",
+        "remove": "Retirer",
+        "editQuestion": "Modifier la question",
+        "required": "obligatoire",
+        "empty": "Aucune question dans cette section."
+      },
+      "types": {
+        "text": "Texte court",
+        "textarea": "Texte long",
+        "date": "Date",
+        "yesno": "Oui / Non",
+        "radio": "Choix multiple",
+        "photo": "Photo",
+        "email": "E-mail",
+        "tel": "Téléphone"
+      },
+      "cascade": {
+        "title": "Cette question en entraîne une autre",
+        "body": "Retirer « {question} » retirera aussi « {dependent} », qui n’a de sens qu’avec elle.",
+        "confirm": "Retirer les deux"
+      },
+      "dialog": {
+        "title": "Ajouter une question — {section}",
+        "removedHeading": "Questions retirées",
+        "removedEmpty": "Toutes les questions du modèle sont présentes.",
+        "suggestionsHeading": "Suggestions d’autres établissements",
+        "suggestionsEmpty": "Aucune suggestion pour l’instant.",
+        "suggestionsSchools": "{n} établissements",
+        "orCreate": "ou créer",
+        "label": "Intitulé",
+        "type": "Type",
+        "required": "Réponse obligatoire",
+        "options": "Choix (un par ligne)",
+        "add": "Ajouter"
+      },
+      "editDialog": {
+        "title": "Modifier la question",
+        "save": "Enregistrer"
+      },
+      "errors": {
+        "locked": "Ce questionnaire est verrouillé : des candidatures ont déjà été reçues.",
+        "not_found": "Programme introuvable.",
+        "invalid_label": "L’intitulé doit contenir entre 1 et 120 caractères.",
+        "invalid_type": "Type de question non pris en charge.",
+        "invalid_options": "Un choix multiple demande au moins deux options.",
+        "unknown_question": "Cette question n’est plus dans le questionnaire — rechargez la page.",
+        "failed": "L’enregistrement a échoué. Réessayez."
+      }
+    },
     "exchanges": {
       "reminders": {
         "heading": "Rappels automatiques",
