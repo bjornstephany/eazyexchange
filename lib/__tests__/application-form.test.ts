@@ -337,6 +337,26 @@ describe('section-aware validation', () => {
     )).toContain('gender_other')
   })
 
+  it('skips a conditional rule when only the dependent survives without its driver', () => {
+    // The organizer removed `sex`/`family_status` but kept the dependent
+    // question; `data` still carries the old driver answer from before the
+    // questionnaire was edited. Nothing on the rendered form can reach the
+    // dependent, so it must never be reported missing.
+    const dependentsOnly: AppSection[] = TRIMMED.map(s => (s.id === 'student' ? { ...s, fields: [
+      ...s.fields,
+      { id: 'gender_other', type: 'text' },
+    ] } : s.id === 'parents' ? { ...s, fields: [
+      ...s.fields,
+      { id: 'separation_housing_address', type: 'textarea' },
+    ] } : s))
+    const missing = missingRequiredApplication(
+      trimmedComplete({ sex: 'other', gender_other: '', family_status: 'separated', separation_housing_address: '' }),
+      { hasPhoto: false, photoRequired: false, sections: dependentsOnly },
+    )
+    expect(missing).not.toContain('gender_other')
+    expect(missing).not.toContain('separation_housing_address')
+  })
+
   it('format checks only the fields still present', () => {
     expect(invalidFormatApplicationFields({ email: 'nope', father_email: 'also-nope' }, TRIMMED))
       .toEqual(['email'])

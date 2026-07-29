@@ -174,9 +174,11 @@ export function missingRequiredApplication(
 
   // Where the exchange partner will be housed only applies when the family is
   // separated / recomposed; the field is hidden from the form otherwise. Both
-  // conditional rules are skipped when their question is no longer in the
-  // questionnaire — a stale answer must never resurrect a deleted question.
-  if (present.has('separation_housing_address')) {
+  // conditional rules are skipped when either their driver or their dependent
+  // question is no longer in the questionnaire — a stale driver answer must
+  // never resurrect a dependent question the organizer deleted, and a
+  // dependent kept without its driver has no field on screen to reach it.
+  if (present.has('family_status') && present.has('separation_housing_address')) {
     const fs = (data.family_status ?? '').trim()
     if ((fs === 'separated' || fs === 'step_family') && empty('separation_housing_address')) {
       missing.push('separation_housing_address')
@@ -184,7 +186,7 @@ export function missingRequiredApplication(
   }
 
   // The gender "specify" field only applies when gender is "other".
-  if (present.has('gender_other') && (data.sex ?? '').trim() === 'other' && empty('gender_other')) {
+  if (present.has('sex') && present.has('gender_other') && (data.sex ?? '').trim() === 'other' && empty('gender_other')) {
     missing.push('gender_other')
   }
 
