@@ -135,15 +135,19 @@ export function DateField({
                   key={iso}
                   type="button"
                   aria-label={longDate(iso, locale)}
-                  // aria-current="date" is the ARIA state built for exactly
-                  // this: the selected day in a date picker. aria-pressed's
-                  // toggle-button semantics were the wrong fit, and
-                  // aria-selected needs a grid/gridcell/option/tab ancestry
-                  // this plain button doesn't have — asserting it here would
-                  // trade one ARIA violation for another (jsx-a11y's
-                  // role-supports-aria-props catches it: "not supported by
-                  // the role button").
-                  aria-current={iso === value ? 'date' : undefined}
+                  // aria-pressed conveys selected-vs-unselected here — the
+                  // toggle-button pattern rather than the APG date-picker
+                  // role="grid"/gridcell + aria-selected pattern, which needs
+                  // a grid/gridcell ancestry this plain button doesn't have
+                  // (asserting aria-selected on a bare button trades one ARIA
+                  // violation for another — jsx-a11y's
+                  // role-supports-aria-props catches it). Deferred alongside
+                  // the keyboard roving-focus item in BACKLOG.md.
+                  aria-pressed={iso === value}
+                  // aria-current="date" is the ARIA state for TODAY's date on
+                  // the calendar — distinct from selection, and not mutually
+                  // exclusive with it: a cell can be both today and selected.
+                  aria-current={iso === today ? 'date' : undefined}
                   onClick={() => {
                     onChange(iso)
                     setOpen(false)

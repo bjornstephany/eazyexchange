@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { screen, fireEvent, within } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 import { DateField } from '@/components/ui/date-field'
@@ -126,13 +126,46 @@ describe('accessibility of the popover and its day cells', () => {
     expect(screen.getByRole('dialog', { name: 'octobre 2026' })).toBeInTheDocument()
   })
 
-  it('names each day cell with its full date, and marks the selected one aria-current="date"', () => {
+  it('names each day cell with its full date', () => {
     open('2026-09-10')
     const calendar = within(screen.getByRole('dialog'))
-    const selected = calendar.getByRole('button', { name: longFr('2026-09-10') })
-    expect(selected).toHaveAttribute('aria-current', 'date')
-    const other = calendar.getByRole('button', { name: longFr('2026-09-15') })
-    expect(other).not.toHaveAttribute('aria-current')
+    expect(calendar.getByRole('button', { name: longFr('2026-09-10') })).toBeInTheDocument()
+    expect(calendar.getByRole('button', { name: longFr('2026-09-15') })).toBeInTheDocument()
+  })
+
+  // "Today" and the selected value can be two different cells, or the same
+  // one — pinned with fake timers so the assertion doesn't depend on which
+  // day this suite happens to run on.
+  describe('selection vs. today, on a fixed clock', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-09-20T12:00:00'))
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('marks the selected day aria-pressed, distinct from the aria-current today cell', () => {
+      open('2026-09-10') // selected day ≠ today (the 20th)
+      const calendar = within(screen.getByRole('dialog'))
+
+      const selected = calendar.getByRole('button', { name: longFr('2026-09-10') })
+      expect(selected).toHaveAttribute('aria-pressed', 'true')
+      expect(selected).not.toHaveAttribute('aria-current')
+
+      const todayCell = calendar.getByRole('button', { name: longFr('2026-09-20') })
+      expect(todayCell).toHaveAttribute('aria-current', 'date')
+      expect(todayCell).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('carries both attributes when today is also the selected day', () => {
+      open('2026-09-20') // selected day = today
+      const calendar = within(screen.getByRole('dialog'))
+
+      const cell = calendar.getByRole('button', { name: longFr('2026-09-20') })
+      expect(cell).toHaveAttribute('aria-pressed', 'true')
+      expect(cell).toHaveAttribute('aria-current', 'date')
+    })
   })
 })
 
