@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
-  daysInMonth, firstDayOfWeek, monthGrid, parseISODate, shiftMonth, toISODate,
+  daysInMonth, firstDayOfWeek, monthGrid, parseISODate, shiftMonth, toISODate, todayISO,
 } from '@/lib/calendar'
 
 describe('toISODate', () => {
@@ -97,5 +97,40 @@ describe('shiftMonth', () => {
   it('rolls the year over at both ends', () => {
     expect(shiftMonth(2026, 11, 1)).toEqual({ year: 2027, month: 0 })
     expect(shiftMonth(2026, 0, -1)).toEqual({ year: 2025, month: 11 })
+  })
+})
+
+describe('todayISO', () => {
+  // Regression test for a "simplify to toISOString().slice(0, 10)" rewrite:
+  // that reads the UTC calendar day, not the viewer's local one, and this
+  // pins both drift directions so neither can regress unnoticed.
+  it('reads the local calendar day from Date, not the UTC one, in both drift directions', () => {
+    const originalTZ = process.env.TZ
+    try {
+      // Los Angeles: local time trails UTC across midnight, so the local day
+      // (31 August) is BEHIND the UTC day (1 September). toISOString() would
+      // read the UTC day here and return the wrong date.
+      process.env.TZ = 'America/Los_Angeles'
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-09-01T03:00:00.000Z'))
+      let now = new Date()
+      expect(todayISO()).toBe(toISODate(now.getFullYear(), now.getMonth(), now.getDate()))
+      expect(todayISO()).toBe('2026-08-31')
+      vi.useRealTimers()
+
+      // Auckland: local time leads UTC across midnight, so the local day
+      // (2 September) is AHEAD of the UTC day (1 September) — the same
+      // regression, in the opposite direction.
+      process.env.TZ = 'Pacific/Auckland'
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-09-01T20:00:00.000Z'))
+      now = new Date()
+      expect(todayISO()).toBe(toISODate(now.getFullYear(), now.getMonth(), now.getDate()))
+      expect(todayISO()).toBe('2026-09-02')
+      vi.useRealTimers()
+    } finally {
+      process.env.TZ = originalTZ
+      vi.useRealTimers()
+    }
   })
 })
