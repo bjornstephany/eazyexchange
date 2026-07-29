@@ -40,8 +40,9 @@ relitigate them.
 - **No « documents manquants », « peut-être » or « aucun formulaire » rows.** The
   first two have no event timestamp so they could never contribute to the badge;
   the third is a setup nag, not a notification. The dashboard keeps all three.
-- **No realtime, no polling.** The digest refreshes on navigation, which for this
-  product's cadence (deadlines measured in weeks) is ample.
+- **No realtime, no polling.** The digest is re-read when the panel opens (and on
+  any full page load or exchange switch), which for this product's cadence
+  (deadlines measured in weeks) is ample. See « Freshness — corrected » below.
 - **No student-side notifications.** Students have one checklist page.
 - **No changes to any organizer page.** The files touched are: one migration,
   `app/(organizer)/layout.tsx`, `actions/session.ts`, `components/shell/*`,
@@ -109,7 +110,8 @@ as $$
 
     union all
 
-    -- Dossiers à vérifier: subject is the STUDENT, not the submission.
+    -- Dossiers à vérifier: subject is the STUDENT, not the submission, and only
+    -- document_upload templates count — see the parity note below.
     select t.exchange_id, 'submissions_to_review',
            asg.student_id::text, s.submitted_at
       from submissions s
@@ -118,6 +120,7 @@ as $$
       join exchanges e      on e.id  = t.exchange_id
      where s.status = 'submitted'
        and s.submitted_at is not null
+       and t.type = 'document_upload'
        and e.archived_at is null
 
     union all
@@ -131,7 +134,7 @@ as $$
       left join submissions s on s.assignment_id = asg.id
      where t.deadline is not null
        and t.deadline < current_date
-       and (s.id is null or s.status <> 'approved')
+       and (s.id is null or s.status in ('draft', 'rejected'))
        and e.archived_at is null
   ),
   deduped as (
@@ -158,8 +161,8 @@ Three `union all` branches over a common shape
 | kind | one counted unit = | event time |
 |---|---|---|
 | `applications_to_review` | one **application** with `status = 'submitted'` | `applications.submitted_at` |
-| `submissions_to_review` | one **student** with ≥1 submission awaiting review | latest `submissions.submitted_at` for that student |
-| `late` | one **student** past ≥1 template deadline with no approved submission | latest passed `form_templates.deadline` for that student |
+| `submissions_to_review` | one **student** with ≥1 **`document_upload`** submission awaiting review | latest `submissions.submitted_at` for that student |
+| `late` | one **student** past ≥1 template deadline with no submission or a `draft`/`rejected` one | latest passed `form_templates.deadline` for that student |
 
 **The counted unit is the student, not the row, for the last two.** That is what
 makes « 7 dossiers à vérifier » and « 2 élèves en retard » in the bell equal the
@@ -167,6 +170,31 @@ numbers the dashboard's action cards already show for the same words — those c
 per-student rollups (`lib/dashboard/rollup.ts:309,317`), not submissions. Counting
 raw submissions here would give the same phrase two different numbers on two
 surfaces, which is worse than no bell.
+
+**Parity is a contract, and the first draft of this SQL broke it twice.**
+`lib/dashboard/rollup.ts` is the reference implementation; this query is the copy.
+
+- « dossiers à vérifier » is `overall.kind === 'info'`, reachable only via
+  `docs === 'review'` (`rollup.ts:85-90,104-106`), and `docs` is derived from
+  `docTemplates` = `templates.filter(t => t.type === 'document_upload')` alone. A
+  submitted `data_entry` form folds into `forms === 'complete'` and never appears
+  as "à vérifier". Since `lib/forms/insert-standard-template.ts:21` maps both
+  `online` and `fillable` standard forms to `data_entry`, an unfiltered branch
+  over-counted in the ordinary case, not a corner one. Hence `t.type =
+  'document_upload'`.
+- « élèves en retard » is `assignmentState(...) === 'incomplete'`
+  (`rollup.ts:40-47,94-102`), and `'submitted'` maps to `'awaiting'`, not
+  `'incomplete'`. `s.status <> 'approved'` admitted `submitted`, making a dossier
+  handed in on time but not yet reviewed late in the bell and on time on the
+  dashboard. `submissions.status` is CHECK-constrained to
+  `draft|submitted|approved|rejected`, so `s.status in ('draft','rejected')` is
+  total and exactly mirrors `assignmentState`.
+
+Two `getExchangeGrid` filters (`actions/exchanges.ts:167-206`) are deliberately
+NOT restated here: `form_templates.status = 'active'` and membership in
+`exchange_enrollments`. Neither can change a count today — a `draft` template has
+no assignments, and assignments only exist for enrolled students — and the
+migration carries a comment naming what would break that assumption.
 
 `new_count` counts subjects whose `event_at` is after the caller's
 `notifications_seen_at` (`-infinity` when never opened, so first sight shows
@@ -217,8 +245,17 @@ export type NotificationRow = { exchange_id: string; kind: NotificationKind; tot
 export type NotificationGroup = { exchangeId: string; exchangeName: string; items: { kind: NotificationKind; total: number; isNew: boolean }[] }
 
 export function buildNotificationGroups(rows, exchanges): NotificationGroup[]
-export function badgeCount(rows): number   // sum of new_count, 0 when empty
+export function badgeCount(rows): number              // sum of new_count, 0 when empty
+export function newestNotificationAt(rows): number | null  // max newest_at, epoch ms
 ```
+
+`newestNotificationAt` is what the bell's local dismissal compares against. The
+badge is hidden only while the newest item is no newer than the newest item
+already looked at — never by comparing badge *counts*, which return to 0 after
+every stamp and climb back through the same small integers, silently hiding a
+genuinely new item whenever the count lands on a previously dismissed value.
+Epoch milliseconds, not the raw `timestamptz` string: nothing guarantees one
+offset across rows, so lexicographic comparison would not be safe.
 
 `buildNotificationGroups` orders groups by the **display order the sidebar already
 uses** — the `sortExchanges` output the layout computes for `ExchangeOption[]` — so
@@ -248,12 +285,22 @@ export type MarkSeenResult = { ok: true } | { ok: false; reason: 'write_failed' 
 - **Deliberately no `revalidatePath`** — the same reasoning as `setExchangeOrder`
   (`actions/session.ts:58`): busting the layout tree would re-render the entire
   shell while the dropdown is open, closing it under the organizer's cursor. The
-  badge clears in local component state instead, and the next navigation re-reads
-  the real value.
+  badge clears in local component state instead.
 
-Called once when the panel opens (not on every render, not on close). A failed
-write is silent: the badge still clears locally for this session and reappears on
-the next navigation. Nothing the organizer can do about it, and nothing lost.
+Called when the panel opens (not on every render, not on close), and only when the
+badge is non-zero — an open with nothing new has nothing to stamp. A failed write
+is silent: the badge still clears locally for this session and reappears on the
+next refresh. Nothing the organizer can do about it, and nothing lost.
+
+**Freshness — corrected.** An earlier draft of this spec claimed the next
+navigation re-reads the real value. It does not. App Router does not re-render a
+shared layout when navigating between its sibling pages, and `next.config.mjs`
+sets `experimental.staleTimes.dynamic = 180`; the work being counted arrives from
+*other* actors (a student submits, an applicant applies), so nothing in the
+organizer's own session invalidates the layout. `NotificationsMenu` therefore
+calls `router.refresh()` itself when the panel opens, so the counts are current at
+the moment the organizer actually looks. Between two openings the badge can lag —
+accepted; a poll or a realtime subscription is out of scope (see non-goals).
 
 ### 4. The UI
 
