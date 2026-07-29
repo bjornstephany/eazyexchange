@@ -128,7 +128,7 @@ export function NotificationsMenu({
                         item.isNew ? 'font-medium text-foreground' : 'text-muted-foreground',
                       )}
                     >
-                      {t(KIND_LABEL_KEY[item.kind] as never, { n: item.total })}
+                      {t(KIND_LABEL_KEY[item.kind] as Parameters<typeof t>[0], { n: item.total })}
                     </span>
                   </button>
                 ))}
