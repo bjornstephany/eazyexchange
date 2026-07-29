@@ -284,12 +284,6 @@
       },
       "tour": {
         "menuItem": "Visita guidata",
-        "invite": {
-          "title": "Scopra EazyExchange in 2 minuti",
-          "body": "Un giro rapido di ogni scheda, per sapere dove si trova tutto.",
-          "start": "Iniziare",
-          "later": "Più tardi"
-        },
         "controls": {
           "skip": "Salta",
           "prev": "Indietro",

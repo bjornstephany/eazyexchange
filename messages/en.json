@@ -284,12 +284,6 @@
       },
       "tour": {
         "menuItem": "Guided tour",
-        "invite": {
-          "title": "Take a 2-minute tour",
-          "body": "A quick pass through every tab, so you know where everything lives.",
-          "start": "Start",
-          "later": "Later"
-        },
         "controls": {
           "skip": "Skip",
           "prev": "Back",

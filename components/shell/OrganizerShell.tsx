@@ -14,7 +14,6 @@ import { NewExchangeModal } from './NewExchangeModal'
 import { FeedbackModal } from './FeedbackModal'
 import { ShellUiContext, type ShellUi } from './ShellUiContext'
 import { TourProvider } from '@/components/tour/TourProvider'
-import { TourInviteCard } from '@/components/tour/TourInviteCard'
 import { TourMenuItem } from '@/components/tour/TourMenuItem'
 import type { TourState } from '@/types/db'
 
@@ -257,7 +256,6 @@ export function OrganizerShell({
         </header>
         <main className="flex-1 overflow-auto px-7 pb-10 pt-[26px]">
           <div className="mx-auto max-w-6xl">
-            <TourInviteCard />
             <ShellUiContext.Provider value={shellUi}>
               {children}
             </ShellUiContext.Provider>

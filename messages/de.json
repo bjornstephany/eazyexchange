@@ -284,12 +284,6 @@
       },
       "tour": {
         "menuItem": "Geführte Tour",
-        "invite": {
-          "title": "Entdecken Sie EazyExchange in 2 Minuten",
-          "body": "Ein kurzer Rundgang durch jeden Tab, damit Sie wissen, wo alles liegt.",
-          "start": "Starten",
-          "later": "Später"
-        },
         "controls": {
           "skip": "Überspringen",
           "prev": "Zurück",
