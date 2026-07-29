@@ -10,8 +10,16 @@ export interface AppField {
   type: AppFieldType
   required?: boolean
   group?: 'father' | 'mother'
-  options?: { value: string }[]
+  // Built-in options carry a value only — their wording lives in the `apply`
+  // catalog. A custom question's options carry their single typed label; the
+  // value is always a generated token (o1, o2, …) so a stored answer never
+  // depends on the wording.
+  options?: { value: string; label?: string }[]
   maxLength?: number
+  // Set ONLY on custom (organizer-written) questions: the one label the
+  // organizer typed, shown verbatim in every locale. Built-ins leave it
+  // undefined and resolve through lib/application-form.labels.ts.
+  label?: string
 }
 
 export interface AppSection {
