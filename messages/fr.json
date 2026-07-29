@@ -651,6 +651,7 @@
       },
       "errors": {
         "locked": "Ce questionnaire est verrouillé : des candidatures ont déjà été reçues.",
+        "archived": "Ce programme est archivé : le questionnaire reste consultable, plus aucune modification possible.",
         "not_found": "Programme introuvable.",
         "invalid_label": "L’intitulé doit contenir entre 1 et 120 caractères.",
         "invalid_type": "Type de question non pris en charge.",

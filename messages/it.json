@@ -651,6 +651,7 @@
       },
       "errors": {
         "locked": "Questo questionario è bloccato: sono già state ricevute delle candidature.",
+        "archived": "Questo programma è archiviato: il questionario resta consultabile, non è più possibile alcuna modifica.",
         "not_found": "Programma non trovato.",
         "invalid_label": "Il testo deve contenere da 1 a 120 caratteri.",
         "invalid_type": "Tipo di domanda non supportato.",

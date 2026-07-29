@@ -651,6 +651,7 @@
       },
       "errors": {
         "locked": "This questionnaire is locked: applications have already been received.",
+        "archived": "This program is archived: the questionnaire stays viewable, but no further changes are possible.",
         "not_found": "Programme not found.",
         "invalid_label": "The label must be between 1 and 120 characters.",
         "invalid_type": "Unsupported question type.",

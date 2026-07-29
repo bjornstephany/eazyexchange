@@ -13,6 +13,7 @@ import type { ApplicationFieldsDoc, CustomQuestionType } from '@/lib/application
 export type QuestionnaireFailureReason =
   | 'locked'            // the exchange already has applications — permanently read-only
   | 'not_found'         // no such exchange for this organizer's school
+  | 'archived'          // the exchange is archived — read-only, distinct from the applications lock
   | 'invalid_label'     // blank, or over 120 characters
   | 'invalid_type'      // not one of the five offered types
   | 'invalid_options'   // a choice question with fewer than two options

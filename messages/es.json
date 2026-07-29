@@ -651,6 +651,7 @@
       },
       "errors": {
         "locked": "Este cuestionario está bloqueado: ya se han recibido candidaturas.",
+        "archived": "Este programa está archivado: el cuestionario sigue siendo consultable, pero ya no se podrá modificar nada.",
         "not_found": "Programa no encontrado.",
         "invalid_label": "El enunciado debe tener entre 1 y 120 caracteres.",
         "invalid_type": "Tipo de pregunta no admitido.",

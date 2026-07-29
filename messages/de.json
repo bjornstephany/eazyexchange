@@ -651,6 +651,7 @@
       },
       "errors": {
         "locked": "Dieser Fragebogen ist gesperrt: Es sind bereits Bewerbungen eingegangen.",
+        "archived": "Dieses Programm ist archiviert: Der Fragebogen bleibt einsehbar, es sind jedoch keine Änderungen mehr möglich.",
         "not_found": "Programm nicht gefunden.",
         "invalid_label": "Der Fragetext muss zwischen 1 und 120 Zeichen lang sein.",
         "invalid_type": "Nicht unterstützter Fragetyp.",
