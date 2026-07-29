@@ -5,12 +5,16 @@ import { useTranslations } from 'next-intl'
 import { asAppTranslator } from '@/lib/i18n/messages'
 import { SECTION_IDS, CASCADE_REMOVALS, type ApplicationFieldsDoc, type SectionId } from '@/lib/application-fields'
 import { editorRows, type EditorRow } from '@/lib/questionnaire/rows'
-import { removeQuestion, resetQuestionnaire } from '@/actions/questionnaire'
+import { removeQuestion, resetQuestionnaire, editCustomQuestion } from '@/actions/questionnaire'
 import type { QuestionnaireFailureReason } from '@/lib/questionnaire/result'
+import { AddQuestionDialog } from '@/components/applications/AddQuestionDialog'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 
 // The four fixed sections, each a native <details> disclosure (keyboard- and
 // screen-reader-correct without a line of state).
@@ -37,9 +41,40 @@ export function QuestionnaireEditor({
   // A removal that drags a dependent question with it is confirmed first.
   const [cascade, setCascade] = useState<{ sectionId: SectionId; row: EditorRow; dependent: string } | null>(null)
   const [resetting, setResetting] = useState(false)
+  const [adding, setAdding] = useState<SectionId | null>(null)
+  // Custom questions also get a pencil: label, required, options.
+  const [editing, setEditing] = useState<{ sectionId: SectionId; row: EditorRow } | null>(null)
+  const [editLabel, setEditLabel] = useState('')
+  const [editRequired, setEditRequired] = useState(false)
+  const [editOptions, setEditOptions] = useState('')
 
   function labelOf(sectionId: SectionId, id: string): string {
     return editorRows(doc, sectionId, tApply).find(r => r.id === id)?.label ?? id
+  }
+
+  function openEdit(sectionId: SectionId, row: EditorRow) {
+    setEditLabel(row.label)
+    setEditRequired(row.required)
+    setEditOptions((row.options ?? []).map(o => o.label).join('\n'))
+    setEditing({ sectionId, row })
+  }
+
+  async function saveEdit() {
+    if (!editing) return
+    setBusy(true); setError(null)
+    try {
+      const res = await editCustomQuestion(exchangeId, editing.sectionId, {
+        id: editing.row.id,
+        label: editLabel,
+        required: editRequired,
+        options: editing.row.type === 'radio' ? editOptions.split('\n') : undefined,
+      })
+      if (!res.ok) { setError(res.reason); return }
+      setDoc(res.doc)
+      setEditing(null)
+    } catch {
+      setError('failed')
+    } finally { setBusy(false) }
   }
 
   async function persistRemoval(sectionId: SectionId, questionId: string) {
@@ -127,6 +162,17 @@ export function QuestionnaireEditor({
                     <span className="whitespace-nowrap rounded-[6px] bg-subtle px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
                       {t(`types.${row.type}`)}
                     </span>
+                    {row.custom && (
+                      <button
+                        type="button"
+                        disabled={locked || busy}
+                        onClick={() => openEdit(sectionId, row)}
+                        aria-label={`${t('page.editQuestion')} — ${row.label}`}
+                        className="w-[22px] text-center text-muted-foreground disabled:opacity-30"
+                      >
+                        ✎
+                      </button>
+                    )}
                     {row.locked ? (
                       <span className="w-[22px] text-center text-tertiary" title={t('page.lockedTooltip')} aria-label={t('page.lockedTooltip')}>🔒</span>
                     ) : (
@@ -148,6 +194,7 @@ export function QuestionnaireEditor({
                 <button
                   type="button"
                   disabled={locked || busy}
+                  onClick={() => setAdding(sectionId)}
                   className="text-[13px] font-semibold text-brand disabled:opacity-40"
                 >
                   {t('page.add')}
@@ -157,6 +204,47 @@ export function QuestionnaireEditor({
           )
         })}
       </div>
+
+      {adding && (
+        <AddQuestionDialog
+          exchangeId={exchangeId}
+          sectionId={adding}
+          doc={doc}
+          open
+          onOpenChange={open => { if (!open) setAdding(null) }}
+          onAdded={next => { setDoc(next); setAdding(null) }}
+        />
+      )}
+
+      <Dialog open={editing != null} onOpenChange={open => { if (!open) setEditing(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('editDialog.title')}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edit-question-label">{t('dialog.label')}</Label>
+              <Input id="edit-question-label" value={editLabel} maxLength={120} onChange={e => setEditLabel(e.target.value)} />
+            </div>
+            {editing?.row.type === 'radio' && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="edit-question-options">{t('dialog.options')}</Label>
+                <Textarea id="edit-question-options" value={editOptions} rows={4} onChange={e => setEditOptions(e.target.value)} />
+              </div>
+            )}
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={editRequired} onChange={e => setEditRequired(e.target.checked)} />
+              {t('dialog.required')}
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditing(null)}>{c('actions.cancel')}</Button>
+              <Button type="button" disabled={busy || editLabel.trim() === ''} onClick={() => void saveEdit()}>
+                {t('editDialog.save')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={cascade != null} onOpenChange={open => { if (!open) setCascade(null) }}>
         <DialogContent>
