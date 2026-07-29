@@ -907,6 +907,7 @@
       "no_file": "No file selected.",
       "not_an_image": "Please choose an image (JPEG, PNG or WebP).",
       "file_rejected": "That file isn’t accepted — JPEG, PNG or WebP image, 10 MB maximum.",
+      "photo_disabled": "This questionnaire does not ask for a photo.",
       "failed": "Something went wrong. Please try again."
     },
     "form": { "yes": "Yes", "no": "No" },

@@ -9,7 +9,7 @@ import { applyFailure, type ApplyFailureReason } from '@/lib/apply/result'
 const REASONS: ApplyFailureReason[] = [
   'not_found', 'expired', 'locked', 'closed', 'rate_limited',
   'too_long', 'bad_format', 'missing_fields', 'registered',
-  'no_file', 'not_an_image', 'file_rejected', 'failed',
+  'no_file', 'not_an_image', 'file_rejected', 'photo_disabled', 'failed',
 ]
 
 const LOCALES = ['fr', 'en', 'es', 'it', 'de'] as const
