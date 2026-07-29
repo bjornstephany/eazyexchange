@@ -42,6 +42,34 @@ export function badgeCount(rows: NotificationRow[] | null | undefined): number {
 }
 
 /**
+ * The newest event time across the rows, as epoch milliseconds, or null when
+ * there is nothing to compare.
+ *
+ * Epoch milliseconds rather than the raw string on purpose: `newest_at` is a
+ * Postgres `timestamptz` serialized by PostgREST, and nothing guarantees a
+ * single offset across rows, so lexicographic comparison of the strings is not
+ * safe. `Date.parse` normalizes to an instant.
+ *
+ * This is what the badge's "already looked at" check compares against, instead
+ * of the badge COUNT: counts drop back to 0 after every stamp and climb again
+ * through small integers, so comparing counts hides a genuinely new item
+ * whenever the count lands back on a value the organizer once dismissed.
+ */
+export function newestNotificationAt(rows: NotificationRow[] | null | undefined): number | null {
+  if (!rows) return null
+  let newest: number | null = null
+  for (const r of rows) {
+    // Same admission rule as buildNotificationGroups: an item the panel would
+    // not list must not make the badge reappear either.
+    if (!isKind(r.kind) || r.total <= 0 || !r.newest_at) continue
+    const at = Date.parse(r.newest_at)
+    if (Number.isNaN(at)) continue
+    if (newest === null || at > newest) newest = at
+  }
+  return newest
+}
+
+/**
  * Group rows under exchange names.
  *
  * `exchanges` must arrive in DISPLAY order — the same sortExchanges output the

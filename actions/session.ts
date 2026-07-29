@@ -72,12 +72,18 @@ export type MarkNotificationsSeenResult = { ok: true } | { ok: false; reason: 'w
  *
  * Deliberately NO revalidatePath: busting the layout tree would re-render the
  * whole shell while the dropdown is open, closing it under the organizer's
- * cursor. The badge clears in local component state instead, and the next
- * navigation re-reads the real value.
+ * cursor. The badge clears in local component state instead.
+ *
+ * A plain navigation does NOT re-read this: App Router does not re-render a
+ * shared layout on sibling navigation, and next.config.mjs caches dynamic
+ * segments for 180s. The bell therefore calls router.refresh() itself when the
+ * panel opens (NotificationsMenu.tsx) — that, a full page load, or an exchange
+ * switch are the only things that recompute the counts.
  *
  * Structured return, never a throw: production replaces thrown server-action
  * messages with an opaque digest, so a throw would be unreadable at the call
- * site. A failed write is harmless — the badge simply reappears next navigation.
+ * site. A failed write is harmless — the badge is cleared locally for this
+ * session and reappears on the next refresh.
  */
 export async function markNotificationsSeen(): Promise<MarkNotificationsSeenResult> {
   const { user } = await requireOrganizer()

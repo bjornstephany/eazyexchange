@@ -4,8 +4,9 @@ import { screen, fireEvent, waitFor } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 const push = vi.fn()
+const refresh = vi.fn()
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, refresh: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push, refresh, replace: vi.fn() }),
   usePathname: () => '/dashboard',
 }))
 vi.mock('@/actions/session', () => ({
@@ -33,12 +34,20 @@ const groups: NotificationGroup[] = [
   },
 ]
 
-function renderMenu(over: { groups?: NotificationGroup[]; badge?: number; open?: boolean } = {}) {
+// Two instants, T2 strictly after T1, in epoch ms — what newestNotificationAt
+// hands the component.
+const T1 = Date.parse('2026-07-29T08:00:00Z')
+const T2 = Date.parse('2026-07-29T09:30:00Z')
+
+function renderMenu(
+  over: { groups?: NotificationGroup[]; badge?: number; newestAt?: number | null; open?: boolean } = {},
+) {
   const onOpenChange = vi.fn()
   const utils = renderWithIntl(
     <NotificationsMenu
       groups={over.groups ?? groups}
       badge={over.badge ?? 5}
+      newestAt={over.newestAt === undefined ? T1 : over.newestAt}
       open={over.open ?? false}
       onOpenChange={onOpenChange}
     />,
@@ -47,9 +56,31 @@ function renderMenu(over: { groups?: NotificationGroup[]; badge?: number; open?:
 }
 
 // Owns `open` itself so a click really drives the closed → open transition.
-function OpenHarness({ badge = 5 }: { badge?: number }) {
+function OpenHarness({ badge = 5, newestAt = T1 }: { badge?: number; newestAt?: number | null }) {
   const [open, setOpen] = useState(false)
-  return <NotificationsMenu groups={groups} badge={badge} open={open} onOpenChange={setOpen} />
+  return <NotificationsMenu groups={groups} badge={badge} newestAt={newestAt} open={open} onOpenChange={setOpen} />
+}
+
+// Drives the whole lifecycle the value-collision bug lived in: open (dismiss),
+// close, the server count drains to 0 after the stamp, then a NEW item arrives
+// and lands the count back on a value already dismissed.
+function CollisionHarness() {
+  const [open, setOpen] = useState(false)
+  const [feed, setFeed] = useState<{ badge: number; newestAt: number | null }>({ badge: 1, newestAt: T1 })
+  return (
+    <div>
+      <button type="button" onClick={() => setFeed({ badge: 0, newestAt: T1 })}>drain</button>
+      <button type="button" onClick={() => setFeed({ badge: 1, newestAt: T2 })}>arrive</button>
+      <button type="button" onClick={() => setFeed({ badge: 1, newestAt: T1 })}>restate</button>
+      <NotificationsMenu
+        groups={groups}
+        badge={feed.badge}
+        newestAt={feed.newestAt}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </div>
+  )
 }
 
 describe('NotificationsMenu', () => {
@@ -111,6 +142,59 @@ describe('NotificationsMenu', () => {
     expect(screen.getByText('5')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
     await waitFor(() => expect(screen.queryByText('5')).toBeNull())
+  })
+
+  // Nothing in the organizer's own session revalidates the organizer layout, and
+  // the work being counted arrives from other actors, so the panel re-reads the
+  // counts itself at the moment the organizer looks.
+  it('refreshes the server counts when it becomes open', async () => {
+    renderWithIntl(<OpenHarness />)
+    expect(refresh).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+  })
+
+  it('does not stamp the watermark when there is nothing new to mark seen', async () => {
+    renderWithIntl(<OpenHarness badge={0} />)
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    // The refresh still happens — that is how a zero badge discovers new work.
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    expect(markNotificationsSeen).not.toHaveBeenCalled()
+  })
+
+  // The value-collision regression. Dismissal is by TIMESTAMP: comparing badge
+  // COUNTS hid a genuinely new item whenever the count returned to a value the
+  // organizer had already dismissed — and after every stamp the count restarts
+  // from 0 and climbs through 1, the commonest value this counter takes.
+  it('shows the badge again when a newer item lands on a previously dismissed count', async () => {
+    renderWithIntl(<CollisionHarness />)
+    expect(screen.getByText('1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(screen.queryByText('1')).toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+
+    fireEvent.click(screen.getByText('drain'))     // stamp landed: count back to 0
+    expect(screen.queryByText('1')).toBeNull()
+
+    fireEvent.click(screen.getByText('arrive'))    // one new candidature: count 1 again
+    await waitFor(() => expect(screen.getByText('1')).toBeInTheDocument())
+  })
+
+  it('keeps the badge hidden when the same count is restated with no newer item', async () => {
+    renderWithIntl(<CollisionHarness />)
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(screen.queryByText('1')).toBeNull())
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+
+    fireEvent.click(screen.getByText('drain'))
+    fireEvent.click(screen.getByText('restate'))   // e.g. the stamp write failed
+    expect(screen.queryByText('1')).toBeNull()
+  })
+
+  it('shows the badge when the rows carry no timestamp at all (fails open)', () => {
+    renderMenu({ badge: 4, newestAt: null })
+    expect(screen.getByText('4')).toBeInTheDocument()
   })
 
   it('switches exchange then navigates when a candidature row is clicked', async () => {

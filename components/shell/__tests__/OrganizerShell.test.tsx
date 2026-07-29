@@ -327,6 +327,27 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('2')).toBeInTheDocument()
   })
 
+  // The bell's local dismissal compares TIMESTAMPS, so newest_at has to reach it
+  // — with no timestamp the badge deliberately fails open and never clears.
+  it('plumbs newest_at through, so opening the bell clears the badge', async () => {
+    renderWithIntl(
+      <OrganizerShell
+        exchanges={exchanges}
+        activeExchangeId="ex1"
+        organizerName="Marie Bernard"
+        schoolName="Lycée Mistral"
+        notifications={[
+          { exchange_id: 'ex1', kind: 'applications_to_review', total: 3, new_count: 2, newest_at: '2026-07-29T08:00:00Z' },
+        ]}
+      >
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByText('2')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(screen.queryByText('2')).toBeNull())
+  })
+
   it('opening the bell closes the account menu', async () => {
     renderShell()
     fireEvent.click(screen.getByRole('button', { name: /Compte/ }))

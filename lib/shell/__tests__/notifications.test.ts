@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { badgeCount, buildNotificationGroups, type NotificationRow } from '@/lib/shell/notifications'
+import { badgeCount, buildNotificationGroups, newestNotificationAt, type NotificationRow } from '@/lib/shell/notifications'
 
 const exchanges = [
   { id: 'ex1', name: 'France–Canada 2026' },
@@ -34,6 +34,48 @@ describe('badgeCount', () => {
     expect(badgeCount([])).toBe(0)
     expect(badgeCount(null)).toBe(0)
     expect(badgeCount(undefined)).toBe(0)
+  })
+})
+
+describe('newestNotificationAt', () => {
+  it('returns the maximum newest_at as epoch ms', () => {
+    expect(
+      newestNotificationAt([
+        row({ newest_at: '2026-07-29T08:00:00Z' }),
+        row({ kind: 'late', newest_at: '2026-07-29T11:00:00Z' }),
+        row({ kind: 'submissions_to_review', newest_at: '2026-07-29T09:00:00Z' }),
+      ]),
+    ).toBe(Date.parse('2026-07-29T11:00:00Z'))
+  })
+
+  // The reason this is not a string max: mixed offsets order differently
+  // lexicographically than they do in time. '2026-07-29T09:00:00+02:00' is
+  // 07:00Z — EARLIER than '2026-07-29T08:00:00Z' — but sorts after it.
+  it('compares instants, not strings, across offsets', () => {
+    expect(
+      newestNotificationAt([
+        row({ newest_at: '2026-07-29T08:00:00Z' }),
+        row({ kind: 'late', newest_at: '2026-07-29T09:00:00+02:00' }),
+      ]),
+    ).toBe(Date.parse('2026-07-29T08:00:00Z'))
+  })
+
+  it('ignores unknown kinds, non-positive totals, null and unparseable stamps', () => {
+    expect(newestNotificationAt([row({ kind: 'bogus', newest_at: '2027-01-01T00:00:00Z' })])).toBeNull()
+    expect(newestNotificationAt([row({ total: 0, newest_at: '2027-01-01T00:00:00Z' })])).toBeNull()
+    expect(newestNotificationAt([row({ newest_at: null })])).toBeNull()
+    expect(newestNotificationAt([row({ newest_at: 'pas une date' })])).toBeNull()
+  })
+
+  it('returns null for empty, null and undefined', () => {
+    expect(newestNotificationAt([])).toBeNull()
+    expect(newestNotificationAt(null)).toBeNull()
+    expect(newestNotificationAt(undefined)).toBeNull()
+  })
+
+  it('is unaffected by new_count — it is about arrival time, not newness', () => {
+    expect(newestNotificationAt([row({ new_count: 0, newest_at: '2026-07-29T08:00:00Z' })]))
+      .toBe(Date.parse('2026-07-29T08:00:00Z'))
   })
 })
 

@@ -18,7 +18,7 @@ import { TourProvider } from '@/components/tour/TourProvider'
 import { TourInviteCard } from '@/components/tour/TourInviteCard'
 import { TourMenuItem } from '@/components/tour/TourMenuItem'
 import { NotificationsMenu } from './NotificationsMenu'
-import { badgeCount, buildNotificationGroups, type NotificationRow } from '@/lib/shell/notifications'
+import { badgeCount, buildNotificationGroups, newestNotificationAt, type NotificationRow } from '@/lib/shell/notifications'
 import type { TourState } from '@/types/db'
 
 export type ExchangeOption = { id: string; name: string; year: number; archived: boolean }
@@ -109,6 +109,8 @@ export function OrganizerShell({
     [notifications, exchanges],
   )
   const notificationBadge = useMemo(() => badgeCount(notifications), [notifications])
+  // Drives the bell's "already looked at" comparison — see newestNotificationAt.
+  const notificationNewestAt = useMemo(() => newestNotificationAt(notifications), [notifications])
 
   // Session-scoped tabs only exist once there is an exchange to scope them to.
   const navItems: SidebarNavItem[] = [
@@ -228,6 +230,7 @@ export function OrganizerShell({
             <NotificationsMenu
               groups={notificationGroups}
               badge={notificationBadge}
+              newestAt={notificationNewestAt}
               open={openMenu === 'notifications'}
               onOpenChange={(next) => setOpenMenu(next ? 'notifications' : null)}
             />

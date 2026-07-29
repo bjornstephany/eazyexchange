@@ -36,6 +36,12 @@ export default async function OrganizerLayout({ children }: { children: React.Re
 
   // One extra round trip for the header bell, issued alongside the exchanges
   // query rather than after it, so it costs a query but ~no added latency.
+  //
+  // This layout is NOT re-rendered by an ordinary navigation between organizer
+  // pages (App Router keeps shared layouts, and next.config.mjs caches dynamic
+  // segments for 180s), and the work it counts arrives from other actors. The
+  // bell calls router.refresh() when its panel opens so the numbers are current
+  // whenever the organizer actually looks; between two openings they can lag.
   const [{ data: exchangeRows }, { data: notificationRows }] = await Promise.all([
     supabase
       .from('exchanges')
