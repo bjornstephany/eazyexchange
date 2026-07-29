@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react'
@@ -17,6 +17,8 @@ import { ShellUiContext, type ShellUi } from './ShellUiContext'
 import { TourProvider } from '@/components/tour/TourProvider'
 import { TourInviteCard } from '@/components/tour/TourInviteCard'
 import { TourMenuItem } from '@/components/tour/TourMenuItem'
+import { NotificationsMenu } from './NotificationsMenu'
+import { badgeCount, buildNotificationGroups, type NotificationRow } from '@/lib/shell/notifications'
 import type { TourState } from '@/types/db'
 
 export type ExchangeOption = { id: string; name: string; year: number; archived: boolean }
@@ -56,6 +58,7 @@ export function OrganizerShell({
   // Defaults to 'completed' so the many existing shell tests (and any caller
   // that does not care) never render the invitation card.
   tourState = 'completed',
+  notifications = [],
   children,
 }: {
   exchanges: ExchangeOption[]
@@ -67,17 +70,20 @@ export function OrganizerShell({
   remaining?: number
   orgRole?: 'owner' | 'admin'
   tourState?: TourState
+  notifications?: NotificationRow[]
   children: React.ReactNode
 }) {
   const t = useTranslations('organizer')
   const c = useTranslations('common')
   const pathname = usePathname()
   const router = useRouter()
-  const [menuOpen, setMenuOpen] = useState(false)
+  // One state, not two booleans: opening either header menu must close the other.
+  const [openMenu, setOpenMenu] = useState<'account' | 'notifications' | null>(null)
+  const menuOpen = openMenu === 'account'
   const [newExchangeOpen, setNewExchangeOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const active = exchanges.find((e) => e.id === activeExchangeId) ?? exchanges[0] ?? null
-  const closeMenu = useCallback(() => setMenuOpen(false), [])
+  const closeMenu = useCallback(() => setOpenMenu(null), [])
   const menuRef = useDismissable<HTMLDivElement>(menuOpen, closeMenu)
   const { collapsed, toggle } = useSidebarCollapsed()
 
@@ -97,6 +103,12 @@ export function OrganizerShell({
   const shellUi = useMemo<ShellUi>(() => ({
     openNewExchange: handleNewExchange,
   }), [handleNewExchange])
+
+  const notificationGroups = useMemo(
+    () => buildNotificationGroups(notifications, exchanges),
+    [notifications, exchanges],
+  )
+  const notificationBadge = useMemo(() => badgeCount(notifications), [notifications])
 
   // Session-scoped tabs only exist once there is an exchange to scope them to.
   const navItems: SidebarNavItem[] = [
@@ -213,10 +225,16 @@ export function OrganizerShell({
               <IconFeedbackLight />
               <span>{t('shell.nav.feedback')}</span>
             </button>
+            <NotificationsMenu
+              groups={notificationGroups}
+              badge={notificationBadge}
+              open={openMenu === 'notifications'}
+              onOpenChange={(next) => setOpenMenu(next ? 'notifications' : null)}
+            />
             <div ref={menuRef} className="relative">
               <button
                 type="button"
-                onClick={() => setMenuOpen((o) => !o)}
+                onClick={() => setOpenMenu((m) => (m === 'account' ? null : 'account'))}
                 aria-label={t('shell.accountMenu.trigger')}
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
@@ -226,7 +244,7 @@ export function OrganizerShell({
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-2 w-44 rounded-[11px] border bg-card p-1 shadow-float">
-                  <TourMenuItem onStarted={() => setMenuOpen(false)} />
+                  <TourMenuItem onStarted={() => setOpenMenu(null)} />
                   <button
                     type="button"
                     onClick={handleSignOut}

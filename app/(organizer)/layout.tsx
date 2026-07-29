@@ -34,11 +34,16 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   const school = profile?.schools ?? null
   const showGrace = school ? isInGrace(school as never) : false
 
-  const { data: exchangeRows } = await supabase
-    .from('exchanges')
-    .select('id, name, year, archived_at, school_a_id')
-    .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
-    .order('created_at', { ascending: false })
+  // One extra round trip for the header bell, issued alongside the exchanges
+  // query rather than after it, so it costs a query but ~no added latency.
+  const [{ data: exchangeRows }, { data: notificationRows }] = await Promise.all([
+    supabase
+      .from('exchanges')
+      .select('id, name, year, archived_at, school_a_id')
+      .or(`school_a_id.eq.${profile.school_id},school_b_id.eq.${profile.school_id}`)
+      .order('created_at', { ascending: false }),
+    supabase.rpc('organizer_notifications'),
+  ])
   const rows = (exchangeRows ?? []) as any[]
   // created_at desc from the query, then the organizer's personal drag order on
   // top of it. Exchanges the organizer has never dragged stay at the front, so
@@ -87,6 +92,7 @@ export default async function OrganizerLayout({ children }: { children: React.Re
           remaining={remaining}
           orgRole={(profile.org_role ?? 'admin') as 'owner' | 'admin'}
           tourState={profile.tour_state}
+          notifications={notificationRows ?? []}
         >
           {showGrace && (
             <PaymentWarningBanner body={tBilling('grace.body')} cta={tBilling('grace.cta')} />
