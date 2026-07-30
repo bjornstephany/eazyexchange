@@ -31,7 +31,6 @@ export default function robots(): MetadataRoute.Robots {
         '/my-forms',
         '/infos',
         '/communication',
-        '/admin',
         '/pending',
         // Local-only quick-access page. It 404s outside development, so a
         // crawler would never reach it — but the segment exists in the app

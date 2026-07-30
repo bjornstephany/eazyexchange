@@ -59,6 +59,21 @@ describe('robots.txt covers the whole non-public route surface', () => {
     }
   )
 
+  // The reverse direction. Without this the list only ever grows: /admin was
+  // deleted in the 2026-07-30 waitlist change and its entry sat here pointing at
+  // nothing, which is how a reader learns the list is not the record it claims
+  // to be. Route handlers and token-gated funnels have no page.tsx, so they are
+  // named explicitly rather than derived.
+  const NON_PAGE_PREFIXES = new Set(['api', 'auth'])
+
+  it('disallows nothing that is not a real route', () => {
+    const segments = new Set(routeSegments())
+    const stale = disallow
+      .map((d) => d.replace(/^\//, '').replace(/\/$/, ''))
+      .filter((s) => s && !NON_PAGE_PREFIXES.has(s) && !segments.has(s))
+    expect(stale).toEqual([])
+  })
+
   it('does not disallow the pages the sitemap advertises', () => {
     for (const entry of sitemap()) {
       const pathname = new URL(entry.url).pathname

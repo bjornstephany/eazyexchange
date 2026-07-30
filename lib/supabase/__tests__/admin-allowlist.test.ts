@@ -14,10 +14,6 @@ const ALLOWLIST = [
   'actions/exchanges.ts',
   'actions/join.ts',
   'actions/settings.ts',
-  // Review queue for the manual signup approval gate: writes users.status and
-  // reviewed_at, which have no grant for the authenticated role by design.
-  'app/admin/actions.ts',
-  'app/admin/page.tsx',
   'app/api/stripe/webhook/route.ts',
   'app/auth/callback/route.ts',
   'app/billing/checkout/route.ts',

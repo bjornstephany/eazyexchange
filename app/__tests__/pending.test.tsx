@@ -19,16 +19,21 @@ beforeEach(() => {
 })
 
 describe('/pending', () => {
-  it('tells a pending organizer their request is under review', async () => {
+  // /pending survives the waitlist change as the terminal page for the one
+  // legacy `pending` row in production. Nobody is reviewing a queue any more,
+  // so the copy no longer promises one.
+  it('tells a pending organizer their access is not open yet, with no promise of a review', async () => {
     getProfile.mockResolvedValue({ status: 'pending', role: 'organizer' })
     render(await PendingPage())
-    expect(screen.getByText(/en cours d’examen/i)).toBeInTheDocument()
+    // By role: the body paragraph also says « pas encore ouvert à tous ».
+    expect(screen.getByRole('heading', { name: /pas encore ouvert/i })).toBeInTheDocument()
+    expect(screen.queryByText(/en cours d’examen/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/contact@eazyexchange\.com/)).toBeInTheDocument()
   })
 
   it('tells a rejected organizer plainly, with a contact address', async () => {
     getProfile.mockResolvedValue({ status: 'rejected', role: 'organizer' })
     render(await PendingPage())
-    expect(screen.queryByText(/en cours d’examen/i)).not.toBeInTheDocument()
     expect(screen.getByText(/contact@eazyexchange\.com/)).toBeInTheDocument()
   })
 
