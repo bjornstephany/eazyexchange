@@ -115,6 +115,20 @@ describe('CandidaturesView', () => {
     expect(screen.getByRole('button', { name: 'Envoyer les invitations' })).toBeInTheDocument()
   })
 
+  // The summary counts apps.length, which includes `invited` rows the organizer
+  // created by inviting — nobody has sent those in, so the subtitle must not
+  // claim they were received. Counting them is right (it matches the « Toutes »
+  // tab); calling them « reçues » was not.
+  it('does not claim invited rows were received', () => {
+    const withInvited: AppRow[] = [
+      ...apps,
+      { id: '4', status: 'invited', submitted_at: null, responded_at: null, data: { email: 'i@x.co' }, email: 'i@x.co' },
+    ]
+    renderWithIntl(<CandidaturesView apps={withInvited} exchangeName="Espagne" exchangeId="ex1" applySlug="espagne-2026" applicationDeadline="2026-09-01" />)
+    expect(screen.getByText('4 candidatures pour Espagne.')).toBeInTheDocument()
+    expect(screen.queryByText(/reçues?/)).toBeNull()
+  })
+
   // A deadline is what makes /apply/<slug> live. Without one — a legacy
   // exchange, or the fail-closed count blip that forces 'running' — inviting
   // would email families a link that refuses them.

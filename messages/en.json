@@ -511,7 +511,7 @@
         "changeTemplateCta": "Change template"
       },
       "inviteCta": "Invite students",
-      "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
+      "countSummary": "{n, plural, one {# application} other {# applications}} for {exchangeName}.",
       "deadlineLabel": "Deadline",
       "deadlineError": "Could not save the deadline. Try again.",
       "copyCta": "Copy",

@@ -511,7 +511,7 @@
         "changeTemplateCta": "Cambia modello"
       },
       "inviteCta": "Invita gli studenti",
-      "countSummary": "{n, plural, one {# candidatura ricevuta} other {# candidature ricevute}} per {exchangeName}.",
+      "countSummary": "{n, plural, one {# candidatura} other {# candidature}} per {exchangeName}.",
       "deadlineLabel": "Scadenza",
       "deadlineError": "Impossibile salvare la scadenza. Riprova.",
       "copyCta": "Copia",

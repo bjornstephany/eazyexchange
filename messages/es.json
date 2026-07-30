@@ -511,7 +511,7 @@
         "changeTemplateCta": "Cambiar de plantilla"
       },
       "inviteCta": "Invitar a los alumnos",
-      "countSummary": "{n, plural, one {# candidatura recibida} other {# candidaturas recibidas}} para {exchangeName}.",
+      "countSummary": "{n, plural, one {# candidatura} other {# candidaturas}} para {exchangeName}.",
       "deadlineLabel": "Fecha límite",
       "deadlineError": "No se pudo guardar la fecha límite. Inténtelo de nuevo.",
       "copyCta": "Copiar",

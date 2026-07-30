@@ -511,7 +511,7 @@
         "changeTemplateCta": "Changer de modèle"
       },
       "inviteCta": "Inviter les élèves",
-      "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
+      "countSummary": "{n, plural, one {# candidature} other {# candidatures}} pour {exchangeName}.",
       "deadlineLabel": "Date limite",
       "deadlineError": "Impossible d’enregistrer la date limite. Réessayez.",
       "copyCta": "Copier",
