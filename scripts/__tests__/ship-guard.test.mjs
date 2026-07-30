@@ -33,5 +33,10 @@ describe('pnpm ship — the local-database guard', () => {
     expect(r.stdout).not.toContain('Lint')
     expect(r.stdout).not.toContain('Production build')
     expect(r.stdout).not.toContain('Supabase local — up')
+    // …and it checks nothing else either. This one is worth pinning: the seed
+    // guard is a filesystem read against the CWD, so ordering it before the
+    // database guard would let a manifest-less worktree be judged before we
+    // know the run is even aimed somewhere safe.
+    expect(r.stdout).not.toContain('Seed manifest')
   })
 }, 30_000)
