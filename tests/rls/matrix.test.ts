@@ -251,6 +251,23 @@ describe.each([
     expectBlocked(await writeOutcome(sql, uid(), (tx) =>
       tx`insert into exchange_program_details (exchange_id, destination) values (${fx.exchangeA}, 'pwned')`))
   })
+
+  it('application_custom_questions: cannot read school A bank rows', async () => {
+    expect(await readRows(uid(), (tx) =>
+      tx`select id from application_custom_questions where id = ${fx.customQuestionA}`)).toHaveLength(0)
+  })
+
+  it('application_custom_questions: cannot insert for school A', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`insert into application_custom_questions (school_id, label, locale, type)
+         values (${fx.schoolA}, 'Injecté', 'fr', 'text')`))
+  })
+
+  it('exchanges: cannot rewrite school A questionnaire', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchanges set application_fields = '{"version":1,"sections":[]}'::jsonb
+         where id = ${fx.exchangeA}`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -477,5 +494,40 @@ describe('partner boundary on the shared exchange', () => {
   it('partner organizer C cannot read school A program details (not on exchange A)', async () => {
     expect(await readRows(fx.orgC, (tx) =>
       tx`select exchange_id from exchange_program_details where exchange_id = ${fx.exchangeA}`)).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The question bank is INSERT-only, even for its owner. Suggestions come from
+// application_question_suggestions(), never from the rows.
+// ---------------------------------------------------------------------------
+describe('question bank is write-only for its own school', () => {
+  it('organizer A may insert a bank row for their own school', async () => {
+    const outcome = await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`insert into application_custom_questions (school_id, label, locale, type)
+         values (${fx.schoolA}, 'Taille de vêtement', 'fr', 'text')`)
+    expect(outcome).toBe(1)
+  })
+
+  it('organizer A cannot read back even their own bank rows', async () => {
+    expect(await readRows(fx.orgA, (tx) =>
+      tx`select id from application_custom_questions where school_id = ${fx.schoolA}`)).toHaveLength(0)
+  })
+
+  it('organizer A may customize their own exchange questionnaire', async () => {
+    const outcome = await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchanges set application_fields = '{"version":1,"sections":[]}'::jsonb
+         where id = ${fx.exchangeA}`)
+    expect(outcome).toBe(1)
+  })
+
+  // The bank table still carries anon's default table-level INSERT grant on
+  // prod (verified) — the RLS policy, which requires (select my_role()) =
+  // 'organizer', is the ONLY thing stopping an anonymous insert. Pin that
+  // directly rather than relying on the authenticated-persona deny cases above.
+  it('anon cannot insert into the bank (grant remains, RLS blocks it)', async () => {
+    expectBlocked(await writeOutcome(sql, null, (tx) =>
+      tx`insert into application_custom_questions (school_id, label, locale, type)
+         values (${fx.schoolA}, 'Injecté anon', 'fr', 'text')`))
   })
 })

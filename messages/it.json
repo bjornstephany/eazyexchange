@@ -31,6 +31,11 @@
       "toVerify": "Da verificare",
       "inProgress": "In corso",
       "missing": "Mancante"
+    },
+    "dateField": {
+      "placeholder": "Scegliere una data",
+      "prevMonth": "Mese precedente",
+      "nextMonth": "Mese successivo"
     }
   },
   "organizer": {
@@ -290,12 +295,6 @@
       },
       "tour": {
         "menuItem": "Visita guidata",
-        "invite": {
-          "title": "Scopra EazyExchange in 2 minuti",
-          "body": "Un giro rapido di ogni scheda, per sapere dove si trova tutto.",
-          "start": "Iniziare",
-          "later": "Più tardi"
-        },
         "controls": {
           "skip": "Salta",
           "prev": "Indietro",
@@ -305,7 +304,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Benvenuto in EazyExchange",
+            "title": "Benvenuto in EazyExchange! 🎉",
             "body": "Un giro rapido delle schede del suo spazio. Può interromperlo in qualsiasi momento e riprenderlo dal menu del suo account."
           },
           "applications": {
@@ -333,7 +332,7 @@
             "body": "Il suo account, il suo istituto, il suo team e il suo abbonamento."
           },
           "finish": {
-            "title": "È tutto",
+            "title": "Tutto pronto! 🚀",
             "body": "Ora sa orientarsi. Per rivedere questo giro, apra il menu del suo account, in alto a destra."
           }
         }
@@ -593,6 +592,77 @@
         "accept": "Accetta",
         "notePlaceholder": "Nota facoltativa per il candidato",
         "sendRejectionEmail": "Invia un’e-mail di rifiuto al candidato"
+      }
+    },
+    "questionnaire": {
+      "card": {
+        "title": "Questionario di candidatura",
+        "template": "Modello: {name}",
+        "templateStandard": "Questionario standard",
+        "summary": "{n} domande · 4 sezioni",
+        "locked": "Bloccato — {n} candidature ricevute",
+        "edit": "Modifica",
+        "view": "Consulta",
+        "reset": "Reimposta",
+        "resetTitle": "Tornare al questionario standard?",
+        "resetBody": "Tutte le tue modifiche andranno perse e il questionario tornerà al modello standard.",
+        "resetConfirm": "Reimposta"
+      },
+      "page": {
+        "title": "Questionario di candidatura",
+        "back": "← Candidature",
+        "intro": "Aggiungi o togli domande. Ogni modifica viene salvata subito.",
+        "lockedNotice": "Questo questionario è bloccato: sono già state ricevute {n} candidature. Resta consultabile.",
+        "sectionCount": "{n} domande",
+        "add": "＋ Aggiungi una domanda",
+        "lockedTooltip": "Raccolta prima del modulo — serve a inviare l’invito.",
+        "remove": "Togli",
+        "editQuestion": "Modifica la domanda",
+        "required": "obbligatoria",
+        "empty": "Nessuna domanda in questa sezione."
+      },
+      "types": {
+        "text": "Testo breve",
+        "textarea": "Testo lungo",
+        "date": "Data",
+        "yesno": "Sì / No",
+        "radio": "Scelta multipla",
+        "photo": "Foto",
+        "email": "E-mail",
+        "tel": "Telefono"
+      },
+      "cascade": {
+        "title": "Questa domanda ne trascina un’altra",
+        "body": "Togliere «{question}» toglierà anche «{dependent}», che ha senso solo insieme a lei.",
+        "confirm": "Togli entrambe"
+      },
+      "dialog": {
+        "title": "Aggiungi una domanda — {section}",
+        "removedHeading": "Domande tolte",
+        "removedEmpty": "Tutte le domande del modello sono presenti.",
+        "suggestionsHeading": "Suggerimenti da altri istituti",
+        "suggestionsEmpty": "Ancora nessun suggerimento.",
+        "suggestionsSchools": "{n} istituti",
+        "orCreate": "oppure crea",
+        "label": "Testo della domanda",
+        "type": "Tipo",
+        "required": "Risposta obbligatoria",
+        "options": "Scelte (una per riga)",
+        "add": "Aggiungi"
+      },
+      "editDialog": {
+        "title": "Modifica la domanda",
+        "save": "Salva"
+      },
+      "errors": {
+        "locked": "Questo questionario è bloccato: sono già state ricevute delle candidature.",
+        "archived": "Questo programma è archiviato: il questionario resta consultabile, non è più possibile alcuna modifica.",
+        "not_found": "Programma non trovato.",
+        "invalid_label": "Il testo deve contenere da 1 a 120 caratteri.",
+        "invalid_type": "Tipo di domanda non supportato.",
+        "invalid_options": "Una scelta multipla richiede almeno due opzioni.",
+        "unknown_question": "Questa domanda non è più nel questionario — ricarica la pagina.",
+        "failed": "Salvataggio non riuscito. Riprova."
       }
     },
     "exchanges": {
@@ -921,6 +991,7 @@
       "no_file": "Nessun file selezionato.",
       "not_an_image": "Scegli un’immagine (JPEG, PNG o WebP).",
       "file_rejected": "Questo file non è accettato — immagine JPEG, PNG o WebP di massimo 10 MB.",
+      "photo_disabled": "Questo questionario non richiede una foto.",
       "failed": "Si è verificato un errore. Riprova."
     },
     "form": {

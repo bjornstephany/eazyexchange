@@ -6,13 +6,15 @@ vi.mock('@/actions/applications-review', () => ({
   acceptApplications: vi.fn(), rejectApplications: vi.fn(), sendApplicationInvitations: vi.fn(),
 }))
 vi.mock('@/actions/exchanges', () => ({ setApplicationOpen: vi.fn() }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+vi.mock('@/actions/questionnaire', () => ({ resetQuestionnaire: vi.fn() }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 
 import { CandidaturesView } from '../CandidaturesView'
 
 const baseProps = {
   exchangeName: 'X', exchangeId: 'ex1', applicationOpen: true,
   applicationDeadline: '2999-01-01', applySlug: 'x',
+  questionnaire: { questionCount: 55, locked: false, applicationCount: 0 },
 }
 
 describe('CandidaturesView invitations', () => {

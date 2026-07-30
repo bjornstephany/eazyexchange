@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { missingRequiredApplication, overLimitApplicationFields, invalidFormatApplicationFields, parentGroupFields } from '@/lib/application-form'
+import type { AppSection } from '@/lib/application-form'
 import { localizedApplicationSections, type LocalizedField } from '@/lib/application-form.labels'
 import { asAppTranslator } from '@/lib/i18n/messages'
 import { useTranslations } from 'next-intl'
@@ -25,11 +26,13 @@ interface Props {
   initialData: Record<string, string>
   locale: Locale
   initialPhotoUrl: string | null
+  // This exchange's resolved questionnaire and whether it still asks for a
+  // portrait. Both come from the page, which reads exchanges.application_fields.
+  sections: AppSection[]
+  photoEnabled: boolean
 }
 
-const PARENT_FIELD_IDS = [...parentGroupFields('father'), ...parentGroupFields('mother')].map(f => f.id)
-
-export function ApplicationForm({ token, slug, exchangeName, initialData, locale, initialPhotoUrl }: Props) {
+export function ApplicationForm({ token, slug, exchangeName, initialData, locale, initialPhotoUrl, sections, photoEnabled }: Props) {
   const [data, setData] = useState<Record<string, string>>(initialData)
   const [hasPhoto, setHasPhoto] = useState(initialPhotoUrl != null)
   const [missing, setMissing] = useState<string[]>([])
@@ -43,8 +46,14 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
   const router = useRouter()
   const t = useTranslations('apply')
   // Field labels come from the `apply` catalog (one source for the funnel form,
-  // the organizer read view and the PDF recap).
-  const sections = localizedApplicationSections(asAppTranslator(t))
+  // the organizer read view and the PDF recap); a custom question carries its
+  // own. An empty section is simply not rendered — except `student`, which
+  // still hosts the portrait when the questionnaire keeps it.
+  const visible = localizedApplicationSections(asAppTranslator(t), sections)
+    .filter(s => s.fields.length > 0 || (s.id === 'student' && photoEnabled))
+  const parentFieldIds = [
+    ...parentGroupFields('father', sections), ...parentGroupFields('mother', sections),
+  ].map(f => f.id)
 
   function set(id: string, value: string) {
     setMissing(prev => (prev.includes(id) ? prev.filter(m => m !== id) : prev))
@@ -76,9 +85,9 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
   }
 
   async function onSubmit() {
-    const miss = missingRequiredApplication(data, { hasPhoto })
-    const over = overLimitApplicationFields(data)
-    const badFormat = invalidFormatApplicationFields(data)
+    const miss = missingRequiredApplication(data, { hasPhoto, photoRequired: photoEnabled, sections })
+    const over = overLimitApplicationFields(data, sections)
+    const badFormat = invalidFormatApplicationFields(data, sections)
     const flagged = [...miss, ...over, ...badFormat]
     setMissing(flagged)
     if (flagged.length) {
@@ -165,8 +174,8 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
 
   const showSeparation = data.family_status === 'separated' || data.family_status === 'step_family'
   const showGenderOther = data.sex === 'other'
-  const parentsInvalid = missing.some(id => PARENT_FIELD_IDS.includes(id))
-  const total = sections.length
+  const parentsInvalid = missing.some(id => parentFieldIds.includes(id))
+  const total = visible.length
   return (
     <div className="pb-28">
       <header className="mb-[26px] flex items-center justify-between">
@@ -187,7 +196,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
       <p className="m-0 mb-7 text-[13px] leading-relaxed text-[#8A97B2]">{t('form.noneHint')}</p>
 
       <div className="flex flex-col gap-6 rounded-t-[18px] border border-[#E4E9F2] bg-white px-9 py-[30px]">
-        {sections.map((section, i) => (
+        {visible.map((section, i) => (
           <section key={section.id} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1 border-b border-[#E4E9F2] pb-3">
               <div className="flex items-baseline gap-3">
@@ -199,7 +208,7 @@ export function ApplicationForm({ token, slug, exchangeName, initialData, locale
               )}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {section.id === 'student' && (
+              {section.id === 'student' && photoEnabled && (
                 <div className="sm:col-span-2">
                   <ApplicationPhotoUpload
                     token={token}

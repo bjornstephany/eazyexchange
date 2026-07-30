@@ -24,6 +24,7 @@ vi.mock('@/actions/exchanges', () => ({
 vi.mock('@/actions/tour', () => ({ setTourState: (s: TourState) => setTourState(s) }))
 
 import { OrganizerShell } from '@/components/shell/OrganizerShell'
+import { TourProvider } from '@/components/tour/TourProvider'
 
 const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: false }]
 
@@ -62,54 +63,57 @@ function renderShell({
 }
 
 const bubble = () => within(screen.getByRole('dialog'))
-const startTour = () => fireEvent.click(screen.getByRole('button', { name: 'Commencer' }))
 
 beforeEach(() => {
   push.mockClear()
   setTourState.mockClear()
 })
 
-describe('the invitation card', () => {
-  it('is offered to a pending organizer on /applications', () => {
+describe('the tour opens by itself', () => {
+  it('opens for an organizer who has never seen it, without being asked', () => {
     renderShell()
-    expect(screen.getByText('Découvrez EazyExchange en 2 minutes')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
-  it('is not offered anywhere else, so it appears once where it is contextual', () => {
+  it('opens wherever they land, not only on /applications', () => {
     renderShell({ pathname: '/students' })
-    expect(screen.queryByText('Découvrez EazyExchange en 2 minutes')).not.toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
-  it('is not offered again once dismissed', () => {
+  it('does not open again once dismissed', () => {
     renderShell({ tourState: 'dismissed' })
-    expect(screen.queryByText('Découvrez EazyExchange en 2 minutes')).not.toBeInTheDocument()
-  })
-
-  it('is not offered once completed', () => {
-    renderShell({ tourState: 'completed' })
-    expect(screen.queryByText('Découvrez EazyExchange en 2 minutes')).not.toBeInTheDocument()
-  })
-
-  it('« Plus tard » records the dismissal and never opens the tour', () => {
-    renderShell()
-    fireEvent.click(screen.getByRole('button', { name: 'Plus tard' }))
-    expect(setTourState).toHaveBeenCalledWith('dismissed')
-    expect(screen.queryByText('Découvrez EazyExchange en 2 minutes')).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('hides while the tour is running', () => {
-    renderShell()
-    startTour()
-    expect(screen.queryByText('Découvrez EazyExchange en 2 minutes')).not.toBeInTheDocument()
+  it('does not open once completed', () => {
+    renderShell({ tourState: 'completed' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('does not reopen once skipped, even after a route change', () => {
+    // initialState is still 'pending' — the server has not re-rendered — so the
+    // only thing standing between the organizer and an infinite tour is the ref.
+    const { navigateTo } = renderShell()
+    fireEvent.click(screen.getByRole('button', { name: 'Passer' }))
+    navigateTo('/students')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('does not open a tour that would be nothing but welcome and finish', () => {
+    // No sidebar, so no data-tour anchors at all: every anchored step filters
+    // out and only the two unanchored ones remain. Not worth an interruption,
+    // and the state stays pending so a later visit can still offer it.
+    renderWithIntl(
+      <TourProvider initialState="pending"><p>page</p></TourProvider>,
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
 
 describe('walking the tour', () => {
   it('opens on the welcome step, unanchored, with no route change', () => {
     renderShell()
-    startTour()
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
     expect(bubble().getByText('1 / 8')).toBeInTheDocument()
     expect(push).not.toHaveBeenCalled()
     // First step: nothing to go back to.
@@ -118,7 +122,6 @@ describe('walking the tour', () => {
 
   it('navigates to each tab as it advances', () => {
     renderShell()
-    startTour()
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
     expect(bubble().getByText('Candidatures')).toBeInTheDocument()
     // Already on /applications, so there is nothing to push yet.
@@ -131,15 +134,13 @@ describe('walking the tour', () => {
 
   it('goes back', () => {
     renderShell()
-    startTour()
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
     fireEvent.click(screen.getByRole('button', { name: 'Précédent' }))
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 
   it('offers Terminer on the last step and records completion', () => {
     renderShell()
-    startTour()
     for (let i = 0; i < TOUR_STEPS.length - 2; i++) {
       fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
     }
@@ -154,7 +155,6 @@ describe('walking the tour', () => {
 
   it('Passer closes the tour and records a dismissal', () => {
     renderShell()
-    startTour()
     fireEvent.click(screen.getByRole('button', { name: 'Passer' }))
     expect(setTourState).toHaveBeenCalledWith('dismissed')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -162,7 +162,6 @@ describe('walking the tour', () => {
 
   it('returns the organizer to where they opened it', () => {
     const { navigateTo } = renderShell()
-    startTour()
     // Walk far enough to leave /applications, following the route for real.
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
@@ -173,7 +172,6 @@ describe('walking the tour', () => {
 
   it('swallows clicks on the app behind instead of navigating', () => {
     renderShell()
-    startTour()
     const swallow = screen.getByTestId('tour-swallow')
     fireEvent.click(swallow)
     // Inert on purpose: a mis-click must not end the tour either.
@@ -185,7 +183,6 @@ describe('walking the tour', () => {
 describe('missing anchors', () => {
   it('skips the tabs that are not rendered without an exchange', () => {
     renderShell({ withExchange: false })
-    startTour()
     // Only welcome, Aperçu, Réglages and finish have anchors on screen.
     expect(bubble().getByText('1 / 4')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))
@@ -199,6 +196,6 @@ describe('the account menu entry', () => {
     renderShell({ tourState: 'completed', pathname: '/students' })
     fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
     fireEvent.click(screen.getByRole('button', { name: 'Visite guidée' }))
-    expect(bubble().getByText('Bienvenue dans EazyExchange')).toBeInTheDocument()
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
   })
 })

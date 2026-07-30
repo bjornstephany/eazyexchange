@@ -170,6 +170,30 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 - **Production redacts thrown Server Action/RSC error messages** (replaced by an opaque digest string). Never branch client-side on `error.message`. Expected outcomes (validation failures, plan caps, business rejections) must be **structured return values**; only throw for genuinely unexpected failures. See `lib/billing/exchange-limit.ts` for the pattern.
 - **Auth preambles are shared helpers** — server actions use `requireUser()` / `requireOrganizer()` / `requireStudent()` from `lib/auth/require.ts`; never hand-roll the `getAuthUser → getProfile → role check → throw` dance. Error strings (`'Unauthenticated'`, `'Unauthorized'`) are load-bearing for tests.
 - **Application server actions are split by trust model** — `actions/apply.ts` (anonymous resume-token funnel), `actions/applications-review.ts` (authenticated organizer review), `actions/invitations.ts` (anonymous invite-token response). New application behavior goes in the file matching its trust model; never re-merge them.
+- **The application questionnaire is per-exchange and locks at the first application.**
+  `exchanges.application_fields` (jsonb, nullable) holds a copy of the questionnaire;
+  `null` means « never customized » and resolves to `lib/application-form.ts`'s
+  `APPLICATION_SECTIONS` verbatim, so no exchange ever needed a backfill. Built-in
+  questions are stored **by reference** so their labels and five translations keep
+  coming from the message catalogs; custom questions are monolingual and inline.
+  Everything goes through one resolver, `resolveApplicationSections()` in
+  `lib/application-fields.ts` — the funnel form, `submitApplication`'s gates, the
+  organizer read view and the PDF recap must all see the same list, or a removed
+  question becomes permanently "missing" and blocks every submission. The lock is
+  derived (any row in `applications` for the exchange), never stored, and
+  re-checked server-side in `actions/questionnaire.ts` — the client is never
+  trusted with it, and it fails **closed** when the count query errors, so
+  `{ locked: true, applicationCount: 0 }` is a real state and no UI may render a
+  count-bearing sentence from it. The portrait is a pseudo-field (it lives on
+  `applications.photo_path`, not in `APPLICATION_SECTIONS`), so `removedBuiltIns`
+  cannot report it and `AddQuestionDialog` restores it as an explicit special
+  case — without which its ✕ would be irreversible. Organizer-written questions
+  are banked in `application_custom_questions`, which organizers may INSERT into
+  and **never SELECT from**: suggestions come from the
+  `application_question_suggestions` SECURITY DEFINER RPC, which only returns
+  phrasings at least three independent schools converged on (that threshold is
+  the PII guard).
+  Spec: `docs/superpowers/specs/2026-07-29-application-template-editor-design.md`.
 - Package manager is **pnpm** (not npm).
 - **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` outright — the
 name is written only by the `claim_school()` SECURITY DEFINER RPC). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`,

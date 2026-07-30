@@ -37,6 +37,9 @@ not "deny all".
   another school" case — where the partner organizer sees the exchange +
   enrollment rows but not the other school's user profiles or templates, and can
   only enroll their own school's students.
+  Also pins the **question bank**: `application_custom_questions` is INSERT-only
+  even for its own school (no SELECT policy and no SELECT grant), and the
+  aggregate RPC is the only read path.
 - `tests/rls/storage.test.ts` — storage.objects matrix (documents,
   application-photos, form-templates)
 - The older one-shot SQL tests in `supabase/tests/*.test.sql` cover in-school

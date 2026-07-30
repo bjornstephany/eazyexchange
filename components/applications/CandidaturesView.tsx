@@ -15,6 +15,7 @@ import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
 import { InviteByEmailDialog } from '@/components/applications/InviteByEmailDialog'
 import { InvitationPanel, type InvitationControls } from '@/components/applications/InvitationPanel'
 import { OpenApplicationsDialog } from '@/components/applications/OpenApplicationsDialog'
+import { QuestionnaireCard } from '@/components/applications/QuestionnaireCard'
 import { GoodNewsBlockNotice } from '@/components/applications/GoodNewsBlockNotice'
 
 // Invited/started rows are organizer-sent invitations still in the funnel; they
@@ -29,6 +30,7 @@ export function CandidaturesView({
   applicationDeadline,
   applySlug,
   initialTab,
+  questionnaire,
 }: {
   apps: AppRow[]
   exchangeName: string
@@ -37,6 +39,7 @@ export function CandidaturesView({
   applicationDeadline: string | null
   applySlug: string
   initialTab?: TabKey
+  questionnaire: { questionCount: number; locked: boolean; applicationCount: number }
 }) {
   const router = useRouter()
   const tr = useTranslations()
@@ -147,6 +150,9 @@ export function CandidaturesView({
   }
 
   async function changeDeadline(next: string) {
+    // DateField cannot emit '', so this guard is dead today — but it records
+    // why an empty deadline must never be written: doing so would close the
+    // funnel behind the organizer's back.
     if (!next) return
     setDeadline(next)
     setSavingState(true)
@@ -343,6 +349,12 @@ export function CandidaturesView({
           </div>
 
           <InvitationPanel applyUrl={applyUrl} controls={controls} onInviteByEmail={() => setInviteOpen(true)} />
+          <QuestionnaireCard
+            exchangeId={exchangeId}
+            questionCount={questionnaire.questionCount}
+            locked={questionnaire.locked}
+            applicationCount={questionnaire.applicationCount}
+          />
         </div>
       )}
       <OpenApplicationsDialog

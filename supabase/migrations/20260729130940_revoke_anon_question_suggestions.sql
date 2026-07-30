@@ -1,0 +1,26 @@
+-- Fix round 1 finding (critical): application_question_suggestions was
+-- reachable by the anon role on hosted Supabase.
+--
+-- `revoke execute on function … from public` (20260729113121) is NOT enough:
+-- it only revokes the PUBLIC pseudo-role's grant. On hosted Supabase, the
+-- `public` schema's default privileges (pg_default_acl, owned by the
+-- Supabase-managed role that runs migrations) grant EXECUTE to `anon`,
+-- `authenticated` AND `service_role` on every newly CREATEd function — those
+-- are separate, explicit grants that a `from public` revoke does not touch.
+-- So on prod the function's proacl kept `anon=X` after the previous
+-- migration ran, and `has_function_privilege('anon', …, 'EXECUTE')` returned
+-- true — anon could call the RPC, defeating "not callable anonymously".
+--
+-- The local stack does NOT reproduce this: locally the default ACL for
+-- functions is `{postgres=X/postgres}` only (no anon/authenticated grant to
+-- begin with), so the existing rpc.test.ts anon case passed locally while the
+-- property was false in prod — the same local-vs-hosted divergence already
+-- documented for check_rate_limit (see the comment above the
+-- 'check_rate_limit grants' describe block in tests/rls/rpc.test.ts).
+--
+-- Fix: name `anon` explicitly in the revoke, every time, on every function
+-- meant to be authenticated-only — never rely on `from public` alone.
+-- Precedent: supabase/migrations/20260724115318_school_registry.sql (claim_school)
+-- and 20260630000004_rate_limit_and_enrolling.sql (check_rate_limit).
+revoke execute on function public.application_question_suggestions(text) from public, anon;
+grant execute on function public.application_question_suggestions(text) to authenticated;

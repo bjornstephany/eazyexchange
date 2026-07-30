@@ -31,6 +31,11 @@
       "toVerify": "Zu prüfen",
       "inProgress": "In Bearbeitung",
       "missing": "Fehlend"
+    },
+    "dateField": {
+      "placeholder": "Datum wählen",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat"
     }
   },
   "organizer": {
@@ -290,12 +295,6 @@
       },
       "tour": {
         "menuItem": "Geführte Tour",
-        "invite": {
-          "title": "Entdecken Sie EazyExchange in 2 Minuten",
-          "body": "Ein kurzer Rundgang durch jeden Tab, damit Sie wissen, wo alles liegt.",
-          "start": "Starten",
-          "later": "Später"
-        },
         "controls": {
           "skip": "Überspringen",
           "prev": "Zurück",
@@ -305,7 +304,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Willkommen bei EazyExchange",
+            "title": "Willkommen bei EazyExchange! 🎉",
             "body": "Ein kurzer Rundgang durch die Tabs Ihres Bereichs. Sie können jederzeit abbrechen und ihn über Ihr Kontomenü wieder aufnehmen."
           },
           "applications": {
@@ -333,7 +332,7 @@
             "body": "Ihr Konto, Ihre Schule, Ihr Team und Ihr Abonnement."
           },
           "finish": {
-            "title": "Das war alles",
+            "title": "Alles bereit! 🚀",
             "body": "Sie kennen sich jetzt aus. Um diese Tour erneut zu sehen, öffnen Sie oben rechts Ihr Kontomenü."
           }
         }
@@ -593,6 +592,77 @@
         "accept": "Annehmen",
         "notePlaceholder": "Optionale Notiz an den Bewerber",
         "sendRejectionEmail": "Eine Ablehnungs-E-Mail an den Bewerber senden"
+      }
+    },
+    "questionnaire": {
+      "card": {
+        "title": "Bewerbungsfragebogen",
+        "template": "Vorlage: {name}",
+        "templateStandard": "Standardfragebogen",
+        "summary": "{n} Fragen · 4 Abschnitte",
+        "locked": "Gesperrt — {n} Bewerbungen eingegangen",
+        "edit": "Bearbeiten",
+        "view": "Ansehen",
+        "reset": "Zurücksetzen",
+        "resetTitle": "Zum Standardfragebogen zurückkehren?",
+        "resetBody": "Alle Ihre Änderungen gehen verloren und der Fragebogen entspricht wieder der Standardvorlage.",
+        "resetConfirm": "Zurücksetzen"
+      },
+      "page": {
+        "title": "Bewerbungsfragebogen",
+        "back": "← Bewerbungen",
+        "intro": "Fügen Sie Fragen hinzu oder entfernen Sie sie. Jede Änderung wird sofort gespeichert.",
+        "lockedNotice": "Dieser Fragebogen ist gesperrt: Es sind bereits {n} Bewerbungen eingegangen. Er bleibt einsehbar.",
+        "sectionCount": "{n} Fragen",
+        "add": "＋ Frage hinzufügen",
+        "lockedTooltip": "Wird vor dem Formular erhoben — daran wird die Einladung geschickt.",
+        "remove": "Entfernen",
+        "editQuestion": "Frage bearbeiten",
+        "required": "Pflichtangabe",
+        "empty": "Keine Fragen in diesem Abschnitt."
+      },
+      "types": {
+        "text": "Kurzer Text",
+        "textarea": "Langer Text",
+        "date": "Datum",
+        "yesno": "Ja / Nein",
+        "radio": "Mehrfachauswahl",
+        "photo": "Foto",
+        "email": "E-Mail",
+        "tel": "Telefon"
+      },
+      "cascade": {
+        "title": "Diese Frage zieht eine weitere nach sich",
+        "body": "Wenn Sie „{question}“ entfernen, wird auch „{dependent}“ entfernt — sie ergibt nur zusammen mit ihr Sinn.",
+        "confirm": "Beide entfernen"
+      },
+      "dialog": {
+        "title": "Frage hinzufügen — {section}",
+        "removedHeading": "Entfernte Fragen",
+        "removedEmpty": "Alle Fragen der Vorlage sind vorhanden.",
+        "suggestionsHeading": "Vorschläge anderer Schulen",
+        "suggestionsEmpty": "Noch keine Vorschläge.",
+        "suggestionsSchools": "{n} Schulen",
+        "orCreate": "oder neu anlegen",
+        "label": "Fragetext",
+        "type": "Typ",
+        "required": "Pflichtangabe",
+        "options": "Auswahlmöglichkeiten (eine pro Zeile)",
+        "add": "Hinzufügen"
+      },
+      "editDialog": {
+        "title": "Frage bearbeiten",
+        "save": "Speichern"
+      },
+      "errors": {
+        "locked": "Dieser Fragebogen ist gesperrt: Es sind bereits Bewerbungen eingegangen.",
+        "archived": "Dieses Programm ist archiviert: Der Fragebogen bleibt einsehbar, es sind jedoch keine Änderungen mehr möglich.",
+        "not_found": "Programm nicht gefunden.",
+        "invalid_label": "Der Fragetext muss zwischen 1 und 120 Zeichen lang sein.",
+        "invalid_type": "Nicht unterstützter Fragetyp.",
+        "invalid_options": "Eine Mehrfachauswahl braucht mindestens zwei Optionen.",
+        "unknown_question": "Diese Frage ist nicht mehr im Fragebogen — laden Sie die Seite neu.",
+        "failed": "Speichern fehlgeschlagen. Bitte erneut versuchen."
       }
     },
     "exchanges": {
@@ -921,6 +991,7 @@
       "no_file": "Keine Datei ausgewählt.",
       "not_an_image": "Bitte wähle ein Bild (JPEG, PNG oder WebP).",
       "file_rejected": "Diese Datei wird nicht akzeptiert — JPEG-, PNG- oder WebP-Bild, maximal 10 MB.",
+      "photo_disabled": "Dieser Fragebogen verlangt kein Foto.",
       "failed": "Ein Fehler ist aufgetreten. Versuche es erneut."
     },
     "form": {

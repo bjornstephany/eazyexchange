@@ -230,16 +230,26 @@ const collaboratorId = await createAuthUser('orga-2', 'Marc Collaborateur')
 // brand new. Left to the 'pending' default they are invisible to my_role(),
 // which silently denies every organizer RLS policy: /dev sign-in lands on
 // /pending, and the seed's own approvals match zero rows without erroring.
+//
+// `tour_state: 'completed'` is explicit and load-bearing for the same kind of
+// reason. The guided tour auto-starts for any organizer still on the 'pending'
+// default, and while it runs its dim layer swallows every click in the app —
+// that is the point of it. But this pair is not meeting the product for the
+// first time: they own a school with 22 enrolled students and 30 applications.
+// Left at the default, every `pnpm seed` hands the smoke suite and every /dev
+// sign-in an organizer who cannot click anything until someone dismisses a
+// tour. To exercise the tour deliberately, reset one row:
+//   update public.users set tour_state = 'pending' where email = '…';
 await insert('users', [
   {
     id: organizerId, school_id: school.id, role: 'organizer', org_role: 'owner',
     full_name: 'Claire Organisatrice', email: email('orga'), locale: 'fr',
-    status: 'approved',
+    status: 'approved', tour_state: 'completed',
   },
   {
     id: collaboratorId, school_id: school.id, role: 'organizer', org_role: 'admin',
     full_name: 'Marc Collaborateur', email: email('orga-2'), locale: 'fr',
-    status: 'approved',
+    status: 'approved', tour_state: 'completed',
   },
 ])
 

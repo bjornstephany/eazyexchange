@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeAll } from 'vitest'
 import { namespaceTranslator, type AppTranslator } from '@/lib/i18n/messages'
+import { APPLICATION_SECTIONS } from '@/lib/application-form'
 import { recapSections, renderApplicationRecapPdf } from '../application-recap'
 
 let FR: AppTranslator
@@ -85,6 +86,7 @@ describe('renderApplicationRecapPdf', () => {
     data: ANSWERS,
     locale: 'fr' as const,
     t: FR,
+    sections: APPLICATION_SECTIONS,
   })
 
   it('renders a non-empty PDF without a photo', async () => {
@@ -114,4 +116,41 @@ describe('renderApplicationRecapPdf', () => {
     })
     expect(buf.subarray(0, 5).toString()).toBe('%PDF-')
   }, 30_000)
+})
+
+describe('recapSections with a customized questionnaire', () => {
+  const t = ((key: string) => `T:${key}`) as never
+  const TRIMMED = [
+    { id: 'student', fields: [{ id: 'c_7f3a', type: 'textarea' as const, label: 'Sait nager ?' }] },
+    { id: 'parents', fields: [] },
+    { id: 'hosting', fields: [] },
+    { id: 'profile', fields: [] },
+  ]
+
+  it('renders a custom question under its typed label', () => {
+    const out = recapSections({ c_7f3a: 'Oui, depuis 6 ans' }, t, TRIMMED)
+    expect(out).toHaveLength(1)
+    expect(out[0].rows).toEqual([{ label: 'Sait nager ?', value: 'Oui, depuis 6 ans' }])
+  })
+
+  it('ignores an answer to a question that is no longer in the questionnaire', () => {
+    // The sections are the single source of truth for what a recap shows — a
+    // stored answer to a removed question must not resurface in the PDF.
+    expect(recapSections({ c_7f3a: 'Oui', pets: 'Un chat' }, t, TRIMMED)[0].rows)
+      .toEqual([{ label: 'Sait nager ?', value: 'Oui' }])
+  })
+
+  it('maps a custom choice token back to its typed option label', () => {
+    const sections = [{ id: 'student', fields: [{
+      id: 'c_1', type: 'radio' as const, label: 'Régime',
+      options: [{ value: 'o1', label: 'Végétarien' }, { value: 'o2', label: 'Aucun' }],
+    }] }]
+    expect(recapSections({ c_1: 'o2' }, t, sections)[0].rows)
+      .toEqual([{ label: 'Régime', value: 'Aucun' }])
+  })
+
+  it('defaults to the built-in catalog when no sections are given', () => {
+    expect(recapSections({ pets: 'Un chat' }, t)[0].rows)
+      .toEqual([{ label: 'T:fields.pets.label', value: 'Un chat' }])
+  })
 })

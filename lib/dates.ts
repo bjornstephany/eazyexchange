@@ -1,6 +1,7 @@
 // Locale date helpers shared across UI and email. No React, no Supabase.
 
 import type { Locale } from '@/lib/i18n/config'
+import { firstDayOfWeek } from '@/lib/calendar'
 
 // BCP-47 tag per app locale. `en` maps to en-GB so dates read day-month like
 // the rest of the product (see lib/pdf/application-recap.tsx); every other
@@ -40,4 +41,22 @@ export function longDate(iso: string | null, locale: Locale): string {
   const date = parse(iso)
   if (!date) return ''
   return new Intl.DateTimeFormat(BCP47[locale], { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+}
+
+// "septembre 2026" in the caller's locale, for a calendar header. `month` is
+// 0-based, matching Date and lib/calendar.
+export function monthLabel(locale: Locale, year: number, month: number): string {
+  return new Intl.DateTimeFormat(BCP47[locale], { month: 'long', year: 'numeric' })
+    .format(new Date(year, month, 1))
+}
+
+// The seven short weekday names, already rotated so index 0 is the locale's own
+// first day of the week — Monday everywhere but English. Rotating here keeps the
+// renderer a plain map over the array, with no offset arithmetic in the markup.
+export function weekdayLabels(locale: Locale): string[] {
+  const fmt = new Intl.DateTimeFormat(BCP47[locale], { weekday: 'short' })
+  const first = firstDayOfWeek(locale)
+  // 7 January 2024 was a Sunday, so +i walks Sunday through Saturday.
+  return Array.from({ length: 7 }, (_, i) =>
+    fmt.format(new Date(2024, 0, 7 + ((first + i) % 7))))
 }

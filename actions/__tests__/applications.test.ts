@@ -170,11 +170,11 @@ vi.mock('@/lib/email', () => ({
 }))
 vi.mock('@/lib/email-log', () => ({ logEmailSend: vi.fn().mockResolvedValue(undefined) }))
 
-import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft } from '../apply'
+import { startApplication, submitApplication, saveApplicationDraft, getApplicationDraft, sendApplicationResumeLink, peekApplicationDraft, uploadApplicationPhoto } from '../apply'
 import { respondToInvitation, getInvitation } from '../invitations'
 import { sendApplicationResumeEmail, sendStudentSetupEmail } from '@/lib/email'
 import { logEmailSend } from '@/lib/email-log'
-import { allApplicationFields } from '@/lib/application-form'
+import { allApplicationFields, APPLICATION_SECTIONS } from '@/lib/application-form'
 
 function completeAppData(): Record<string, string> {
   const data: Record<string, string> = {}
@@ -187,6 +187,52 @@ function completeAppData(): Record<string, string> {
   }
   data.family_status = 'married'
   return data
+}
+
+// Raw exchanges.application_fields documents for the customized-questionnaire
+// scenarios below — hand-built rather than run through the editor's mutation
+// helpers, since these tests exercise the funnel's READ side of the column.
+
+// The full catalog minus one built-in field — models an organizer removing a
+// single question from a section.
+function docWithout(sectionId: string, fieldId: string): unknown {
+  return {
+    version: 1,
+    sections: APPLICATION_SECTIONS.map(s => ({
+      id: s.id,
+      fields: [
+        ...(s.id === 'student' ? [{ ref: 'photo' }] : []),
+        ...s.fields.filter(f => !(s.id === sectionId && f.id === fieldId)).map(f => ({ ref: f.id })),
+      ],
+    })),
+  }
+}
+
+// The full catalog with the photo ref dropped from the student section —
+// models an organizer removing the portrait question.
+function docWithoutPhoto(): unknown {
+  return {
+    version: 1,
+    sections: APPLICATION_SECTIONS.map(s => ({ id: s.id, fields: s.fields.map(f => ({ ref: f.id })) })),
+  }
+}
+
+// The full catalog plus one custom question appended to a section.
+function docWithCustom(
+  sectionId: string,
+  question: { id: string; type: string; label: string; maxLength?: number },
+): unknown {
+  return {
+    version: 1,
+    sections: APPLICATION_SECTIONS.map(s => ({
+      id: s.id,
+      fields: [
+        ...(s.id === 'student' ? [{ ref: 'photo' }] : []),
+        ...s.fields.map(f => ({ ref: f.id })),
+        ...(s.id === sectionId ? [question] : []),
+      ],
+    })),
+  }
 }
 
 const PAST = new Date(Date.now() - 60_000).toISOString()
@@ -369,6 +415,26 @@ describe('saveApplicationDraft', () => {
     const res = await saveApplicationDraft('tok', { cell_phone: '06 12', father_email: 'marie@' })
     expect(res).toEqual({ ok: true })
   })
+  it("honours a custom question's own maxLength cap on autosave", async () => {
+    scenario.application = {
+      id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1',
+      exchanges: { application_fields: docWithCustom('hosting', { id: 'c_swim', type: 'textarea', label: 'Sait nager ?', maxLength: 10 }) },
+    }
+    const res = await saveApplicationDraft('tok', { c_swim: 'x'.repeat(11) })
+    expect(res).toEqual({ ok: false, reason: 'too_long', fields: ['c_swim'] })
+    expect(scenario.updated).toBeNull()
+  })
+  // Pins the "null means never customized, behaves exactly like today" contract
+  // EXPLICITLY (the DB column really does hold null, not merely omit the key) —
+  // rather than relying on the mock row's `exchanges` key happening to be absent.
+  it('an explicit application_fields: null exchange still enforces the built-in per-field cap on autosave (no regression for every pre-existing exchange)', async () => {
+    scenario.application = {
+      id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1',
+      exchanges: { application_fields: null },
+    }
+    const res = await saveApplicationDraft('tok', { lived_abroad: 'x'.repeat(151) })
+    expect(res).toEqual({ ok: false, reason: 'too_long', fields: ['lived_abroad'] })
+  })
 })
 
 describe('getApplicationDraft', () => {
@@ -485,6 +551,67 @@ describe('submitApplication', () => {
     const res = await submitApplication('tok', completeAppData())
     expect(res).toEqual({ ok: false, reason: 'registered' })
     expect(scenario.updated).toBeNull()
+  })
+
+  // The failure mode this whole task exists to prevent: a question the
+  // organizer removed from the questionnaire must not stay permanently
+  // "missing" and block every submission on that exchange.
+  it('does not require a built-in field the organizer removed from the questionnaire', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    scenario.exchange.application_fields = docWithout('hosting', 'pets')
+    const data = completeAppData()
+    delete data.pets
+    const res = await submitApplication('tok', data)
+    expect(res).toEqual({ ok: true })
+  })
+
+  it('a customized questionnaire that dropped the photo no longer requires one at submit (photoRequired: false)', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: null }
+    scenario.exchange.application_fields = docWithoutPhoto()
+    const res = await submitApplication('tok', completeAppData())
+    expect(res).toEqual({ ok: true })
+  })
+
+  // Pins the "null means never customized, behaves exactly like today" contract
+  // EXPLICITLY (the DB column really does hold null, not merely omit the key) —
+  // same missing field as the "removed built-in" test above, so the contrast is
+  // direct: without customization the built-in catalog still wins.
+  it('an explicit application_fields: null exchange still requires the full built-in catalog at submit (no regression for every pre-existing exchange)', async () => {
+    scenario.application = { id: 'app-1', status: 'draft', email: 'a@b.co', exchange_id: 'ex-1', school_id: 's-1', resume_token_expires_at: null, photo_path: 'app-1/photo.jpg' }
+    scenario.exchange.application_fields = null
+    const data = completeAppData()
+    delete data.pets
+    const res = await submitApplication('tok', data)
+    expect(res).toMatchObject({ ok: false, reason: 'missing_fields' })
+    expect('fields' in res && res.fields).toContain('pets')
+  })
+})
+
+describe('uploadApplicationPhoto', () => {
+  function photoFormData(): FormData {
+    const fd = new FormData()
+    fd.append('photo', new File(['x'], 'me.png', { type: 'image/png' }))
+    return fd
+  }
+
+  it('refuses with photo_disabled when the questionnaire no longer asks for a portrait', async () => {
+    scenario.application = {
+      id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1',
+      exchanges: { application_fields: docWithoutPhoto() },
+    }
+    const res = await uploadApplicationPhoto('tok', photoFormData())
+    expect(res).toEqual({ ok: false, reason: 'photo_disabled' })
+  })
+
+  // Same explicit-null contract as above, for this gate: a pre-existing exchange
+  // (never customized) must still accept the portrait upload it always has.
+  it('still accepts a photo when application_fields is explicitly null (pre-existing exchange, unchanged)', async () => {
+    scenario.application = {
+      id: 'app-1', status: 'draft', resume_token_expires_at: null, exchange_id: 'ex-1',
+      exchanges: { application_fields: null },
+    }
+    const res = await uploadApplicationPhoto('tok', photoFormData())
+    expect(res).toEqual({ ok: true, path: 'app-1/photo.png' })
   })
 })
 

@@ -13,6 +13,17 @@ vi.mock('@/actions/applications-review', () => ({
 
 import { OpenApplicationsDialog } from '@/components/applications/OpenApplicationsDialog'
 
+const now = new Date()
+const FIRST_OF_THIS_MONTH =
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+// The DateField day-cell's accessible name is the full date, not a bare
+// number — computed independently of lib/dates so this isn't circular.
+const FIRST_OF_THIS_MONTH_NAME = new Intl.DateTimeFormat('fr', {
+  day: 'numeric', month: 'long', year: 'numeric',
+}).format(new Date(`${FIRST_OF_THIS_MONTH}T00:00:00`))
+const DEADLINE_LABEL_EMPTY = 'Date limite des candidatures Choisir une date'
+const DEADLINE_LABEL_CHOSEN = `Date limite des candidatures ${FIRST_OF_THIS_MONTH_NAME}`
+
 function setup(onOpened = vi.fn(), onOpenChange = vi.fn()) {
   renderWithIntl(
     <OpenApplicationsDialog
@@ -43,24 +54,24 @@ describe('OpenApplicationsDialog', () => {
 
   it('choosing a deadline opens applications and unlocks both methods', async () => {
     const { onOpened } = setup()
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
-    await waitFor(() => expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-09-01'))
-    await waitFor(() => expect(onOpened).toHaveBeenCalledWith('2026-09-01'))
+    fireEvent.click(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY }))
+    fireEvent.click(screen.getByRole('button', { name: FIRST_OF_THIS_MONTH_NAME }))
+    await waitFor(() => expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, FIRST_OF_THIS_MONTH))
+    await waitFor(() => expect(onOpened).toHaveBeenCalledWith(FIRST_OF_THIS_MONTH))
+    // The trigger's accessible name now carries both the label and the picked
+    // date — the regression the review flagged, since <Label htmlFor> alone
+    // used to swallow the date from a screen reader.
+    expect(screen.getByRole('button', { name: DEADLINE_LABEL_CHOSEN })).toBeInTheDocument()
     expect(screen.getByDisplayValue(/\/apply\/france-canada$/)).toBeInTheDocument()
     await waitFor(() => expect(screen.getByRole('button', { name: 'Copier' })).toBeEnabled())
     expect(screen.queryByText('Choisissez une date limite pour débloquer ces options.')).toBeNull()
   })
 
-  it('never persists an empty deadline', () => {
-    setup()
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '' } })
-    expect(setApplicationOpen).not.toHaveBeenCalled()
-  })
-
   it('sends pasted addresses once applications are open', async () => {
     send.mockResolvedValue({ ok: true, sent: 2, skippedExchange: 0, skippedElsewhere: 0, invalid: 0 })
     setup()
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY }))
+    fireEvent.click(screen.getByRole('button', { name: FIRST_OF_THIS_MONTH_NAME }))
     await waitFor(() => expect(setApplicationOpen).toHaveBeenCalled())
     const box = screen.getByPlaceholderText(/marie@ecole\.fr/)
     await waitFor(() => expect(box).toBeEnabled())
@@ -76,14 +87,16 @@ describe('OpenApplicationsDialog', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false)
     expect(screen.queryByRole('button', { name: 'Terminé' })).toBeNull()
 
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY }))
+    fireEvent.click(screen.getByRole('button', { name: FIRST_OF_THIS_MONTH_NAME }))
     await screen.findByRole('button', { name: 'Terminé' })
     expect(screen.queryByRole('button', { name: 'Annuler' })).toBeNull()
   })
 
   it('carries no copy-before-closing warning — the link lives on in the panel', async () => {
     setup()
-    fireEvent.change(screen.getByLabelText('Date limite des candidatures'), { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY }))
+    fireEvent.click(screen.getByRole('button', { name: FIRST_OF_THIS_MONTH_NAME }))
     await screen.findByRole('button', { name: 'Terminé' })
     expect(screen.queryByText(/Vous ne reverrez plus ce lien/)).toBeNull()
   })
@@ -91,12 +104,13 @@ describe('OpenApplicationsDialog', () => {
   it('surfaces a retryable error when opening applications fails', async () => {
     setApplicationOpen.mockRejectedValueOnce(new Error('boom'))
     const { onOpened } = setup()
-    const field = screen.getByLabelText('Date limite des candidatures')
-    fireEvent.change(field, { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY }))
+    fireEvent.click(screen.getByRole('button', { name: FIRST_OF_THIS_MONTH_NAME }))
     await screen.findByText("Impossible d’ouvrir les candidatures. Veuillez réessayer.")
     expect(onOpened).not.toHaveBeenCalled()
-    // The optimistic value is rolled back, so re-picking the same date still fires a change.
-    expect(field).toHaveValue('')
+    // The optimistic value is rolled back, so the field shows its empty placeholder
+    // again — re-picking the same date still fires a fresh onChange call.
+    expect(screen.getByRole('button', { name: DEADLINE_LABEL_EMPTY })).toHaveTextContent('Choisir une date')
     expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument()
   })
 })
