@@ -1,18 +1,24 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { MailCheck } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { normalizeEmail, isValidEmail } from '@/lib/validation'
+import { MailCheck, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/brand/Logo'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { GoogleButton } from '@/components/auth/GoogleButton'
-import { resendSignupEmail } from './actions'
+import { requestOrganizerSignup, resendSignupEmail } from './actions'
 
 const RESEND_COOLDOWN = 45
+const SUPPORT_EMAIL = 'contact@eazyexchange.com'
+
+// The page has three terminal states: the form, « Vérifiez votre e-mail » for an
+// allowlisted address, and the waitlist message for everyone else. Validation
+// and account creation both live in requestOrganizerSignup — the browser no
+// longer talks to Supabase here at all, because a client-side check cannot
+// prevent an account from existing.
+type Step = 'form' | 'confirm' | 'waitlisted'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -20,44 +26,50 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [step, setStep] = useState<Step>('form')
   const [confirmEmail, setConfirmEmail] = useState('')
   const [resendError, setResendError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
   const [resendNote, setResendNote] = useState<string | null>(null)
-  const supabase = createClient()
+
+  // How the Google path returns here: app/auth/callback/route.ts tears down the
+  // orphan auth row and redirects to /signup?waitlisted=1. Read in an effect,
+  // like /login reads ?error= — useSearchParams() would force a <Suspense>
+  // boundary, and reading window.location during render would hydration-mismatch.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('waitlisted') === '1') {
+      setStep('waitlisted')
+    }
+  }, [])
 
   useEffect(() => {
-    if (!submitted) return
+    if (step !== 'confirm') return
     const t = setInterval(() => setCooldown(c => (c <= 0 ? 0 : c - 1)), 1000)
     return () => clearInterval(t)
-  }, [submitted])
+  }, [step])
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    const name = fullName.trim()
-    const cleanEmail = normalizeEmail(email)
-    if (!name) { setError('Veuillez remplir tous les champs.'); return }
-    if (!isValidEmail(cleanEmail)) { setError('Veuillez saisir une adresse e-mail valide.'); return }
     setLoading(true)
-    // Full name is all provisionOrganizer reads. The establishment is captured
-    // at /onboarding step 1, where it is validated against school_registry —
-    // asking for it here as well duplicated that, and the approval gate
-    // (every self-signup lands pending) is what actually keeps fake schools out.
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        data: { full_name: name },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
-      },
-    })
-    if (signUpError) { setError(signUpError.message); setLoading(false); return }
-    setConfirmEmail(cleanEmail)
-    setCooldown(RESEND_COOLDOWN)
-    setSubmitted(true)
+    const res = await requestOrganizerSignup({ fullName, email, password })
     setLoading(false)
+    if (!res.ok) {
+      // Structured discriminants, not error.message parsing: prod redacts thrown
+      // Server Action messages to an opaque digest.
+      if (res.error === 'invalid_name') setError('Veuillez remplir tous les champs.')
+      else if (res.error === 'invalid_email') setError('Veuillez saisir une adresse e-mail valide.')
+      else if (res.error === 'rate_limited') {
+        setError('Trop de tentatives depuis cette connexion. Réessayez dans une heure.')
+      } else {
+        setError(res.message ?? 'La création du compte a échoué. Réessayez dans un instant.')
+      }
+      return
+    }
+    if (res.state === 'waitlisted') { setStep('waitlisted'); return }
+    setConfirmEmail(email.trim().toLowerCase())
+    setCooldown(RESEND_COOLDOWN)
+    setStep('confirm')
   }
 
   async function handleResend() {
@@ -73,13 +85,40 @@ export default function SignupPage() {
   }
 
   function handleRestart() {
-    setSubmitted(false)
+    setStep('form')
     setResendError(null)
     setResendNote(null)
     setCooldown(0)
   }
 
-  if (submitted) {
+  if (step === 'waitlisted') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-[#EEF1F7] px-4 py-10">
+        <Logo href="/" />
+        <AuthCard maxWidth={460} className="flex flex-col gap-4">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E7EDFD] text-[#2456E6]">
+            <Clock className="h-6 w-6" aria-hidden />
+          </span>
+          <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em] text-[#10203F]">
+            Vous êtes sur la liste d’attente
+          </h3>
+          <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">
+            Merci de votre intérêt. Eazyexchange n’est pas encore ouvert à tous : nous
+            avons enregistré votre adresse et nous vous écrirons dès que l’accès sera
+            disponible.
+          </p>
+          <p className="m-0 text-[15px] leading-relaxed text-[#5B6B8C]">
+            Une question d’ici là ?{' '}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-[#2456E6] hover:underline">
+              {SUPPORT_EMAIL}
+            </a>
+          </p>
+        </AuthCard>
+      </div>
+    )
+  }
+
+  if (step === 'confirm') {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-[#EEF1F7] px-4 py-10">
         <Logo href="/" />

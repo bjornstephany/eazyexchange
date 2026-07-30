@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: {} }) }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
-vi.mock('../actions', () => ({ resendSignupEmail: vi.fn() }))
+vi.mock('../actions', () => ({ resendSignupEmail: vi.fn(), requestOrganizerSignup: vi.fn() }))
 
 // Stand in for GoogleButton so the OAuth props it receives are observable —
 // asserting the rendered button alone would not catch a dropped `intent`.
