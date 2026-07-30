@@ -60,3 +60,40 @@ export async function setExchangeOrder(ids: string[]): Promise<SetExchangeOrderR
   // profile anyway.
   return { ok: true }
 }
+
+export type MarkNotificationsSeenResult = { ok: true } | { ok: false; reason: 'write_failed' }
+
+/**
+ * Stamp the header bell's seen-watermark, called once when the panel opens.
+ *
+ * Same trust model as setExchangeOrder — an authenticated organizer writing a
+ * display preference on their own row — hence the same file. RLS ("users update
+ * themselves") plus the notifications_seen_at column grant confine the write.
+ *
+ * Deliberately NO revalidatePath: busting the layout tree would re-render the
+ * whole shell while the dropdown is open, closing it under the organizer's
+ * cursor. The badge clears in local component state instead.
+ *
+ * A plain navigation does NOT re-read this: App Router does not re-render a
+ * shared layout on sibling navigation, and next.config.mjs caches dynamic
+ * segments for 180s. The bell therefore calls router.refresh() itself when the
+ * panel opens (NotificationsMenu.tsx) — that, a full page load, or an exchange
+ * switch are the only things that recompute the counts.
+ *
+ * Structured return, never a throw: production replaces thrown server-action
+ * messages with an opaque digest, so a throw would be unreadable at the call
+ * site. A failed write is harmless — the badge is cleared locally for this
+ * session and reappears on the next refresh.
+ */
+export async function markNotificationsSeen(): Promise<MarkNotificationsSeenResult> {
+  const { user } = await requireOrganizer()
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('users')
+    .update({ notifications_seen_at: new Date().toISOString() })
+    .eq('id', user.id)
+  if (error) return { ok: false, reason: 'write_failed' }
+
+  return { ok: true }
+}

@@ -11,7 +11,10 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth: { signOut: vi.fn() } }) }))
-vi.mock('@/actions/session', () => ({ setActiveExchange: vi.fn() }))
+vi.mock('@/actions/session', () => ({
+  setActiveExchange: vi.fn(),
+  markNotificationsSeen: vi.fn().mockResolvedValue({ ok: true }),
+}))
 vi.mock('@/actions/exchanges', () => ({
   createExchange: vi.fn(),
   getExchangeProgressSummaries: vi.fn().mockResolvedValue({}),
@@ -280,5 +283,76 @@ describe('OrganizerShell', () => {
     renderShell({ pathname: '/dashboard' })
     expect(screen.queryByText('Candidatures')).toBeNull()
     expect(screen.getByRole('button', { name: 'Développer' })).toBeInTheDocument()
+  })
+
+  it('renders the bell between the Feedback button and the account trigger', () => {
+    renderShell()
+    // The exchange name renders twice at this default viewport width (header
+    // title + expanded sidebar entry, see the "shows organizer initials"
+    // test above) — getByText alone throws on that ambiguity, so anchor on
+    // whichever match is actually inside <header>.
+    const header = screen
+      .getAllByText('France–Canada 2026')
+      .map((el) => el.closest('header'))
+      .find((h): h is HTMLElement => h !== null)!
+    const buttons = within(header).getAllByRole('button')
+    const labels = buttons.map((b) => b.getAttribute('aria-label') ?? b.textContent)
+    const feedback = labels.findIndex((l) => l?.includes('Feedback'))
+    const bell = labels.findIndex((l) => l?.includes('Notifications'))
+    const account = labels.findIndex((l) => l?.includes('Compte'))
+    expect(feedback).toBeGreaterThanOrEqual(0)
+    expect(bell).toBeGreaterThan(feedback)
+    expect(account).toBeGreaterThan(bell)
+  })
+
+  it('shows no badge when there are no notifications', () => {
+    renderShell()
+    expect(screen.queryByText('9+')).toBeNull()
+  })
+
+  it('shapes the raw rows into a badge count', () => {
+    renderWithIntl(
+      <OrganizerShell
+        exchanges={exchanges}
+        activeExchangeId="ex1"
+        organizerName="Marie Bernard"
+        schoolName="Lycée Mistral"
+        notifications={[
+          { exchange_id: 'ex1', kind: 'applications_to_review', total: 3, new_count: 2, newest_at: null },
+        ]}
+      >
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  // The bell's local dismissal compares TIMESTAMPS, so newest_at has to reach it
+  // — with no timestamp the badge deliberately fails open and never clears.
+  it('plumbs newest_at through, so opening the bell clears the badge', async () => {
+    renderWithIntl(
+      <OrganizerShell
+        exchanges={exchanges}
+        activeExchangeId="ex1"
+        organizerName="Marie Bernard"
+        schoolName="Lycée Mistral"
+        notifications={[
+          { exchange_id: 'ex1', kind: 'applications_to_review', total: 3, new_count: 2, newest_at: '2026-07-29T08:00:00Z' },
+        ]}
+      >
+        <p>page</p>
+      </OrganizerShell>
+    )
+    expect(screen.getByText('2')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(screen.queryByText('2')).toBeNull())
+  })
+
+  it('opening the bell closes the account menu', async () => {
+    renderShell()
+    fireEvent.click(screen.getByRole('button', { name: /Compte/ }))
+    expect(screen.getByText('Se déconnecter')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Notifications/ }))
+    await waitFor(() => expect(screen.queryByText('Se déconnecter')).toBeNull())
   })
 })

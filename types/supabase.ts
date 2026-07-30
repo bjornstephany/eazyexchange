@@ -1108,6 +1108,7 @@ export type Database = {
           id: string
           locale: string
           notes: string | null
+          notifications_seen_at: string | null
           org_role: string
           reviewed_at: string | null
           role: string
@@ -1123,6 +1124,7 @@ export type Database = {
           id: string
           locale?: string
           notes?: string | null
+          notifications_seen_at?: string | null
           org_role?: string
           reviewed_at?: string | null
           role: string
@@ -1138,6 +1140,7 @@ export type Database = {
           id?: string
           locale?: string
           notes?: string | null
+          notifications_seen_at?: string | null
           org_role?: string
           reviewed_at?: string | null
           role?: string
@@ -1192,6 +1195,16 @@ export type Database = {
       has_assignment: { Args: { tid: string }; Returns: boolean }
       my_role: { Args: never; Returns: string }
       my_school_id: { Args: never; Returns: string }
+      organizer_notifications: {
+        Args: never
+        Returns: {
+          exchange_id: string
+          kind: string
+          new_count: number
+          newest_at: string
+          total: number
+        }[]
+      }
       peek_application_draft: {
         Args: { p_token: string }
         Returns: {

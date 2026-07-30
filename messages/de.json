@@ -287,6 +287,12 @@
         "settings": "Einstellungen",
         "signOut": "Abmelden"
       },
+      "notifications": {
+        "trigger": "Benachrichtigungen",
+        "title": "Benachrichtigungen",
+        "empty": "Nichts ausstehend",
+        "badgeLabel": "{n, plural, one {# Neuigkeit} other {# Neuigkeiten}}"
+      },
       "tour": {
         "menuItem": "Geführte Tour",
         "controls": {
