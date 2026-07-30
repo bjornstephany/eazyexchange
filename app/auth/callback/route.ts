@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { provisionOrganizer } from '@/lib/auth/provision'
 import { safeNextPath } from '@/lib/auth/safe-next'
 
@@ -62,8 +63,15 @@ export async function GET(request: NextRequest) {
   // Uninvited student / stranger — enforce invite-only: drop the session and
   // delete the orphan auth row Google just created.
   await supabase.auth.signOut()
-  await admin.auth.admin.deleteUser(user.id).catch((e) =>
-    console.error('[auth/callback] deleteUser failed:', (e as { code?: string })?.code ?? 'unknown')
-  )
+  // Retried: a bad_jwt here leaves an orphan auth row that blocks the same
+  // person from ever being invited properly (createUser then returns
+  // email_exists). See lib/supabase/admin-retry.ts.
+  const { error: deleteError } = await withAuthAdminRetry(
+    () => admin.auth.admin.deleteUser(user.id),
+    'auth/callback.deleteOrphanUser',
+  ).catch((e) => ({ error: e as { code?: string } }))
+  if (deleteError) {
+    console.error('[auth/callback] deleteUser failed:', deleteError?.code ?? 'unknown')
+  }
   return redirect('/login?error=not_invited')
 }

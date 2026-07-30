@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { hasActivePlan, exchangeCap } from '@/lib/billing/limits'
 import { isPlanKey, type PlanKey } from '@/lib/billing/plans'
 import { getStripe } from '@/lib/billing/stripe'
@@ -328,7 +329,10 @@ export async function removeOrganizer(userId: string): Promise<void> {
   await admin.from('applications').update({ reviewer_id: ctx.userId }).eq('reviewer_id', userId)
   await admin.from('organizer_invites').update({ invited_by: ctx.userId }).eq('invited_by', userId)
 
-  const { error } = await admin.auth.admin.deleteUser(userId)
+  const { error } = await withAuthAdminRetry(
+    () => admin.auth.admin.deleteUser(userId),
+    'settings.removeCollaborator',
+  )
   if (error) throw new Error('Le collaborateur n’a pas pu être retiré. Réessayez.')
 
   await logAudit({

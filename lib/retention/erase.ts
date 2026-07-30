@@ -10,6 +10,7 @@
 // to write to audit_log.
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
 
 const DOCUMENTS_BUCKET = 'documents'
@@ -74,7 +75,16 @@ export async function eraseStudent(userId: string): Promise<EraseStudentResult> 
   //    CASCADEs public.users -> assignments -> submissions -> field_answers /
   //    document_uploads and exchange_enrollments (see the cascade migration).
   await admin.from('applications').delete().eq('enrolled_user_id', userId)
-  await admin.auth.admin.deleteUser(userId)
+  // Retried: this is the erasure itself. A bad_jwt here means the auth row and
+  // everything cascading from it survive a request that reported success.
+  //
+  // NOTE: the result is still unchecked, as it always has been — a failure here
+  // is silent, which for an erasure path deserves its own fix rather than a
+  // behaviour change smuggled into a retry rollout.
+  await withAuthAdminRetry(
+    () => admin.auth.admin.deleteUser(userId),
+    'retention.eraseSubject',
+  )
 
   return {
     userId,
