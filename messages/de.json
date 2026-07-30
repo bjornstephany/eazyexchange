@@ -508,10 +508,10 @@
         "cardSummary": "{n} Fragen · Frist {date}",
         "cardSummaryNoDeadline": "{n} Fragen",
         "customizeCta": "Anpassen",
-        "changeTemplateCta": "Vorlage wechseln",
-        "inviteCta": "Schüler einladen"
+        "changeTemplateCta": "Vorlage wechseln"
       },
-      "countSummary": "{n, plural, one {# Bewerbung erhalten} other {# Bewerbungen erhalten}} für {exchangeName}.",
+      "inviteCta": "Schüler einladen",
+      "countSummary": "{n, plural, one {# Bewerbung} other {# Bewerbungen}} für {exchangeName}.",
       "deadlineLabel": "Frist",
       "deadlineError": "Die Frist konnte nicht gespeichert werden. Bitte erneut versuchen.",
       "copyCta": "Kopieren",

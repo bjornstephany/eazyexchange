@@ -168,8 +168,11 @@ export function ApplicationSetup({
           <Button type="button" variant="outline" onClick={openLibrary} className="h-[36px] text-[12.5px]">
             {t('changeTemplateCta')}
           </Button>
+          {/* `ta`, not `t`: the label is shared with the En cours screen's own
+              invite button, so it lives at organizer.applications.inviteCta
+              rather than under setup. */}
           <Button type="button" onClick={() => setInviteOpen(true)} className="ml-auto h-[36px] text-[12.5px]">
-            {t('inviteCta')}
+            {ta('inviteCta')}
           </Button>
         </div>
       </div>

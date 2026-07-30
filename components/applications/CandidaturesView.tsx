@@ -13,26 +13,37 @@ import { StatusPill } from '@/components/dashboard/StatusPill'
 import { ApplicantAvatar } from '@/components/applications/ApplicantAvatar'
 import { ApplicationDeadlineLine } from '@/components/applications/ApplicationDeadlineLine'
 import { GoodNewsBlockNotice } from '@/components/applications/GoodNewsBlockNotice'
+import { InviteStudentsDialog } from '@/components/applications/InviteStudentsDialog'
+import { Button } from '@/components/ui/button'
 
 // Invited/started rows are organizer-sent invitations still in the funnel; they
 // are shown for tracking but never bulk-selectable for accept/reject.
 const SELECTABLE = (a: AppRow) => a.status !== 'invited' && a.status !== 'draft'
 
-// The tracking list, and nothing else. Once applications exist there is nothing
-// left to configure: no template line, no copy-link, no invite, no open/closed
-// toggle — only the grid, its tabs and one editable deadline. Everything that
-// sets an application up now lives in ApplicationSetup, which this file never
-// renders and which never renders this one (the page branches server-side).
+// The tracking list plus the two controls that outlive setup: one editable
+// deadline and « Inviter les élèves ». There is no template line and no
+// open/closed toggle — everything that CONFIGURES an application lives in
+// ApplicationSetup, which this file never renders and which never renders this
+// one (the page branches server-side).
+//
+// Inviting has to be here and not only in ApplicationSetup, because sending
+// invitations is what ENDS the setup state: sendApplicationInvitations writes
+// an `invited` row per address, that row counts in applicationCount, and
+// applicationState() therefore returns 'running'. Left in setup alone, the
+// invite button destroyed itself on first use and no second wave — nor even
+// the /apply link — was reachable again.
 export function CandidaturesView({
   apps,
   exchangeName,
   exchangeId,
+  applySlug,
   applicationDeadline,
   initialTab,
 }: {
   apps: AppRow[]
   exchangeName: string
   exchangeId: string
+  applySlug: string
   applicationDeadline: string | null
   initialTab?: TabKey
 }) {
@@ -46,6 +57,7 @@ export function CandidaturesView({
   const [note, setNote] = useState('')
   const [sendEmail, setSendEmail] = useState(true)
   const [bulkResult, setBulkResult] = useState<{ succeeded: number; failed: number } | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
   // A whole batch refused because the acceptance email is incomplete — one
   // cause, one fix, so it is reported once rather than per candidate.
   const [bulkBlock, setBulkBlock] = useState<AcceptBlock | null>(null)
@@ -125,7 +137,21 @@ export function CandidaturesView({
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-navy">{tr('organizer.applications.heading')}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="font-display text-2xl font-bold text-navy">{tr('organizer.applications.heading')}</h1>
+        {/* Gated on the deadline, because the deadline is what makes
+            /apply/<slug> live (the funnel honours today <= deadline). Two
+            states reach En cours without one: a legacy exchange carrying
+            applications but no deadline, and the fail-closed count-query blip
+            that forces 'running' with zero applications. Offering to invite
+            into a dead funnel would email families a link that refuses them.
+            Setting the deadline in the line just below brings the button back. */}
+        {applicationDeadline != null && (
+          <Button type="button" onClick={() => setInviteOpen(true)} className="h-[36px] shrink-0 text-[12.5px]">
+            {tr('organizer.applications.inviteCta')}
+          </Button>
+        )}
+      </div>
       <p className="text-sm text-muted-foreground mb-4">
         {apps.length === 0
           ? tr('organizer.applications.emptyState')
@@ -273,6 +299,13 @@ export function CandidaturesView({
           ))
         )}
       </div>
+
+      <InviteStudentsDialog
+        exchangeId={exchangeId}
+        applySlug={applySlug}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
     </div>
   )
 }

@@ -508,10 +508,10 @@
         "cardSummary": "{n} preguntas · fecha límite {date}",
         "cardSummaryNoDeadline": "{n} preguntas",
         "customizeCta": "Personalizar",
-        "changeTemplateCta": "Cambiar de plantilla",
-        "inviteCta": "Invitar a los alumnos"
+        "changeTemplateCta": "Cambiar de plantilla"
       },
-      "countSummary": "{n, plural, one {# candidatura recibida} other {# candidaturas recibidas}} para {exchangeName}.",
+      "inviteCta": "Invitar a los alumnos",
+      "countSummary": "{n, plural, one {# candidatura} other {# candidaturas}} para {exchangeName}.",
       "deadlineLabel": "Fecha límite",
       "deadlineError": "No se pudo guardar la fecha límite. Inténtelo de nuevo.",
       "copyCta": "Copiar",

@@ -508,10 +508,10 @@
         "cardSummary": "{n} domande · scadenza {date}",
         "cardSummaryNoDeadline": "{n} domande",
         "customizeCta": "Personalizza",
-        "changeTemplateCta": "Cambia modello",
-        "inviteCta": "Invita gli studenti"
+        "changeTemplateCta": "Cambia modello"
       },
-      "countSummary": "{n, plural, one {# candidatura ricevuta} other {# candidature ricevute}} per {exchangeName}.",
+      "inviteCta": "Invita gli studenti",
+      "countSummary": "{n, plural, one {# candidatura} other {# candidature}} per {exchangeName}.",
       "deadlineLabel": "Scadenza",
       "deadlineError": "Impossibile salvare la scadenza. Riprova.",
       "copyCta": "Copia",

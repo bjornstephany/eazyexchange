@@ -70,6 +70,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
       apps={apps}
       exchangeName={active.name}
       exchangeId={active.id}
+      applySlug={active.apply_slug}
       applicationDeadline={active.application_deadline ?? null}
       initialTab={parseTab(tab)}
     />

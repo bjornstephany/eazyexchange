@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
@@ -21,6 +21,8 @@ const listApplicationsMock = vi.fn().mockResolvedValue([])
 vi.mock('@/actions/applications-review', () => ({
   listApplications: (...a: unknown[]) => listApplicationsMock(...a),
   getApplicationForReview: vi.fn(),
+  // Reached through the grid's InviteStudentsDialog → InviteByEmailForm.
+  sendApplicationInvitations: vi.fn(),
 }))
 
 import ApplicationsPage from '@/app/(organizer)/applications/page'
@@ -73,5 +75,18 @@ describe('/applications state guard (locked-with-zero-count)', () => {
     getQuestionnaireMock.mockResolvedValue({ questionCount: 55, locked: true, applicationCount: 3 })
     await renderPage()
     expect(screen.getByRole('heading', { name: 'Candidatures' })).toBeInTheDocument()
+  })
+
+  // The grid's invite dialog needs apply_slug, which the setup flow used to be
+  // the only consumer of — so the page has to hand it to BOTH branches.
+  it('hands apply_slug to the tracking grid, so its invite dialog offers the real link', async () => {
+    getExchangesMock.mockResolvedValue([
+      { ...BASE_EXCHANGE, application_open: true, application_deadline: '2026-09-01' },
+    ])
+    getQuestionnaireMock.mockResolvedValue({ questionCount: 55, locked: true, applicationCount: 3 })
+    await renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Inviter les élèves' }))
+    const link = await screen.findByLabelText<HTMLInputElement>('Partager un lien')
+    expect(link.value).toContain('/apply/espagne-2026')
   })
 })

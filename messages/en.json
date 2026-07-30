@@ -508,10 +508,10 @@
         "cardSummary": "{n} questions · deadline {date}",
         "cardSummaryNoDeadline": "{n} questions",
         "customizeCta": "Customize",
-        "changeTemplateCta": "Change template",
-        "inviteCta": "Invite students"
+        "changeTemplateCta": "Change template"
       },
-      "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
+      "inviteCta": "Invite students",
+      "countSummary": "{n, plural, one {# application} other {# applications}} for {exchangeName}.",
       "deadlineLabel": "Deadline",
       "deadlineError": "Could not save the deadline. Try again.",
       "copyCta": "Copy",
