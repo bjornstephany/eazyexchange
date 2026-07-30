@@ -588,6 +588,77 @@
         "sendRejectionEmail": "Enviar un correo de rechazo al candidato"
       }
     },
+    "questionnaire": {
+      "card": {
+        "title": "Cuestionario de candidatura",
+        "template": "Plantilla: {name}",
+        "templateStandard": "Cuestionario estándar",
+        "summary": "{n} preguntas · 4 secciones",
+        "locked": "Bloqueado — {n} candidaturas recibidas",
+        "edit": "Modificar",
+        "view": "Consultar",
+        "reset": "Restablecer",
+        "resetTitle": "¿Volver al cuestionario estándar?",
+        "resetBody": "Se perderán todos tus cambios y el cuestionario volverá a la plantilla estándar.",
+        "resetConfirm": "Restablecer"
+      },
+      "page": {
+        "title": "Cuestionario de candidatura",
+        "back": "← Candidaturas",
+        "intro": "Añade o quita preguntas. Cada cambio se guarda al instante.",
+        "lockedNotice": "Este cuestionario está bloqueado: ya se han recibido {n} candidaturas. Sigue siendo consultable.",
+        "sectionCount": "{n} preguntas",
+        "add": "＋ Añadir una pregunta",
+        "lockedTooltip": "Se recoge antes del formulario — sirve para enviar la invitación.",
+        "remove": "Quitar",
+        "editQuestion": "Modificar la pregunta",
+        "required": "obligatoria",
+        "empty": "No hay preguntas en esta sección."
+      },
+      "types": {
+        "text": "Texto corto",
+        "textarea": "Texto largo",
+        "date": "Fecha",
+        "yesno": "Sí / No",
+        "radio": "Opción múltiple",
+        "photo": "Foto",
+        "email": "Correo electrónico",
+        "tel": "Teléfono"
+      },
+      "cascade": {
+        "title": "Esta pregunta arrastra otra",
+        "body": "Quitar «{question}» también quitará «{dependent}», que solo tiene sentido junto a ella.",
+        "confirm": "Quitar las dos"
+      },
+      "dialog": {
+        "title": "Añadir una pregunta — {section}",
+        "removedHeading": "Preguntas quitadas",
+        "removedEmpty": "Todas las preguntas de la plantilla están presentes.",
+        "suggestionsHeading": "Sugerencias de otros centros",
+        "suggestionsEmpty": "Todavía no hay sugerencias.",
+        "suggestionsSchools": "{n} centros",
+        "orCreate": "o crear",
+        "label": "Enunciado",
+        "type": "Tipo",
+        "required": "Respuesta obligatoria",
+        "options": "Opciones (una por línea)",
+        "add": "Añadir"
+      },
+      "editDialog": {
+        "title": "Modificar la pregunta",
+        "save": "Guardar"
+      },
+      "errors": {
+        "locked": "Este cuestionario está bloqueado: ya se han recibido candidaturas.",
+        "archived": "Este programa está archivado: el cuestionario sigue siendo consultable, pero ya no se podrá modificar nada.",
+        "not_found": "Programa no encontrado.",
+        "invalid_label": "El enunciado debe tener entre 1 y 120 caracteres.",
+        "invalid_type": "Tipo de pregunta no admitido.",
+        "invalid_options": "Una opción múltiple necesita al menos dos opciones.",
+        "unknown_question": "Esa pregunta ya no está en el cuestionario — recarga la página.",
+        "failed": "No se ha podido guardar. Inténtalo de nuevo."
+      }
+    },
     "exchanges": {
       "reminders": {
         "heading": "Recordatorios automáticos",
@@ -914,6 +985,7 @@
       "no_file": "No has seleccionado ningún archivo.",
       "not_an_image": "Elige una imagen (JPEG, PNG o WebP).",
       "file_rejected": "Este archivo no se acepta — imagen JPEG, PNG o WebP de 10 MB como máximo.",
+      "photo_disabled": "Este cuestionario no pide ninguna foto.",
       "failed": "Se ha producido un error. Inténtalo de nuevo."
     },
     "form": {

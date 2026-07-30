@@ -33,6 +33,8 @@ vi.mock('@/lib/supabase/admin', () => ({
 }))
 
 import { downloadApplicationRecap } from '../apply'
+import { APPLICATION_SECTIONS } from '@/lib/application-form'
+import { resolveApplicationSections, parseApplicationFields } from '@/lib/application-fields'
 
 const FUTURE = new Date(Date.now() + 1e9).toISOString()
 const PAST = new Date(Date.now() - 1e9).toISOString()
@@ -52,7 +54,9 @@ beforeEach(() => {
     photo_path: null,
     submitted_at: '2026-07-19T10:00:00Z',
     resume_token_expires_at: FUTURE,
-    exchanges: { name: 'France-Minnesota 2026' },
+    // Explicit null (not just an absent key) — matches the real column shape
+    // for an exchange that was never customized (Task 1/2 contract).
+    exchanges: { name: 'France-Minnesota 2026', application_fields: null },
   }
 })
 
@@ -78,6 +82,43 @@ describe('downloadApplicationRecap', () => {
     if (!res.ok) return
     expect(Buffer.from(res.pdf, 'base64').toString()).toBe('%PDF-fake')
     expect(res.filename).toBe('candidature-zoe-dupont-leger.pdf')
+  })
+
+  // Pins the wiring at actions/apply.ts: a never-customized exchange
+  // (application_fields is null on the row) must render the built-in
+  // catalog, byte-identical to before this feature existed. Without this
+  // assertion, a call site that reads the wrong field — or drops the
+  // `sections` argument entirely — still returns { ok: true } and passes
+  // every other assertion in this suite.
+  it('passes the built-in catalog to the renderer for a never-customized exchange', async () => {
+    await downloadApplicationRecap('tok')
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({
+      sections: APPLICATION_SECTIONS,
+    }))
+  })
+
+  // Same wiring, the other direction: a customized exchange must reach the
+  // renderer with ITS resolved questionnaire, not the default one. Computed
+  // through the real resolver chain (not hand-duplicated) so the assertion
+  // tracks the production contract rather than re-implementing it.
+  it("passes the exchange's own resolved questionnaire to the renderer when customized", async () => {
+    const doc = {
+      version: 1,
+      sections: [
+        { id: 'student', fields: [{ id: 'c_1', type: 'text', label: 'Allergies' }] },
+        { id: 'parents', fields: [] },
+        { id: 'hosting', fields: [] },
+        { id: 'profile', fields: [] },
+      ],
+    }
+    appRow.exchanges.application_fields = doc
+    await downloadApplicationRecap('tok')
+    expect(renderApplicationRecapPdf).toHaveBeenCalledWith(expect.objectContaining({
+      sections: resolveApplicationSections(parseApplicationFields(doc)),
+    }))
+    // Sanity: the customized questionnaire really does differ from the
+    // default, so the assertion above could not pass by accident.
+    expect(resolveApplicationSections(parseApplicationFields(doc))).not.toEqual(APPLICATION_SECTIONS)
   })
 
   it('rate-limits by client IP before touching the database', async () => {

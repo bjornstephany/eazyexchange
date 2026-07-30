@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { getExchanges } from '@/actions/exchanges'
 import { listApplications, getApplicationForReview } from '@/actions/applications-review'
+import { getQuestionnaire } from '@/actions/questionnaire'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { parseTab } from '@/lib/applications/tabs'
 import { CandidaturesView } from '@/components/applications/CandidaturesView'
@@ -16,8 +17,14 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   if (!active) return <EmptyDashboard />
 
   if (id) {
-    const { application, photoUrl } = await getApplicationForReview(id)
-    return <ApplicationDetail application={application} photoUrl={photoUrl} exchangeName={active.name} year={active.year} />
+    const { application, photoUrl, applicationFields } = await getApplicationForReview(id)
+    return (
+      <ApplicationDetail
+        application={application} photoUrl={photoUrl}
+        exchangeName={active.name} year={active.year}
+        applicationFields={applicationFields}
+      />
+    )
   }
 
   const applications = await listApplications(active.id, { withPhotos: true })
@@ -25,6 +32,10 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
     id: a.id, status: a.status, submitted_at: a.submitted_at, responded_at: a.responded_at,
     data: a.data ?? {}, email: a.email, photoUrl: a.photoUrl ?? null,
   }))
+  // `applicationCount` deliberately comes from getQuestionnaire, not from
+  // apps.length: listApplications filters untouched drafts out of the grid, but
+  // ANY application at all locks the questionnaire.
+  const { questionCount, locked, applicationCount } = await getQuestionnaire(active.id)
   return (
     <CandidaturesView
       apps={apps}
@@ -34,6 +45,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
       applicationDeadline={active.application_deadline ?? null}
       applySlug={active.apply_slug}
       initialTab={parseTab(tab)}
+      questionnaire={{ questionCount, locked, applicationCount }}
     />
   )
 }

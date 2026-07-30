@@ -24,12 +24,17 @@ vi.mock('@/lib/application-form', async (orig) => {
 import { ApplicationForm } from '@/components/ApplicationForm'
 import { sendApplicationResumeLink, submitApplication } from '@/actions/apply'
 import { storeResumeToken, readResumeToken } from '@/lib/apply-storage'
+import { APPLICATION_SECTIONS } from '@/lib/application-form'
 
 beforeEach(() => { vi.clearAllMocks(); missingMock.mockReturnValue([]); localStorage.clear() })
 
 function renderForm(over: Partial<Parameters<typeof ApplicationForm>[0]> = {}) {
   return renderWithIntl(
-    <ApplicationForm token="t" slug="s" exchangeName="Échange Espagne" initialData={{}} locale="fr" initialPhotoUrl={null} {...over} />,
+    <ApplicationForm
+      token="t" slug="s" exchangeName="Échange Espagne" initialData={{}} locale="fr"
+      initialPhotoUrl={null} sections={APPLICATION_SECTIONS} photoEnabled
+      {...over}
+    />,
   )
 }
 
@@ -84,7 +89,9 @@ describe('ApplicationForm', () => {
     expect(screen.getByText(/une photo est requise/i)).toBeInTheDocument()
     expect(submitApplication).not.toHaveBeenCalled()
     // validation was asked about the photo
-    expect(missingMock).toHaveBeenCalledWith(expect.any(Object), { hasPhoto: false })
+    expect(missingMock).toHaveBeenCalledWith(
+      expect.any(Object), { hasPhoto: false, photoRequired: true, sections: APPLICATION_SECTIONS },
+    )
   })
 
   it('hides the separation housing address until family status is separated / step-family', async () => {
@@ -159,5 +166,45 @@ describe('ApplicationForm', () => {
     await user.click(screen.getByRole('button', { name: /envoyer ma candidature/i }))
     expect(await screen.findByText(/vérifie le format/i)).toBeInTheDocument()
     expect(screen.queryByText(/ta candidature a été envoyée/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('ApplicationForm with a customized questionnaire', () => {
+  const TRIMMED = [
+    { id: 'student', fields: [
+      { id: 'last_name', type: 'text' as const, required: true },
+      { id: 'c_7f3a', type: 'textarea' as const, label: 'Sait nager ?', maxLength: 150 },
+    ] },
+    { id: 'parents', fields: [] },
+    { id: 'hosting', fields: [] },
+    { id: 'profile', fields: [] },
+  ]
+
+  it('renders a custom question with its typed label, untranslated', () => {
+    renderForm({ sections: TRIMMED })
+    expect(screen.getByText('Sait nager ?')).toBeInTheDocument()
+  })
+
+  it('does not render a removed built-in question', () => {
+    renderForm({ sections: TRIMMED })
+    expect(screen.queryByText('Animaux domestiques')).not.toBeInTheDocument()
+  })
+
+  it('does not render an empty section', () => {
+    renderForm({ sections: TRIMMED })
+    expect(screen.queryByText('Conditions d’accueil')).not.toBeInTheDocument()
+    // …and the step counter counts only what is on screen.
+    expect(screen.getByText('1/1')).toBeInTheDocument()
+  })
+
+  it('hides the photo uploader when the portrait was removed', () => {
+    renderForm({ sections: TRIMMED, photoEnabled: false })
+    expect(screen.queryByText(/photo/i)).not.toBeInTheDocument()
+  })
+
+  it('still shows the student section when the photo is its only remaining question', () => {
+    const photoOnly = TRIMMED.map(s => (s.id === 'student' ? { ...s, fields: [] } : s))
+    renderForm({ sections: photoOnly, photoEnabled: true })
+    expect(screen.getByText('Élève')).toBeInTheDocument()
   })
 })

@@ -4,6 +4,9 @@ import { createAnonClient } from '@/lib/supabase/anon'
 import { randomToken, tokenExpired, resumeTokenExpiry } from '@/lib/tokens'
 import { normalizeEmail, isValidEmail, hasOverlongAnswer } from '@/lib/validation'
 import { missingRequiredApplication, overLimitApplicationFields, invalidFormatApplicationFields, applicantName as buildApplicantName } from '@/lib/application-form'
+import {
+  parseApplicationFields, resolveApplicationSections, questionnaireHasPhoto,
+} from '@/lib/application-fields'
 import { uploadFileIssue, APPLICATION_PHOTO_BUCKET } from '@/lib/uploads'
 import { checkRateLimit, clientIp } from '@/lib/rate-limit'
 import {
@@ -213,7 +216,7 @@ export async function getApplicationDraft(token: string) {
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug)')
+    .select('status, data, language, photo_path, resume_token_expires_at, exchanges(name, apply_slug, application_fields)')
     .eq('resume_token', token)
     .maybeSingle()
   if (!app) return null
@@ -247,6 +250,10 @@ export async function getApplicationDraft(token: string) {
     status: app.status, data: app.data ?? {}, language: app.language,
     photo_path: app.photo_path, photoUrl, exchangeName,
     slug: app.exchanges?.apply_slug ?? '',
+    // The raw column; the page resolves it. Shipping the DOCUMENT rather than
+    // the resolved sections keeps the built-in labels coming from the client's
+    // own catalog, so a language switch still relabels the whole form.
+    applicationFields: (app.exchanges?.application_fields ?? null) as unknown,
   }
 }
 
@@ -299,14 +306,22 @@ export async function sendApplicationResumeLink(token: string): Promise<ApplyWri
 }
 
 export async function saveApplicationDraft(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
-  const overLimit = overLimitApplicationFields(data)
-  if (hasOverlongAnswer(data) || overLimit.length > 0) return applyFailure('too_long', overLimit)
+  // The absolute cap first — it needs no context and rejects a hostile payload
+  // before we touch the database.
+  if (hasOverlongAnswer(data)) return applyFailure('too_long')
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
+    .from('applications')
+    .select('id, status, resume_token_expires_at, exchange_id, exchanges(application_fields)')
+    .eq('resume_token', token).maybeSingle()
   if (!app) return applyFailure('not_found')
   if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
   if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
+  // Per-field caps come from THIS exchange's questionnaire — a custom textarea
+  // has its own 150-char limit and the built-in ones may have been removed.
+  const sections = resolveApplicationSections(parseApplicationFields(app.exchanges?.application_fields))
+  const overLimit = overLimitApplicationFields(data, sections)
+  if (overLimit.length > 0) return applyFailure('too_long', overLimit)
   await assertExchangeWritable(admin, app.exchange_id)
   // First edit of an organizer-invited row marks it "started".
   const patch: { data: Record<string, string>; status?: 'draft' } =
@@ -331,8 +346,7 @@ export async function setApplicationLanguage(token: string, locale: Locale): Pro
 }
 
 export async function submitApplication(token: string, data: Record<string, string>): Promise<ApplyWriteResult> {
-  const overLimit = overLimitApplicationFields(data)
-  if (hasOverlongAnswer(data) || overLimit.length > 0) return applyFailure('too_long', overLimit)
+  if (hasOverlongAnswer(data)) return applyFailure('too_long')
 
   const admin = createAdminClient()
   const { data: app } = await admin
@@ -343,26 +357,41 @@ export async function submitApplication(token: string, data: Record<string, stri
   if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
   if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
 
+  // Read the exchange BEFORE the content gates: every one of them runs against
+  // this exchange's own questionnaire. Running them against the global catalog
+  // would make a removed question permanently "missing" and block every
+  // submission on a customized exchange.
+  const { data: exchange } = await admin
+    .from('exchanges')
+    .select('name, application_open, application_deadline, application_fields')
+    .eq('id', app.exchange_id).maybeSingle()
+  if (!exchange) return applyFailure('not_found')
+  const doc = parseApplicationFields(exchange.application_fields)
+  const sections = resolveApplicationSections(doc)
+
+  const overLimit = overLimitApplicationFields(data, sections)
+  if (overLimit.length > 0) return applyFailure('too_long', overLimit)
+
   // Server-side backstop of the client submit gate — same policy, including
-  // the photo (which lives on the row, not in `data`). Structured so the client
-  // can flag the offending fields instead of showing a digest.
-  const missing = missingRequiredApplication(data, { hasPhoto: app.photo_path != null })
+  // the photo (which lives on the row, not in `data`) and whether this
+  // questionnaire still asks for one. Structured so the client can flag the
+  // offending fields instead of showing a digest.
+  const missing = missingRequiredApplication(data, {
+    hasPhoto: app.photo_path != null,
+    photoRequired: questionnaireHasPhoto(doc),
+    sections,
+  })
   if (missing.length > 0) return applyFailure('missing_fields', missing)
 
   // Format backstop for the e-mail/phone fields. Structured, not thrown: the
   // client can point at the offending fields, and a malformed parent address
   // here would 422 the whole acceptance send later on.
-  const invalidFormat = invalidFormatApplicationFields(data)
+  const invalidFormat = invalidFormatApplicationFields(data, sections)
   if (invalidFormat.length > 0) return applyFailure('bad_format', invalidFormat)
 
   // Re-check the window at submit time: startApplication gated it, but the
   // organizer may have closed applications (or the deadline passed) while this
   // draft was open.
-  const { data: exchange } = await admin
-    .from('exchanges')
-    .select('name, application_open, application_deadline')
-    .eq('id', app.exchange_id).maybeSingle()
-  if (!exchange) return applyFailure('not_found')
   if (applicationsClosed(exchange)) return applyFailure('closed')
   await assertExchangeWritable(admin, app.exchange_id)
 
@@ -413,10 +442,17 @@ export async function uploadApplicationPhoto(token: string, formData: FormData):
 
   const admin = createAdminClient()
   const { data: app } = await admin
-    .from('applications').select('id, status, resume_token_expires_at, exchange_id').eq('resume_token', token).maybeSingle()
+    .from('applications')
+    .select('id, status, resume_token_expires_at, exchange_id, exchanges(application_fields)')
+    .eq('resume_token', token).maybeSingle()
   if (!app) return applyFailure('not_found')
   if (tokenExpired(app.resume_token_expires_at)) return applyFailure('expired')
   if (app.status !== 'draft' && app.status !== 'invited') return applyFailure('locked')
+  // The form does not render the uploader when the portrait was removed; this
+  // is the server-side backstop for a stale tab or a hand-made request.
+  if (!questionnaireHasPhoto(parseApplicationFields(app.exchanges?.application_fields))) {
+    return applyFailure('photo_disabled')
+  }
   await assertExchangeWritable(admin, app.exchange_id)
 
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
@@ -483,7 +519,7 @@ export async function downloadApplicationRecap(token: string, language?: Locale)
   const admin = createAdminClient()
   const { data: app } = await admin
     .from('applications')
-    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name)')
+    .select('status, data, language, photo_path, submitted_at, resume_token_expires_at, exchanges(name, application_fields)')
     .eq('resume_token', token)
     .maybeSingle()
   // Structured returns, not throws: prod redacts thrown Server Action messages.
@@ -528,6 +564,7 @@ export async function downloadApplicationRecap(token: string, language?: Locale)
     photoBytes,
     locale: effectiveLocale,
     t: await namespaceTranslator(effectiveLocale, 'apply'),
+    sections: resolveApplicationSections(parseApplicationFields(app.exchanges?.application_fields)),
   })
 
   return { ok: true, filename: recapFilename(data), pdf: pdf.toString('base64') }

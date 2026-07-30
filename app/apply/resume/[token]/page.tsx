@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import { getApplicationDraft } from '@/actions/apply'
+import { parseApplicationFields, resolveApplicationSections, questionnaireHasPhoto } from '@/lib/application-fields'
 import { resolveLocale } from '@/lib/i18n/resolve'
 import { loadMessages, pickNamespaces } from '@/lib/i18n/messages'
 import { isLocale, type Locale } from '@/lib/i18n/config'
@@ -47,9 +48,21 @@ export default async function ResumePage({ params }: { params: Promise<{ token: 
       </div>
     </main>
   )
+  // The exchange's own questionnaire; `null` (never customized) resolves to the
+  // built-in catalog, so an exchange that predates the editor is unchanged.
+  const doc = parseApplicationFields(draft.applicationFields)
   return wrap(
     <main className="mx-auto max-w-[720px] px-4 pt-[52px]">
-      <ApplicationForm token={token} slug={draft.slug} exchangeName={draft.exchangeName} initialData={draft.data} locale={locale} initialPhotoUrl={draft.photoUrl} />
+      <ApplicationForm
+        token={token}
+        slug={draft.slug}
+        exchangeName={draft.exchangeName}
+        initialData={draft.data}
+        locale={locale}
+        initialPhotoUrl={draft.photoUrl}
+        sections={resolveApplicationSections(doc)}
+        photoEnabled={questionnaireHasPhoto(doc)}
+      />
     </main>
   )
 }

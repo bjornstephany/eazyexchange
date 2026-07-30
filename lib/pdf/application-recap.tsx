@@ -2,14 +2,15 @@
 // keepsake at the end of the funnel. Server-side only — imported by
 // actions/apply.ts (downloadApplicationRecap).
 //
-// Layout is driven by iterating APPLICATION_SECTIONS: a question added to the
-// funnel later shows up here automatically, with no second list to maintain.
-// Separate module from fillable-pdf.tsx on purpose — that renderer walks a
-// FillableDefinition block tree, which has nothing in common with a flat
-// answers map.
+// Layout is driven by iterating the exchange's resolved questionnaire: a
+// question added to the funnel later shows up here automatically, with no
+// second list to maintain. Separate module from fillable-pdf.tsx on purpose —
+// that renderer walks a FillableDefinition block tree, which has nothing in
+// common with a flat answers map.
 import React from 'react'
 import { Document, Page, Text, View, Image, Font, StyleSheet, renderToBuffer } from '@react-pdf/renderer'
 import { localizedApplicationSections, type LocalizedField } from '@/lib/application-form.labels'
+import type { AppSection } from '@/lib/application-form'
 import type { AppTranslator } from '@/lib/i18n/messages'
 import type { Locale } from '@/lib/i18n/config'
 import { notoSansRegular, notoSansBold, notoSansItalic } from './fonts'
@@ -62,13 +63,15 @@ function answerText(field: LocalizedField, raw: string | undefined, t: AppTransl
 
 // Pure content model of the recap: the sections and rows the PDF will draw.
 // Exported so the label/option/empty-answer rules are unit-testable without
-// parsing PDF bytes. Keys in `data` that are not in APPLICATION_SECTIONS are
-// ignored — the sections are the single source of truth for what a recap shows.
+// parsing PDF bytes. Keys in `data` that are not in `sections` are ignored —
+// the questionnaire is the single source of truth for what a recap shows, so
+// an answer to a since-removed question never resurfaces here.
 export function recapSections(
   data: Record<string, string>,
   t: AppTranslator,
+  sections?: AppSection[],
 ): RecapSection[] {
-  return localizedApplicationSections(t)
+  return localizedApplicationSections(t, sections)
     .map(section => ({
       title: section.title,
       rows: section.fields
@@ -101,9 +104,10 @@ export async function renderApplicationRecapPdf(input: {
   photoBytes: Uint8Array | null
   locale: Locale
   t: AppTranslator
+  sections: AppSection[]
 }): Promise<Buffer> {
-  const { exchangeName, applicantName, submittedAt, data, photoBytes, locale, t } = input
-  const sections = recapSections(data, t)
+  const { exchangeName, applicantName, submittedAt, data, photoBytes, locale, t, sections: questionnaire } = input
+  const sections = recapSections(data, t, questionnaire)
   const format = photoBytes ? imageFormat(photoBytes) : null
 
   const doc = (
