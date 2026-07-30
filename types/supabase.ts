@@ -600,6 +600,7 @@ export type Database = {
           application_deadline: string | null
           application_fields: Json | null
           application_open: boolean
+          application_template: string | null
           apply_slug: string | null
           archived_at: string | null
           created_at: string
@@ -619,6 +620,7 @@ export type Database = {
           application_deadline?: string | null
           application_fields?: Json | null
           application_open?: boolean
+          application_template?: string | null
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
@@ -638,6 +640,7 @@ export type Database = {
           application_deadline?: string | null
           application_fields?: Json | null
           application_open?: boolean
+          application_template?: string | null
           apply_slug?: string | null
           archived_at?: string | null
           created_at?: string
