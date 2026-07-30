@@ -33,12 +33,16 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   // apps.length: listApplications filters untouched drafts out of the grid, but
   // ANY application at all locks the questionnaire — and both facts have to
   // agree, or the page would offer « Ajouter » beside a locked questionnaire.
-  const { questionCount, applicationCount } = await getQuestionnaire(active.id)
-  const state = applicationState({
-    applicationOpen: !!active.application_open,
-    applicationDeadline: active.application_deadline ?? null,
-    applicationCount,
-  })
+  const { questionCount, locked, applicationCount } = await getQuestionnaire(active.id)
+  // An unreadable count is locked with count 0 — we cannot prove there are no
+  // applications, so render the read-only grid rather than the setup flow.
+  const state = locked && applicationCount === 0
+    ? 'running'
+    : applicationState({
+        applicationOpen: !!active.application_open,
+        applicationDeadline: active.application_deadline ?? null,
+        applicationCount,
+      })
 
   // Branching HERE, not inside a client component, is the point: the pre-grid
   // states never ship the grid's JavaScript and never run listApplications,
