@@ -177,18 +177,38 @@ to `/auth/confirm`, and must NOT ask for a code:
 </p>
 ```
 
-Apply via the Management API (Supabase PAT in `$SUPABASE_PAT`; Cloudflare blocks
-the python-urllib UA, so force a curl UA). Both the body and the subject change —
-the subject must no longer mention a code:
+Apply via the Management API. The token is `SUPABASE_ACCESS_TOKEN`, exported by
+`~/.claude-secrets.sh` — Cloudflare blocks the python-urllib UA, so force a curl
+UA. Both the body and the subject change; the subject must no longer mention a
+code:
 
 ```bash
+source ~/.claude-secrets.sh
 curl -A curl/8.0 -X PATCH \
   "https://api.supabase.com/v1/projects/rgisrqlbcjdoetoybaqd/config/auth" \
-  -H "Authorization: Bearer $SUPABASE_PAT" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"mailer_templates_confirmation_content": "<the HTML above, JSON-escaped>",
        "mailer_subjects_confirmation": "Confirmez votre inscription EazyExchange"}'
 ```
+
+Verify with a read-back, which is also how you check whether a patch is needed at
+all:
+
+```bash
+source ~/.claude-secrets.sh
+curl -sS -A curl/8.0 \
+  "https://api.supabase.com/v1/projects/rgisrqlbcjdoetoybaqd/config/auth" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  | jq -r '.mailer_subjects_confirmation, .mailer_templates_confirmation_content'
+```
+
+- **A GET returns the body HTML-entity-escaped** (`&lt;h2&gt;`). That is a display
+  artifact of the Management API, not the stored value — send raw HTML on the
+  PATCH, never pre-escaped.
+- Claude Code's auto-mode classifier blocks these calls, **GET included**. Run them
+  yourself with the `!` prefix; Claude can build the command and the JSON payload
+  (`-d @file` avoids hand-escaping the HTML) and read the verification output.
 
 - **The button is the whole flow, not a fallback.** Nothing else confirms a
   signup: there is no code path any more (`confirmSignupCode` was removed). A
