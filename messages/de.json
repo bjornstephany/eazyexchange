@@ -491,9 +491,25 @@
       "heading": "Bewerbungen",
       "emptyState": "Noch keine Bewerbungen eingegangen — teilen Sie den Bewerbungslink mit Ihren Schülern.",
       "empty": {
-        "title": "Laden Sie Ihre Schüler zur Bewerbung ein",
-        "body": "Legen Sie eine Frist fest und teilen Sie dann den Bewerbungslink, oder lassen Sie uns Ihre Schüler anschreiben. Die Bewerbungen öffnen sofort nach dem Speichern.",
-        "cta": "Schüler zur Bewerbung einladen"
+        "title": "Noch keine Bewerbung",
+        "body": "Wählen Sie eine Vorlage, um zu beginnen.",
+        "cta": "Bewerbung hinzufügen"
+      },
+      "setup": {
+        "libraryTitle": "Wählen Sie eine Vorlage",
+        "libraryBody": "Die Vorlage bestimmt, welche Fragen Ihre Schülerinnen und Schüler beantworten. Sie können sie danach anpassen.",
+        "questionCount": "{n} Fragen",
+        "chooseCta": "Auswählen",
+        "chosenLabel": "Ausgewählt ✓",
+        "deadlineLabel": "Bewerbungsfrist",
+        "createCta": "Bewerbung hinzufügen",
+        "creating": "Wird gespeichert…",
+        "cardTitle": "Bewerbung · {template}",
+        "cardSummary": "{n} Fragen · Frist {date}",
+        "cardSummaryNoDeadline": "{n} Fragen",
+        "customizeCta": "Anpassen",
+        "changeTemplateCta": "Vorlage wechseln",
+        "inviteCta": "Schüler einladen"
       },
       "openDialog": {
         "title": "Schüler zur Bewerbung einladen",
@@ -521,8 +537,10 @@
       "copiedCta": "Kopiert ✓",
       "invite": {
         "openCta": "Per E-Mail einladen",
-        "title": "Per E-Mail einladen",
-        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "title": "Schüler einladen",
+        "description": "Teilen Sie den Bewerbungslink oder lassen Sie uns Ihre Schüler anschreiben.",
+        "linkHeading": "Link teilen",
+        "emailHeading": "Oder lassen Sie uns die E-Mails senden",
         "placeholder": "marie@schule.de\nleo@schule.de",
         "sendCta": "Einladungen senden",
         "sending": "Senden…",
@@ -607,6 +625,12 @@
         "resetTitle": "Zum Standardfragebogen zurückkehren?",
         "resetBody": "Alle Ihre Änderungen gehen verloren und der Fragebogen entspricht wieder der Standardvorlage.",
         "resetConfirm": "Zurücksetzen"
+      },
+      "templates": {
+        "standard": {
+          "name": "Standard-Fragebogen",
+          "description": "Der vollständige Fragebogen: Schüler, Eltern, Unterbringung und Profil."
+        }
       },
       "page": {
         "title": "Bewerbungsfragebogen",

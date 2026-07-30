@@ -491,9 +491,25 @@
       "heading": "Applications",
       "emptyState": "No applications received yet — share the application link with your students.",
       "empty": {
-        "title": "Invite your students to apply",
-        "body": "Set a deadline, then share the application link or let us email your students. Applications open as soon as you save.",
-        "cta": "Invite your students to apply"
+        "title": "No application yet",
+        "body": "Choose a template to get started.",
+        "cta": "Add an application"
+      },
+      "setup": {
+        "libraryTitle": "Choose a template",
+        "libraryBody": "The template decides which questions your students answer. You can customize it afterwards.",
+        "questionCount": "{n} questions",
+        "chooseCta": "Choose",
+        "chosenLabel": "Chosen ✓",
+        "deadlineLabel": "Application deadline",
+        "createCta": "Add the application",
+        "creating": "Saving…",
+        "cardTitle": "Application · {template}",
+        "cardSummary": "{n} questions · deadline {date}",
+        "cardSummaryNoDeadline": "{n} questions",
+        "customizeCta": "Customize",
+        "changeTemplateCta": "Change template",
+        "inviteCta": "Invite students"
       },
       "openDialog": {
         "title": "Invite your students to apply",
@@ -521,8 +537,10 @@
       "copiedCta": "Copied ✓",
       "invite": {
         "openCta": "Invite by email",
-        "title": "Invite by email",
-        "description": "Paste students' email addresses — one per line or comma-separated.",
+        "title": "Invite students",
+        "description": "Share the application link or let us email your students.",
+        "linkHeading": "Share a link",
+        "emailHeading": "Or let us send the emails",
         "placeholder": "marie@school.org\nleo@school.org",
         "sendCta": "Send invitations",
         "sending": "Sending…",
@@ -607,6 +625,12 @@
         "resetTitle": "Go back to the standard questionnaire?",
         "resetBody": "All your changes will be lost and the questionnaire will return to the standard template.",
         "resetConfirm": "Reset"
+      },
+      "templates": {
+        "standard": {
+          "name": "Standard questionnaire",
+          "description": "The full questionnaire: student, parents, hosting conditions and profile."
+        }
       },
       "page": {
         "title": "Application questionnaire",

@@ -491,9 +491,25 @@
       "heading": "Candidaturas",
       "emptyState": "Ninguna candidatura recibida por el momento — comparta el enlace de candidatura con sus alumnos.",
       "empty": {
-        "title": "Invite a sus alumnos a postularse",
-        "body": "Fije una fecha límite y luego comparta el enlace de candidatura o deje que escribamos a sus alumnos. Las candidaturas se abren al guardar.",
-        "cta": "Invitar a sus alumnos a postularse"
+        "title": "Ninguna candidatura",
+        "body": "Elija una plantilla para empezar.",
+        "cta": "Añadir una candidatura"
+      },
+      "setup": {
+        "libraryTitle": "Elija una plantilla",
+        "libraryBody": "La plantilla determina las preguntas que responderán sus alumnos. Podrá personalizarla después.",
+        "questionCount": "{n} preguntas",
+        "chooseCta": "Elegir",
+        "chosenLabel": "Elegida ✓",
+        "deadlineLabel": "Fecha límite de candidaturas",
+        "createCta": "Añadir la candidatura",
+        "creating": "Guardando…",
+        "cardTitle": "Candidatura · {template}",
+        "cardSummary": "{n} preguntas · fecha límite {date}",
+        "cardSummaryNoDeadline": "{n} preguntas",
+        "customizeCta": "Personalizar",
+        "changeTemplateCta": "Cambiar de plantilla",
+        "inviteCta": "Invitar a los alumnos"
       },
       "openDialog": {
         "title": "Invitar a sus alumnos a postularse",
@@ -521,8 +537,10 @@
       "copiedCta": "Copiado ✓",
       "invite": {
         "openCta": "Invitar por correo",
-        "title": "Invitar por correo",
-        "description": "Pega los correos de los alumnos — uno por línea o separados por comas.",
+        "title": "Invitar a los alumnos",
+        "description": "Comparta el enlace de candidatura o deje que escribamos a sus alumnos.",
+        "linkHeading": "Compartir un enlace",
+        "emailHeading": "O deje que enviemos los correos",
         "placeholder": "marie@escuela.es\nleo@escuela.es",
         "sendCta": "Enviar invitaciones",
         "sending": "Enviando…",
@@ -607,6 +625,12 @@
         "resetTitle": "¿Volver al cuestionario estándar?",
         "resetBody": "Se perderán todos tus cambios y el cuestionario volverá a la plantilla estándar.",
         "resetConfirm": "Restablecer"
+      },
+      "templates": {
+        "standard": {
+          "name": "Cuestionario estándar",
+          "description": "El cuestionario completo: alumno, padres, condiciones de acogida y perfil."
+        }
       },
       "page": {
         "title": "Cuestionario de candidatura",

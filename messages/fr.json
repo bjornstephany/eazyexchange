@@ -491,9 +491,25 @@
       "heading": "Candidatures",
       "emptyState": "Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.",
       "empty": {
-        "title": "Invitez vos élèves à postuler",
-        "body": "Fixez une date limite, puis partagez le lien de candidature ou laissez-nous écrire à vos élèves. Les candidatures ouvrent dès l’enregistrement.",
-        "cta": "Inviter vos élèves à postuler"
+        "title": "Aucune candidature",
+        "body": "Choisissez un modèle pour commencer.",
+        "cta": "Ajouter une candidature"
+      },
+      "setup": {
+        "libraryTitle": "Choisissez un modèle",
+        "libraryBody": "Le modèle décide des questions posées à vos élèves. Vous pourrez le personnaliser ensuite.",
+        "questionCount": "{n} questions",
+        "chooseCta": "Choisir",
+        "chosenLabel": "Choisi ✓",
+        "deadlineLabel": "Date limite des candidatures",
+        "createCta": "Ajouter la candidature",
+        "creating": "Enregistrement…",
+        "cardTitle": "Candidature · {template}",
+        "cardSummary": "{n} questions · date limite {date}",
+        "cardSummaryNoDeadline": "{n} questions",
+        "customizeCta": "Personnaliser",
+        "changeTemplateCta": "Changer de modèle",
+        "inviteCta": "Inviter les élèves"
       },
       "openDialog": {
         "title": "Inviter vos élèves à postuler",
@@ -521,8 +537,10 @@
       "copiedCta": "Copié ✓",
       "invite": {
         "openCta": "Inviter par e-mail",
-        "title": "Inviter par e-mail",
-        "description": "Collez les adresses e-mail des élèves — une par ligne ou séparées par des virgules.",
+        "title": "Inviter les élèves",
+        "description": "Partagez le lien de candidature ou laissez-nous écrire à vos élèves.",
+        "linkHeading": "Partager un lien",
+        "emailHeading": "Ou laissez-nous envoyer les e-mails",
         "placeholder": "marie@ecole.fr\nleo@ecole.fr",
         "sendCta": "Envoyer les invitations",
         "sending": "Envoi…",
@@ -607,6 +625,12 @@
         "resetTitle": "Revenir au questionnaire standard ?",
         "resetBody": "Toutes vos modifications seront perdues et le questionnaire redeviendra celui du modèle standard.",
         "resetConfirm": "Réinitialiser"
+      },
+      "templates": {
+        "standard": {
+          "name": "Questionnaire standard",
+          "description": "Le questionnaire complet : élève, parents, conditions d’accueil et profil."
+        }
       },
       "page": {
         "title": "Questionnaire de candidature",
