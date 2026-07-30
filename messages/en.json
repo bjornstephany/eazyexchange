@@ -662,6 +662,8 @@
         "invalid_type": "Unsupported question type.",
         "invalid_options": "A multiple choice needs at least two options.",
         "unknown_question": "That question is no longer in the questionnaire — reload the page.",
+        "unknown_template": "Unknown template — reload the page.",
+        "deadline_past": "Choose a deadline in the future: an application opened on a past date is already closed.",
         "failed": "Saving failed. Please try again."
       }
     },

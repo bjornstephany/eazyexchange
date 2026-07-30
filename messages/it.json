@@ -662,6 +662,8 @@
         "invalid_type": "Tipo di domanda non supportato.",
         "invalid_options": "Una scelta multipla richiede almeno due opzioni.",
         "unknown_question": "Questa domanda non è più nel questionario — ricarica la pagina.",
+        "unknown_template": "Modello sconosciuto — ricarica la pagina.",
+        "deadline_past": "Scegli una scadenza futura: una candidatura aperta con una data passata è già chiusa.",
         "failed": "Salvataggio non riuscito. Riprova."
       }
     },

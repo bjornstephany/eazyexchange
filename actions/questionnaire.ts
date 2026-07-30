@@ -15,7 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { requireOrganizer } from '@/lib/auth/require'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
-import { standardQuestionnaire } from '@/lib/application-templates/library'
+import { standardQuestionnaire, templateById } from '@/lib/application-templates/library'
 import {
   parseApplicationFields, removeQuestion as removeFromDoc, addQuestion as addToDoc,
   replaceCustomQuestion, removedBuiltIns, sectionEntries, entryId, isCustomQuestion,
@@ -104,10 +104,20 @@ async function loadEditable(exchangeId: string): Promise<
   return { ok: true, doc: state.doc }
 }
 
-async function persist(exchangeId: string, doc: ApplicationFieldsDoc | null): Promise<boolean> {
+// A partial column patch on `exchanges`, not just the questionnaire document:
+// createApplication has to write four columns in ONE update, and every writer
+// in this file must share the same revalidation.
+type ExchangePatch = {
+  application_fields?: ApplicationFieldsDoc | null
+  application_template?: string
+  application_open?: boolean
+  application_deadline?: string
+}
+
+async function persist(exchangeId: string, patch: ExchangePatch): Promise<boolean> {
   const supabase = await createClient()
   const { error } = await supabase
-    .from('exchanges').update({ application_fields: doc }).eq('id', exchangeId)
+    .from('exchanges').update(patch).eq('id', exchangeId)
   if (error) return false
   revalidatePath('/applications')
   revalidatePath('/applications/questionnaire')
@@ -142,7 +152,7 @@ export async function removeQuestion(
   // Cascades (sex → gender_other, family_status → separation_housing_address)
   // are applied by removeFromDoc; the editor warns before calling.
   const doc = removeFromDoc(loaded.doc, sectionId, questionId)
-  if (!(await persist(exchangeId, doc))) return questionnaireFailure('failed')
+  if (!(await persist(exchangeId, { application_fields: doc }))) return questionnaireFailure('failed')
   return { ok: true, doc }
 }
 
@@ -167,7 +177,7 @@ export async function addQuestion(
     if (input.ref === PHOTO_REF) {
       if (sectionId !== 'student' || questionnaireHasPhoto(loaded.doc)) return questionnaireFailure('unknown_question')
       const doc = addToDoc(loaded.doc, sectionId, { ref: PHOTO_REF })
-      if (!(await persist(exchangeId, doc))) return questionnaireFailure('failed')
+      if (!(await persist(exchangeId, { application_fields: doc }))) return questionnaireFailure('failed')
       return { ok: true, doc }
     }
     // Only a question this section actually lost may come back — which also
@@ -176,7 +186,7 @@ export async function addQuestion(
       return questionnaireFailure('unknown_question')
     }
     const doc = addToDoc(loaded.doc, sectionId, { ref: input.ref })
-    if (!(await persist(exchangeId, doc))) return questionnaireFailure('failed')
+    if (!(await persist(exchangeId, { application_fields: doc }))) return questionnaireFailure('failed')
     return { ok: true, doc }
   }
 
@@ -201,7 +211,7 @@ export async function addQuestion(
   if (options) question.options = options
 
   const doc = addToDoc(loaded.doc, sectionId, question)
-  if (!(await persist(exchangeId, doc))) return questionnaireFailure('failed')
+  if (!(await persist(exchangeId, { application_fields: doc }))) return questionnaireFailure('failed')
   await bankQuestion(question, label)
   return { ok: true, doc }
 }
@@ -272,7 +282,52 @@ export async function editCustomQuestion(
   if (options) question.options = options
 
   const doc = replaceCustomQuestion(loaded.doc, sectionId, question)
-  if (!(await persist(exchangeId, doc))) return questionnaireFailure('failed')
+  if (!(await persist(exchangeId, { application_fields: doc }))) return questionnaireFailure('failed')
+  return { ok: true, doc }
+}
+
+// Step ① of the two-step setup: pick a template, pick a deadline, and the
+// funnel is live. Also step ① again — « Changer de modèle » calls this same
+// action, which is exactly why the lock below makes overwriting safe.
+export async function createApplication(
+  exchangeId: string, templateId: string, deadline: string,
+): Promise<QuestionnaireResult> {
+  // Both arguments are untrusted regardless of their TypeScript types, and
+  // both are checked before any DB call — same discipline as removeQuestion's
+  // section-id guard, and a bogus id costs no round-trip.
+  const template = templateById(templateId)
+  if (!template) return questionnaireFailure('unknown_template')
+  // The SAME expression the /apply gate uses (app/apply/[slug]/page.tsx) so
+  // this refuses exactly what that gate would call already-closed. A calendar
+  // date is compared as a string on purpose: turning it into a Date would drift
+  // by a day for half the planet.
+  const today = new Date().toISOString().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || deadline < today) {
+    return questionnaireFailure('deadline_past')
+  }
+  // Foreign exchange, archived exchange, and THE LOCK — all three, server-side.
+  // The client greys the button out; this refuses anyway.
+  const loaded = await loadEditable(exchangeId)
+  if (!loaded.ok) return questionnaireFailure(loaded.reason)
+
+  // MATERIALIZED, never null. resolveApplicationSections(null) falls back to
+  // APPLICATION_SECTIONS — the *standard* set — at five call sites, so a null
+  // here would render the standard questionnaire to a candidate applying under
+  // another template, and the organizer would review answers to questions the
+  // candidate never saw. Materializing costs nothing in translation freshness:
+  // built-in questions are stored BY REFERENCE, so a later copy fix in the
+  // message catalogs still reaches every exchange built from the template.
+  const doc = template.build()
+  // ONE update. Four separate writes could leave the funnel live carrying the
+  // previous questionnaire if the second one failed.
+  if (!(await persist(exchangeId, {
+    application_template: template.id,
+    application_fields: doc,
+    application_open: true,
+    application_deadline: deadline,
+  }))) return questionnaireFailure('failed')
+  // The Aperçu carries the application state too.
+  revalidatePath('/dashboard')
   return { ok: true, doc }
 }
 
@@ -281,7 +336,7 @@ export async function resetQuestionnaire(exchangeId: string): Promise<Questionna
   if (!loaded.ok) return questionnaireFailure(loaded.reason)
   // NULL, not a copy of the standard structure — the same state as an exchange
   // that was never customized. One representation for one meaning.
-  if (!(await persist(exchangeId, null))) return questionnaireFailure('failed')
+  if (!(await persist(exchangeId, { application_fields: null }))) return questionnaireFailure('failed')
   return { ok: true, doc: standardQuestionnaire() }
 }
 

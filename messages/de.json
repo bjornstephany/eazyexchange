@@ -662,6 +662,8 @@
         "invalid_type": "Nicht unterstützter Fragetyp.",
         "invalid_options": "Eine Mehrfachauswahl braucht mindestens zwei Optionen.",
         "unknown_question": "Diese Frage ist nicht mehr im Fragebogen — laden Sie die Seite neu.",
+        "unknown_template": "Unbekannte Vorlage — laden Sie die Seite neu.",
+        "deadline_past": "Wählen Sie eine Frist in der Zukunft: Eine Bewerbung mit einem vergangenen Datum ist bereits geschlossen.",
         "failed": "Speichern fehlgeschlagen. Bitte erneut versuchen."
       }
     },

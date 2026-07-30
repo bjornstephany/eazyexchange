@@ -18,6 +18,8 @@ export type QuestionnaireFailureReason =
   | 'invalid_type'      // not one of the five offered types
   | 'invalid_options'   // a choice question with fewer than two options
   | 'unknown_question'  // the id is not in that section (a stale tab)
+  | 'unknown_template'  // no such library template (a stale tab, or a hostile id)
+  | 'deadline_past'     // creating on a past date yields an instantly dead funnel
   | 'failed'            // genuinely unexpected, surfaced rather than thrown
 
 export type QuestionnaireState = {

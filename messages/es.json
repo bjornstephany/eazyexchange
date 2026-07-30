@@ -662,6 +662,8 @@
         "invalid_type": "Tipo de pregunta no admitido.",
         "invalid_options": "Una opción múltiple necesita al menos dos opciones.",
         "unknown_question": "Esa pregunta ya no está en el cuestionario — recarga la página.",
+        "unknown_template": "Plantilla desconocida: recargue la página.",
+        "deadline_past": "Elija una fecha límite futura: una candidatura abierta con una fecha pasada ya está cerrada.",
         "failed": "No se ha podido guardar. Inténtalo de nuevo."
       }
     },

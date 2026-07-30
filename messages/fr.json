@@ -662,6 +662,8 @@
         "invalid_type": "Type de question non pris en charge.",
         "invalid_options": "Un choix multiple demande au moins deux options.",
         "unknown_question": "Cette question n’est plus dans le questionnaire — rechargez la page.",
+        "unknown_template": "Modèle inconnu — rechargez la page.",
+        "deadline_past": "Choisissez une date limite à venir : une candidature ouverte sur une date passée est déjà fermée.",
         "failed": "L’enregistrement a échoué. Réessayez."
       }
     },
