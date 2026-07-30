@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent, waitFor } from '@testing-library/react'
 import { renderWithIntl } from '@/lib/test/renderWithIntl'
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }))
@@ -10,7 +10,6 @@ vi.mock('@/actions/applications-review', () => ({
 }))
 const setApplicationOpen = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/actions/exchanges', () => ({ setApplicationOpen: (...a: unknown[]) => setApplicationOpen(...a) }))
-vi.mock('@/actions/questionnaire', () => ({ resetQuestionnaire: vi.fn() }))
 import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import type { AppRow } from '@/lib/dashboard/rollup'
 
@@ -20,10 +19,6 @@ function longFr(iso: string) {
   return new Intl.DateTimeFormat('fr', { day: 'numeric', month: 'long', year: 'numeric' })
     .format(new Date(`${iso}T00:00:00`))
 }
-const now = new Date()
-const firstOfThisMonthISO =
-  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-const firstOfThisMonthLongFr = longFr(firstOfThisMonthISO)
 
 const apps: AppRow[] = [
   { id: '1', status: 'submitted', submitted_at: '2026-09-12', responded_at: null, data: { first_name: 'Léa', last_name: 'Moreau', grade: 'Première', native_language: 'Français', sex: 'female' }, email: 'l@m.fr' },
@@ -33,13 +28,13 @@ const apps: AppRow[] = [
 
 describe('CandidaturesView', () => {
   it('tabs filter with counts', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Refusées/ }))
     expect(screen.queryByText('Léa Moreau')).toBeNull()
   })
   it('selection reveals the bulk bar and accepts the selection', async () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getAllByRole('checkbox')[1]) // first row
     fireEvent.click(screen.getAllByRole('checkbox')[2])
     expect(screen.getByText('2 sélectionnées')).toBeInTheDocument()
@@ -53,7 +48,7 @@ describe('CandidaturesView', () => {
       succeeded: 0, failed: 2,
       blocked: { missing: ['participation_cost'], literal: false },
     })
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getAllByRole('checkbox')[1])
     fireEvent.click(screen.getAllByRole('checkbox')[2])
     fireEvent.click(screen.getByRole('button', { name: 'Accepter & inviter' }))
@@ -63,28 +58,50 @@ describe('CandidaturesView', () => {
   })
 
   it('row click navigates to the detail', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getByText('Léa Moreau'))
     expect(push).toHaveBeenCalledWith('/applications?id=1')
   })
   it('select-all checkbox selects the filtered rows', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getAllByRole('checkbox')[0])
     expect(screen.getByText('3 sélectionnées')).toBeInTheDocument()
   })
-  it('changing the deadline calls setApplicationOpen with the current open state', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+  // Nothing in the redesign ever writes application_open = false. Closing
+  // applications early means setting a past deadline, and this line is where
+  // that happens — so it always saves `true`, which also self-repairs a legacy
+  // exchange left closed.
+  it('changing the deadline always saves applications as open', async () => {
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getByRole('button', { name: `Date limite ${longFr('2026-09-01')}` }))
     fireEvent.click(screen.getByRole('button', { name: longFr('2026-09-20') }))
-    expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-09-20')
+    await waitFor(() => expect(setApplicationOpen).toHaveBeenCalledWith('ex1', true, '2026-09-20'))
   })
-  it('the toggle closes applications, keeping the current deadline', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
-    fireEvent.click(screen.getByRole('button', { name: /Ouvert/ }))
-    expect(setApplicationOpen).toHaveBeenCalledWith('ex1', false, '2026-09-01')
+
+  it('a failed save rolls the date back and says so', async () => {
+    setApplicationOpen.mockRejectedValueOnce(new Error('boom'))
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
+    fireEvent.click(screen.getByRole('button', { name: `Date limite ${longFr('2026-09-01')}` }))
+    fireEvent.click(screen.getByRole('button', { name: longFr('2026-09-20') }))
+    expect(await screen.findByText('Impossible d’enregistrer la date limite. Réessayez.')).toBeInTheDocument()
+    // Rolled back, so re-picking the SAME date still fires a fresh onChange.
+    expect(screen.getByRole('button', { name: `Date limite ${longFr('2026-09-01')}` })).toBeInTheDocument()
+  })
+
+  it('carries no invitation panel, no open/closed toggle and no questionnaire card', () => {
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
+    expect(screen.queryByText('Candidatures ouvertes')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Ouvert/ })).toBeNull()
+    expect(screen.queryByText(/Questionnaire de candidature/)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Inviter par e-mail' })).toBeNull()
+  })
+
+  it('renders the deadline line with a placeholder when the exchange has no deadline', () => {
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline={null} />)
+    expect(screen.getByRole('button', { name: 'Date limite Choisir une date' })).toBeInTheDocument()
   })
   it('shows a Gender column with the localized label, not Native language', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     expect(screen.getByText('Genre')).toBeInTheDocument()
     expect(screen.queryByText('Langue mat.')).toBeNull()
     // Stored token 'female' renders as its French label…
@@ -97,7 +114,7 @@ describe('CandidaturesView', () => {
       { id: 'r', status: 'rejected', submitted_at: '2026-09-01', responded_at: null, data: { first_name: 'Rita', last_name: 'Refus' }, email: 'r@x.fr' },
       { id: 'd', status: 'declined', submitted_at: '2026-09-02', responded_at: null, data: { first_name: 'Diane', last_name: 'Desist' }, email: 'd@x.fr' },
     ]
-    renderWithIntl(<CandidaturesView apps={tabApps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={tabApps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getByRole('button', { name: /Refusées/ }))
     expect(screen.getByText('Rita Refus')).toBeInTheDocument()
     expect(screen.queryByText('Diane Desist')).toBeNull()
@@ -111,7 +128,7 @@ describe('CandidaturesView', () => {
       { id: 'm', status: 'maybe', submitted_at: '2026-09-02', responded_at: null, data: { first_name: 'Manon', last_name: 'Peutetre' }, email: 'm@x.fr' },
       { id: 'e', status: 'enrolled', submitted_at: '2026-09-03', responded_at: null, data: { first_name: 'Enzo', last_name: 'Inscrit' }, email: 'e@x.fr' },
     ]
-    renderWithIntl(<CandidaturesView apps={tabApps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={tabApps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
     fireEvent.click(screen.getByRole('button', { name: /En attente/ }))
     expect(screen.getByText('Alex Attente')).toBeInTheDocument()
     expect(screen.getByText('Manon Peutetre')).toBeInTheDocument()
@@ -121,40 +138,21 @@ describe('CandidaturesView', () => {
     expect(screen.queryByText('Alex Attente')).toBeNull()
   })
 
-  it('shows only the invite CTA when applications never opened and nobody applied', () => {
-    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
-    expect(screen.getByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inviter vos élèves à postuler' })).toBeInTheDocument()
-    expect(screen.queryByText('Candidatures ouvertes')).toBeNull()
-    expect(screen.queryByText('Candidatures fermées')).toBeNull()
-    expect(screen.queryByRole('button', { name: /Toutes/ })).toBeNull()
-  })
-
-  it('keeps the grid and the panel once applications are open, even with nobody yet', () => {
-    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
-    expect(screen.queryByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeNull()
-    expect(screen.getByText('Candidatures ouvertes')).toBeInTheDocument()
-  })
-
-  it('existing applications suppress the empty state even if applications never opened', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
-    expect(screen.queryByRole('heading', { name: 'Invitez vos élèves à postuler' })).toBeNull()
-    expect(screen.getByText('Léa Moreau')).toBeInTheDocument()
-  })
-
-  it('opening applications from the dialog leaves the empty state without unmounting the dialog', async () => {
-    renderWithIntl(<CandidaturesView apps={[]} exchangeName="Espagne" exchangeId="ex1" applicationOpen={false} applicationDeadline={null} applySlug="espagne-2026" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Inviter vos élèves à postuler' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Date limite des candidatures Choisir une date' }))
-    fireEvent.click(screen.getByRole('button', { name: firstOfThisMonthLongFr }))
-    // The dialog survives the flip and reaches its opened state…
-    expect(await screen.findByRole('button', { name: 'Terminé' })).toBeInTheDocument()
-    // …and the page behind it is now the grid with its panel.
-    expect(screen.getByText('Candidatures ouvertes')).toBeInTheDocument()
+  it('the Invités tab shows invited and started rows only', () => {
+    const tabApps = [
+      { id: '1', status: 'invited', submitted_at: null, responded_at: null, data: { email: 'a@x.co' }, email: 'a@x.co' },
+      { id: '2', status: 'draft', submitted_at: null, responded_at: null, data: { email: 'b@x.co' }, email: 'b@x.co' },
+      { id: '3', status: 'submitted', submitted_at: '2026-01-01', responded_at: null, data: { email: 'c@x.co' }, email: 'c@x.co' },
+    ] as AppRow[]
+    renderWithIntl(<CandidaturesView apps={tabApps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" />)
+    fireEvent.click(screen.getByText('Invités'))
+    expect(screen.getByText('a@x.co')).toBeTruthy()
+    expect(screen.getByText('b@x.co')).toBeTruthy()
+    expect(screen.queryByText('c@x.co')).toBeNull()
   })
 
   it('honours initialTab', () => {
-    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationOpen applicationDeadline="2026-09-01" applySlug="espagne-2026" initialTab="rejected" questionnaire={{ questionCount: 55, locked: false, applicationCount: 0 }} />)
+    renderWithIntl(<CandidaturesView apps={apps} exchangeName="Espagne" exchangeId="ex1" applicationDeadline="2026-09-01" initialTab="rejected" />)
     expect(screen.getByText('r@r.fr')).toBeInTheDocument()
     expect(screen.queryByText('Léa Moreau')).toBeNull()
   })

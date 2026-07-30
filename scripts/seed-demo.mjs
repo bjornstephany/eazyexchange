@@ -262,6 +262,9 @@ const exchange = await insertOne('exchanges', {
   apply_slug: 'demo-2026',
   application_open: true,
   application_deadline: dayOnly(20),
+  // Explicit rather than left NULL: the demo exchange must exercise the normal
+  // path, not the legacy « created before templates existed » one.
+  application_template: 'standard',
   reminders_enabled: true,
   reminder_cadence: 'normale',
 })

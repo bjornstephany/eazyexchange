@@ -489,40 +489,38 @@
       "printCta": "⎙ Imprimir la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",
       "heading": "Candidaturas",
-      "emptyState": "Ninguna candidatura recibida por el momento — comparta el enlace de candidatura con sus alumnos.",
+      "emptyState": "Ninguna candidatura que mostrar por ahora.",
       "empty": {
-        "title": "Invite a sus alumnos a postularse",
-        "body": "Fije una fecha límite y luego comparta el enlace de candidatura o deje que escribamos a sus alumnos. Las candidaturas se abren al guardar.",
-        "cta": "Invitar a sus alumnos a postularse"
+        "title": "Ninguna candidatura",
+        "body": "Elija una plantilla para empezar.",
+        "cta": "Añadir una candidatura"
       },
-      "openDialog": {
-        "title": "Invitar a sus alumnos a postularse",
-        "description": "Elija una fecha límite. Las candidaturas se abrirán de inmediato.",
-        "deadlineLabel": "Fecha límite de las candidaturas",
-        "saving": "Abriendo…",
-        "methodHeading": "¿Cómo desea invitar?",
-        "lockedHint": "Elija una fecha límite para desbloquear estas opciones.",
-        "linkHeading": "Compartir un enlace",
-        "emailHeading": "O deje que enviemos los correos",
-        "done": "Listo",
-        "openError": "No se han podido abrir las candidaturas. Vuelva a intentarlo."
-      },
-      "panel": {
-        "summaryOpen": "Candidaturas abiertas",
-        "summaryClosed": "Candidaturas cerradas",
-        "deadlineSuffix": " · fecha límite {date}"
+      "setup": {
+        "libraryTitle": "Elija una plantilla",
+        "libraryBody": "La plantilla determina las preguntas que responderán sus alumnos. Podrá personalizarla después.",
+        "questionCount": "{n} preguntas",
+        "chooseCta": "Elegir",
+        "chosenLabel": "Elegida ✓",
+        "deadlineLabel": "Fecha límite de candidaturas",
+        "createCta": "Añadir la candidatura",
+        "creating": "Guardando…",
+        "cardTitle": "Candidatura · {template}",
+        "cardSummary": "{n} preguntas · fecha límite {date}",
+        "cardSummaryNoDeadline": "{n} preguntas",
+        "customizeCta": "Personalizar",
+        "changeTemplateCta": "Cambiar de plantilla",
+        "inviteCta": "Invitar a los alumnos"
       },
       "countSummary": "{n, plural, one {# candidatura recibida} other {# candidaturas recibidas}} para {exchangeName}.",
-      "stateOpen": "Abierto",
-      "stateClosed": "Cerrado",
       "deadlineLabel": "Fecha límite",
-      "linkLabel": "Enlace de candidatura",
+      "deadlineError": "No se pudo guardar la fecha límite. Inténtelo de nuevo.",
       "copyCta": "Copiar",
       "copiedCta": "Copiado ✓",
       "invite": {
-        "openCta": "Invitar por correo",
-        "title": "Invitar por correo",
-        "description": "Pega los correos de los alumnos — uno por línea o separados por comas.",
+        "title": "Invitar a los alumnos",
+        "description": "Comparta el enlace de candidatura o deje que escribamos a sus alumnos.",
+        "linkHeading": "Compartir un enlace",
+        "emailHeading": "O deje que enviemos los correos",
         "placeholder": "marie@escuela.es\nleo@escuela.es",
         "sendCta": "Enviar invitaciones",
         "sending": "Enviando…",
@@ -595,18 +593,11 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Cuestionario de candidatura",
-        "template": "Plantilla: {name}",
-        "templateStandard": "Cuestionario estándar",
-        "summary": "{n} preguntas · 4 secciones",
-        "locked": "Bloqueado — {n} candidaturas recibidas",
-        "edit": "Modificar",
-        "view": "Consultar",
-        "reset": "Restablecer",
-        "resetTitle": "¿Volver al cuestionario estándar?",
-        "resetBody": "Se perderán todos tus cambios y el cuestionario volverá a la plantilla estándar.",
-        "resetConfirm": "Restablecer"
+      "templates": {
+        "standard": {
+          "name": "Cuestionario estándar",
+          "description": "El cuestionario completo: alumno, padres, condiciones de acogida y perfil."
+        }
       },
       "page": {
         "title": "Cuestionario de candidatura",
@@ -662,6 +653,8 @@
         "invalid_type": "Tipo de pregunta no admitido.",
         "invalid_options": "Una opción múltiple necesita al menos dos opciones.",
         "unknown_question": "Esa pregunta ya no está en el cuestionario — recarga la página.",
+        "unknown_template": "Plantilla desconocida: recargue la página.",
+        "deadline_past": "Elija una fecha límite futura: una candidatura abierta con una fecha pasada ya está cerrada.",
         "failed": "No se ha podido guardar. Inténtalo de nuevo."
       }
     },

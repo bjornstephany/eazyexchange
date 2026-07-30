@@ -489,40 +489,38 @@
       "printCta": "⎙ Imprimer la candidature",
       "subtitle": "Candidature · {exchangeName} · {year}",
       "heading": "Candidatures",
-      "emptyState": "Aucune candidature reçue pour le moment — partagez le lien de candidature avec vos élèves.",
+      "emptyState": "Aucune candidature à afficher pour le moment.",
       "empty": {
-        "title": "Invitez vos élèves à postuler",
-        "body": "Fixez une date limite, puis partagez le lien de candidature ou laissez-nous écrire à vos élèves. Les candidatures ouvrent dès l’enregistrement.",
-        "cta": "Inviter vos élèves à postuler"
+        "title": "Aucune candidature",
+        "body": "Choisissez un modèle pour commencer.",
+        "cta": "Ajouter une candidature"
       },
-      "openDialog": {
-        "title": "Inviter vos élèves à postuler",
-        "description": "Choisissez une date limite. Les candidatures ouvrent aussitôt.",
+      "setup": {
+        "libraryTitle": "Choisissez un modèle",
+        "libraryBody": "Le modèle décide des questions posées à vos élèves. Vous pourrez le personnaliser ensuite.",
+        "questionCount": "{n} questions",
+        "chooseCta": "Choisir",
+        "chosenLabel": "Choisi ✓",
         "deadlineLabel": "Date limite des candidatures",
-        "saving": "Ouverture…",
-        "methodHeading": "Comment souhaitez-vous inviter ?",
-        "lockedHint": "Choisissez une date limite pour débloquer ces options.",
-        "linkHeading": "Partager un lien",
-        "emailHeading": "Ou laissez-nous envoyer les e-mails",
-        "done": "Terminé",
-        "openError": "Impossible d’ouvrir les candidatures. Veuillez réessayer."
-      },
-      "panel": {
-        "summaryOpen": "Candidatures ouvertes",
-        "summaryClosed": "Candidatures fermées",
-        "deadlineSuffix": " · date limite {date}"
+        "createCta": "Ajouter la candidature",
+        "creating": "Enregistrement…",
+        "cardTitle": "Candidature · {template}",
+        "cardSummary": "{n} questions · date limite {date}",
+        "cardSummaryNoDeadline": "{n} questions",
+        "customizeCta": "Personnaliser",
+        "changeTemplateCta": "Changer de modèle",
+        "inviteCta": "Inviter les élèves"
       },
       "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
-      "stateOpen": "Ouvert",
-      "stateClosed": "Fermé",
       "deadlineLabel": "Date limite",
-      "linkLabel": "Lien de candidature",
+      "deadlineError": "Impossible d’enregistrer la date limite. Réessayez.",
       "copyCta": "Copier",
       "copiedCta": "Copié ✓",
       "invite": {
-        "openCta": "Inviter par e-mail",
-        "title": "Inviter par e-mail",
-        "description": "Collez les adresses e-mail des élèves — une par ligne ou séparées par des virgules.",
+        "title": "Inviter les élèves",
+        "description": "Partagez le lien de candidature ou laissez-nous écrire à vos élèves.",
+        "linkHeading": "Partager un lien",
+        "emailHeading": "Ou laissez-nous envoyer les e-mails",
         "placeholder": "marie@ecole.fr\nleo@ecole.fr",
         "sendCta": "Envoyer les invitations",
         "sending": "Envoi…",
@@ -595,18 +593,11 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Questionnaire de candidature",
-        "template": "Modèle : {name}",
-        "templateStandard": "Questionnaire standard",
-        "summary": "{n} questions · 4 sections",
-        "locked": "Verrouillé — {n} candidatures reçues",
-        "edit": "Modifier",
-        "view": "Consulter",
-        "reset": "Réinitialiser",
-        "resetTitle": "Revenir au questionnaire standard ?",
-        "resetBody": "Toutes vos modifications seront perdues et le questionnaire redeviendra celui du modèle standard.",
-        "resetConfirm": "Réinitialiser"
+      "templates": {
+        "standard": {
+          "name": "Questionnaire standard",
+          "description": "Le questionnaire complet : élève, parents, conditions d’accueil et profil."
+        }
       },
       "page": {
         "title": "Questionnaire de candidature",
@@ -662,6 +653,8 @@
         "invalid_type": "Type de question non pris en charge.",
         "invalid_options": "Un choix multiple demande au moins deux options.",
         "unknown_question": "Cette question n’est plus dans le questionnaire — rechargez la page.",
+        "unknown_template": "Modèle inconnu — rechargez la page.",
+        "deadline_past": "Choisissez une date limite à venir : une candidature ouverte sur une date passée est déjà fermée.",
         "failed": "L’enregistrement a échoué. Réessayez."
       }
     },

@@ -489,40 +489,38 @@
       "printCta": "⎙ Print application",
       "subtitle": "Application · {exchangeName} · {year}",
       "heading": "Applications",
-      "emptyState": "No applications received yet — share the application link with your students.",
+      "emptyState": "No application to show yet.",
       "empty": {
-        "title": "Invite your students to apply",
-        "body": "Set a deadline, then share the application link or let us email your students. Applications open as soon as you save.",
-        "cta": "Invite your students to apply"
+        "title": "No application yet",
+        "body": "Choose a template to get started.",
+        "cta": "Add an application"
       },
-      "openDialog": {
-        "title": "Invite your students to apply",
-        "description": "Choose a deadline. Applications open as soon as you pick one.",
+      "setup": {
+        "libraryTitle": "Choose a template",
+        "libraryBody": "The template decides which questions your students answer. You can customize it afterwards.",
+        "questionCount": "{n} questions",
+        "chooseCta": "Choose",
+        "chosenLabel": "Chosen ✓",
         "deadlineLabel": "Application deadline",
-        "saving": "Opening…",
-        "methodHeading": "How do you want to invite?",
-        "lockedHint": "Choose a deadline to unlock these.",
-        "linkHeading": "Share a link",
-        "emailHeading": "Or let us send the emails",
-        "done": "Done",
-        "openError": "Applications could not be opened. Please try again."
-      },
-      "panel": {
-        "summaryOpen": "Applications open",
-        "summaryClosed": "Applications closed",
-        "deadlineSuffix": " · deadline {date}"
+        "createCta": "Add the application",
+        "creating": "Saving…",
+        "cardTitle": "Application · {template}",
+        "cardSummary": "{n} questions · deadline {date}",
+        "cardSummaryNoDeadline": "{n} questions",
+        "customizeCta": "Customize",
+        "changeTemplateCta": "Change template",
+        "inviteCta": "Invite students"
       },
       "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
-      "stateOpen": "Open",
-      "stateClosed": "Closed",
       "deadlineLabel": "Deadline",
-      "linkLabel": "Application link",
+      "deadlineError": "Could not save the deadline. Try again.",
       "copyCta": "Copy",
       "copiedCta": "Copied ✓",
       "invite": {
-        "openCta": "Invite by email",
-        "title": "Invite by email",
-        "description": "Paste students' email addresses — one per line or comma-separated.",
+        "title": "Invite students",
+        "description": "Share the application link or let us email your students.",
+        "linkHeading": "Share a link",
+        "emailHeading": "Or let us send the emails",
         "placeholder": "marie@school.org\nleo@school.org",
         "sendCta": "Send invitations",
         "sending": "Sending…",
@@ -595,18 +593,11 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Application questionnaire",
-        "template": "Template: {name}",
-        "templateStandard": "Standard questionnaire",
-        "summary": "{n} questions · 4 sections",
-        "locked": "Locked — {n} applications received",
-        "edit": "Edit",
-        "view": "View",
-        "reset": "Reset",
-        "resetTitle": "Go back to the standard questionnaire?",
-        "resetBody": "All your changes will be lost and the questionnaire will return to the standard template.",
-        "resetConfirm": "Reset"
+      "templates": {
+        "standard": {
+          "name": "Standard questionnaire",
+          "description": "The full questionnaire: student, parents, hosting conditions and profile."
+        }
       },
       "page": {
         "title": "Application questionnaire",
@@ -662,6 +653,8 @@
         "invalid_type": "Unsupported question type.",
         "invalid_options": "A multiple choice needs at least two options.",
         "unknown_question": "That question is no longer in the questionnaire — reload the page.",
+        "unknown_template": "Unknown template — reload the page.",
+        "deadline_past": "Choose a deadline in the future: an application opened on a past date is already closed.",
         "failed": "Saving failed. Please try again."
       }
     },

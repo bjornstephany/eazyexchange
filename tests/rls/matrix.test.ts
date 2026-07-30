@@ -268,6 +268,11 @@ describe.each([
       tx`update exchanges set application_fields = '{"version":1,"sections":[]}'::jsonb
          where id = ${fx.exchangeA}`))
   })
+
+  it('exchanges: cannot rewrite school A application template', async () => {
+    expectBlocked(await writeOutcome(sql, uid(), (tx) =>
+      tx`update exchanges set application_template = 'standard' where id = ${fx.exchangeA}`))
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -297,6 +302,11 @@ describe('own-school allow', () => {
   it('organizer A can write their own exchange good-news template', async () => {
     expect(await writeOutcome(sql, fx.orgA, (tx) =>
       tx`update exchanges set good_news_subject = 'Bonne nouvelle', good_news_body = 'Bonjour' where id = ${fx.exchangeA}`)).toBe(1)
+  })
+
+  it('organizer A can write their own exchange application template', async () => {
+    expect(await writeOutcome(sql, fx.orgA, (tx) =>
+      tx`update exchanges set application_template = 'standard' where id = ${fx.exchangeA}`)).toBe(1)
   })
 
   it('student A reads their own profile, assignment and template', async () => {

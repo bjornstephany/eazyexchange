@@ -81,7 +81,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import {
   getQuestionnaire, addQuestion, removeQuestion, editCustomQuestion,
-  resetQuestionnaire, listQuestionSuggestions,
+  createApplication, listQuestionSuggestions,
 } from '../questionnaire'
 import { standardQuestionnaire } from '@/lib/application-templates/library'
 import { entryId, sectionEntries, questionnaireHasPhoto } from '@/lib/application-fields'
@@ -359,17 +359,80 @@ describe('editCustomQuestion', () => {
   })
 })
 
-describe('resetQuestionnaire', () => {
-  it('writes NULL back — the same state as an exchange that was never customized', async () => {
-    const res = await resetQuestionnaire('ex-1')
+describe('createApplication', () => {
+  // A far-future date, so the past-deadline gate never fires on the happy path
+  // no matter when the suite runs.
+  const FUTURE = '2999-01-01'
+
+  it('writes all four application columns in ONE update, materializing the template', async () => {
+    const res = await createApplication('ex-1', 'standard', FUTURE)
     expect(res).toEqual({ ok: true, doc: standardQuestionnaire() })
-    expect(state.updates).toEqual([{ application_fields: null }])
+    // One update, not four: a half-created application (fields written, deadline
+    // missing) would leave the funnel live with the wrong questionnaire.
+    expect(state.updates).toEqual([{
+      application_template: 'standard',
+      application_fields: standardQuestionnaire(),
+      application_open: true,
+      application_deadline: FUTURE,
+    }])
   })
 
-  it('refuses once locked', async () => {
-    state.applicationCount = 3
-    expect(await resetQuestionnaire('ex-1')).toEqual({ ok: false, reason: 'locked' })
+  // application_fields must be the MATERIALIZED document, never null:
+  // resolveApplicationSections(null) falls back to the STANDARD set at five
+  // call sites, so a null here would silently show template #2's candidates
+  // the standard questionnaire.
+  it('never writes null application_fields', async () => {
+    await createApplication('ex-1', 'standard', FUTURE)
+    expect((state.updates[0] as { application_fields: unknown }).application_fields).not.toBeNull()
+  })
+
+  it('rejects an unknown template id before touching the database', async () => {
+    expect(await createApplication('ex-1', 'deluxe', FUTURE))
+      .toEqual({ ok: false, reason: 'unknown_template' })
     expect(state.updates).toHaveLength(0)
+  })
+
+  it('rejects a deadline in the past — a funnel born dead is always a mistake', async () => {
+    expect(await createApplication('ex-1', 'standard', '2000-01-01'))
+      .toEqual({ ok: false, reason: 'deadline_past' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it('rejects a malformed or empty deadline as the same outcome', async () => {
+    expect(await createApplication('ex-1', 'standard', '')).toEqual({ ok: false, reason: 'deadline_past' })
+    expect(await createApplication('ex-1', 'standard', 'demain')).toEqual({ ok: false, reason: 'deadline_past' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  // This is also what makes « Changer de modèle » safe: it calls the very same
+  // action, so it inherits the very same lock.
+  it('refuses once the exchange has an application', async () => {
+    state.applicationCount = 1
+    expect(await createApplication('ex-1', 'standard', FUTURE)).toEqual({ ok: false, reason: 'locked' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it('fails CLOSED when the application-count query itself errors', async () => {
+    state.applicationCountError = { message: 'statement timeout' }
+    expect(await createApplication('ex-1', 'standard', FUTURE)).toEqual({ ok: false, reason: 'locked' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it("refuses another school's exchange", async () => {
+    state.exchange = { id: 'ex-1', school_a_id: 'other-school', school_b_id: null, application_fields: null }
+    expect(await createApplication('ex-1', 'standard', FUTURE)).toEqual({ ok: false, reason: 'not_found' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it('returns a structured "archived" outcome rather than throwing a French sentence through', async () => {
+    assertExchangeWritable.mockRejectedValueOnce(new Error(ARCHIVED_ERROR))
+    expect(await createApplication('ex-1', 'standard', FUTURE)).toEqual({ ok: false, reason: 'archived' })
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it('accepts today as a deadline — only strictly earlier dates are dead on arrival', async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    expect((await createApplication('ex-1', 'standard', today)).ok).toBe(true)
   })
 })
 

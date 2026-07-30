@@ -489,40 +489,38 @@
       "printCta": "⎙ Bewerbung drucken",
       "subtitle": "Bewerbung · {exchangeName} · {year}",
       "heading": "Bewerbungen",
-      "emptyState": "Noch keine Bewerbungen eingegangen — teilen Sie den Bewerbungslink mit Ihren Schülern.",
+      "emptyState": "Derzeit keine Bewerbung anzuzeigen.",
       "empty": {
-        "title": "Laden Sie Ihre Schüler zur Bewerbung ein",
-        "body": "Legen Sie eine Frist fest und teilen Sie dann den Bewerbungslink, oder lassen Sie uns Ihre Schüler anschreiben. Die Bewerbungen öffnen sofort nach dem Speichern.",
-        "cta": "Schüler zur Bewerbung einladen"
+        "title": "Noch keine Bewerbung",
+        "body": "Wählen Sie eine Vorlage, um zu beginnen.",
+        "cta": "Bewerbung hinzufügen"
       },
-      "openDialog": {
-        "title": "Schüler zur Bewerbung einladen",
-        "description": "Wählen Sie eine Frist. Die Bewerbungen werden sofort geöffnet.",
+      "setup": {
+        "libraryTitle": "Wählen Sie eine Vorlage",
+        "libraryBody": "Die Vorlage bestimmt, welche Fragen Ihre Schülerinnen und Schüler beantworten. Sie können sie danach anpassen.",
+        "questionCount": "{n} Fragen",
+        "chooseCta": "Auswählen",
+        "chosenLabel": "Ausgewählt ✓",
         "deadlineLabel": "Bewerbungsfrist",
-        "saving": "Wird geöffnet…",
-        "methodHeading": "Wie möchten Sie einladen?",
-        "lockedHint": "Wählen Sie eine Frist, um diese Optionen freizuschalten.",
-        "linkHeading": "Einen Link teilen",
-        "emailHeading": "Oder lassen Sie uns die E-Mails senden",
-        "done": "Fertig",
-        "openError": "Die Bewerbungen konnten nicht geöffnet werden. Bitte versuchen Sie es erneut."
-      },
-      "panel": {
-        "summaryOpen": "Bewerbungen offen",
-        "summaryClosed": "Bewerbungen geschlossen",
-        "deadlineSuffix": " · Frist {date}"
+        "createCta": "Bewerbung hinzufügen",
+        "creating": "Wird gespeichert…",
+        "cardTitle": "Bewerbung · {template}",
+        "cardSummary": "{n} Fragen · Frist {date}",
+        "cardSummaryNoDeadline": "{n} Fragen",
+        "customizeCta": "Anpassen",
+        "changeTemplateCta": "Vorlage wechseln",
+        "inviteCta": "Schüler einladen"
       },
       "countSummary": "{n, plural, one {# Bewerbung erhalten} other {# Bewerbungen erhalten}} für {exchangeName}.",
-      "stateOpen": "Offen",
-      "stateClosed": "Geschlossen",
       "deadlineLabel": "Frist",
-      "linkLabel": "Bewerbungslink",
+      "deadlineError": "Die Frist konnte nicht gespeichert werden. Bitte erneut versuchen.",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
       "invite": {
-        "openCta": "Per E-Mail einladen",
-        "title": "Per E-Mail einladen",
-        "description": "E-Mail-Adressen der Schüler einfügen — eine pro Zeile oder mit Komma getrennt.",
+        "title": "Schüler einladen",
+        "description": "Teilen Sie den Bewerbungslink oder lassen Sie uns Ihre Schüler anschreiben.",
+        "linkHeading": "Link teilen",
+        "emailHeading": "Oder lassen Sie uns die E-Mails senden",
         "placeholder": "marie@schule.de\nleo@schule.de",
         "sendCta": "Einladungen senden",
         "sending": "Senden…",
@@ -595,18 +593,11 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Bewerbungsfragebogen",
-        "template": "Vorlage: {name}",
-        "templateStandard": "Standardfragebogen",
-        "summary": "{n} Fragen · 4 Abschnitte",
-        "locked": "Gesperrt — {n} Bewerbungen eingegangen",
-        "edit": "Bearbeiten",
-        "view": "Ansehen",
-        "reset": "Zurücksetzen",
-        "resetTitle": "Zum Standardfragebogen zurückkehren?",
-        "resetBody": "Alle Ihre Änderungen gehen verloren und der Fragebogen entspricht wieder der Standardvorlage.",
-        "resetConfirm": "Zurücksetzen"
+      "templates": {
+        "standard": {
+          "name": "Standard-Fragebogen",
+          "description": "Der vollständige Fragebogen: Schüler, Eltern, Unterbringung und Profil."
+        }
       },
       "page": {
         "title": "Bewerbungsfragebogen",
@@ -662,6 +653,8 @@
         "invalid_type": "Nicht unterstützter Fragetyp.",
         "invalid_options": "Eine Mehrfachauswahl braucht mindestens zwei Optionen.",
         "unknown_question": "Diese Frage ist nicht mehr im Fragebogen — laden Sie die Seite neu.",
+        "unknown_template": "Unbekannte Vorlage — laden Sie die Seite neu.",
+        "deadline_past": "Wählen Sie eine Frist in der Zukunft: Eine Bewerbung mit einem vergangenen Datum ist bereits geschlossen.",
         "failed": "Speichern fehlgeschlagen. Bitte erneut versuchen."
       }
     },

@@ -489,40 +489,38 @@
       "printCta": "⎙ Stampa la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",
       "heading": "Candidature",
-      "emptyState": "Nessuna candidatura ricevuta al momento — condividi il link di candidatura con i tuoi studenti.",
+      "emptyState": "Nessuna candidatura da mostrare per ora.",
       "empty": {
-        "title": "Invita i tuoi studenti a candidarsi",
-        "body": "Imposta una scadenza, poi condividi il link di candidatura o lascia che scriviamo noi ai tuoi studenti. Le candidature si aprono al salvataggio.",
-        "cta": "Invita i tuoi studenti a candidarsi"
+        "title": "Nessuna candidatura",
+        "body": "Scegli un modello per iniziare.",
+        "cta": "Aggiungi una candidatura"
       },
-      "openDialog": {
-        "title": "Invita i tuoi studenti a candidarsi",
-        "description": "Scegli una scadenza. Le candidature si apriranno subito.",
+      "setup": {
+        "libraryTitle": "Scegli un modello",
+        "libraryBody": "Il modello determina le domande poste ai tuoi studenti. Potrai personalizzarlo in seguito.",
+        "questionCount": "{n} domande",
+        "chooseCta": "Scegli",
+        "chosenLabel": "Scelto ✓",
         "deadlineLabel": "Scadenza delle candidature",
-        "saving": "Apertura…",
-        "methodHeading": "Come vuoi invitare?",
-        "lockedHint": "Scegli una scadenza per sbloccare queste opzioni.",
-        "linkHeading": "Condividere un link",
-        "emailHeading": "Oppure lascia che inviamo noi le e-mail",
-        "done": "Fatto",
-        "openError": "Impossibile aprire le candidature. Riprova."
-      },
-      "panel": {
-        "summaryOpen": "Candidature aperte",
-        "summaryClosed": "Candidature chiuse",
-        "deadlineSuffix": " · scadenza {date}"
+        "createCta": "Aggiungi la candidatura",
+        "creating": "Salvataggio…",
+        "cardTitle": "Candidatura · {template}",
+        "cardSummary": "{n} domande · scadenza {date}",
+        "cardSummaryNoDeadline": "{n} domande",
+        "customizeCta": "Personalizza",
+        "changeTemplateCta": "Cambia modello",
+        "inviteCta": "Invita gli studenti"
       },
       "countSummary": "{n, plural, one {# candidatura ricevuta} other {# candidature ricevute}} per {exchangeName}.",
-      "stateOpen": "Aperto",
-      "stateClosed": "Chiuso",
       "deadlineLabel": "Scadenza",
-      "linkLabel": "Link di candidatura",
+      "deadlineError": "Impossibile salvare la scadenza. Riprova.",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
       "invite": {
-        "openCta": "Invita via e-mail",
-        "title": "Invita via e-mail",
-        "description": "Incolla le e-mail degli studenti — una per riga o separate da virgole.",
+        "title": "Invita gli studenti",
+        "description": "Condividi il link di candidatura o lascia che scriviamo ai tuoi studenti.",
+        "linkHeading": "Condividi un link",
+        "emailHeading": "Oppure lascia che inviamo le e-mail",
         "placeholder": "marie@scuola.it\nleo@scuola.it",
         "sendCta": "Invia inviti",
         "sending": "Invio…",
@@ -595,18 +593,11 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Questionario di candidatura",
-        "template": "Modello: {name}",
-        "templateStandard": "Questionario standard",
-        "summary": "{n} domande · 4 sezioni",
-        "locked": "Bloccato — {n} candidature ricevute",
-        "edit": "Modifica",
-        "view": "Consulta",
-        "reset": "Reimposta",
-        "resetTitle": "Tornare al questionario standard?",
-        "resetBody": "Tutte le tue modifiche andranno perse e il questionario tornerà al modello standard.",
-        "resetConfirm": "Reimposta"
+      "templates": {
+        "standard": {
+          "name": "Questionario standard",
+          "description": "Il questionario completo: studente, genitori, condizioni di accoglienza e profilo."
+        }
       },
       "page": {
         "title": "Questionario di candidatura",
@@ -662,6 +653,8 @@
         "invalid_type": "Tipo di domanda non supportato.",
         "invalid_options": "Una scelta multipla richiede almeno due opzioni.",
         "unknown_question": "Questa domanda non è più nel questionario — ricarica la pagina.",
+        "unknown_template": "Modello sconosciuto — ricarica la pagina.",
+        "deadline_past": "Scegli una scadenza futura: una candidatura aperta con una data passata è già chiusa.",
         "failed": "Salvataggio non riuscito. Riprova."
       }
     },

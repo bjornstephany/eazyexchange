@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { APPLICATION_SECTIONS } from '@/lib/application-form'
 import { resolveApplicationSections, questionnaireHasPhoto, entryId } from '@/lib/application-fields'
-import { APPLICATION_TEMPLATES, templateById, standardQuestionnaire } from '../library'
+import { APPLICATION_TEMPLATES, templateById, standardQuestionnaire, resolveTemplateId } from '../library'
 
 describe('template library', () => {
   it('offers exactly one template today', () => {
@@ -37,5 +37,25 @@ describe('template library', () => {
 
   it('returns a fresh document each call (callers mutate their copy)', () => {
     expect(standardQuestionnaire()).not.toBe(standardQuestionnaire())
+  })
+})
+
+describe('resolveTemplateId', () => {
+  it('resolves a known id to itself', () => {
+    expect(resolveTemplateId('standard')).toBe('standard')
+  })
+
+  // NULL means « created before templates existed ». It is not an error state
+  // and must never render an empty template name.
+  it('resolves null and undefined to standard', () => {
+    expect(resolveTemplateId(null)).toBe('standard')
+    expect(resolveTemplateId(undefined)).toBe('standard')
+  })
+
+  // A hostile or stale value reaching a message key would throw a next-intl
+  // MISSING_MESSAGE at render time; degrade instead.
+  it('resolves an unknown id to standard rather than passing it through', () => {
+    expect(resolveTemplateId('deluxe')).toBe('standard')
+    expect(resolveTemplateId('')).toBe('standard')
   })
 })
