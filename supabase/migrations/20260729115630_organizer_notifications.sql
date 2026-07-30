@@ -33,13 +33,19 @@ grant update (notifications_seen_at) on public.users to authenticated;
 -- KNOWN, DELIBERATE DIVERGENCE (accepted, latent today): the dashboard's rows
 -- come from `getExchangeGrid` (actions/exchanges.ts:167-206), which additionally
 -- restricts to `form_templates.status = 'active'` and to students present in
--- `exchange_enrollments`. Neither filter is restated here, because neither can
--- change a count today: a `draft` template has no assignments (the assign
--- triggers in 20260703000001 only fire for status='active', audience='all'), and
--- assignments only ever exist for enrolled students. What would break it: any
--- code path that reverts an active template to `draft` while keeping its
--- assignments, or that un-enrolls a student without deleting theirs. Adding
--- either means adding the two filters here in the same change.
+-- `exchange_enrollments`. The two SUBMISSION-driven branches below do not
+-- restate either filter, because neither can change their counts today: a
+-- `draft` template has no assignments (the assign triggers in 20260703000001
+-- only fire for status='active', audience='all'), and assignments only ever
+-- exist for enrolled students. What would break it: any code path that reverts
+-- an active template to `draft` while keeping its assignments, or that
+-- un-enrolls a student without deleting theirs. Adding either means adding the
+-- two filters to those branches in the same change.
+--
+-- The `late` branch is the exception and DOES restate both — see its own
+-- comment: once a MISSING assignment can produce a count, "assignments only
+-- exist for enrolled students in active templates" stops being a substitute for
+-- the filters.
 --
 -- SECURITY INVOKER is the whole security story: RLS on applications,
 -- submissions, assignments and form_templates already scopes an organizer to
@@ -112,8 +118,29 @@ as $$
     -- is `due !== null && due < today`, where `due` is the EARLIEST deadline
     -- among templates whose `assignmentState(...) === 'incomplete'`. An earliest
     -- overdue deadline exists exactly when SOME overdue deadline exists, so the
-    -- min collapses to the EXISTS below; both types of template count (the
-    -- dashboard's `due` loop iterates all `templates`, not just docs).
+    -- min collapses to "the student has at least one overdue incomplete
+    -- template" — which is what emitting one row per such (student, template)
+    -- and then grouping by student in `deduped` computes. Both types of template
+    -- count (the `due` loop iterates all `templates`, not just docs).
+    --
+    -- GRAIN: that loop's outer product is (enrolled student × active template),
+    -- NOT (assignment) — `assignmentState` returns 'incomplete' when the cellMap
+    -- has NO entry at all. So this branch drives off `exchange_enrollments` ×
+    -- `form_templates` and LEFT JOINs the assignment, rather than driving off
+    -- `assignments`. It matters for `audience = 'conditional'` documents, whose
+    -- assignments lib/forms/activate.ts:78-83 creates only for the CHOSEN
+    -- students: 10 enrolled, a « Visa » activated for 2 with yesterday's
+    -- deadline — the dashboard says « 8 élèves en retard » and an
+    -- assignment-driven bell said 0. Conditional docs ship in LibraryDrawer, so
+    -- that divergence was live, not latent.
+    --
+    -- Consequently this branch — alone among the three — also restates
+    -- getExchangeGrid's `status = 'active'` filter and its school/role
+    -- restriction on the enrolled users (see the header note). Both stop being
+    -- redundant the moment a missing assignment can produce a count: a draft
+    -- template would otherwise make every enrolled student late, and a partner
+    -- school's enrolled student would be counted against a template they are
+    -- outside the grid of.
     --
     -- `assignmentState` returns 'incomplete' for: no assignment cell, a cell
     -- with no submission, 'draft', 'rejected' — and 'awaiting' for 'submitted',
@@ -124,12 +151,18 @@ as $$
     -- CHECK-constrained to exactly those four values (20260624000001:84), so the
     -- IN-list is total and the two forms coincide.
     select t.exchange_id, 'late',
-           asg.student_id::text, t.deadline::timestamptz
-      from assignments asg
-      join form_templates t   on t.id = asg.template_id
-      join exchanges e        on e.id = t.exchange_id
-      left join submissions s on s.assignment_id = asg.id
-     where t.deadline is not null
+           en.user_id::text, t.deadline::timestamptz
+      from form_templates t
+      join exchanges e             on e.id = t.exchange_id
+      join exchange_enrollments en on en.exchange_id = t.exchange_id
+      join users u                 on u.id = en.user_id
+                                  and u.school_id = t.school_id
+                                  and u.role = 'student'
+      left join assignments asg    on asg.template_id = t.id
+                                  and asg.student_id = en.user_id
+      left join submissions s      on s.assignment_id = asg.id
+     where t.status = 'active'
+       and t.deadline is not null
        and t.deadline < current_date
        and (s.id is null or s.status in ('draft', 'rejected'))
        and e.archived_at is null

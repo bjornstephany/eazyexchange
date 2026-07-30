@@ -275,3 +275,102 @@ describe('organizer_notifications() counting grain', () => {
     expect(Number(rows[0].total)).toBe(2)
   })
 })
+
+// ---------------------------------------------------------------------------
+// `late` grain, missing-assignment edge. The dashboard's due loop iterates
+// (enrolled student × ACTIVE template) and treats a MISSING cellMap entry as
+// 'incomplete' (lib/dashboard/rollup.ts:96-100), so a student with no
+// assignment at all for an overdue template is late there. An assignment-driven
+// bell counted 0 of them. Conditional documents are exactly that case:
+// lib/forms/activate.ts:78-83 assigns only the CHOSEN students.
+//
+// Fixture: one overdue CONDITIONAL document assigned to studentA only, with
+// studentSharedA enrolled and unchosen, plus studentC enrolled from the PARTNER
+// school. Expected late total is 2 — and each of the three predicates the
+// migration's `late` branch carries moves that number if removed:
+//   drive off assignments, not enrollments  -> 1 (studentSharedA disappears)
+//   drop `u.school_id = t.school_id`        -> 3 (studentC leaks in)
+//   drop `t.status = 'active'`              -> 4 (the draft template below)
+//
+// Own exchange, declared LAST for the same reason as the block above: its
+// beforeAll must not run before the "orgA sees only exchangeA" assertions.
+// ---------------------------------------------------------------------------
+describe('organizer_notifications() late grain — students with no assignment', () => {
+  const c = {
+    exchange: randomUUID(),
+    condOverdue: randomUUID(),  // document_upload, conditional, deadline in the PAST
+    draftOverdue: randomUUID(), // document_upload, DRAFT, deadline in the PAST
+    suffix: randomBytes(4).toString('hex'),
+  }
+
+  beforeAll(async () => {
+    // Partner exchange so studentC (school C) can be enrolled alongside school A's
+    // students without being in scope of a school-A template.
+    await sql`insert into exchanges (id, name, year, school_a_id, school_b_id, apply_slug, application_open)
+      values (${c.exchange}, ${'RLS Cond ' + c.suffix}, 2026, ${fx.schoolA}, ${fx.schoolC},
+        ${'rls-cond-' + c.suffix}, false)`
+
+    await sql`insert into exchange_enrollments (exchange_id, user_id) values
+      (${c.exchange}, ${fx.studentA}),
+      (${c.exchange}, ${fx.studentSharedA}),
+      (${c.exchange}, ${fx.studentC})`
+
+    // Neither template gets auto-assignments: assign_students_to_new_template
+    // fires only for status='active' AND audience='all' (20260703000001).
+    await sql`insert into form_templates
+        (id, exchange_id, school_id, name, description, type, kind, status, audience, condition_label, deadline, created_by)
+      values
+        (${c.condOverdue},  ${c.exchange}, ${fx.schoolA}, ${'Visa ' + c.suffix},   null,
+          'document_upload', 'doc', 'active', 'conditional', 'Hors UE', current_date - 3, ${fx.orgA}),
+        (${c.draftOverdue}, ${c.exchange}, ${fx.schoolA}, ${'Brouillon ' + c.suffix}, null,
+          'document_upload', 'doc', 'draft',  'all',         null,      current_date - 3, ${fx.orgA})`
+
+    const [assigned] = await sql`
+      select id from assignments where template_id = ${c.condOverdue}`
+    if (assigned) throw new Error('cond seed failed: a trigger assigned a conditional template')
+
+    // What activateTemplateRecord does for audience='conditional': assign the
+    // chosen students only. studentSharedA is deliberately left unchosen.
+    await sql`insert into assignments (template_id, student_id)
+      values (${c.condOverdue}, ${fx.studentA})`
+  })
+
+  afterAll(async () => {
+    await sql`delete from exchanges where id = ${c.exchange}`
+  })
+
+  async function lateTotal(): Promise<number> {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from organizer_notifications()
+          where exchange_id = ${c.exchange} and kind = 'late'`)
+    expect(rows).toHaveLength(1)
+    return Number(rows[0].total)
+  }
+
+  it('counts an enrolled student with NO assignment for an overdue template', async () => {
+    // studentA (assigned, nothing submitted) and studentSharedA (never
+    // assigned) — both 'incomplete' on the dashboard, both late here.
+    expect(await lateTotal()).toBe(2)
+  })
+
+  it('does not count the partner school’s enrolled student', async () => {
+    // studentC is enrolled and visible to orgA, but getExchangeGrid restricts
+    // the grid's students to the organizer's own school, so studentC is on
+    // nobody's late list. If they were counted the total above would be 3.
+    const visible = await runAs(sql, fx.orgA, (tx) =>
+      tx`select user_id from exchange_enrollments
+          where exchange_id = ${c.exchange} and user_id = ${fx.studentC}`)
+    expect(visible).toHaveLength(1) // readable, simply not counted
+    expect(await lateTotal()).toBe(2)
+  })
+
+  it('does not count an overdue DRAFT template', async () => {
+    // The draft template has a deadline (only active ⇒ deadline is enforced)
+    // and no assignments. Without the status filter every enrolled school-A
+    // student would be 'incomplete' against it and the total would be 4.
+    const rows = await sql`select status, deadline from form_templates where id = ${c.draftOverdue}`
+    expect(rows[0].status).toBe('draft')
+    expect(rows[0].deadline).not.toBeNull()
+    expect(await lateTotal()).toBe(2)
+  })
+})
