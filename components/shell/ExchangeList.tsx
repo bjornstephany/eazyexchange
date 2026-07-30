@@ -247,6 +247,15 @@ export function ExchangeList({
           ))
         ) : (
           <DndContext
+            // Explicit, because dnd-kit's fallback is a MODULE-GLOBAL counter
+            // (@dnd-kit/utilities useUniqueId: `ids[prefix] + 1`). On the server
+            // that module outlives the request, so the counter climbs per
+            // request while the freshly-loaded client bundle always starts at
+            // 0 — every page after the server's first one hydrated with a
+            // mismatched aria-describedby on the grips. Any stable string
+            // short-circuits it (`if (value) return value`); there is only one
+            // DndContext in the app, so this one is enough.
+            id="exchange-list"
             sensors={sensors}
             collisionDetection={closestCenter}
             // Vertical only (a row can never drift out of the 250 px rail), and
