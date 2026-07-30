@@ -489,7 +489,7 @@
       "printCta": "⎙ Bewerbung drucken",
       "subtitle": "Bewerbung · {exchangeName} · {year}",
       "heading": "Bewerbungen",
-      "emptyState": "Noch keine Bewerbungen eingegangen — teilen Sie den Bewerbungslink mit Ihren Schülern.",
+      "emptyState": "Derzeit keine Bewerbung anzuzeigen.",
       "empty": {
         "title": "Noch keine Bewerbung",
         "body": "Wählen Sie eine Vorlage, um zu beginnen.",
@@ -532,6 +532,7 @@
       "stateOpen": "Offen",
       "stateClosed": "Geschlossen",
       "deadlineLabel": "Frist",
+      "deadlineError": "Die Frist konnte nicht gespeichert werden. Bitte erneut versuchen.",
       "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",

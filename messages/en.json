@@ -489,7 +489,7 @@
       "printCta": "⎙ Print application",
       "subtitle": "Application · {exchangeName} · {year}",
       "heading": "Applications",
-      "emptyState": "No applications received yet — share the application link with your students.",
+      "emptyState": "No application to show yet.",
       "empty": {
         "title": "No application yet",
         "body": "Choose a template to get started.",
@@ -532,6 +532,7 @@
       "stateOpen": "Open",
       "stateClosed": "Closed",
       "deadlineLabel": "Deadline",
+      "deadlineError": "Could not save the deadline. Try again.",
       "linkLabel": "Application link",
       "copyCta": "Copy",
       "copiedCta": "Copied ✓",

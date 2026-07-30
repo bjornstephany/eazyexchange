@@ -489,7 +489,7 @@
       "printCta": "⎙ Imprimir la candidatura",
       "subtitle": "Candidatura · {exchangeName} · {year}",
       "heading": "Candidaturas",
-      "emptyState": "Ninguna candidatura recibida por el momento — comparta el enlace de candidatura con sus alumnos.",
+      "emptyState": "Ninguna candidatura que mostrar por ahora.",
       "empty": {
         "title": "Ninguna candidatura",
         "body": "Elija una plantilla para empezar.",
@@ -532,6 +532,7 @@
       "stateOpen": "Abierto",
       "stateClosed": "Cerrado",
       "deadlineLabel": "Fecha límite",
+      "deadlineError": "No se pudo guardar la fecha límite. Inténtelo de nuevo.",
       "linkLabel": "Enlace de candidatura",
       "copyCta": "Copiar",
       "copiedCta": "Copiado ✓",

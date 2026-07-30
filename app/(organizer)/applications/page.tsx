@@ -4,6 +4,8 @@ import { listApplications, getApplicationForReview } from '@/actions/application
 import { getQuestionnaire } from '@/actions/questionnaire'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { parseTab } from '@/lib/applications/tabs'
+import { applicationState } from '@/lib/applications/state'
+import { ApplicationSetup } from '@/components/applications/ApplicationSetup'
 import { CandidaturesView } from '@/components/applications/CandidaturesView'
 import { ApplicationDetail } from '@/components/applications/ApplicationDetail'
 import { EmptyDashboard } from '@/components/dashboard/EmptyDashboard'
@@ -27,25 +29,45 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
     )
   }
 
+  // `applicationCount` deliberately comes from getQuestionnaire, not from
+  // apps.length: listApplications filters untouched drafts out of the grid, but
+  // ANY application at all locks the questionnaire — and both facts have to
+  // agree, or the page would offer « Ajouter » beside a locked questionnaire.
+  const { questionCount, applicationCount } = await getQuestionnaire(active.id)
+  const state = applicationState({
+    applicationOpen: !!active.application_open,
+    applicationDeadline: active.application_deadline ?? null,
+    applicationCount,
+  })
+
+  // Branching HERE, not inside a client component, is the point: the pre-grid
+  // states never ship the grid's JavaScript and never run listApplications,
+  // which signs a storage URL per candidate photo.
+  if (state !== 'running') {
+    return (
+      <ApplicationSetup
+        exchangeId={active.id}
+        applySlug={active.apply_slug}
+        created={state === 'created'}
+        applicationTemplate={active.application_template}
+        applicationDeadline={active.application_deadline ?? null}
+        questionCount={questionCount}
+      />
+    )
+  }
+
   const applications = await listApplications(active.id, { withPhotos: true })
   const apps: AppRow[] = applications.map(a => ({
     id: a.id, status: a.status, submitted_at: a.submitted_at, responded_at: a.responded_at,
     data: a.data ?? {}, email: a.email, photoUrl: a.photoUrl ?? null,
   }))
-  // `applicationCount` deliberately comes from getQuestionnaire, not from
-  // apps.length: listApplications filters untouched drafts out of the grid, but
-  // ANY application at all locks the questionnaire.
-  const { questionCount, locked, applicationCount } = await getQuestionnaire(active.id)
   return (
     <CandidaturesView
       apps={apps}
       exchangeName={active.name}
       exchangeId={active.id}
-      applicationOpen={!!active.application_open}
       applicationDeadline={active.application_deadline ?? null}
-      applySlug={active.apply_slug}
       initialTab={parseTab(tab)}
-      questionnaire={{ questionCount, locked, applicationCount }}
     />
   )
 }
