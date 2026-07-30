@@ -182,4 +182,19 @@ as $$
    group by d.exchange_id, d.kind
 $$;
 
+-- Name `anon` explicitly, and never rely on the bare `to authenticated` grant
+-- to be exclusive. A CREATEd function starts with PostgreSQL's built-in
+-- EXECUTE-to-PUBLIC, which anon inherits; and on hosted Supabase the `public`
+-- schema's default ACL additionally grants EXECUTE to anon/authenticated/
+-- service_role outright, so even `from public` alone would leave `anon=X` in
+-- proacl there. Without this line anon could call the RPC — it returns no rows
+-- (the `my_role() = 'organizer'` gate in the body denies it), but "not callable
+-- anonymously" would be false, and the body's gate is not something a future
+-- edit should be free to weaken unnoticed.
+--
+-- Same finding, same fix, one migration earlier:
+-- 20260729130940_revoke_anon_question_suggestions.sql (which documents the
+-- local-vs-hosted divergence in full). Precedent: 20260724115318 (claim_school),
+-- 20260630000004 (check_rate_limit).
+revoke execute on function public.organizer_notifications() from public, anon;
 grant execute on function public.organizer_notifications() to authenticated;
