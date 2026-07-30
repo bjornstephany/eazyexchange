@@ -52,7 +52,7 @@ describe('shellDestination', () => {
     })
 
     it('lands on an auth route, which middleware lets a profile-less session reach', () => {
-      // middleware.ts returns supabaseResponse for a session with no users row
+      // proxy.ts returns supabaseResponse for a session with no users row
       // on auth routes, so /login is genuinely terminal rather than another hop.
       expect(PROFILE_MISSING_DESTINATION.startsWith('/login')).toBe(true)
     })

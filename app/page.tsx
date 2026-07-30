@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
 }
 
-// No auth calls here — the logged-in redirect happens in middleware.ts. Keeping
+// No auth calls here — the logged-in redirect happens in proxy.ts. Keeping
 // this component synchronous and dependency-free is what lets Next prerender the
 // landing page so anonymous visitors never pay a function cold start. The
 // JSON-LD below is static markup, not a data fetch.

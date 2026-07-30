@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase/middleware', () => ({
   }),
 }))
 
-import { middleware, config } from '@/middleware'
+import { proxy, config } from '@/proxy'
 
 beforeEach(() => {
   user = null
@@ -32,20 +32,20 @@ function req(path: string) {
   return new NextRequest(new URL(`http://localhost${path}`))
 }
 
-describe('middleware', () => {
+describe('proxy', () => {
   it('lets a logged-out visitor reach / (no redirect)', async () => {
-    const res = await middleware(req('/'))
+    const res = await proxy(req('/'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('lets a logged-out visitor reach /signup (no redirect)', async () => {
-    const res = await middleware(req('/signup'))
+    const res = await proxy(req('/signup'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('redirects a logged-in visitor away from /signup to their dashboard', async () => {
     user = { id: 'u1' }
-    const res = await middleware(req('/signup'))
+    const res = await proxy(req('/signup'))
     expect(res.headers.get('location')).toContain('/dashboard')
   })
 
@@ -55,17 +55,17 @@ describe('middleware', () => {
     // layout back to /login → infinite loop → blank screen. Let /login render.
     user = { id: 'ghost' }
     profileRow = null
-    const res = await middleware(req('/login'))
+    const res = await proxy(req('/login'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('still redirects a logged-out visitor on a gated route to /login', async () => {
-    const res = await middleware(req('/dashboard'))
+    const res = await proxy(req('/dashboard'))
     expect(res.headers.get('location')).toContain('/login')
   })
 
   it('lets a logged-out visitor reach /apply/<slug> (no redirect)', async () => {
-    const res = await middleware(req('/apply/some-slug'))
+    const res = await proxy(req('/apply/some-slug'))
     expect(res.headers.get('location')).toBeNull()
   })
 
@@ -75,32 +75,32 @@ describe('middleware', () => {
   it.each(['/legal/cgu', '/legal/cgv', '/legal/confidentialite', '/legal/mentions-legales'])(
     'lets a logged-out visitor reach %s (no redirect)',
     async (path) => {
-      const res = await middleware(req(path))
+      const res = await proxy(req(path))
       expect(res.headers.get('location')).toBeNull()
     }
   )
 
   it('still serves /legal to a logged-in user without bouncing them to their app', async () => {
     user = { id: 'u1' }
-    const res = await middleware(req('/legal/cgv'))
+    const res = await proxy(req('/legal/cgv'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('lets a logged-out visitor reach /invite/<tok> (no redirect)', async () => {
-    const res = await middleware(req('/invite/tok123'))
+    const res = await proxy(req('/invite/tok123'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('redirects a logged-in organizer from / to /dashboard', async () => {
     user = { id: 'u1' }
-    const res = await middleware(req('/'))
+    const res = await proxy(req('/'))
     expect(res.headers.get('location')).toContain('/dashboard')
   })
 
   it('redirects a logged-in student from / to /my-forms', async () => {
     user = { id: 'u2' }
     profileRow = { role: 'student', full_name: 'Stu', status: 'approved' }
-    const res = await middleware(req('/'))
+    const res = await proxy(req('/'))
     expect(res.headers.get('location')).toContain('/my-forms')
   })
 
@@ -111,14 +111,14 @@ describe('middleware', () => {
   it.each(['pending', 'rejected'])('lets a %s organizer read the landing page /', async (status) => {
     user = { id: 'u3' }
     profileRow = { role: 'organizer', full_name: 'Org', status }
-    const res = await middleware(req('/'))
+    const res = await proxy(req('/'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('redirects a rejected organizer off /login to /pending', async () => {
     user = { id: 'u4' }
     profileRow = { role: 'organizer', full_name: 'Org', status: 'rejected' }
-    const res = await middleware(req('/login'))
+    const res = await proxy(req('/login'))
     expect(res.headers.get('location')).toContain('/pending')
   })
 
@@ -126,7 +126,7 @@ describe('middleware', () => {
   it('lets a pending organizer reach /pending itself (no redirect)', async () => {
     user = { id: 'u3' }
     profileRow = { role: 'organizer', full_name: 'Org', status: 'pending' }
-    const res = await middleware(req('/pending'))
+    const res = await proxy(req('/pending'))
     expect(res.headers.get('location')).toBeNull()
   })
 
@@ -135,7 +135,7 @@ describe('middleware', () => {
     // layouts back to /login → loop. The landing page is safe to serve instead.
     user = { id: 'ghost' }
     profileRow = null
-    const res = await middleware(req('/'))
+    const res = await proxy(req('/'))
     expect(res.headers.get('location')).toBeNull()
   })
 
@@ -158,13 +158,13 @@ describe('middleware', () => {
       '/onboarding',
       '/my-forms',
     ])('redirects a pending organizer off %s to /pending', async (path) => {
-      const res = await middleware(req(path))
+      const res = await proxy(req(path))
       expect(res.headers.get('location')).toContain('/pending')
     })
 
     it('redirects a rejected account off /billing too', async () => {
       profileRow = { role: 'organizer', full_name: 'Org', status: 'rejected' }
-      const res = await middleware(req('/billing'))
+      const res = await proxy(req('/billing'))
       expect(res.headers.get('location')).toContain('/pending')
     })
 
@@ -174,7 +174,7 @@ describe('middleware', () => {
     it.each(['/billing/checkout?plan=growth', '/billing/portal', '/billing/upgrade?plan=growth'])(
       'redirects a pending organizer off %s to /pending',
       async (path) => {
-        const res = await middleware(req(path))
+        const res = await proxy(req(path))
         expect(res.headers.get('location')).toContain('/pending')
       },
     )
@@ -184,14 +184,14 @@ describe('middleware', () => {
     it.each(['/', '/legal/cgv', '/apply/some-slug', '/invite/tok123', '/join/tok123', '/api/health'])(
       'still serves the public route %s',
       async (path) => {
-        const res = await middleware(req(path))
+        const res = await proxy(req(path))
         expect(res.headers.get('location')).toBeNull()
       },
     )
 
     it('leaves an approved organizer alone on /billing', async () => {
       profileRow = { role: 'organizer', full_name: 'Org', status: 'approved' }
-      const res = await middleware(req('/billing'))
+      const res = await proxy(req('/billing'))
       expect(res.headers.get('location')).toBeNull()
     })
 
@@ -199,18 +199,18 @@ describe('middleware', () => {
     // no status to judge, and bouncing it loops into a blank tab.
     it('does not bounce an orphaned session (no users row) off a gated route', async () => {
       profileRow = null
-      const res = await middleware(req('/dashboard'))
+      const res = await proxy(req('/dashboard'))
       expect(res.headers.get('location')).toBeNull()
     })
   })
 
   it('lets the unauthenticated keep-warm pinger reach /api/health (no redirect)', async () => {
-    const res = await middleware(req('/api/health'))
+    const res = await proxy(req('/api/health'))
     expect(res.headers.get('location')).toBeNull()
   })
 
   it('lets the unauthenticated pg_cron caller reach /api/cron/* (self-auth via CRON_SECRET)', async () => {
-    const res = await middleware(req('/api/cron/retention-sweep'))
+    const res = await proxy(req('/api/cron/retention-sweep'))
     expect(res.headers.get('location')).toBeNull()
   })
 })

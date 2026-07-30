@@ -2,6 +2,7 @@
 // Public (unauthenticated) organizer-invite acceptance. Service-role only —
 // mirrors the anonymous application flow's token-keyed pattern.
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { checkRateLimit, clientIp } from '@/lib/rate-limit'
 import { isPasswordPwned, passwordPolicyIssue } from '@/lib/auth/hibp'
 import { inviteState, type InviteState } from '@/lib/team/invite-state'
@@ -70,9 +71,14 @@ export async function acceptOrganizerInvite(
   if (!claimed || claimed.length === 0) return joinError('accepted')
 
   // Link possession proves e-mail ownership → create the user pre-confirmed.
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: row.email, password, email_confirm: true,
-  })
+  //
+  // Retried on bad_jwt only, so `email_exists` below still resolves on the first
+  // attempt. A transient failure here reads to the colleague as a broken invite
+  // link, and the claim above has already been consumed.
+  const { data: created, error: createError } = await withAuthAdminRetry(
+    () => admin.auth.admin.createUser({ email: row.email, password, email_confirm: true }),
+    'join.createOrganizer',
+  )
   if (createError || !created?.user) {
     await admin.from('organizer_invites').update({ accepted_at: null }).eq('id', row.id)
     return joinError(createError?.code === 'email_exists' ? 'email_exists' : 'creation_failed')
@@ -87,8 +93,13 @@ export async function acceptOrganizerInvite(
     email: row.email,
   })
   if (profileError) {
-    // No orphan auth rows (same rollback as provisionOrganizer).
-    await admin.auth.admin.deleteUser(created.user.id)
+    // No orphan auth rows (same rollback as provisionOrganizer). Retried: a
+    // failed rollback strands an auth row that makes every later attempt with
+    // this address return email_exists.
+    await withAuthAdminRetry(
+      () => admin.auth.admin.deleteUser(created.user.id),
+      'join.rollbackOrphan',
+    )
     await admin.from('organizer_invites').update({ accepted_at: null }).eq('id', row.id)
     return joinError('creation_failed')
   }

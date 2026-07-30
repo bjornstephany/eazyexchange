@@ -9,9 +9,10 @@
  *
  *   1. refuse to run unless the Supabase URL is local
  *   2. refuse to run unless the local stack is up
- *   3. refuse to run if the smoke's port is already bound
- *   4. lint · test:rls · tsc · test · build · smoke   (cheapest first)
- *   5. verdict
+ *   3. refuse to run unless this worktree has been seeded
+ *   4. refuse to run if the smoke's port is already bound
+ *   5. lint · test:rls · tsc · test · build · smoke   (cheapest first)
+ *   6. verdict
  *
  * Ring 2 of three. Ring 1 is the pre-push hook, ring 3 is CI — and ring 3 is
  * the copy that enforces, because both local rings are bypassable by a human.
@@ -24,6 +25,7 @@ import { resolvePort } from './lib/port.mjs'
 import { stackIsUp } from './lib/stack.mjs'
 import { SHIP_STEPS, runSteps } from './lib/ship-steps.mjs'
 import { isLocalSupabaseUrl, LOCAL_API_URL } from './lib/local-target.mjs'
+import { checkSeedManifest, SEED_MANIFEST_FILE } from './lib/seed-manifest.mjs'
 
 const step = (msg) => process.stdout.write(`\n  ▸ ${msg}\n`)
 const die = (title, ...lines) => {
@@ -64,7 +66,21 @@ if (!(await stackIsUp())) {
 }
 step('Supabase local — up')
 
-// --- 3. the port ------------------------------------------------------------
+// --- 3. the seeded world ----------------------------------------------------
+
+// Without this the run gets all the way to the smoke step — three minutes in,
+// after lint, RLS, types, unit and a full production build — and then fails
+// FOUR specs at once with "No .seed-manifest.json". That reads like four broken
+// tests rather than one missing prerequisite, and it has cost real time more
+// than once. Fail here instead, in under a millisecond, with the command that
+// fixes it. What counts as usable, and why, is in lib/seed-manifest.mjs.
+const seed = checkSeedManifest(
+  existsSync(SEED_MANIFEST_FILE) ? readFileSync(SEED_MANIFEST_FILE, 'utf8') : null,
+)
+if (!seed.ok) die(seed.title, ...seed.lines)
+step('Seed manifest — present')
+
+// --- 4. the port ------------------------------------------------------------
 
 const port = resolvePort(existsSync('.wtport') ? readFileSync('.wtport', 'utf8') : null)
 // localhost, matching playwright.config.ts: Next resolves middleware redirect
@@ -92,7 +108,7 @@ if (!(await portIsFree(port))) {
 }
 step(`Smoke port ${port} — free`)
 
-// --- 4. the gate ------------------------------------------------------------
+// --- 5. the gate ------------------------------------------------------------
 
 // NEXT_PUBLIC_* are inlined at build time, so the bundle the smoke drives has
 // to be built with the URL it will actually be served on.
@@ -103,7 +119,7 @@ const result = runSteps(SHIP_STEPS, (s) => {
   return spawnSync(s.cmd, s.args, { stdio: 'inherit', env: childEnv }).status ?? 1
 })
 
-// --- 5. the verdict ---------------------------------------------------------
+// --- 6. the verdict ---------------------------------------------------------
 
 if (!result.ok) {
   const failed = result.failed

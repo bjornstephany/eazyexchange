@@ -12,7 +12,7 @@
 // RLS-scoped client one redirect later.
 //
 // So "no profile" must leave the shells entirely rather than pick the other one.
-// /login is terminal for such a session: middleware.ts explicitly lets a session
+// /login is terminal for such a session: proxy.ts explicitly lets a session
 // with no users row reach the auth routes instead of bouncing it onward.
 
 export type ProfileRole = 'organizer' | 'student'

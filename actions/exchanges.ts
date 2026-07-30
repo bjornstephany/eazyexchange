@@ -262,8 +262,12 @@ export async function updateReminderSettings(
   revalidatePath('/settings')
 }
 
-// Re-export for dropdown consumers (type-only exports are legal in 'use server').
-export type { ExchangeProgressSummary }
+// No re-export of ExchangeProgressSummary here. Inline `export type Foo = …` in
+// a 'use server' module is fine, but the RE-EXPORT form `export type { Foo }` is
+// not: Turbopack's server-actions transform (the default builder from Next 16)
+// registers it as a value re-export and the build fails with "export
+// ExchangeProgressSummary was not found". Nothing imported it from here anyway —
+// consumers take it from its home in lib/dashboard/rollup.ts.
 
 // Per-exchange completion counts for the shell's exchange dropdown. Reuses the
 // same pipeline as the dashboard (listApplications + grid → rollupStudent →

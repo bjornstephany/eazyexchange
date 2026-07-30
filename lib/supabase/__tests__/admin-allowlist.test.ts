@@ -40,7 +40,11 @@ const ALLOWLIST = [
 // __dirname, which is unreliable under vitest's ESM transform.
 const ROOT = process.cwd()
 const SCAN_DIRS = ['app', 'actions', 'lib', 'components']
-const ROOT_FILES = ['middleware.ts', 'instrumentation.ts']
+// Renamed from the old middleware convention in the Next 16 upgrade. These are
+// named files rather than a glob, and line 67 filters on existsSync — so a
+// rename silently drops a file out of this guard instead of failing. Keep this
+// list in step with the root-level file conventions.
+const ROOT_FILES = ['proxy.ts', 'instrumentation.ts']
 // Matches only static `import … from '…/supabase/admin'`. Assumes the app's
 // static-import convention (verified: no dynamic `import()` of the admin client
 // exists today) — a dynamic import would slip past this guard.

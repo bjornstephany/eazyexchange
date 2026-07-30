@@ -31,7 +31,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
+    // `data-scroll-behavior="smooth"` is required from Next 16: the router no
+    // longer overrides `scroll-behavior` during navigation unless asked. Without
+    // it, globals.css's `html { scroll-behavior: smooth }` (under
+    // prefers-reduced-motion: no-preference, for in-page anchors) would make
+    // every route change animate its scroll to top instead of jumping.
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${sans.variable} ${display.variable} ${mono.variable}`}
+    >
       <body className="font-sans">{children}</body>
     </html>
   )
