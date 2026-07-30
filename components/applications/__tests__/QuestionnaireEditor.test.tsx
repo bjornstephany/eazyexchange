@@ -6,13 +6,11 @@ import { standardQuestionnaire } from '@/lib/application-templates/library'
 import { removeQuestion as removeFromDoc } from '@/lib/application-fields'
 
 const removeQuestion = vi.fn()
-const resetQuestionnaire = vi.fn()
 const editCustomQuestion = vi.fn()
 const addQuestion = vi.fn()
 const listQuestionSuggestions = vi.fn()
 vi.mock('@/actions/questionnaire', () => ({
   removeQuestion: (...a: unknown[]) => removeQuestion(...(a as [])),
-  resetQuestionnaire: (...a: unknown[]) => resetQuestionnaire(...(a as [])),
   editCustomQuestion: (...a: unknown[]) => editCustomQuestion(...(a as [])),
   addQuestion: (...a: unknown[]) => addQuestion(...(a as [])),
   listQuestionSuggestions: () => listQuestionSuggestions(),
@@ -24,7 +22,6 @@ beforeEach(() => {
   vi.clearAllMocks()
   removeQuestion.mockImplementation(async (_id: string, sectionId: never, questionId: string) =>
     ({ ok: true, doc: removeFromDoc(standardQuestionnaire(), sectionId, questionId) }))
-  resetQuestionnaire.mockResolvedValue({ ok: true, doc: standardQuestionnaire() })
   editCustomQuestion.mockResolvedValue({ ok: true, doc: standardQuestionnaire() })
   addQuestion.mockResolvedValue({ ok: true, doc: standardQuestionnaire() })
   listQuestionSuggestions.mockResolvedValue([])
@@ -86,14 +83,6 @@ describe('QuestionnaireEditor', () => {
     renderEditor()
     await user.click(screen.getByRole('button', { name: /Retirer — Animaux domestiques/ }))
     expect(await screen.findByText(/verrouillé/)).toBeInTheDocument()
-  })
-
-  it('resets to the standard questionnaire after confirming', async () => {
-    const user = userEvent.setup()
-    renderEditor()
-    await user.click(screen.getByRole('button', { name: 'Réinitialiser' }))
-    await user.click(screen.getByRole('button', { name: 'Réinitialiser' }))
-    expect(resetQuestionnaire).toHaveBeenCalledWith('ex-1')
   })
 
   it('gives a custom question a pencil that pre-fills its current definition', async () => {

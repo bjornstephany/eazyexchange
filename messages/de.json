@@ -511,33 +511,12 @@
         "changeTemplateCta": "Vorlage wechseln",
         "inviteCta": "Schüler einladen"
       },
-      "openDialog": {
-        "title": "Schüler zur Bewerbung einladen",
-        "description": "Wählen Sie eine Frist. Die Bewerbungen werden sofort geöffnet.",
-        "deadlineLabel": "Bewerbungsfrist",
-        "saving": "Wird geöffnet…",
-        "methodHeading": "Wie möchten Sie einladen?",
-        "lockedHint": "Wählen Sie eine Frist, um diese Optionen freizuschalten.",
-        "linkHeading": "Einen Link teilen",
-        "emailHeading": "Oder lassen Sie uns die E-Mails senden",
-        "done": "Fertig",
-        "openError": "Die Bewerbungen konnten nicht geöffnet werden. Bitte versuchen Sie es erneut."
-      },
-      "panel": {
-        "summaryOpen": "Bewerbungen offen",
-        "summaryClosed": "Bewerbungen geschlossen",
-        "deadlineSuffix": " · Frist {date}"
-      },
       "countSummary": "{n, plural, one {# Bewerbung erhalten} other {# Bewerbungen erhalten}} für {exchangeName}.",
-      "stateOpen": "Offen",
-      "stateClosed": "Geschlossen",
       "deadlineLabel": "Frist",
       "deadlineError": "Die Frist konnte nicht gespeichert werden. Bitte erneut versuchen.",
-      "linkLabel": "Bewerbungslink",
       "copyCta": "Kopieren",
       "copiedCta": "Kopiert ✓",
       "invite": {
-        "openCta": "Per E-Mail einladen",
         "title": "Schüler einladen",
         "description": "Teilen Sie den Bewerbungslink oder lassen Sie uns Ihre Schüler anschreiben.",
         "linkHeading": "Link teilen",
@@ -614,19 +593,6 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Bewerbungsfragebogen",
-        "template": "Vorlage: {name}",
-        "templateStandard": "Standardfragebogen",
-        "summary": "{n} Fragen · 4 Abschnitte",
-        "locked": "Gesperrt — {n} Bewerbungen eingegangen",
-        "edit": "Bearbeiten",
-        "view": "Ansehen",
-        "reset": "Zurücksetzen",
-        "resetTitle": "Zum Standardfragebogen zurückkehren?",
-        "resetBody": "Alle Ihre Änderungen gehen verloren und der Fragebogen entspricht wieder der Standardvorlage.",
-        "resetConfirm": "Zurücksetzen"
-      },
       "templates": {
         "standard": {
           "name": "Standard-Fragebogen",

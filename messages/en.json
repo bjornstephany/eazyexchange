@@ -511,33 +511,12 @@
         "changeTemplateCta": "Change template",
         "inviteCta": "Invite students"
       },
-      "openDialog": {
-        "title": "Invite your students to apply",
-        "description": "Choose a deadline. Applications open as soon as you pick one.",
-        "deadlineLabel": "Application deadline",
-        "saving": "Opening…",
-        "methodHeading": "How do you want to invite?",
-        "lockedHint": "Choose a deadline to unlock these.",
-        "linkHeading": "Share a link",
-        "emailHeading": "Or let us send the emails",
-        "done": "Done",
-        "openError": "Applications could not be opened. Please try again."
-      },
-      "panel": {
-        "summaryOpen": "Applications open",
-        "summaryClosed": "Applications closed",
-        "deadlineSuffix": " · deadline {date}"
-      },
       "countSummary": "{n, plural, one {# application received} other {# applications received}} for {exchangeName}.",
-      "stateOpen": "Open",
-      "stateClosed": "Closed",
       "deadlineLabel": "Deadline",
       "deadlineError": "Could not save the deadline. Try again.",
-      "linkLabel": "Application link",
       "copyCta": "Copy",
       "copiedCta": "Copied ✓",
       "invite": {
-        "openCta": "Invite by email",
         "title": "Invite students",
         "description": "Share the application link or let us email your students.",
         "linkHeading": "Share a link",
@@ -614,19 +593,6 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Application questionnaire",
-        "template": "Template: {name}",
-        "templateStandard": "Standard questionnaire",
-        "summary": "{n} questions · 4 sections",
-        "locked": "Locked — {n} applications received",
-        "edit": "Edit",
-        "view": "View",
-        "reset": "Reset",
-        "resetTitle": "Go back to the standard questionnaire?",
-        "resetBody": "All your changes will be lost and the questionnaire will return to the standard template.",
-        "resetConfirm": "Reset"
-      },
       "templates": {
         "standard": {
           "name": "Standard questionnaire",

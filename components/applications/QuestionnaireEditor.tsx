@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { asAppTranslator } from '@/lib/i18n/messages'
 import { SECTION_IDS, CASCADE_REMOVALS, type ApplicationFieldsDoc, type SectionId } from '@/lib/application-fields'
 import { editorRows, type EditorRow } from '@/lib/questionnaire/rows'
-import { removeQuestion, resetQuestionnaire, editCustomQuestion } from '@/actions/questionnaire'
+import { removeQuestion, editCustomQuestion } from '@/actions/questionnaire'
 import type { QuestionnaireFailureReason } from '@/lib/questionnaire/result'
 import { AddQuestionDialog } from '@/components/applications/AddQuestionDialog'
 import {
@@ -40,7 +40,6 @@ export function QuestionnaireEditor({
   const [error, setError] = useState<QuestionnaireFailureReason | null>(null)
   // A removal that drags a dependent question with it is confirmed first.
   const [cascade, setCascade] = useState<{ sectionId: SectionId; row: EditorRow; dependent: string } | null>(null)
-  const [resetting, setResetting] = useState(false)
   const [adding, setAdding] = useState<SectionId | null>(null)
   // Custom questions also get a pencil: label, required, options.
   const [editing, setEditing] = useState<{ sectionId: SectionId; row: EditorRow } | null>(null)
@@ -99,28 +98,12 @@ export function QuestionnaireEditor({
     void persistRemoval(sectionId, row.id)
   }
 
-  async function onReset() {
-    setBusy(true); setError(null)
-    try {
-      const res = await resetQuestionnaire(exchangeId)
-      if (!res.ok) { setError(res.reason); return }
-      setDoc(res.doc)
-    } catch {
-      setError('failed')
-    } finally { setBusy(false); setResetting(false) }
-  }
-
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5">
         <Link href="/applications" className="text-sm text-muted-foreground hover:text-navy">
           {t('page.back')}
         </Link>
-        {!locked && (
-          <Button type="button" variant="outline" disabled={busy} onClick={() => setResetting(true)}>
-            {t('card.reset')}
-          </Button>
-        )}
       </div>
 
       <h1 className="font-display text-2xl font-bold text-navy">{t('page.title')}</h1>
@@ -263,19 +246,6 @@ export function QuestionnaireEditor({
             >
               {t('cascade.confirm')}
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={resetting} onOpenChange={setResetting}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('card.resetTitle')}</DialogTitle>
-            <DialogDescription>{t('card.resetBody')}</DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setResetting(false)}>{c('actions.cancel')}</Button>
-            <Button type="button" disabled={busy} onClick={() => void onReset()}>{t('card.resetConfirm')}</Button>
           </div>
         </DialogContent>
       </Dialog>

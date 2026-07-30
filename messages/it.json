@@ -511,33 +511,12 @@
         "changeTemplateCta": "Cambia modello",
         "inviteCta": "Invita gli studenti"
       },
-      "openDialog": {
-        "title": "Invita i tuoi studenti a candidarsi",
-        "description": "Scegli una scadenza. Le candidature si apriranno subito.",
-        "deadlineLabel": "Scadenza delle candidature",
-        "saving": "Apertura…",
-        "methodHeading": "Come vuoi invitare?",
-        "lockedHint": "Scegli una scadenza per sbloccare queste opzioni.",
-        "linkHeading": "Condividere un link",
-        "emailHeading": "Oppure lascia che inviamo noi le e-mail",
-        "done": "Fatto",
-        "openError": "Impossibile aprire le candidature. Riprova."
-      },
-      "panel": {
-        "summaryOpen": "Candidature aperte",
-        "summaryClosed": "Candidature chiuse",
-        "deadlineSuffix": " · scadenza {date}"
-      },
       "countSummary": "{n, plural, one {# candidatura ricevuta} other {# candidature ricevute}} per {exchangeName}.",
-      "stateOpen": "Aperto",
-      "stateClosed": "Chiuso",
       "deadlineLabel": "Scadenza",
       "deadlineError": "Impossibile salvare la scadenza. Riprova.",
-      "linkLabel": "Link di candidatura",
       "copyCta": "Copia",
       "copiedCta": "Copiato ✓",
       "invite": {
-        "openCta": "Invita via e-mail",
         "title": "Invita gli studenti",
         "description": "Condividi il link di candidatura o lascia che scriviamo ai tuoi studenti.",
         "linkHeading": "Condividi un link",
@@ -614,19 +593,6 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Questionario di candidatura",
-        "template": "Modello: {name}",
-        "templateStandard": "Questionario standard",
-        "summary": "{n} domande · 4 sezioni",
-        "locked": "Bloccato — {n} candidature ricevute",
-        "edit": "Modifica",
-        "view": "Consulta",
-        "reset": "Reimposta",
-        "resetTitle": "Tornare al questionario standard?",
-        "resetBody": "Tutte le tue modifiche andranno perse e il questionario tornerà al modello standard.",
-        "resetConfirm": "Reimposta"
-      },
       "templates": {
         "standard": {
           "name": "Questionario standard",

@@ -68,7 +68,7 @@ export function AddQuestionDialog({
   // `removedBuiltIns`, whose result is typed AppField[], structurally cannot
   // report it. Were this entry absent, the ✕ on « Photo récente » would be the
   // one irreversible action on the page: the only way back would be
-  // resetQuestionnaire, discarding every other edit. The server already accepts
+  // « Changer de modèle », discarding every other edit. The server already accepts
   // the restore under exactly this input (actions/questionnaire.ts:167-172,
   // which also re-checks the section and refuses a duplicate); this is its only
   // caller.

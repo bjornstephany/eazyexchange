@@ -171,7 +171,7 @@ export async function addQuestion(
     // The photo is a pseudo-field (lives on applications.photo_path, not in
     // APPLICATION_SECTIONS), so it is never a member of removedBuiltIns'
     // AppField[] result and could otherwise never be restored once removed —
-    // the organizer's only way back would be resetQuestionnaire, discarding
+    // the organizer's only way back would be « Changer de modèle », discarding
     // every other edit. Special-cased here instead of forcing a non-field
     // into that AppField-typed catalog.
     if (input.ref === PHOTO_REF) {
@@ -329,15 +329,6 @@ export async function createApplication(
   // The Aperçu carries the application state too.
   revalidatePath('/dashboard')
   return { ok: true, doc }
-}
-
-export async function resetQuestionnaire(exchangeId: string): Promise<QuestionnaireResult> {
-  const loaded = await loadEditable(exchangeId)
-  if (!loaded.ok) return questionnaireFailure(loaded.reason)
-  // NULL, not a copy of the standard structure — the same state as an exchange
-  // that was never customized. One representation for one meaning.
-  if (!(await persist(exchangeId, { application_fields: null }))) return questionnaireFailure('failed')
-  return { ok: true, doc: standardQuestionnaire() }
 }
 
 // Phrasings at least three INDEPENDENT schools converged on, in the caller's

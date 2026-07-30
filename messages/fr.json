@@ -511,33 +511,12 @@
         "changeTemplateCta": "Changer de modèle",
         "inviteCta": "Inviter les élèves"
       },
-      "openDialog": {
-        "title": "Inviter vos élèves à postuler",
-        "description": "Choisissez une date limite. Les candidatures ouvrent aussitôt.",
-        "deadlineLabel": "Date limite des candidatures",
-        "saving": "Ouverture…",
-        "methodHeading": "Comment souhaitez-vous inviter ?",
-        "lockedHint": "Choisissez une date limite pour débloquer ces options.",
-        "linkHeading": "Partager un lien",
-        "emailHeading": "Ou laissez-nous envoyer les e-mails",
-        "done": "Terminé",
-        "openError": "Impossible d’ouvrir les candidatures. Veuillez réessayer."
-      },
-      "panel": {
-        "summaryOpen": "Candidatures ouvertes",
-        "summaryClosed": "Candidatures fermées",
-        "deadlineSuffix": " · date limite {date}"
-      },
       "countSummary": "{n, plural, one {# candidature reçue} other {# candidatures reçues}} pour {exchangeName}.",
-      "stateOpen": "Ouvert",
-      "stateClosed": "Fermé",
       "deadlineLabel": "Date limite",
       "deadlineError": "Impossible d’enregistrer la date limite. Réessayez.",
-      "linkLabel": "Lien de candidature",
       "copyCta": "Copier",
       "copiedCta": "Copié ✓",
       "invite": {
-        "openCta": "Inviter par e-mail",
         "title": "Inviter les élèves",
         "description": "Partagez le lien de candidature ou laissez-nous écrire à vos élèves.",
         "linkHeading": "Partager un lien",
@@ -614,19 +593,6 @@
       }
     },
     "questionnaire": {
-      "card": {
-        "title": "Questionnaire de candidature",
-        "template": "Modèle : {name}",
-        "templateStandard": "Questionnaire standard",
-        "summary": "{n} questions · 4 sections",
-        "locked": "Verrouillé — {n} candidatures reçues",
-        "edit": "Modifier",
-        "view": "Consulter",
-        "reset": "Réinitialiser",
-        "resetTitle": "Revenir au questionnaire standard ?",
-        "resetBody": "Toutes vos modifications seront perdues et le questionnaire redeviendra celui du modèle standard.",
-        "resetConfirm": "Réinitialiser"
-      },
       "templates": {
         "standard": {
           "name": "Questionnaire standard",
