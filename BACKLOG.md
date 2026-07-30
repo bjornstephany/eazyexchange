@@ -5,6 +5,8 @@ pick items off the top when starting new work.
 
 ## Queue
 
+- Adopt eslint-config-next 16's React Compiler-era hook rules, demoted to warnings in `eslint.config.mjs` during the Next 16 upgrade (2026-07-30): 17 × `react-hooks/set-state-in-effect` and 3 × `react-hooks/refs` across 18 files — the shell, the tour, and most dialogs. They are deliberate effect-driven-state patterns rather than defects, so this is a refactor with real regression risk and wants its own branch plus a browser pass. `pnpm lint` lists every site.
+
 - organizer 2FA via Supabase MFA TOTP (deferred 2026-07-06 — delete this line if still unwanted)
 - organizer review aid: verify cross-form consistency of submissions (ex: parent passport copy matches the parent who signed the AST/cerfa form)
 - Google search appearance: add favicon + fix meta description getting cut off in results

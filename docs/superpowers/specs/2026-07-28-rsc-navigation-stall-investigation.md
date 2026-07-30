@@ -1,7 +1,57 @@
 # Client-side navigation stall after a server action — investigation record
 
-**Status: UNRESOLVED.** Five hypotheses tested and refuted. This record exists so
-the next attempt starts from evidence rather than repeating it.
+**Status: RESOLVED 2026-07-30 by upgrading to Next.js 16.2.12.** Root cause was
+an upstream React bug, never this application — which is why all five
+app-level hypotheses below were refuted. The record of that search is kept
+intact, because the shape of what *didn't* explain it is what identified the
+culprit.
+
+## Resolution
+
+`facebook/react#35839` — *"Fix context propagation through suspended Suspense
+boundaries"* (merged 2026-02-21). When a Suspense boundary suspends during
+initial mount its primary children's fibers are discarded; lazy context
+propagation then cannot find the consumer fibers, so the boundary is never
+marked for retry and stays in fallback indefinitely. App Router navigation is
+driven through router *context*, so the RSC payload arrives, is never applied,
+and the router appears to decline the navigation.
+
+Tracked downstream as `vercel/next.js#83386` (closed by a maintainer pointing at
+that PR). That thread independently reproduces every observation in this
+document: intermittent, RSC 200 with nothing committed, production-skewed, retry
+logic producing only more RSC calls, and a server-side `redirect()` failing the
+same way — hypothesis 4 here, which stalled 6/6.
+
+**The version trap.** App Router does not use `node_modules/react`; it resolves
+React to Next's vendored copy at `next/dist/compiled/react`. `package.json` said
+19.2.7 — released well after the fix and completely irrelevant. What mattered:
+
+| release | vendored React | |
+|---|---|---|
+| next@15.5.21 (was) | `19.2.0-canary-0bdb9206-20250818` | pre-fix |
+| next@15.5.22 (latest `backport`) | same | **no 15.5.x could ever fix it** |
+| next@16.2.12 (now) | `19.3.0-canary-3f0b9e61-20260317` | contains the fix |
+
+Audit any release without installing it:
+
+```bash
+curl -sSL https://unpkg.com/next@<v>/dist/compiled/react/cjs/react.production.js \
+  | grep -oE '19\.[0-9]+\.[0-9]+-canary-[a-f0-9]+-[0-9]{8}'
+```
+
+**Measured after the upgrade**, same harness and conditions as below (`next
+start`, single worker, one reserved student): **8/8 navigations committed, 0
+stalled**, mean commit 2107 ms. Eight consecutive successes at the previous ~50%
+stall rate would occur by chance about 0.4% of the time.
+
+The test-side mitigation was deliberately left in place — see *Current
+mitigation*. It asserts outcomes rather than navigation, which is the more
+robust assertion regardless of this bug.
+
+---
+
+**Original record follows (status at the time: UNRESOLVED).** Five hypotheses
+tested and refuted.
 
 Found 2026-07-28 while building the ship gate
 ([`2026-07-28-ship-gate-verification.md`](2026-07-28-ship-gate-verification.md)).
@@ -94,11 +144,22 @@ the submission or the approval did not land.
 **This is a workaround in the tests, not a fix in the app.** A real user still
 sees the stall.
 
-## Recommended next step
+## Recommended next step — superseded, kept for the lesson
 
-Reproduce by hand on staging before spending more engineering time. If it does
-not reproduce there, this is a local-environment artefact and the mitigation is
-sufficient. If it does, the next thing to try is the pattern the two
-non-stalling components already use — `<form action={…}>` with `useActionState`
-rather than an imperative call from `onClick` — and, failing that, an upstream
-issue against Next.js with the trace above, which is small and self-contained.
+The original advice was: reproduce by hand on staging, then try `<form
+action={…}>` with `useActionState`, then file upstream.
+
+What actually resolved it was the step this list never included and which cost
+ten minutes: **searching the upstream issue tracker.** The record even noted "no
+upstream issue search was done" under *What has NOT been ruled out*, below six
+rounds of rebuild-and-measure against app-level hypotheses. The bug was already
+reported, diagnosed and fixed months earlier.
+
+The `finally`/`catch` correlation noted above was a real observation with no
+causal power — both patterns sit downstream of a reconciler that had stopped
+retrying a suspended boundary. Worth remembering when a correlation resists
+explanation: it may be a symptom ordering, not a cause.
+
+**Check the upstream tracker before forming the second hypothesis**, especially
+for intermittent, production-skewed, framework-boundary behaviour where the
+application's own code is not obviously at fault.
