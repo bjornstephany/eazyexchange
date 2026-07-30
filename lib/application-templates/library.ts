@@ -35,3 +35,12 @@ export const APPLICATION_TEMPLATES: readonly LibraryTemplate[] = [
 export function templateById(id: string): LibraryTemplate | null {
   return APPLICATION_TEMPLATES.find(t => t.id === id) ?? null
 }
+
+// The one place a stored template id becomes a TemplateId. NULL means « created
+// before templates existed » and an unknown id means stale or hostile data;
+// both resolve to 'standard' rather than travelling on as a `string`, because
+// the UI turns this value into a message key (templates.${id}.name) and a
+// missing key throws at render time.
+export function resolveTemplateId(raw: string | null | undefined): TemplateId {
+  return templateById(raw ?? '')?.id ?? 'standard'
+}
