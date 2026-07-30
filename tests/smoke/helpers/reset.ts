@@ -80,4 +80,13 @@ export async function resetSignupCruft(): Promise<void> {
     if (row.school_id) await db.from('schools').delete().eq('id', row.school_id)
     await db.auth.admin.deleteUser(row.id)
   }
+
+  // Waitlist rows and the per-IP signup counter. requestOrganizerSignup caps a
+  // source IP at 10 signups per hour and fails CLOSED, so without this the
+  // eleventh `pnpm ship` in an hour would fail for a reason that is not a bug.
+  const { error: wlErr } = await db
+    .from('signup_waitlist').delete().like('email', `%@${SEED_DOMAIN}`)
+  if (wlErr) throw new Error(`reset signup waitlist: ${wlErr.message}`)
+  const { error: rlErr } = await db.from('rate_limits').delete().like('key', 'signup:%')
+  if (rlErr) throw new Error(`reset signup rate limits: ${rlErr.message}`)
 }
