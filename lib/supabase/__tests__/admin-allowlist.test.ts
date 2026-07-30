@@ -29,6 +29,10 @@ const ALLOWLIST = [
   'lib/application-photos.ts',
   'lib/audit.ts',
   'lib/auth/provision.ts',
+  // The signup gate. Both signup_allowlist and signup_waitlist are zero-policy
+  // tables, and the password path's caller is an anonymous visitor with no
+  // auth.uid() to write a policy against — the service role is the only way in.
+  'lib/auth/waitlist.ts',
   'lib/email-log.ts',
   'lib/error-reporting.ts',
   'lib/rate-limit.ts',
