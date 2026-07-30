@@ -87,12 +87,27 @@ JWT against the ES256 JWKS — where a key with no `kid` cannot match.
 
 ## Our mitigation
 
-- `emailStudentSetupLink` in `actions/invitations.ts` retries `generateLink` 3×
-  and records an `email_send_log` error row if every attempt fails.
+**Every `auth.admin.*` call site now retries** (2026-07-30). The shared wrapper is
+`lib/supabase/admin-retry.ts` — 3 attempts, 150/400 ms backoff, returning the last
+result so each caller's existing error handling is untouched.
 
-Every other `auth.admin.*` call site is still single-attempt and therefore still
-exposed to the same ~20% dice roll: `actions/invitations.ts` (`createUser`,
-`deleteUser`), `actions/join.ts`, `actions/settings.ts`,
-`app/auth/callback/route.ts`, `lib/retention/erase.ts`. A failed `createUser`
-surfaces to the user as a failed signup or enrollment they can retry; that is
-why only the silent, unrecoverable one was hardened first.
+- `actions/invitations.ts` — `createUser`, and both rollback `deleteUser` calls
+- `actions/join.ts` — `createUser` and the rollback `deleteUser`
+- `actions/settings.ts` — `deleteUser` (remove collaborator)
+- `app/auth/callback/route.ts` — `deleteUser` (orphan Google account cleanup)
+- `lib/retention/erase.ts` — `deleteUser` (GDPR erasure)
+- `emailStudentSetupLink` keeps its own earlier retry, which additionally records
+  an `email_send_log` error row when all attempts fail — behaviour the generic
+  wrapper deliberately does not replicate.
+
+**The retry is narrow by design: `bad_jwt` only.** Two things it must not do —
+
+- retry `email_exists` from `createUser`, which is a legitimate business outcome
+  rather than a failure;
+- treat *any* 403 as retryable. The Cloudflare block described above also answers
+  403 (HTML, not JSON), and retrying into it deepens the block. The discriminator
+  is the `bad_jwt` code, never the status alone.
+
+Residual exposure: a call that loses all three attempts still fails, and
+`lib/retention/erase.ts` still does not check the result — a silent failure in an
+erasure path, worth its own fix.

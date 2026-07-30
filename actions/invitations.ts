@@ -1,5 +1,6 @@
 'use server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { applicantName as buildApplicantName } from '@/lib/application-form'
 import { assertExchangeWritable, ARCHIVED_ERROR } from '@/lib/exchange-guard'
 import { tokenExpired } from '@/lib/tokens'
@@ -115,9 +116,13 @@ export async function respondToInvitation(
     // the invite token already proves mailbox access (the link was delivered
     // by Resend to this address), so no activation round-trip is needed.
     // trg_assign_on_enrollment_insert fans out the Phase 2 assignments.
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email: claimed.email, email_confirm: true,
-    })
+    // Retried on bad_jwt only, so the email_exists branch below still resolves
+    // on the first attempt. A transient failure here strands the application in
+    // 'enrolling' until the catch releases the claim.
+    const { data: created, error: createError } = await withAuthAdminRetry(
+      () => admin.auth.admin.createUser({ email: claimed.email, email_confirm: true }),
+      'invitations.createStudent',
+    )
     if (createError || !created?.user) {
       if (createError?.code === 'email_exists') throw new InviteEmailExistsError()
       throw createError ?? new Error('createUser returned no user')
@@ -135,7 +140,10 @@ export async function respondToInvitation(
       email: claimed.email, full_name: '', locale: seededLocale,
     })
     if (profileError) {
-      await admin.auth.admin.deleteUser(userId).catch(() => {})
+      await withAuthAdminRetry(
+        () => admin.auth.admin.deleteUser(userId),
+        'invitations.rollbackProfile',
+      ).catch(() => {})
       if (profileError.code === '23505') throw new InviteEmailExistsError()
       throw profileError
     }
@@ -144,7 +152,10 @@ export async function respondToInvitation(
     })
     if (enrollError && enrollError.code !== '23505') {
       await admin.from('users').delete().eq('id', userId)
-      await admin.auth.admin.deleteUser(userId).catch(() => {})
+      await withAuthAdminRetry(
+        () => admin.auth.admin.deleteUser(userId),
+        'invitations.rollbackEnrollment',
+      ).catch(() => {})
       throw enrollError
     }
   } catch (err) {
