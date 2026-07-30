@@ -6,17 +6,20 @@ import { PrintButton } from '@/components/applications/PrintButton'
 import { StatusPill } from '@/components/dashboard/StatusPill'
 import { applicantStatusPill } from '@/lib/dashboard/rollup'
 import { applicantName } from '@/lib/application-form'
+import { parseApplicationFields, resolveApplicationSections } from '@/lib/application-fields'
 
 export async function ApplicationDetail({
   application,
   photoUrl,
   exchangeName,
   year,
+  applicationFields,
 }: {
   application: any
   photoUrl: string | null
   exchangeName: string
   year: number
+  applicationFields: unknown
 }) {
   const tr = await getTranslations()
   const name = applicantName(application.data) || application.email
@@ -41,7 +44,11 @@ export async function ApplicationDetail({
       </div>
 
       <div className="bg-card border rounded-card p-8">
-        <ApplicationReadView data={application.data} photoUrl={photoUrl} />
+        <ApplicationReadView
+          data={application.data}
+          photoUrl={photoUrl}
+          sections={resolveApplicationSections(parseApplicationFields(applicationFields))}
+        />
       </div>
 
       {application.status === 'maybe' && application.invite_response_note && (

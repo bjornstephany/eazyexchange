@@ -72,3 +72,70 @@ describe('check_rate_limit grants', () => {
     ).rejects.toThrow(/permission denied/i)
   })
 })
+
+describe('application_question_suggestions', () => {
+  // Everything this describe seeds is stamped with fx.suffix (the seed's
+  // per-run random suffix) so a leftover row from a run that aborted before
+  // its afterAll ran can never accidentally normalize to the same
+  // normalized_label as this run's rows and flip a threshold assertion —
+  // the cross-run coupling a review flagged when these labels were static.
+  const threeSchoolLabel = () => `Sait nager ${fx.suffix}`
+  const singleSchoolLabel = () => `Allergies alimentaires ${fx.suffix}`
+
+  beforeAll(async () => {
+    // Three independent schools converge on the same phrasing under three
+    // different spellings — seeded via the superuser client, like
+    // fx.customQuestionA in seed.ts. The INSERT policy scopes a write to the
+    // caller's own school, so one organizer cannot write all three rows
+    // themselves in one statement (that RLS scoping is exactly what the deny
+    // cases in matrix.test.ts pin); this describe's subject is the RPC's
+    // read-side aggregation, not the insert path.
+    await sql`insert into application_custom_questions (school_id, label, locale, type) values
+      (${fx.schoolA}, ${threeSchoolLabel() + ' ?'}, 'fr', 'yesno'),
+      (${fx.schoolB}, ${threeSchoolLabel().toLowerCase() + '?'}, 'fr', 'yesno'),
+      (${fx.schoolC}, ${threeSchoolLabel().toUpperCase() + ' ?'}, 'fr', 'yesno')`
+    // A phrasing only ONE school has written — must never surface. Its own
+    // fixture (not fx.customQuestionA / 'Sait nager ?' from seed.ts) so the
+    // exclusion assertion below runs against a result set that genuinely
+    // contains other entries instead of an empty array.
+    await sql`insert into application_custom_questions (school_id, label, locale, type)
+      values (${fx.schoolA}, ${singleSchoolLabel()}, 'fr', 'text')`
+  })
+
+  afterAll(async () => {
+    // Belt-and-braces beyond the file's outer cleanupFixtures (which already
+    // deletes every application_custom_questions row scoped to schools
+    // A/B/C): delete these specific rows here too, so a describe that never
+    // reaches the outer afterAll still leaves nothing behind.
+    await sql`delete from application_custom_questions where label ilike ${'%' + fx.suffix + '%'}`
+  })
+
+  it('returns aggregates only — never a raw row shape', async () => {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['label', 'options', 'schools', 'type'])
+    }
+  })
+
+  it('hides a phrasing only one school has written', async () => {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.map((r) => r.label)).not.toContain(singleSchoolLabel())
+  })
+
+  it('surfaces a phrasing three independent schools converged on, merging spellings', async () => {
+    const rows = await runAs(sql, fx.orgA, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)
+    const hit = rows.find((r) => String(r.label).toLowerCase().includes(threeSchoolLabel().toLowerCase()))
+    expect(hit).toBeDefined()
+    expect(Number(hit!.schools)).toBe(3)
+  })
+
+  it('is not callable anonymously', async () => {
+    await expect(runAs(sql, null, (tx) =>
+      tx`select * from application_question_suggestions('fr')`)).rejects.toMatchObject({ code: '42501' })
+  })
+})

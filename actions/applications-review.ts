@@ -120,7 +120,11 @@ export async function getApplicationForReview(applicationId: string) {
     const urls = await signApplicationPhotoUrls([application.photo_path])
     photoUrl = urls.get(application.photo_path) ?? null
   }
-  return { application, photoUrl }
+  // The exchange's own questionnaire, so the read view shows exactly the
+  // questions this applicant was asked — including removed ones' absence.
+  const { data: exchange } = await supabase
+    .from('exchanges').select('application_fields').eq('id', application.exchange_id).maybeSingle()
+  return { application, photoUrl, applicationFields: (exchange?.application_fields ?? null) as unknown }
 }
 
 // ---- Application review (single + bulk share one engine) ----

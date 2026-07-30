@@ -29,6 +29,7 @@ export type ApplyFailureReason =
   | 'no_file'         // the form arrived without a file part
   | 'not_an_image'    // a non-image (e.g. PDF) was chosen for the portrait
   | 'file_rejected'   // unsupported type or over the 10 MB cap
+  | 'photo_disabled'  // this exchange's questionnaire no longer asks for a portrait
   // Genuinely unexpected, surfaced rather than thrown
   | 'failed'
 

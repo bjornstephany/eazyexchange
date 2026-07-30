@@ -589,6 +589,77 @@
         "sendRejectionEmail": "Send a rejection email to the applicant"
       }
     },
+    "questionnaire": {
+      "card": {
+        "title": "Application questionnaire",
+        "template": "Template: {name}",
+        "templateStandard": "Standard questionnaire",
+        "summary": "{n} questions · 4 sections",
+        "locked": "Locked — {n} applications received",
+        "edit": "Edit",
+        "view": "View",
+        "reset": "Reset",
+        "resetTitle": "Go back to the standard questionnaire?",
+        "resetBody": "All your changes will be lost and the questionnaire will return to the standard template.",
+        "resetConfirm": "Reset"
+      },
+      "page": {
+        "title": "Application questionnaire",
+        "back": "← Applications",
+        "intro": "Add or remove questions. Every change is saved immediately.",
+        "lockedNotice": "This questionnaire is locked: {n} applications have already been received. It stays readable.",
+        "sectionCount": "{n} questions",
+        "add": "＋ Add a question",
+        "lockedTooltip": "Collected before the form opens — it is where the invitation is sent.",
+        "remove": "Remove",
+        "editQuestion": "Edit question",
+        "required": "required",
+        "empty": "No questions in this section."
+      },
+      "types": {
+        "text": "Short text",
+        "textarea": "Long text",
+        "date": "Date",
+        "yesno": "Yes / No",
+        "radio": "Multiple choice",
+        "photo": "Photo",
+        "email": "Email",
+        "tel": "Phone"
+      },
+      "cascade": {
+        "title": "This question brings another with it",
+        "body": "Removing “{question}” will also remove “{dependent}”, which only makes sense alongside it.",
+        "confirm": "Remove both"
+      },
+      "dialog": {
+        "title": "Add a question — {section}",
+        "removedHeading": "Removed questions",
+        "removedEmpty": "Every question from the template is present.",
+        "suggestionsHeading": "Suggestions from other schools",
+        "suggestionsEmpty": "No suggestions yet.",
+        "suggestionsSchools": "{n} schools",
+        "orCreate": "or create",
+        "label": "Label",
+        "type": "Type",
+        "required": "Answer required",
+        "options": "Choices (one per line)",
+        "add": "Add"
+      },
+      "editDialog": {
+        "title": "Edit question",
+        "save": "Save"
+      },
+      "errors": {
+        "locked": "This questionnaire is locked: applications have already been received.",
+        "archived": "This program is archived: the questionnaire stays viewable, but no further changes are possible.",
+        "not_found": "Programme not found.",
+        "invalid_label": "The label must be between 1 and 120 characters.",
+        "invalid_type": "Unsupported question type.",
+        "invalid_options": "A multiple choice needs at least two options.",
+        "unknown_question": "That question is no longer in the questionnaire — reload the page.",
+        "failed": "Saving failed. Please try again."
+      }
+    },
     "exchanges": {
       "reminders": {
         "heading": "Automatic reminders",
@@ -907,6 +978,7 @@
       "no_file": "No file selected.",
       "not_an_image": "Please choose an image (JPEG, PNG or WebP).",
       "file_rejected": "That file isn’t accepted — JPEG, PNG or WebP image, 10 MB maximum.",
+      "photo_disabled": "This questionnaire does not ask for a photo.",
       "failed": "Something went wrong. Please try again."
     },
     "form": { "yes": "Yes", "no": "No" },

@@ -12,6 +12,7 @@ export type Fixtures = {
   assignmentA: string; submissionA: string; answerA: string
   applicationA: string; resumeTokenA: string; feedbackA: string
   infoCardA: string
+  customQuestionA: string
   docPathA: string; photoPathA: string; tplPathA: string
 }
 
@@ -32,6 +33,7 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
     assignmentA: '', submissionA: id(), answerA: id(),
     applicationA: id(), resumeTokenA: `rls-resume-${suffix}`, feedbackA: id(),
     infoCardA: id(),
+    customQuestionA: id(),
     docPathA: '', photoPathA: '', tplPathA: '',
   }
 
@@ -151,6 +153,23 @@ export async function seedFixtures(sql: postgres.Sql): Promise<Fixtures> {
     ('application-photos', ${fx.photoPathA}),
     ('form-templates', ${fx.tplPathA})`
 
+  // School A banks one custom question and customizes its own exchange's
+  // questionnaire. Both are targets for the school-B deny cases.
+  await sql`insert into application_custom_questions
+      (id, school_id, label, locale, type, options)
+    values (${fx.customQuestionA}, ${fx.schoolA}, ${'Sait nager ?'}, 'fr', 'yesno', null)`
+  await sql`update exchanges
+    set application_fields = ${sql.json({
+      version: 1,
+      sections: [
+        { id: 'student', fields: [{ ref: 'photo' }, { ref: 'last_name' }, { ref: 'first_name' }, { ref: 'email' }] },
+        { id: 'parents', fields: [] },
+        { id: 'hosting', fields: [] },
+        { id: 'profile', fields: [] },
+      ],
+    })}
+    where id = ${fx.exchangeA}`
+
   return fx
 }
 
@@ -161,6 +180,7 @@ export async function cleanupFixtures(sql: postgres.Sql, fx: Fixtures): Promise<
     await tx`set local storage.allow_delete_query = 'true'`
     await tx`delete from storage.objects where name in (${fx.docPathA}, ${fx.photoPathA}, ${fx.tplPathA})`
   })
+  await sql`delete from application_custom_questions where school_id in (${fx.schoolA}, ${fx.schoolB}, ${fx.schoolC})`
   // exchange delete cascades templates → fields/slots/assignments → submissions
   // → answers/uploads, plus applications and enrollments.
   await sql`delete from exchanges where id in (${fx.exchangeA}, ${fx.exchangeShared})`
