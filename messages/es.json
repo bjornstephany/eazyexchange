@@ -31,6 +31,11 @@
       "toVerify": "Por verificar",
       "inProgress": "En curso",
       "missing": "Faltante"
+    },
+    "dateField": {
+      "placeholder": "Elegir una fecha",
+      "prevMonth": "Mes anterior",
+      "nextMonth": "Mes siguiente"
     }
   },
   "organizer": {
@@ -284,12 +289,6 @@
       },
       "tour": {
         "menuItem": "Visita guiada",
-        "invite": {
-          "title": "Descubra EazyExchange en 2 minutos",
-          "body": "Un recorrido rápido por cada pestaña, para saber dónde está todo.",
-          "start": "Empezar",
-          "later": "Más tarde"
-        },
         "controls": {
           "skip": "Omitir",
           "prev": "Anterior",
@@ -299,7 +298,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Bienvenido a EazyExchange",
+            "title": "¡Te damos la bienvenida a EazyExchange! 🎉",
             "body": "Un recorrido rápido por las pestañas de su espacio. Puede interrumpirlo cuando quiera y retomarlo desde el menú de su cuenta."
           },
           "applications": {
@@ -327,7 +326,7 @@
             "body": "Su cuenta, su centro, su equipo y su suscripción."
           },
           "finish": {
-            "title": "Listo",
+            "title": "¡Todo listo! 🚀",
             "body": "Ya sabe moverse. Para volver a ver este recorrido, abra el menú de su cuenta, arriba a la derecha."
           }
         }

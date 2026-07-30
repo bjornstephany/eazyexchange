@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shortDate, longDate } from '@/lib/dates'
+import { shortDate, longDate, monthLabel, weekdayLabels } from '@/lib/dates'
 
 describe('shortDate', () => {
   it('strips the trailing period in fr only', () => {
@@ -44,5 +44,32 @@ describe('longDate', () => {
     expect(longDate(null, 'fr')).toBe('')
     expect(longDate('', 'fr')).toBe('')
     expect(longDate('not-a-date', 'fr')).toBe('')
+  })
+})
+
+describe('monthLabel', () => {
+  it('names the month and year in the caller locale', () => {
+    expect(monthLabel('fr', 2026, 8)).toBe('septembre 2026')
+    expect(monthLabel('de', 2026, 8)).toBe('September 2026')
+  })
+
+  it('rolls with the month index, which is 0-based', () => {
+    expect(monthLabel('fr', 2026, 0)).toBe('janvier 2026')
+    expect(monthLabel('fr', 2026, 11)).toBe('décembre 2026')
+  })
+})
+
+describe('weekdayLabels', () => {
+  it('starts on Monday for French', () => {
+    const days = weekdayLabels('fr')
+    expect(days).toHaveLength(7)
+    expect(days[0]).toBe('lun.')
+    expect(days[6]).toBe('dim.')
+  })
+
+  it('starts on Sunday for English', () => {
+    const days = weekdayLabels('en')
+    expect(days[0]).toBe('Sun')
+    expect(days[6]).toBe('Sat')
   })
 })

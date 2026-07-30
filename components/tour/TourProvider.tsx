@@ -8,7 +8,7 @@ import type { TourState } from '@/types/db'
 import { TourSpotlight } from './TourSpotlight'
 
 export type TourContextValue = {
-  /** Latest known state, updated optimistically — drives the invitation card. */
+  /** Latest known state, updated optimistically. */
   tourState: TourState
   /** Indices into TOUR_STEPS, resolved when the tour started. Empty = idle. */
   plan: number[]
@@ -21,8 +21,6 @@ export type TourContextValue = {
   skip: () => void
   /** Terminer on the last step — closes and records 'completed'. */
   finish: () => void
-  /** « Plus tard » on the invitation, without ever opening the tour. */
-  dismissInvite: () => void
 }
 
 const TourContext = createContext<TourContextValue | null>(null)
@@ -77,7 +75,6 @@ export function TourProvider({
 
   const finish = useCallback(() => close('completed'), [close])
   const skip = useCallback(() => close('dismissed'), [close])
-  const dismissInvite = useCallback(() => persist('dismissed'), [persist])
 
   const next = useCallback(() => {
     setCursor((c) => (c + 1 < plan.length ? c + 1 : c))
@@ -86,6 +83,35 @@ export function TourProvider({
   const prev = useCallback(() => {
     setCursor((c) => (c > 0 ? c - 1 : c))
   }, [])
+
+  // The tour opens by itself for an organizer who has never seen it. There is
+  // no invitation to accept any more, so this is the only way most of them will
+  // ever meet it.
+  //
+  // An effect rather than render-time work: start() performs the tour's only DOM
+  // read, which is meaningless before mount and unsafe during SSR. The ref keeps
+  // it to a single firing — including under StrictMode's double-invoke, where
+  // the ref object survives.
+  //
+  // It reads initialState, never tourState: tourState is what start() will move,
+  // so watching it would arm this effect against its own result.
+  const autoStarted = useRef(false)
+  useEffect(() => {
+    if (autoStarted.current) return
+    if (initialState !== 'pending') return
+    // Unreachable from the real shell: OrganizerShell renders nav-dashboard
+    // and nav-settings unconditionally, so welcome + those two + finish alone
+    // already total 4 — the count here can never be as low as 2 with that
+    // shell mounted. This guards a TourProvider mounted without the shell
+    // (a future host page, or a test), where « Voici un tour de vos onglets »
+    // followed immediately by « c'est tout » would be worse than no tour at
+    // all — so leave the state pending and let a later visit spend it.
+    if (visibleStepIndices(anchorPresent).length <= 2) return
+    autoStarted.current = true
+    start()
+    // start() is re-created when the pathname changes, which is exactly when a
+    // shell that had no tabs might have grown some. Re-running then is the point.
+  }, [initialState, start])
 
   // Drive the router from the step, after the cursor has committed. Every anchor
   // lives in the layout, so this only changes the scenery behind the dim layer —
@@ -97,8 +123,8 @@ export function TourProvider({
   }, [activeStep, pathname, router])
 
   const value = useMemo<TourContextValue>(() => ({
-    tourState, plan, cursor, start, next, prev, skip, finish, dismissInvite,
-  }), [tourState, plan, cursor, start, next, prev, skip, finish, dismissInvite])
+    tourState, plan, cursor, start, next, prev, skip, finish,
+  }), [tourState, plan, cursor, start, next, prev, skip, finish])
 
   return (
     <TourContext.Provider value={value}>

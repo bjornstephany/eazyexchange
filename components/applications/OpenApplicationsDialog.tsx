@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateField } from '@/components/ui/date-field'
 import { Label } from '@/components/ui/label'
 import { InviteByEmailForm } from '@/components/applications/InviteByEmailForm'
 
@@ -47,8 +48,10 @@ export function OpenApplicationsDialog({
       : `/apply/${applySlug}`
 
   async function chooseDeadline(next: string) {
-    // Clearing a date input fires onChange with ''. Persisting that would close
-    // the funnel behind the organizer's back — ignore it, same rule as the panel.
+    // DateField cannot emit '', so this guard is dead today — but it protects
+    // the persistence path below if that invariant ever changes, same rule as
+    // the panel: an empty deadline must never close the funnel behind the
+    // organizer's back.
     if (!next) return
     setDeadline(next)
     setSaving(true)
@@ -85,13 +88,15 @@ export function OpenApplicationsDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="open-applications-deadline">{t('deadlineLabel')}</Label>
-          <Input
+          <Label id="open-applications-deadline-label" htmlFor="open-applications-deadline">
+            {t('deadlineLabel')}
+          </Label>
+          <DateField
             id="open-applications-deadline"
-            type="date"
+            ariaLabelledBy="open-applications-deadline-label"
             value={deadline}
             disabled={saving}
-            onChange={(e) => chooseDeadline(e.target.value)}
+            onChange={chooseDeadline}
             className="h-12"
           />
         </div>

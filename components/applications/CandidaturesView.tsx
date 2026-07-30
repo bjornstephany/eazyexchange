@@ -150,6 +150,9 @@ export function CandidaturesView({
   }
 
   async function changeDeadline(next: string) {
+    // DateField cannot emit '', so this guard is dead today — but it records
+    // why an empty deadline must never be written: doing so would close the
+    // funnel behind the organizer's back.
     if (!next) return
     setDeadline(next)
     setSavingState(true)

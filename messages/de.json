@@ -31,6 +31,11 @@
       "toVerify": "Zu prüfen",
       "inProgress": "In Bearbeitung",
       "missing": "Fehlend"
+    },
+    "dateField": {
+      "placeholder": "Datum wählen",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat"
     }
   },
   "organizer": {
@@ -284,12 +289,6 @@
       },
       "tour": {
         "menuItem": "Geführte Tour",
-        "invite": {
-          "title": "Entdecken Sie EazyExchange in 2 Minuten",
-          "body": "Ein kurzer Rundgang durch jeden Tab, damit Sie wissen, wo alles liegt.",
-          "start": "Starten",
-          "later": "Später"
-        },
         "controls": {
           "skip": "Überspringen",
           "prev": "Zurück",
@@ -299,7 +298,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Willkommen bei EazyExchange",
+            "title": "Willkommen bei EazyExchange! 🎉",
             "body": "Ein kurzer Rundgang durch die Tabs Ihres Bereichs. Sie können jederzeit abbrechen und ihn über Ihr Kontomenü wieder aufnehmen."
           },
           "applications": {
@@ -327,7 +326,7 @@
             "body": "Ihr Konto, Ihre Schule, Ihr Team und Ihr Abonnement."
           },
           "finish": {
-            "title": "Das war alles",
+            "title": "Alles bereit! 🚀",
             "body": "Sie kennen sich jetzt aus. Um diese Tour erneut zu sehen, öffnen Sie oben rechts Ihr Kontomenü."
           }
         }

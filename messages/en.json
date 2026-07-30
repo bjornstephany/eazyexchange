@@ -31,6 +31,11 @@
       "toVerify": "To review",
       "inProgress": "In progress",
       "missing": "Missing"
+    },
+    "dateField": {
+      "placeholder": "Pick a date",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month"
     }
   },
   "organizer": {
@@ -284,12 +289,6 @@
       },
       "tour": {
         "menuItem": "Guided tour",
-        "invite": {
-          "title": "Take a 2-minute tour",
-          "body": "A quick pass through every tab, so you know where everything lives.",
-          "start": "Start",
-          "later": "Later"
-        },
         "controls": {
           "skip": "Skip",
           "prev": "Back",
@@ -299,7 +298,7 @@
         },
         "steps": {
           "welcome": {
-            "title": "Welcome to EazyExchange",
+            "title": "Welcome to EazyExchange! 🎉",
             "body": "A quick tour of the tabs in your workspace. You can stop at any time and pick it up again from your account menu."
           },
           "applications": {
@@ -327,7 +326,7 @@
             "body": "Your account, your school, your team and your subscription."
           },
           "finish": {
-            "title": "That’s it",
+            "title": "You’re all set! 🚀",
             "body": "You know your way around. To see this tour again, open your account menu, top right."
           }
         }
