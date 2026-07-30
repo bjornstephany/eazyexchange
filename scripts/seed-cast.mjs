@@ -106,3 +106,10 @@ export const SHAPE_LABELS = {
   'one-missing': 'il manque un formulaire',
   'overdue-partial': 'en retard, mais avancé',
 }
+
+// The address tests/smoke/signup.spec.ts signs up with to exercise the
+// allowlisted path. seed-demo.mjs inserts the matching signup_allowlist row —
+// without it the spec would waitlist and the confirm flow would never run.
+// Deliberately under the `smoke-signup-` prefix so resetSignupCruft() sweeps
+// the account it creates, leaving each run a clean slate.
+export const ALLOWLISTED_SIGNUP = 'smoke-signup-allowlisted@seed.example.com'

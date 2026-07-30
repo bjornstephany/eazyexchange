@@ -361,39 +361,52 @@ const ADMIN_FOOTER = 'Notification interne Eazyexchange.'
 
 // Recipients for owner-facing alerts. Deliberately ADMIN_EMAILS and not
 // FEEDBACK_EMAIL: FEEDBACK_EMAIL is optional by design and is not confirmed
-// set in Vercel prod, which would drop signup alerts silently. ADMIN_EMAILS
-// is the same variable /admin gates on, so it cannot be missing in practice.
+// set in Vercel prod, which would drop signup alerts silently. ADMIN_EMAILS is
+// confirmed set there and is now read only here — /admin and isPlatformAdmin
+// are gone (2026-07-30 waitlist change).
 function adminRecipients(): string[] {
   return (process.env.ADMIN_EMAILS ?? '')
     .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
 }
 
-// A new organizer has signed up and is waiting for manual approval.
-export async function sendSignupRequestEmail(opts: {
+// Someone who is not on signup_allowlist tried to create an account. No auth
+// user, no school and no users row were created — only a signup_waitlist row.
+//
+// Awaited, not fire-and-forget, for the same reason as the failure alert:
+// send() swallows its own errors and returns a boolean, so awaiting cannot fail
+// a signup — whereas a `void` call is dropped when the serverless function
+// freezes after the response, i.e. exactly when the alert matters.
+export async function sendWaitlistNotificationEmail(opts: {
   fullName: string
   email: string
+  source: 'password' | 'google'
 }): Promise<void> {
   const to = adminRecipients()
   if (to.length === 0) return
 
-  // Name and address are all signup collects. The establishment is not known
-  // yet — it is captured at /onboarding, after approval — so there is nothing
-  // provider-specific left to flag either.
+  // `source` is a closed union, so it needs no escaping; fullName and email do.
+  const provider = opts.source === 'google' ? 'Google' : 'e-mail / mot de passe'
+
   const html = layout(`
-    <p><strong>Nouvelle demande d’accès</strong></p>
+    <p><strong>Nouvelle inscription en liste d’attente</strong></p>
     <p style="font-size:14px;">
-      <strong>${esc(opts.fullName)}</strong><br>
-      ${esc(opts.email)}
+      <strong>${esc(opts.fullName || '—')}</strong><br>
+      ${esc(opts.email)}<br>
+      <span style="font-size:13px;color:#5C7268;">Via ${provider}</span>
     </p>
-    <p><a href="${APP_URL}/admin" style="display:inline-block;background:#2456E6;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;">Examiner la demande</a></p>
+    <p style="font-size:13px;color:#5C7268;">
+      Aucun compte n’a été créé. Pour ouvrir l’accès à cette personne, ajoutez son
+      adresse à la table <strong>signup_allowlist</strong> depuis le tableau de bord
+      Supabase ; la liste complète se consulte dans <strong>signup_waitlist</strong>.
+    </p>
   `, ADMIN_FOOTER)
-  await send(to, 'Nouvelle demande d’accès', html, 'signup request email')
+  await send(to, 'Nouvelle inscription en liste d’attente', html, 'waitlist notification email')
 }
 
 // Provisioning failed after the user confirmed their email: no users row, no
-// /admin entry, nothing. This is exactly how the 2026-07-24 signup was nearly
-// missed — and a Database Webhook on users INSERT would have the same blind
-// spot, since there is no row to fire on.
+// trace anywhere. This is exactly how the 2026-07-24 signup was nearly missed —
+// and a Database Webhook on users INSERT would have the same blind spot, since
+// there is no row to fire on.
 export async function sendSignupFailureEmail(opts: {
   email: string
   reason: string
@@ -408,7 +421,8 @@ export async function sendSignupFailureEmail(opts: {
       <span style="color:#5C7268;">Raison : ${esc(opts.reason)}</span>
     </p>
     <p style="font-size:13px;color:#5C7268;">
-      Aucune ligne n’a été créée dans users : cette personne n’apparaît pas dans /admin.
+      Aucune ligne n’a été créée dans users : il ne reste aucune trace de cette
+      personne côté application.
     </p>
   `, ADMIN_FOOTER)
   await send(to, 'Échec de création de compte Eazyexchange', html, 'signup failure email')

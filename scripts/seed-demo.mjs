@@ -23,7 +23,7 @@
 //   node scripts/seed-demo.mjs          # or: pnpm seed:staging
 import { writeFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { STUDENTS, SMOKE_STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS } from './seed-cast.mjs'
+import { STUDENTS, SMOKE_STUDENTS, APPLICANTS, TEMPLATES, SHAPES, SHAPE_LABELS, HIGHLIGHTS, ALLOWLISTED_SIGNUP } from './seed-cast.mjs'
 import { buildManifest } from './lib/manifest.mjs'
 import { applyStudentShape, dayFactory } from './lib/student-shape.mjs'
 
@@ -136,6 +136,13 @@ async function wipe() {
     if (error) throw new Error(`wipe auth ${u.email}: ${JSON.stringify(error)}`)
   }
 
+  // Signup funnel debris from a previous smoke run. The allowlist row itself is
+  // NOT deleted — it is re-inserted below on conflict-do-nothing, and dropping
+  // it mid-run would waitlist a spec that is mid-flight in another worktree.
+  const { error: wlError } = await db
+    .from('signup_waitlist').delete().like('email', `%@${SEED_DOMAIN}`)
+  if (wlError) throw new Error(`wipe signup_waitlist: ${wlError.message}`)
+
   for (const s of schools ?? []) {
     const { error } = await db.from('schools').delete().eq('id', s.id)
     if (error) throw new Error(`wipe school: ${error.message}`)
@@ -214,6 +221,14 @@ if (reachError) {
 }
 
 await wipe()
+
+// The one address allowed to complete a real signup in the smoke suite. Every
+// other address the suite tries must be waitlisted, which is the point.
+const { error: allowError } = await db
+  .from('signup_allowlist')
+  .upsert({ email: ALLOWLISTED_SIGNUP, note: 'smoke suite — allowlisted signup path' },
+          { onConflict: 'email', ignoreDuplicates: true })
+if (allowError) throw new Error(`seed signup_allowlist: ${allowError.message}`)
 
 const school = await insertOne('schools', {
   name: SCHOOL_NAME,

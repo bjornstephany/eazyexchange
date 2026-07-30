@@ -152,17 +152,29 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
 
 - **RLS is the most error-prone area.** Avoid self-referential/recursive policies (see `20260625000005_fix_rls_recursion.sql`). New access needs a migration, never a client-side service-role workaround.
 - **RLS is the isolation layer; the service role is walled in.** `lib/supabase/admin` (bypasses RLS) may only be imported by the files allowlisted in `lib/supabase/__tests__/admin-allowlist.test.ts` — the anonymous funnel, auth/provisioning, billing/Stripe, the rate limiter, and audit logging. Any new import is a design decision, not a convenience: prefer a scoped RLS policy; if the service role is genuinely required, extend the allowlist deliberately in the same change.
-- **Signup is open but gated.** A self-registered organizer lands `pending` and has
-  zero access until approved at `/admin` (gated by `ADMIN_EMAILS`, not a DB column).
-  The gate is `public.my_role()`: it returns the role **only** when
-  `users.status = 'approved'`, so every policy written as `my_role() = 'organizer'
-  AND …` inherits it — including future ones. Do not add an `is_approved()` clause;
-  there is deliberately one gate in one place. Initial status is decided by the
-  `set_initial_user_status()` BEFORE INSERT trigger (students and colleagues joining
-  an approved school are auto-approved; `signup_allowlist` pre-approves testers), so
-  new user-creation paths need no changes. `users.status`, `reviewed_at` and `notes`
-  have no column grant for `authenticated` — only the service role writes them.
-  Spec: `docs/superpowers/specs/2026-07-25-signup-approval-gate-design.md`.
+- **Signup is gated by an allowlist, checked before an account exists.** Eazyexchange
+  is not open to the public. `requestOrganizerSignup` (`app/(auth)/signup/actions.ts`)
+  and the `intent=organizer_signup` branch of `app/auth/callback/route.ts` both consult
+  `signup_allowlist` **before** anything is created; a non-allowlisted person gets a row
+  in `signup_waitlist` and **no auth user, no school and no `users` row at all**. Both
+  tables are service-role only — no policies, no grants, `anon` *and* `authenticated`
+  revoked explicitly — and `lib/auth/waitlist.ts` is the only module that touches them.
+  **Letting someone new in is one SQL statement in the Supabase dashboard:**
+  `insert into signup_allowlist (email, note) values ('them@example.com', 'why');`
+  There is deliberately no UI for it, and there is no `/admin` review queue any more.
+  The DB gate stays as the fail-closed backstop: `public.my_role()` returns the role
+  **only** when `users.status = 'approved'`, so every policy written as
+  `my_role() = 'organizer' AND …` inherits it — including future ones. Do not add an
+  `is_approved()` clause; there is deliberately one gate in one place. Initial status
+  comes from the `set_initial_user_status()` BEFORE INSERT trigger (students and
+  colleagues joining an approved school are auto-approved; `signup_allowlist`
+  pre-approves testers), so new user-creation paths need no changes. `users.status`,
+  `reviewed_at` and `notes` have no column grant for `authenticated` — only the service
+  role writes them. `/pending` survives for the legacy pre-allowlist rows. Reset an
+  allowlisted account to run the signup cycle again with `pnpm reset-account <email>`.
+  Specs: `docs/superpowers/specs/2026-07-30-signup-waitlist-design.md` (the allowlist +
+  waitlist) and `docs/superpowers/specs/2026-07-25-signup-approval-gate-design.md` (the
+  DB gate it keeps).
 - **Organizer email confirmation goes through `app/auth/confirm/route.ts`.** Session cookies must be persisted via `redirect()` from that route — don't bypass it. Student invite acceptance is **parent-facing**, so `respondToInvitation` deliberately mints **no** session in the confirming browser: it enrolls the student, sends the enrollment checklist, then emails the *student* a `/auth/confirm` set-your-password link (`generateLink` magiclink delivered via Resend, not a Supabase auth email). The student lands on `/accept-invite` from that emailed link.
 - **Google OAuth goes through `app/auth/callback/route.ts`** (the `?code=` PKCE exchange), separate from `/auth/confirm` (email OTP `?token_hash=`). Invite-only is enforced *in the callback*: a Google user with no invited profile and no `intent=organizer_signup` is signed out and their orphan auth row deleted. Provider config is a manual dashboard step (not code): create a Google Cloud OAuth client whose redirect URI is Supabase's `https://<ref>.supabase.co/auth/v1/callback`, enable the Google provider in Supabase with that client's ID/secret, and add each app origin's `/auth/callback` under Supabase → Authentication → URL Configuration → Redirect URLs. Consent-screen branding (« pour continuer vers <ref>.supabase.co ») is fixed in Google Cloud → OAuth consent screen, not Supabase: set App name, add eazyexchange.com as an Authorized domain (verified in Search Console), publish the app; a logo upload triggers Google brand review (days). No Supabase custom domain needed for this. The invited-student Google path relies on Supabase's automatic same-email identity linking, which is default-on — there is no toggle to enable (the only linking toggle in the dashboard is for *manual* linking, which this app does not use).
 - **Always escape user-supplied content in email HTML** (Resend) to prevent injection.

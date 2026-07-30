@@ -39,6 +39,14 @@ vi.mock('@/lib/auth/provision', () => ({
   provisionOrganizer: (u: unknown) => provisionOrganizer(u),
 }))
 
+let allowlisted = false
+const isSignupAllowlisted = vi.fn(async (_e: string) => allowlisted)
+const recordWaitlistEntry = vi.fn(async (_e: Record<string, unknown>) => {})
+vi.mock('@/lib/auth/waitlist', () => ({
+  isSignupAllowlisted: (e: string) => isSignupAllowlisted(e),
+  recordWaitlistEntry: (e: Record<string, unknown>) => recordWaitlistEntry(e),
+}))
+
 import { GET } from '@/app/auth/callback/route'
 
 function req(qs: string) {
@@ -55,6 +63,9 @@ beforeEach(() => {
   exchangeResult = { data: { user: { id: 'u1', email: 'a@b.com', user_metadata: { full_name: 'Stu Dent' } } }, error: null }
   profile = null
   profileError = null
+  allowlisted = false
+  isSignupAllowlisted.mockClear()
+  recordWaitlistEntry.mockClear()
 })
 
 describe('GET /auth/callback', () => {
@@ -86,13 +97,18 @@ describe('GET /auth/callback', () => {
     expect(dest).toBe('/my-forms')
   })
 
+  // Both of these are the allowlisted branch — since the 2026-07-30 waitlist
+  // change, an address that is not on signup_allowlist never reaches
+  // provisionOrganizer at all (see the gate describe block below).
   it('provisions a new organizer when intent=organizer_signup and no profile exists', async () => {
+    allowlisted = true
     const dest = await getRedirect('code=x&intent=organizer_signup&next=/dashboard')
     expect(provisionOrganizer).toHaveBeenCalledTimes(1)
     expect(dest).toBe('/dashboard')
   })
 
   it('redirects signup_failed when provisioning fails', async () => {
+    allowlisted = true
     provisionOrganizer.mockResolvedValueOnce({ ok: false })
     expect(await getRedirect('code=x&intent=organizer_signup')).toBe('/login?error=signup_failed')
   })
@@ -118,5 +134,62 @@ describe('GET /auth/callback', () => {
     profileError = { message: 'connection reset' }
     expect(await getRedirect('code=x')).toBe('/login?error=oauth_failed')
     expect(deleteUser).not.toHaveBeenCalled()
+  })
+})
+
+describe('GET /auth/callback — the organizer_signup allowlist gate', () => {
+  it('provisions an allowlisted Google signup, as before', async () => {
+    allowlisted = true
+    exchangeResult = {
+      data: { user: { id: 'g1', email: 'Owner@Example.com', user_metadata: { name: 'G Owner' } } },
+      error: null,
+    }
+    const dest = await getRedirect('code=abc&intent=organizer_signup')
+    expect(isSignupAllowlisted).toHaveBeenCalledWith('owner@example.com')
+    expect(provisionOrganizer).toHaveBeenCalledTimes(1)
+    expect(recordWaitlistEntry).not.toHaveBeenCalled()
+    expect(deleteUser).not.toHaveBeenCalled()
+    expect(dest).toBe('/dashboard')
+  })
+
+  // Without this the Google button is a straight bypass of the whole gate.
+  it('waitlists a non-allowlisted Google signup and leaves no orphan auth row', async () => {
+    exchangeResult = {
+      data: { user: { id: 'g2', email: 'Stranger@Example.com', user_metadata: { name: 'A Stranger' } } },
+      error: null,
+    }
+    const dest = await getRedirect('code=abc&intent=organizer_signup')
+    expect(recordWaitlistEntry).toHaveBeenCalledWith({
+      email: 'stranger@example.com', fullName: 'A Stranger', source: 'google',
+    })
+    expect(provisionOrganizer).not.toHaveBeenCalled()
+    expect(signOut).toHaveBeenCalledTimes(1)
+    expect(deleteUser).toHaveBeenCalledWith('g2')
+    expect(dest).toBe('/signup?waitlisted=1')
+  })
+
+  it('records a null name when Google supplied none', async () => {
+    exchangeResult = {
+      data: { user: { id: 'g3', email: 'noname@example.com', user_metadata: {} } },
+      error: null,
+    }
+    await getRedirect('code=abc&intent=organizer_signup')
+    expect(recordWaitlistEntry).toHaveBeenCalledWith({
+      email: 'noname@example.com', fullName: null, source: 'google',
+    })
+  })
+
+  // The waitlist row must be written BEFORE the session is dropped — the
+  // teardown is what makes the address unrecoverable afterwards.
+  it('writes the waitlist row before tearing the session down', async () => {
+    const order: string[] = []
+    recordWaitlistEntry.mockImplementationOnce(async () => { order.push('waitlist') })
+    signOut.mockImplementationOnce(async () => { order.push('signOut'); return { error: null } })
+    exchangeResult = {
+      data: { user: { id: 'g4', email: 'order@example.com', user_metadata: { name: 'O' } } },
+      error: null,
+    }
+    await getRedirect('code=abc&intent=organizer_signup')
+    expect(order).toEqual(['waitlist', 'signOut'])
   })
 })

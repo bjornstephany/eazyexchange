@@ -1045,6 +1045,33 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          note: string | null
+          notified_at: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          note?: string | null
+          notified_at?: string | null
+          source: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          note?: string | null
+          notified_at?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assignment_id: string

@@ -61,17 +61,12 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => admin }))
 // would still be in flight when provisionOrganizer returns, so `delivered`
 // distinguishes an awaited send from a dropped one. On serverless the dropped
 // one never arrives — which is how a broken service-role key stayed silent.
-const delivered = { request: false, failure: false }
-const sendSignupRequestEmail = vi.fn(async (_opts: Record<string, unknown>) => {
-  await new Promise((r) => setTimeout(r, 5))
-  delivered.request = true
-})
+const delivered = { failure: false }
 const sendSignupFailureEmail = vi.fn(async (_opts: Record<string, unknown>) => {
   await new Promise((r) => setTimeout(r, 5))
   delivered.failure = true
 })
 vi.mock('@/lib/email', () => ({
-  sendSignupRequestEmail: (o: Record<string, unknown>) => sendSignupRequestEmail(o),
   sendSignupFailureEmail: (o: Record<string, unknown>) => sendSignupFailureEmail(o),
 }))
 
@@ -85,9 +80,7 @@ const baseUser = {
 
 beforeEach(() => {
   admin = makeAdmin()
-  sendSignupRequestEmail.mockClear()
   sendSignupFailureEmail.mockClear()
-  delivered.request = false
   delivered.failure = false
 })
 
@@ -124,19 +117,26 @@ describe('provisionOrganizer', () => {
     expect(admin.calls.usersInserted[0]).toMatchObject({ full_name: 'From Name' })
   })
 
-  it('notifies the platform admins about a pending request', async () => {
-    await provisionOrganizer(baseUser)
-    expect(sendSignupRequestEmail).toHaveBeenCalledTimes(1)
-    expect(sendSignupRequestEmail.mock.calls[0][0]).toEqual({
-      fullName: 'Jane Doe', email: 'org@example.com',
+  // Since the waitlist change, a self-signup can only reach provisioning if its
+  // address is already on signup_allowlist — and set_initial_user_status()
+  // auto-approves those. A `pending` result therefore means the application
+  // check and the DB trigger disagreed: alert on it rather than silently
+  // stranding the account on /pending.
+  it('alerts when an account unexpectedly lands pending', async () => {
+    const result = await provisionOrganizer(baseUser)
+    expect(result).toEqual({ ok: true, status: 'pending' })
+    expect(sendSignupFailureEmail).toHaveBeenCalledTimes(1)
+    expect(sendSignupFailureEmail.mock.calls[0][0]).toEqual({
+      email: 'org@example.com', reason: 'unexpected_pending_status',
     })
+    expect(delivered.failure).toBe(true)
   })
 
-  it('reports approved for an allowlisted address, and sends no request email', async () => {
+  it('reports approved for an allowlisted address, and sends nothing', async () => {
     admin = makeAdmin({ insertedStatus: 'approved' })
     const result = await provisionOrganizer(baseUser)
     expect(result).toEqual({ ok: true, status: 'approved' })
-    expect(sendSignupRequestEmail).not.toHaveBeenCalled()
+    expect(sendSignupFailureEmail).not.toHaveBeenCalled()
   })
 
   it('is idempotent: no writes when a profile already exists', async () => {
@@ -186,11 +186,6 @@ describe('provisionOrganizer', () => {
     admin = makeAdmin({ schoolInsert: { data: null, error: { message: 'boom' } } })
     await provisionOrganizer(baseUser)
     expect(delivered.failure).toBe(true)
-  })
-
-  it('waits for the admin notification to be delivered before returning', async () => {
-    await provisionOrganizer(baseUser)
-    expect(delivered.request).toBe(true)
   })
 
   it('logs the failure reason without leaking the address', async () => {

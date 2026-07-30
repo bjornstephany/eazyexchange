@@ -14,10 +14,6 @@ const ALLOWLIST = [
   'actions/exchanges.ts',
   'actions/join.ts',
   'actions/settings.ts',
-  // Review queue for the manual signup approval gate: writes users.status and
-  // reviewed_at, which have no grant for the authenticated role by design.
-  'app/admin/actions.ts',
-  'app/admin/page.tsx',
   'app/api/stripe/webhook/route.ts',
   'app/auth/callback/route.ts',
   'app/billing/checkout/route.ts',
@@ -29,6 +25,10 @@ const ALLOWLIST = [
   'lib/application-photos.ts',
   'lib/audit.ts',
   'lib/auth/provision.ts',
+  // The signup gate. Both signup_allowlist and signup_waitlist are zero-policy
+  // tables, and the password path's caller is an anonymous visitor with no
+  // auth.uid() to write a policy against — the service role is the only way in.
+  'lib/auth/waitlist.ts',
   'lib/email-log.ts',
   'lib/error-reporting.ts',
   'lib/rate-limit.ts',

@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendSignupRequestEmail, sendSignupFailureEmail } from '@/lib/email'
+import { sendSignupFailureEmail } from '@/lib/email'
 
 export interface ProvisionUser {
   id: string
@@ -41,8 +41,8 @@ async function failProvisioning(email: string, reason: string): Promise<Provisio
 //
 // The school is always created blank. /onboarding step 1 names it through
 // claim_school(), which re-validates the pick against school_registry; signup
-// deliberately asks for nothing but the name, and the approval gate (every
-// self-signup lands pending) is what keeps fake schools out.
+// deliberately asks for nothing but the name, and signup_allowlist (checked
+// before this function is ever reached) is what keeps fake schools out.
 //
 // The initial status is NOT decided here — set_initial_user_status() decides
 // it in the database so that join.ts, invitations.ts and the RLS fixtures are
@@ -84,10 +84,12 @@ export async function provisionOrganizer(user: ProvisionUser): Promise<Provision
 
   const status = profile.status as 'pending' | 'approved'
   if (status === 'pending') {
-    // Awaited for the same reason as the failure alert: send() cannot throw, and
-    // a dropped notification means an organizer waits on /pending that nobody
-    // knows about.
-    await sendSignupRequestEmail({ fullName, email })
+    // Unreachable by design since the 2026-07-30 waitlist change: both signup
+    // paths check signup_allowlist before an account can exist, and
+    // set_initial_user_status() auto-approves an allowlisted address. Landing
+    // here means those two disagreed — the account is stranded on /pending with
+    // nobody watching, so it gets the same alert as a failed provision.
+    await sendSignupFailureEmail({ email, reason: 'unexpected_pending_status' })
   }
 
   return { ok: true, status }

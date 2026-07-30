@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { provisionOrganizer } from '@/lib/auth/provision'
 import { safeNextPath } from '@/lib/auth/safe-next'
+import { isSignupAllowlisted, recordWaitlistEntry } from '@/lib/auth/waitlist'
 
 // OAuth (Google) callback for the SSR/PKCE flow. Distinct from /auth/confirm,
 // which handles email-OTP links (?token_hash=). Here we exchange the ?code=
@@ -54,24 +55,43 @@ export async function GET(request: NextRequest) {
   }
 
   // No profile — a brand-new Google user.
+  const meta = user.user_metadata as Record<string, unknown> | undefined
+  const googleName =
+    (typeof meta?.full_name === 'string' && meta.full_name.trim()) ||
+    (typeof meta?.name === 'string' && meta.name.trim()) || ''
+  const email = (user.email ?? '').trim().toLowerCase()
+
+  // Drops the session and deletes the orphan auth row Google just created.
+  // Retried: a bad_jwt here leaves an orphan that blocks the same person from
+  // ever being invited or signing up properly (createUser then returns
+  // email_exists). See lib/supabase/admin-retry.ts.
+  async function dropOrphanUser(): Promise<void> {
+    await supabase.auth.signOut()
+    const { error: deleteError } = await withAuthAdminRetry(
+      () => admin.auth.admin.deleteUser(user.id),
+      'auth/callback.deleteOrphanUser',
+    ).catch((e) => ({ error: e as { code?: string } }))
+    if (deleteError) {
+      console.error('[auth/callback] deleteUser failed:', deleteError?.code ?? 'unknown')
+    }
+  }
+
   if (intent === 'organizer_signup') {
+    // The same gate requestOrganizerSignup applies to the password funnel.
+    // Without it the Google button bypasses the entire signup gate: it would
+    // land straight in provisionOrganizer and create the account.
+    if (!(await isSignupAllowlisted(email))) {
+      // Written BEFORE the teardown — afterwards the address is gone.
+      await recordWaitlistEntry({ email, fullName: googleName || null, source: 'google' })
+      await dropOrphanUser()
+      return redirect('/signup?waitlisted=1')
+    }
     const result = await provisionOrganizer(user)
     if (!result.ok) return redirect('/login?error=signup_failed')
     return redirect('/dashboard')
   }
 
-  // Uninvited student / stranger — enforce invite-only: drop the session and
-  // delete the orphan auth row Google just created.
-  await supabase.auth.signOut()
-  // Retried: a bad_jwt here leaves an orphan auth row that blocks the same
-  // person from ever being invited properly (createUser then returns
-  // email_exists). See lib/supabase/admin-retry.ts.
-  const { error: deleteError } = await withAuthAdminRetry(
-    () => admin.auth.admin.deleteUser(user.id),
-    'auth/callback.deleteOrphanUser',
-  ).catch((e) => ({ error: e as { code?: string } }))
-  if (deleteError) {
-    console.error('[auth/callback] deleteUser failed:', deleteError?.code ?? 'unknown')
-  }
+  // Uninvited student / stranger — enforce invite-only.
+  await dropOrphanUser()
   return redirect('/login?error=not_invited')
 }
