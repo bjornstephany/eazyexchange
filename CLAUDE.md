@@ -10,8 +10,6 @@ A SaaS web app for student exchange organizers to manage forms and documents col
 - Students get a personal checklist of forms to complete with clear deadlines and automated reminders
 - Organizers get a master dashboard showing completion status across all students
 
-**MVP Scope:** Forms and documents collection only. One exchange program at a time per school pair.
-
 ## Tech Stack
 
 - **Framework:** Next.js 14+ (App Router, Server Actions)
@@ -208,7 +206,7 @@ A second Supabase project (`eazyexchange-staging`, ref in `.env.staging` — nev
   Spec: `docs/superpowers/specs/2026-07-29-application-template-editor-design.md`.
 - Package manager is **pnpm** (not npm).
 - **Billing is a usage-based free trial, school-anchored.** Subscription state lives on `schools` (`subscription_status`, `plan`, `grace_until`, …), written only by the Stripe webhook (`app/api/stripe/webhook/route.ts`) via the service-role admin client — never from the browser (a migration revokes client `UPDATE` on `schools` outright — the
-name is written only by the `claim_school()` SECURITY DEFINER RPC). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`,
+name is written only by the `claim_school()` SECURITY DEFINER RPC). Trial = 1 exchange; Starter = 2, Growth = 6, Scale = unlimited. The only gate is `createExchange` (+ dashboard CTA), via `lib/billing/limits.ts`. No card at signup; organizers subscribe at `/billing`. Required env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_{STARTER,GROWTH,SCALE}`. Register the prod webhook at `/api/stripe/webhook` for `checkout.session.completed`,
 `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`.
 **Upgrades** (`app/billing/upgrade/route.ts`) swap the price on the existing subscription
 through a Stripe-hosted `subscription_update_confirm` portal flow — never through
