@@ -27,11 +27,21 @@ const CHEVREUL = {
   status: 'Privé', commune: 'Lyon', postal_code: '69007',
 }
 
+// What the browser ACTUALLY sees when completeFirstExchange succeeds. The
+// action ends in redirect(), and Next signals that to the client by REJECTING
+// the action promise with a NEXT_REDIRECT-digest error (server-action-reducer
+// rejects, then navigates). The promise never resolves to undefined — assuming
+// it did is what let the red-error flash ship.
+function redirectRejection(url = '/applications') {
+  const err = new Error('NEXT_REDIRECT') as Error & { digest?: string }
+  err.digest = `NEXT_REDIRECT;push;${url};307;`
+  return err
+}
+
 beforeEach(() => {
   window.localStorage.clear()
   completeOnboarding.mockReset().mockResolvedValue({ ok: true, schoolName: 'Lycée Chevreul Lestonnac' })
-  // Success redirects server-side; the client promise resolves to undefined.
-  completeFirstExchange.mockReset().mockResolvedValue(undefined)
+  completeFirstExchange.mockReset().mockRejectedValue(redirectRejection())
   searchSchools.mockReset().mockResolvedValue([CHEVREUL])
 })
 
@@ -82,6 +92,37 @@ describe('OnboardingForm', () => {
 
     expect(await screen.findByText('Renseignez la destination et les deux dates du voyage.')).toBeInTheDocument()
     expect(screen.getByLabelText('Nom du programme')).toBeInTheDocument()
+  })
+
+  // The redirect IS the success signal. Treating its rejection as a failure
+  // flashed « Une erreur est survenue » in red over a submit that had just
+  // worked, for as long as the SPA navigation to /applications took.
+  it('shows no error when the submit succeeds and the action redirects', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    const user = userEvent.setup()
+
+    await user.type(screen.getByLabelText('Nom du programme'), 'Espagne 2026')
+    fillProgramDetails()
+    await user.click(screen.getByRole('button', { name: 'Continuer' }))
+
+    await waitFor(() => expect(completeFirstExchange).toHaveBeenCalledOnce())
+    await waitFor(() =>
+      expect(screen.queryByText('Une erreur est survenue. Réessayez.')).not.toBeInTheDocument())
+  })
+
+  // The router is already navigating away, so re-enabling the button would
+  // flip « Enregistrement… » back to « Continuer » for the whole transition.
+  it('stays busy while the redirect navigation runs', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    const user = userEvent.setup()
+
+    await user.type(screen.getByLabelText('Nom du programme'), 'Espagne 2026')
+    fillProgramDetails()
+    await user.click(screen.getByRole('button', { name: 'Continuer' }))
+
+    await waitFor(() => expect(completeFirstExchange).toHaveBeenCalledOnce())
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Enregistrement…' })).toBeDisabled())
   })
 
   it('starts on the exchange step when initialStep is 2', async () => {
@@ -158,6 +199,18 @@ describe('OnboardingForm — abandoned tab', () => {
       const raw = window.localStorage.getItem(draftKey('s1'))
       expect(raw && JSON.parse(raw).exchangeName).toBe('Espagne 2026')
     })
+  })
+
+  // clearDraft runs before the action; the catch used to put the draft straight
+  // back, so a completed onboarding left a stale draft behind in localStorage.
+  it('leaves the draft cleared when the submit succeeds and redirects', async () => {
+    render(<OnboardingForm schoolId="s1" initialStep={2} />)
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Nom du programme'), 'Espagne 2026')
+    fillProgramDetails()
+    await user.click(screen.getByRole('button', { name: 'Continuer' }))
+    await waitFor(() => expect(completeFirstExchange).toHaveBeenCalledOnce())
+    await waitFor(() => expect(window.localStorage.getItem(draftKey('s1'))).toBeNull())
   })
 
   it('keeps the draft when the submit is rejected', async () => {
