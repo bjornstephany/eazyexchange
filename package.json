@@ -37,7 +37,7 @@
     "lucide-react": "^1.21.0",
     "next": "16.2.12",
     "next-intl": "^4.13.4",
-    "pdfjs-dist": "^6.1.200",
+    "pdfjs-dist": "^6.2.108",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "resend": "^6.14.0",
