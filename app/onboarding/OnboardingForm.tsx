@@ -6,6 +6,7 @@ import {
 } from '@/lib/onboarding/first-exchange'
 import { travelOrderProblem } from '@/lib/exchange/travel-dates'
 import { loadDraft, saveDraft, clearDraft } from '@/lib/onboarding/draft'
+import { isRedirectRejection } from '@/lib/next-redirect'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -114,12 +115,18 @@ export function OnboardingForm({
         saveDraft(schoolId, snapshot)
         setExchangeError(problem.message)
       }
-    } catch {
+    } catch (err) {
+      // The action ends in redirect(), and Next reports that by REJECTING this
+      // promise — a successful submit arrives here, not in the branch above.
+      // Return without touching anything: the router is already navigating, so
+      // the draft stays cleared and the button stays « Enregistrement… » until
+      // the screen changes. Anything else paints a red error over a submit that
+      // just worked.
+      if (isRedirectRejection(err)) return
       saveDraft(schoolId, snapshot)
       setExchangeError('Une erreur est survenue. Réessayez.')
-    } finally {
-      setExchangeBusy(false)
     }
+    setExchangeBusy(false)
   }
 
   if (step === 1) {
