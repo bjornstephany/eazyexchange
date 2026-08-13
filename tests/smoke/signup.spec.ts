@@ -76,10 +76,16 @@ test('an allowlisted address signs up, confirms by mail and reaches the dashboar
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
   // Positive assertion, deliberately: a thrown page still returns 200 with an
   // empty shell, so only asserting the URL would pass on a broken render.
-  // Locale-agnostic on purpose: unlike seeded accounts (locale: 'fr' in
-  // scripts/seed-demo.mjs), a real signup gets `users.locale`'s DB default of
-  // 'en' (20260714200924_users_locale.sql) — this browser context is fr-FR
-  // (playwright.config.ts) but that only drives anonymous Accept-Language
-  // negotiation, which a logged-in profile's locale overrides.
-  await expect(page.getByText(/Aucun échange|No exchange yet/i).first()).toBeVisible()
+  // Scoped to <main> and phrased with dashboard.emptyBody, not
+  // shell.exchangeGroup.empty ("Aucun échange") — that shorter string is the
+  // SIDEBAR's exchange-list empty label, rendered in <nav> ahead of <main>, so
+  // an assertion that could match either would pass even if <main> itself
+  // threw. French-only, not locale-agnostic: provisionOrganizer now seeds
+  // `users.locale` from the request (lib/i18n/resolve.ts's
+  // resolveRequestLocale — cookie, then Accept-Language), and this browser
+  // context is fr-FR (playwright.config.ts) with no NEXT_LOCALE cookie set
+  // along this path, so a real signup always negotiates French here.
+  await expect(
+    page.locator('main').getByText('Créez votre premier échange pour inviter des élèves')
+  ).toBeVisible()
 })
