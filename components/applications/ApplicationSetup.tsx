@@ -109,19 +109,26 @@ export function ApplicationSetup({
 
         <TemplateLibrary selected={picked} onSelect={setPicked} />
 
-        <div className="mt-5 flex flex-col gap-1.5">
-          <Label id="create-application-deadline-label" htmlFor="create-application-deadline">
-            {t('deadlineLabel')}
-          </Label>
-          <DateField
-            id="create-application-deadline"
-            ariaLabelledBy="create-application-deadline-label"
-            value={deadline}
-            disabled={busy}
-            onChange={setDeadline}
-            className="h-12"
-          />
-        </div>
+        {/* The deadline is a property of the candidature being created, so it
+            has nothing to ask until a template is chosen — and asking first
+            reads as a second, unrelated decision competing with the choice.
+            `deadline` itself is untouched by this: « Changer de modèle » still
+            arrives pre-filled, the field is simply not mounted yet. */}
+        {picked && (
+          <div className="mt-5 flex flex-col gap-1.5">
+            <Label id="create-application-deadline-label" htmlFor="create-application-deadline">
+              {t('deadlineLabel')}
+            </Label>
+            <DateField
+              id="create-application-deadline"
+              ariaLabelledBy="create-application-deadline-label"
+              value={deadline}
+              disabled={busy}
+              onChange={setDeadline}
+              className="h-12"
+            />
+          </div>
+        )}
 
         {error && <p className="mt-3 text-[13px] text-danger-text">{tq(`errors.${error}`)}</p>}
 

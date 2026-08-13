@@ -7,7 +7,8 @@
       "newExchange": "+ New exchange",
       "add": "Add",
       "continue": "Continue",
-      "retry": "Try again"
+      "retry": "Try again",
+      "close": "Close"
     },
     "states": {
       "saved": "✓ Changes saved",
@@ -508,7 +509,27 @@
         "cardSummary": "{n} questions · deadline {date}",
         "cardSummaryNoDeadline": "{n} questions",
         "customizeCta": "Customize",
-        "changeTemplateCta": "Change template"
+        "changeTemplateCta": "Change template",
+        "previewCta": "View the questions",
+        "chooseThisCta": "Choose this template",
+        "requestTitle": "Don't see a template that fits your needs?",
+        "requestBody": "Send us the application form you already use and we'll add it to the library within 48 hours.",
+        "requestCta": "Send my form",
+        "requestDialogBody": "Attach your application form. We'll add it to the library within 48 hours and email you when it's ready.",
+        "requestFileLabel": "Your form (PDF, Word or a photo, 3 MB max)",
+        "requestPrivacyHint": "Send a blank copy, with no answers and no student data.",
+        "requestNoteLabel": "Anything to add? (optional)",
+        "requestSubmitCta": "Send",
+        "requestSending": "Sending…",
+        "requestSent": "Got it. We'll add your template within 48 hours and email you.",
+        "requestErrors": {
+          "missing_file": "Choose a file to send.",
+          "unsupported_type": "Unsupported format. Send a PDF, a Word document or a photo.",
+          "too_large": "File is too large. The maximum size is 3 MB.",
+          "note_too_long": "Your note is longer than 1000 characters.",
+          "rate_limited": "Too many uploads. Try again in an hour.",
+          "failed": "The upload failed. Please try again."
+        }
       },
       "inviteCta": "Invite students",
       "countSummary": "{n, plural, one {# application} other {# applications}} for {exchangeName}.",

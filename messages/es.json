@@ -7,7 +7,8 @@
       "newExchange": "+ Nuevo intercambio",
       "add": "Añadir",
       "continue": "Continuar",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "close": "Cerrar"
     },
     "states": {
       "saved": "✓ Cambios guardados",
@@ -508,7 +509,27 @@
         "cardSummary": "{n} preguntas · fecha límite {date}",
         "cardSummaryNoDeadline": "{n} preguntas",
         "customizeCta": "Personalizar",
-        "changeTemplateCta": "Cambiar de plantilla"
+        "changeTemplateCta": "Cambiar de plantilla",
+        "previewCta": "Ver las preguntas",
+        "chooseThisCta": "Elegir esta plantilla",
+        "requestTitle": "¿No encuentra una plantilla que le convenga?",
+        "requestBody": "Envíenos el formulario de candidatura que ya utiliza: lo añadimos a la biblioteca en 48 h.",
+        "requestCta": "Enviar mi formulario",
+        "requestDialogBody": "Adjunte su formulario de candidatura. Lo añadimos a la biblioteca en 48 h y le avisamos por correo electrónico.",
+        "requestFileLabel": "Su formulario (PDF, Word o una foto, 3 MB máx.)",
+        "requestPrivacyHint": "Envíe un ejemplar en blanco, sin respuestas ni datos de alumnos.",
+        "requestNoteLabel": "Precisiones (opcional)",
+        "requestSubmitCta": "Enviar",
+        "requestSending": "Enviando…",
+        "requestSent": "Recibido. Añadiremos su plantilla en 48 h y le avisaremos por correo electrónico.",
+        "requestErrors": {
+          "missing_file": "Elija un archivo para enviar.",
+          "unsupported_type": "Formato no admitido. Envíe un PDF, un documento Word o una foto.",
+          "too_large": "El archivo es demasiado grande. El tamaño máximo es de 3 MB.",
+          "note_too_long": "Sus precisiones superan los 1000 caracteres.",
+          "rate_limited": "Demasiados envíos. Inténtelo de nuevo en una hora.",
+          "failed": "El envío ha fallado. Inténtelo de nuevo."
+        }
       },
       "inviteCta": "Invitar a los alumnos",
       "countSummary": "{n, plural, one {# candidatura} other {# candidaturas}} para {exchangeName}.",
