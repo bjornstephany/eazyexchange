@@ -42,18 +42,22 @@ export function ProfileCard({ profile }: {
     setBusy(false)
   }
 
-  // The school name is read-only for every organizer, in every country: it is
-  // set once at account creation (from school_registry in France) and there is
-  // deliberately no client write path to schools.name. Changing establishment
-  // is a rare, support-worthy event.
+  // The school name is read-only for every organizer, in every country: there
+  // is deliberately no client write path to schools.name, and the only writer
+  // (the claim_school RPC, called from /onboarding step 1) lost its caller when
+  // the onboarding flow was removed on 2026-08-13. So it is populated only on
+  // accounts created before that date, and blank on every account since — the
+  // row is skipped rather than rendered as a labelled, permanently-empty box.
   const fields: { key: 'fullName' | 'email' | 'schoolName'; label: string; value: string; disabled?: boolean; hint?: string }[] = [
     { key: 'fullName', label: t('settings.profile.fullNameLabel'), value: fullName },
     { key: 'email', label: t('settings.profile.emailLabel'), value: profile.email, disabled: true, hint: t('settings.profile.emailHint') },
-    {
-      key: 'schoolName', label: t('settings.profile.schoolNameLabel'),
-      value: profile.schoolName, disabled: true,
-      hint: t('settings.profile.schoolNameLockedHint'),
-    },
+    ...(profile.schoolName
+      ? [{
+          key: 'schoolName' as const, label: t('settings.profile.schoolNameLabel'),
+          value: profile.schoolName, disabled: true,
+          hint: t('settings.profile.schoolNameLockedHint'),
+        }]
+      : []),
   ]
 
   return (
@@ -67,9 +71,9 @@ export function ProfileCard({ profile }: {
         </span>
         <div>
           <div className="font-display text-[17px] font-bold tracking-[-.01em] text-foreground">{fullName}</div>
-          <div className="mt-0.5 text-[13px] text-tertiary">
-            {profile.schoolName}
-          </div>
+          {profile.schoolName ? (
+            <div className="mt-0.5 text-[13px] text-tertiary">{profile.schoolName}</div>
+          ) : null}
         </div>
       </div>
       <div className="grid grid-cols-1 gap-x-4 gap-y-[15px] sm:grid-cols-2">

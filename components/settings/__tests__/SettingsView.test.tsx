@@ -255,3 +255,29 @@ describe('SettingsView — the school name is locked for everyone', () => {
     expect(screen.getByText(/défini à la création du compte/)).toBeInTheDocument()
   })
 })
+
+// Since /onboarding was removed (2026-08-13) nothing writes schools.name, so it
+// is '' for every new account. A labelled, disabled, permanently-empty input
+// with a "contact support to change it" hint is worse than no row at all.
+describe('SettingsView — blank school name', () => {
+  const blank = { ...baseProps, profile: { ...baseProps.profile, schoolName: '' } }
+
+  it('omits the locked school-name field entirely', () => {
+    render(<SettingsView {...blank} />)
+    expect(screen.queryByLabelText('Établissement')).toBeNull()
+    expect(
+      screen.queryByText(/L’établissement est défini à la création du compte/)
+    ).toBeNull()
+  })
+
+  it('still renders the other profile fields', () => {
+    render(<SettingsView {...blank} />)
+    expect(screen.getByLabelText('Nom complet')).toHaveValue('Marie Blanchet')
+    expect(screen.getByLabelText('Adresse e-mail')).toBeDisabled()
+  })
+
+  it('keeps rendering the field when a school name exists', () => {
+    render(<SettingsView {...baseProps} />)
+    expect(screen.getByLabelText('Établissement')).toHaveValue('Lycée Frédéric Mistral')
+  })
+})
