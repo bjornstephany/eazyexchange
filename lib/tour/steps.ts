@@ -18,8 +18,8 @@ export type TourStep = {
 }
 
 // Order is deliberately NOT sidebar order. Candidatures comes first because it
-// is where onboarding drops the organizer and where their real work starts;
-// Aperçu comes late because a progress rollup means nothing until students
+// is where an organizer's real work starts; Aperçu comes late because a
+// progress rollup means nothing until students
 // exist.
 // `as const satisfies` rather than a `: readonly TourStep[]` annotation: the
 // annotation would widen `id` to string, and TourStepId has to stay a literal

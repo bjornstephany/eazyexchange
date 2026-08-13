@@ -85,9 +85,10 @@ beforeEach(() => {
 })
 
 describe('provisionOrganizer', () => {
-  // The school is created blank on every path. /onboarding step 1 names it
-  // through claim_school(), which re-validates against school_registry — so
-  // provisioning has no school to resolve and no registry to read.
+  // The school is created blank on every path, and nothing names it any more:
+  // /onboarding step 1 was the only writer (through claim_school()) and was
+  // removed on 2026-08-13. Provisioning has no school to resolve and no
+  // registry to read.
   it('creates a blank school and a pending organizer profile', async () => {
     const result = await provisionOrganizer(baseUser)
     expect(result).toEqual({ ok: true, status: 'pending' })

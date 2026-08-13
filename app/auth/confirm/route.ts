@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         if (!data.user) return redirect('/login?error=signup_failed')
         const result = await provisionOrganizer(data.user)
         if (!result.ok) return redirect('/login?error=signup_failed')
-        // A self-signup lands pending: `next` points at /onboarding, which the
+        // A self-signup lands pending: `next` points at /dashboard, which the
         // approval gate would bounce anyway. Go straight to the holding page.
         if (result.status === 'pending') return redirect('/pending')
       }

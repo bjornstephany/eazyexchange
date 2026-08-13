@@ -39,10 +39,12 @@ async function failProvisioning(email: string, reason: string): Promise<Provisio
 // Google alike. Idempotent; rolls back the school if the profile insert fails
 // so a partial failure leaves no debris.
 //
-// The school is always created blank. /onboarding step 1 names it through
-// claim_school(), which re-validates the pick against school_registry; signup
-// deliberately asks for nothing but the name, and signup_allowlist (checked
-// before this function is ever reached) is what keeps fake schools out.
+// The school is always created blank, and now stays that way. /onboarding step
+// 1 was the only thing that ever named it — via claim_school(), which
+// re-validated the pick against school_registry — and it was removed on
+// 2026-08-13, so claim_school() survives as an RPC with no caller. Signup asks
+// for nothing but the name, and signup_allowlist (checked before this function
+// is ever reached) is what keeps fake schools out.
 //
 // The initial status is NOT decided here — set_initial_user_status() decides
 // it in the database so that join.ts, invitations.ts and the RLS fixtures are
