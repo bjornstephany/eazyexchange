@@ -44,8 +44,9 @@ const FULL_NAME_MAX = 120
 // schools.name is the one client-updatable school column (column grant from
 // 20260701000001), and left open it would undo the signup gate one screen
 // later — pick a real lycée to get in, then rename to anything. FR names come
-// from school_registry via claim_school(); every other country's name is typed
-// once at onboarding. Both change only through support.
+// came from school_registry via claim_school(), and every other country's name
+// was typed once at onboarding — but that flow was removed on 2026-08-13, so
+// nothing sets the name any more. Both change only through support.
 export async function updateProfile(input: { fullName: string }): Promise<ActionResult> {
   const supabase = await createClient()
   const ctx = await getOrganizerCtx()

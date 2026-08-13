@@ -41,9 +41,9 @@ async function submit(user: ReturnType<typeof userEvent.setup>) {
 
 describe('SignupPage (French)', () => {
   // Creating an account asks for the three things an account needs. The
-  // establishment is captured at /onboarding step 1, which validates it against
-  // the registry. Asserting absence is the point — re-adding a field would
-  // otherwise slip through every other test in this file.
+  // establishment is not captured anywhere: the /onboarding step that collected
+  // it was removed on 2026-08-13. Asserting absence is the point — re-adding a
+  // field would otherwise slip through every other test in this file.
   it('asks for the full name, e-mail and password only', () => {
     render(<SignupPage />)
     expect(screen.getByLabelText(/nom complet/i)).toBeInTheDocument()

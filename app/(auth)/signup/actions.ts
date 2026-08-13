@@ -10,7 +10,7 @@ export type ResendSignupResult = { ok: true } | { ok: false; error: 'resend_fail
 // Relies on Supabase's own rate limits plus the client-side cooldown on the page.
 //
 // Confirmation itself is a one-click link in that email, verified by
-// app/auth/confirm/route.ts (verifyOtp → provisionOrganizer → /onboarding).
+// app/auth/confirm/route.ts (verifyOtp → provisionOrganizer → /dashboard).
 // There is no in-tab code step. Expected failures are structured returns, never
 // thrown, so prod Server Action error redaction cannot swallow them.
 export async function resendSignupEmail(email: string): Promise<ResendSignupResult> {
@@ -71,15 +71,17 @@ export async function requestOrganizerSignup(input: {
     return { ok: true, state: 'waitlisted' }
   }
 
-  // Full name is all provisionOrganizer reads. The establishment is captured at
-  // /onboarding step 1, where it is validated against school_registry.
+  // Full name is all provisionOrganizer reads. The establishment is no longer
+  // captured anywhere: the /onboarding flow that collected it was removed on
+  // 2026-08-13, so schools.name stays blank and the organizer goes straight to
+  // the (empty) dashboard to create their first exchange.
   const supabase = await createClient()
   const { error } = await supabase.auth.signUp({
     email,
     password: input.password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
     },
   })
   // Supabase's own message ("User already registered", password-strength

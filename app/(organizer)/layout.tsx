@@ -7,7 +7,6 @@ import { PaymentWarningBanner } from '@/components/billing/PaymentWarningBanner'
 import { OrganizerShell, type ExchangeOption } from '@/components/shell/OrganizerShell'
 import { resolveActiveExchange, ACTIVE_EXCHANGE_COOKIE } from '@/lib/exchange-session'
 import { sortExchanges } from '@/lib/shell/exchange-order'
-import { mustOnboard } from '@/lib/onboarding/gate'
 import { shellDestination } from '@/lib/auth/shell-destination'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
@@ -65,12 +64,6 @@ export default async function OrganizerLayout({ children }: { children: React.Re
   // created) to decide whether "+ Nouvel échange" should offer creation or
   // send the organizer to /billing.
   const ownedCount = rows.filter(e => e.school_a_id === profile.school_id).length
-
-  // Hard gate: no organizer page renders until the school is named AND owns at
-  // least one exchange. Catches fresh signups and existing empty accounts.
-  // ownedCount includes archived exchanges, so archiving your only exchange
-  // does not re-trap you here.
-  if (school && mustOnboard(school.name, ownedCount)) redirect('/onboarding')
 
   const cap = school ? exchangeCap(school as never) : TRIAL_EXCHANGE_CAP
   const atCap = ownedCount >= cap

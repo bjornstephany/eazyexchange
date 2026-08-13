@@ -155,7 +155,6 @@ describe('proxy', () => {
       '/dashboard',
       '/applications',
       '/settings',
-      '/onboarding',
       '/my-forms',
     ])('redirects a pending organizer off %s to /pending', async (path) => {
       const res = await proxy(req(path))

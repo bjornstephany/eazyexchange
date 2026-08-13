@@ -37,10 +37,10 @@ describe('GET /auth/confirm', () => {
     expect(dest).toBe('/dashboard')
   })
 
-  // `next` points at /onboarding, which the approval gate bounces anyway.
+  // `next` points at /dashboard, which the approval gate bounces anyway.
   it('overrides next with /pending for a signup that landed pending', async () => {
     provisionOrganizer.mockResolvedValueOnce({ ok: true, status: 'pending' })
-    const dest = await getRedirect('token_hash=h&type=signup&next=/onboarding')
+    const dest = await getRedirect('token_hash=h&type=signup&next=/dashboard')
     expect(dest).toBe('/pending')
   })
 

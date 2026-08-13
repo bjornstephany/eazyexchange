@@ -46,7 +46,7 @@ test('a stranger is waitlisted and no account is created', async ({ page }) => {
 // Known limitation (see the spec): this reads the LOCAL template
 // (supabase/templates/confirmation.html), a committed copy of production's. It
 // proves the application's wiring; it does not prove production's template.
-test('an allowlisted address signs up, confirms by mail and reaches onboarding', async ({ page }) => {
+test('an allowlisted address signs up, confirms by mail and reaches the dashboard', async ({ page }) => {
   await resetSignupCruft()
 
   const res = await page.goto('/signup')
@@ -71,7 +71,21 @@ test('an allowlisted address signs up, confirms by mail and reaches onboarding',
   // verification, the provisioning — is the real thing.
   await page.goto(confirmPath)
   // Allowlisted means set_initial_user_status() approves on insert, so there is
-  // no /pending stop: the account goes straight to onboarding.
-  await expect(page).toHaveURL(/\/onboarding$/, { timeout: 20_000 })
-  await expect(page.getByText(/établissement/i).first()).toBeVisible()
+  // no /pending stop; and there is no onboarding gate any more (removed
+  // 2026-08-13), so the account goes straight to an empty dashboard.
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
+  // Positive assertion, deliberately: a thrown page still returns 200 with an
+  // empty shell, so only asserting the URL would pass on a broken render.
+  // Scoped to <main> and phrased with dashboard.emptyBody, not
+  // shell.exchangeGroup.empty ("Aucun échange") — that shorter string is the
+  // SIDEBAR's exchange-list empty label, rendered in <nav> ahead of <main>, so
+  // an assertion that could match either would pass even if <main> itself
+  // threw. French-only, not locale-agnostic: provisionOrganizer now seeds
+  // `users.locale` from the request (lib/i18n/resolve.ts's
+  // resolveRequestLocale — cookie, then Accept-Language), and this browser
+  // context is fr-FR (playwright.config.ts) with no NEXT_LOCALE cookie set
+  // along this path, so a real signup always negotiates French here.
+  await expect(
+    page.locator('main').getByText('Créez votre premier échange pour inviter des élèves')
+  ).toBeVisible()
 })

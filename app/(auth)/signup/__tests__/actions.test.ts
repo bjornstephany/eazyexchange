@@ -74,7 +74,7 @@ describe('requestOrganizerSignup', () => {
     // toEqual, not toMatchObject: a leftover key would mean provisionOrganizer
     // is still being fed data nothing reads.
     expect(arg.options.data).toEqual({ full_name: 'Jane Doe' })
-    expect(arg.options.emailRedirectTo).toBe('https://app.test/onboarding')
+    expect(arg.options.emailRedirectTo).toBe('https://app.test/dashboard')
     expect(recordWaitlistEntry).not.toHaveBeenCalled()
   })
 

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSignupFailureEmail } from '@/lib/email'
+import { DEFAULT_LOCALE, isLocale } from '@/lib/i18n/config'
 
 export interface ProvisionUser {
   id: string
@@ -39,20 +40,33 @@ async function failProvisioning(email: string, reason: string): Promise<Provisio
 // Google alike. Idempotent; rolls back the school if the profile insert fails
 // so a partial failure leaves no debris.
 //
-// The school is always created blank. /onboarding step 1 names it through
-// claim_school(), which re-validates the pick against school_registry; signup
-// deliberately asks for nothing but the name, and signup_allowlist (checked
-// before this function is ever reached) is what keeps fake schools out.
+// The school is always created blank, and now stays that way. /onboarding step
+// 1 was the only thing that ever named it — via claim_school(), which
+// re-validated the pick against school_registry — and it was removed on
+// 2026-08-13, so claim_school() survives as an RPC with no caller. Signup asks
+// for nothing but the name, and signup_allowlist (checked before this function
+// is ever reached) is what keeps fake schools out.
 //
 // The initial status is NOT decided here — set_initial_user_status() decides
 // it in the database so that join.ts, invitations.ts and the RLS fixtures are
 // covered by the same rule. We read it back to pick the redirect.
-export async function provisionOrganizer(user: ProvisionUser): Promise<ProvisionResult> {
+// `locale`, when passed, is whatever the caller could read off the request
+// (see lib/i18n/resolve.ts's resolveRequestLocale) — the organizer's own
+// demonstrated language preference, same idea as the `language` invitations.ts
+// seeds a student's profile with. Validated here rather than trusted, exactly
+// like invitations.ts does for `claimed.language`: a bad or missing value
+// degrades to DEFAULT_LOCALE rather than reaching the CHECK constraint.
+export async function provisionOrganizer(
+  user: ProvisionUser,
+  locale?: string,
+): Promise<ProvisionResult> {
   // `name` is Google's field; email/password signups only ever set `full_name`.
   const fullName =
     metaString(user.user_metadata, 'full_name') || metaString(user.user_metadata, 'name')
   const email = normalizedEmail(user)
   if (!fullName || !email) return failProvisioning(email, 'missing_metadata')
+
+  const seededLocale = isLocale(locale ?? '') ? locale : DEFAULT_LOCALE
 
   const admin = createAdminClient()
 
@@ -75,6 +89,7 @@ export async function provisionOrganizer(user: ProvisionUser): Promise<Provision
     org_role: 'owner' as const,
     full_name: fullName,
     email,
+    locale: seededLocale,
   }).select('status').single()
 
   if (profileError || !profile) {

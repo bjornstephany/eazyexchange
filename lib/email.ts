@@ -377,6 +377,14 @@ export async function sendTemplateRequestEmail(opts: {
 // pair of human eyes. Same posture as the feedback widget: best-effort, the row
 // in `schools` is the source of truth, and FEEDBACK_EMAIL is optional.
 // Triage: select id, name, country, created_at from schools where uai is null;
+//
+// No caller since 2026-08-13: its one caller, actions/onboarding.ts, is
+// parked with the rest of the removed /onboarding flow, so this alert never
+// fires. Left in place, alongside its caller, per this branch's parking
+// discipline — not deleted. If it is ever wired back up, fix the triage query
+// above first: `uai` was set only by the claim_school() step that flow used
+// to run, so with that gone `uai is null` now matches every school, not just
+// the non-FR ones this was meant to flag.
 export async function sendUnverifiedSchoolEmail(opts: {
   schoolName: string
   country: string

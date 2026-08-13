@@ -151,7 +151,7 @@ The default template (`{{ .ConfirmationURL }}` → `GET /auth/v1/verify`) bypass
 Organizer signup confirmation is **one click on a button in the email**. The
 signup tab shows a "Vérifiez votre e-mail" screen with no code input
 (`app/(auth)/signup/page.tsx`); the button verifies, provisions and lands the
-organizer on `/onboarding` (or `/pending` behind the approval gate) via
+organizer on `/dashboard` (or `/pending` behind the approval gate) via
 `app/auth/confirm/route.ts`. The **Confirm signup** template MUST therefore link
 to `/auth/confirm`, and must NOT ask for a code:
 
@@ -161,7 +161,7 @@ to `/auth/confirm`, and must NOT ask for a code:
   Bienvenue sur EazyExchange. Un seul clic suffit pour activer votre compte.
 </p>
 <p style="margin:0 0 24px;">
-  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding"
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard"
      style="display:inline-block;background:#2456E6;color:#ffffff;text-decoration:none;
             font-size:16px;font-weight:600;padding:14px 28px;border-radius:11px;">
     Confirmer mon inscription
@@ -170,7 +170,7 @@ to `/auth/confirm`, and must NOT ask for a code:
 <hr style="border:none;border-top:1px solid #E4E9F2;margin:24px 0;">
 <p style="font-size:13px;line-height:1.6;color:#8A97B2;">
   Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br>
-  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding
+  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard
 </p>
 <p style="font-size:13px;color:#8A97B2;">
   Vous n’êtes pas à l’origine de cette inscription ? Ignorez cet e-mail.
@@ -214,9 +214,10 @@ curl -sS -A curl/8.0 \
   signup: there is no code path any more (`confirmSignupCode` was removed). A
   template that reverts to `{{ .Token }}` leaves organizers with a code and
   nowhere to type it.
-- **`next=/onboarding`, not `/dashboard`.** A fresh signup has no school, so
-  `/dashboard` is a hop the layout gate can only bounce. `app/auth/confirm/route.ts`
-  overrides `next` with `/pending` when provisioning lands pending.
+- **`next=/dashboard`, not `/onboarding`.** The forced onboarding flow was removed
+  2026-08-13 along with the `/onboarding` route and its layout gate; a fresh signup
+  now goes straight to the (empty) dashboard. `app/auth/confirm/route.ts` overrides
+  `next` with `/pending` when provisioning lands pending.
 - **Prod-only, manually verified:** staging uses Supabase default templates and
   sends no email, so this change cannot be exercised on previews.
 - **`mailer_otp_length` (6) is now irrelevant to signup** — it only governs the
