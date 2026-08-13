@@ -181,8 +181,32 @@ describe('walking the tour', () => {
 })
 
 describe('missing anchors', () => {
-  it('skips the tabs that are not rendered without an exchange', () => {
+  it('does not auto-start with zero exchanges, and leaves tour_state untouched', () => {
+    // OrganizerShell renders nav-dashboard and nav-settings unconditionally,
+    // so an exchange-less organizer still collapses to a 4-step plan (welcome,
+    // dashboard, settings, finish) — enough to clear the "too short to bother"
+    // guard, but the tour would be introducing 4 tabs that don't exist, right
+    // on top of the empty dashboard's only CTA. suppressAutoStart is how
+    // OrganizerShell tells the provider to hold off.
     renderShell({ withExchange: false })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    // Not persisted either — the next visit (once an exchange exists) must
+    // still see 'pending' and get the real tour.
+    expect(setTourState).not.toHaveBeenCalled()
+  })
+
+  it('still auto-starts once an exchange exists', () => {
+    renderShell({ withExchange: true })
+    expect(bubble().getByText('Bienvenue dans EazyExchange ! 🎉')).toBeInTheDocument()
+  })
+
+  it('a manual replay from the account menu still walks the condensed plan with zero exchanges', () => {
+    // Suppression only guards the AUTO-START effect. start() itself, reached
+    // here via the account menu, is untouched — the organizer can always ask
+    // for the tour on purpose, even before their first exchange.
+    renderShell({ withExchange: false, tourState: 'completed' })
+    fireEvent.click(screen.getByRole('button', { name: 'Compte' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Visite guidée' }))
     // Only welcome, Aperçu, Réglages and finish have anchors on screen.
     expect(bubble().getByText('1 / 4')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }))

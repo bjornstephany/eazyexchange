@@ -136,7 +136,7 @@ export function OrganizerShell({
   }
 
   return (
-    <TourProvider initialState={tourState}>
+    <TourProvider initialState={tourState} suppressAutoStart={exchanges.length === 0}>
     <div className="flex h-screen overflow-hidden bg-background">
       <Suspense fallback={null}>
         <NewExchangeAutoOpen onOpen={handleNewExchange} />

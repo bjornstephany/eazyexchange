@@ -37,9 +37,20 @@ function anchorPresent(anchor: string) {
 
 export function TourProvider({
   initialState,
+  suppressAutoStart = false,
   children,
 }: {
   initialState: TourState
+  /**
+   * True when the host page has nothing worth touring yet (an organizer with
+   * zero exchanges: only nav-dashboard and nav-settings are on screen, so the
+   * plan collapses to welcome + dashboard + settings + finish — coherent
+   * enough to clear the `<= 2` guard below, but still a tour introducing tabs
+   * that don't exist, on top of the empty dashboard's only CTA). Only the
+   * AUTO-START effect reads this — `start()` itself is unaffected, so the
+   * account menu's manual replay still works with no exchange.
+   */
+  suppressAutoStart?: boolean
   children: React.ReactNode
 }) {
   const router = useRouter()
@@ -99,19 +110,22 @@ export function TourProvider({
   useEffect(() => {
     if (autoStarted.current) return
     if (initialState !== 'pending') return
-    // Unreachable from the real shell: OrganizerShell renders nav-dashboard
-    // and nav-settings unconditionally, so welcome + those two + finish alone
-    // already total 4 — the count here can never be as low as 2 with that
-    // shell mounted. This guards a TourProvider mounted without the shell
-    // (a future host page, or a test), where « Voici un tour de vos onglets »
-    // followed immediately by « c'est tout » would be worse than no tour at
-    // all — so leave the state pending and let a later visit spend it.
+    // Deliberately does NOT persist anything: tour_state stays 'pending', so
+    // the first visit after the organizer creates their first exchange (this
+    // prop flipping to false, on a rerender or a fresh mount) still gets the
+    // real tour auto-offered. A manual replay from the account menu bypasses
+    // this effect entirely and works regardless.
+    if (suppressAutoStart) return
+    // Belt-and-suspenders: a TourProvider mounted without the shell (a future
+    // host page, or a test) where every anchored step filters out — welcome +
+    // finish alone is worse than no tour at all. leave the state pending and
+    // let a later visit spend it.
     if (visibleStepIndices(anchorPresent).length <= 2) return
     autoStarted.current = true
     start()
     // start() is re-created when the pathname changes, which is exactly when a
     // shell that had no tabs might have grown some. Re-running then is the point.
-  }, [initialState, start])
+  }, [initialState, suppressAutoStart, start])
 
   // Drive the router from the step, after the cursor has committed. Every anchor
   // lives in the layout, so this only changes the scenery behind the dim layer —
