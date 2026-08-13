@@ -19,7 +19,6 @@ export default function robots(): MetadataRoute.Robots {
         '/invite/',
         '/join/',
         '/accept-invite',
-        '/onboarding',
         '/billing',
         '/dashboard',
         '/exchanges',
