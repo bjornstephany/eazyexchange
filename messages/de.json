@@ -7,7 +7,8 @@
       "newExchange": "+ Neuer Austausch",
       "add": "Hinzufügen",
       "continue": "Weiter",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "close": "Schließen"
     },
     "states": {
       "saved": "✓ Änderungen gespeichert",
@@ -508,7 +509,27 @@
         "cardSummary": "{n} Fragen · Frist {date}",
         "cardSummaryNoDeadline": "{n} Fragen",
         "customizeCta": "Anpassen",
-        "changeTemplateCta": "Vorlage wechseln"
+        "changeTemplateCta": "Vorlage wechseln",
+        "previewCta": "Fragen ansehen",
+        "chooseThisCta": "Diese Vorlage wählen",
+        "requestTitle": "Keine passende Vorlage gefunden?",
+        "requestBody": "Senden Sie uns das Bewerbungsformular, das Sie bereits verwenden – wir fügen es innerhalb von 48 Stunden zur Bibliothek hinzu.",
+        "requestCta": "Formular senden",
+        "requestDialogBody": "Hängen Sie Ihr Bewerbungsformular an. Wir fügen es innerhalb von 48 Stunden zur Bibliothek hinzu und benachrichtigen Sie per E-Mail.",
+        "requestFileLabel": "Ihr Formular (PDF, Word oder Foto, max. 3 MB)",
+        "requestPrivacyHint": "Senden Sie ein leeres Exemplar – ohne Antworten und ohne Schülerdaten.",
+        "requestNoteLabel": "Anmerkungen (optional)",
+        "requestSubmitCta": "Senden",
+        "requestSending": "Wird gesendet…",
+        "requestSent": "Erhalten. Wir fügen Ihre Vorlage innerhalb von 48 Stunden hinzu und benachrichtigen Sie per E-Mail.",
+        "requestErrors": {
+          "missing_file": "Wählen Sie eine Datei zum Senden aus.",
+          "unsupported_type": "Format nicht unterstützt. Senden Sie ein PDF, ein Word-Dokument oder ein Foto.",
+          "too_large": "Die Datei ist zu groß. Maximal 3 MB.",
+          "note_too_long": "Ihre Anmerkungen überschreiten 1000 Zeichen.",
+          "rate_limited": "Zu viele Sendungen. Versuchen Sie es in einer Stunde erneut.",
+          "failed": "Das Senden ist fehlgeschlagen. Bitte erneut versuchen."
+        }
       },
       "inviteCta": "Schüler einladen",
       "countSummary": "{n, plural, one {# Bewerbung} other {# Bewerbungen}} für {exchangeName}.",
