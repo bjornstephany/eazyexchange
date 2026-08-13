@@ -46,7 +46,7 @@ test('a stranger is waitlisted and no account is created', async ({ page }) => {
 // Known limitation (see the spec): this reads the LOCAL template
 // (supabase/templates/confirmation.html), a committed copy of production's. It
 // proves the application's wiring; it does not prove production's template.
-test('an allowlisted address signs up, confirms by mail and reaches onboarding', async ({ page }) => {
+test('an allowlisted address signs up, confirms by mail and reaches the dashboard', async ({ page }) => {
   await resetSignupCruft()
 
   const res = await page.goto('/signup')
