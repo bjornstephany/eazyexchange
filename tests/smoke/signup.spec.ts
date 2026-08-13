@@ -76,5 +76,10 @@ test('an allowlisted address signs up, confirms by mail and reaches the dashboar
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
   // Positive assertion, deliberately: a thrown page still returns 200 with an
   // empty shell, so only asserting the URL would pass on a broken render.
-  await expect(page.getByText(/Aucun échange/i).first()).toBeVisible()
+  // Locale-agnostic on purpose: unlike seeded accounts (locale: 'fr' in
+  // scripts/seed-demo.mjs), a real signup gets `users.locale`'s DB default of
+  // 'en' (20260714200924_users_locale.sql) — this browser context is fr-FR
+  // (playwright.config.ts) but that only drives anonymous Accept-Language
+  // negotiation, which a logged-in profile's locale overrides.
+  await expect(page.getByText(/Aucun échange|No exchange yet/i).first()).toBeVisible()
 })

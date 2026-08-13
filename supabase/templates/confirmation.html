@@ -18,7 +18,7 @@
   Bienvenue sur EazyExchange. Un seul clic suffit pour activer votre compte.
 </p>
 <p style="margin:0 0 24px;">
-  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding"
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard"
      style="display:inline-block;background:#2456E6;color:#ffffff;text-decoration:none;
             font-size:16px;font-weight:600;padding:14px 28px;border-radius:11px;">
     Confirmer mon inscription
@@ -27,7 +27,7 @@
 <hr style="border:none;border-top:1px solid #E4E9F2;margin:24px 0;">
 <p style="font-size:13px;line-height:1.6;color:#8A97B2;">
   Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br>
-  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding
+  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard
 </p>
 <p style="font-size:13px;color:#8A97B2;">
   Vous n’êtes pas à l’origine de cette inscription ? Ignorez cet e-mail.
