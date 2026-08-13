@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * `pnpm reset-account <email> [--yes]` — delete an account and everything it
- * owns, so the signup → onboarding → walkthrough cycle can be run again.
+ * owns, so the signup → guided-tour walkthrough cycle can be run again. (There
+ * is no onboarding step any more: `/onboarding` was removed 2026-08-13, and a
+ * confirmed organizer lands straight on the empty /dashboard.)
  *
  * public.users is the target of four ON DELETE NO ACTION foreign keys and
  * schools of five more, so this is not a dashboard click. The order below is
