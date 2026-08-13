@@ -197,7 +197,10 @@ export function OrganizerShell({
         <header data-noprint className="flex h-[66px] flex-none items-center justify-between gap-5 border-b bg-card px-7">
           <div className="flex items-center gap-3.5">
             {isSettings ? (
-              <span className="font-display text-base font-semibold text-navy">{schoolName}</span>
+              // schools.name has had no capture path since /onboarding was
+              // removed (2026-08-13), so it is blank on every new account.
+              // The organizer's own name beats an empty header bar.
+              <span className="font-display text-base font-semibold text-navy">{schoolName || organizerName}</span>
             ) : active ? (
               <>
                 <span className="font-display text-base font-semibold text-navy">{active.name}</span>

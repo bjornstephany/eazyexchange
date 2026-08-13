@@ -28,14 +28,17 @@ import { OrganizerShell } from '@/components/shell/OrganizerShell'
 
 const exchanges = [{ id: 'ex1', name: 'France–Canada 2026', year: 2026, archived: false }]
 
-function renderShell({ pathname = '/dashboard' }: { pathname?: string } = {}) {
+function renderShell(
+  { pathname = '/dashboard', schoolName = 'Lycée Mistral' }:
+    { pathname?: string; schoolName?: string } = {},
+) {
   mockPathname = pathname
   return renderWithIntl(
     <OrganizerShell
       exchanges={exchanges}
       activeExchangeId="ex1"
       organizerName="Marie Bernard"
-      schoolName="Lycée Mistral"
+      schoolName={schoolName}
     >
       <p>page</p>
     </OrganizerShell>
@@ -170,6 +173,15 @@ describe('OrganizerShell', () => {
     expect(screen.getByText('France–Canada 2026').closest('nav')).not.toBeNull()
     expect(screen.queryByPlaceholderText(/Rechercher/)).toBeNull()
     expect(screen.queryByText(/Inviter des élèves/)).toBeNull()
+  })
+
+  // Since the /onboarding flow was removed there is no capture path for
+  // schools.name, so it is blank for every account created after 2026-08-13.
+  // An empty header title reads as a broken shell; fall back to the organizer.
+  it('falls back to the organizer name in the /settings header when the school is blank', () => {
+    renderShell({ pathname: '/settings', schoolName: '' })
+    const header = document.querySelector('header')!
+    expect(header.textContent).toContain('Marie Bernard')
   })
 
   it('renders no search input in the shell on /students', () => {
