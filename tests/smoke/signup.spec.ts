@@ -71,7 +71,10 @@ test('an allowlisted address signs up, confirms by mail and reaches onboarding',
   // verification, the provisioning — is the real thing.
   await page.goto(confirmPath)
   // Allowlisted means set_initial_user_status() approves on insert, so there is
-  // no /pending stop: the account goes straight to onboarding.
-  await expect(page).toHaveURL(/\/onboarding$/, { timeout: 20_000 })
-  await expect(page.getByText(/établissement/i).first()).toBeVisible()
+  // no /pending stop; and there is no onboarding gate any more (removed
+  // 2026-08-13), so the account goes straight to an empty dashboard.
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
+  // Positive assertion, deliberately: a thrown page still returns 200 with an
+  // empty shell, so only asserting the URL would pass on a broken render.
+  await expect(page.getByText(/Aucun échange/i).first()).toBeVisible()
 })
