@@ -96,9 +96,26 @@ describe('provisionOrganizer', () => {
     expect(admin.calls.usersInserted).toEqual([
       {
         id: 'u1', school_id: 'school-1', role: 'organizer', org_role: 'owner',
-        full_name: 'Jane Doe', email: 'org@example.com',
+        full_name: 'Jane Doe', email: 'org@example.com', locale: 'en',
       },
     ])
+  })
+
+  // A real French-market signup must not silently land in an English app —
+  // actions/invitations.ts:140 seeds a student's profile the same way, from
+  // whatever locale signal the caller could read off the request.
+  it('seeds the locale the caller resolved off the request', async () => {
+    await provisionOrganizer(baseUser, 'fr')
+    expect(admin.calls.usersInserted[0]).toMatchObject({ locale: 'fr' })
+  })
+
+  it('falls back to en for an unsupported or missing locale', async () => {
+    await provisionOrganizer(baseUser, 'pt')
+    expect(admin.calls.usersInserted[0]).toMatchObject({ locale: 'en' })
+
+    admin = makeAdmin()
+    await provisionOrganizer(baseUser)
+    expect(admin.calls.usersInserted[0]).toMatchObject({ locale: 'en' })
   })
 
   it('creates the same blank school for a Google identity', async () => {

@@ -6,6 +6,7 @@ import { withAuthAdminRetry } from '@/lib/supabase/admin-retry'
 import { provisionOrganizer } from '@/lib/auth/provision'
 import { safeNextPath } from '@/lib/auth/safe-next'
 import { isSignupAllowlisted, recordWaitlistEntry } from '@/lib/auth/waitlist'
+import { resolveRequestLocale } from '@/lib/i18n/resolve'
 
 // OAuth (Google) callback for the SSR/PKCE flow. Distinct from /auth/confirm,
 // which handles email-OTP links (?token_hash=). Here we exchange the ?code=
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       await dropOrphanUser()
       return redirect('/signup?waitlisted=1')
     }
-    const result = await provisionOrganizer(user)
+    const result = await provisionOrganizer(user, resolveRequestLocale(request))
     if (!result.ok) return redirect('/login?error=signup_failed')
     return redirect('/dashboard')
   }

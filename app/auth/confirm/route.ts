@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { provisionOrganizer } from '@/lib/auth/provision'
 import { safeNextPath } from '@/lib/auth/safe-next'
+import { resolveRequestLocale } from '@/lib/i18n/resolve'
 
 // Handles email-link verification for the SSR (PKCE) cookie flow.
 // Supabase email templates point here with a `token_hash` + `type`, e.g.
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (!error) {
       if (type === 'signup') {
         if (!data.user) return redirect('/login?error=signup_failed')
-        const result = await provisionOrganizer(data.user)
+        const result = await provisionOrganizer(data.user, resolveRequestLocale(request))
         if (!result.ok) return redirect('/login?error=signup_failed')
         // A self-signup lands pending: `next` points at /dashboard, which the
         // approval gate would bounce anyway. Go straight to the holding page.

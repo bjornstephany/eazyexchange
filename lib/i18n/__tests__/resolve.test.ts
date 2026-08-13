@@ -10,7 +10,7 @@ vi.mock('next/headers', () => ({
   headers: async () => ({ get: (n: string) => headerGet(n) }),
 }))
 
-import { resolveLocale } from '@/lib/i18n/resolve'
+import { resolveLocale, resolveRequestLocale } from '@/lib/i18n/resolve'
 
 describe('resolveLocale', () => {
   beforeEach(() => {
@@ -38,5 +38,30 @@ describe('resolveLocale', () => {
     getProfile.mockResolvedValue({ locale: 'pt' })
     cookieGet.mockReturnValue({ value: 'fr' })
     expect(await resolveLocale()).toBe('fr')
+  })
+})
+
+// The same cookie → Accept-Language cascade as resolveLocale(), but read
+// synchronously off a NextRequest instead of next/headers — used by
+// provisionOrganizer's callers, which run before any profile row exists.
+function fakeRequest({ cookie, acceptLanguage }: { cookie?: string; acceptLanguage?: string } = {}) {
+  return {
+    cookies: { get: () => (cookie === undefined ? undefined : { value: cookie }) },
+    headers: { get: () => acceptLanguage ?? null },
+  } as unknown as import('next/server').NextRequest
+}
+
+describe('resolveRequestLocale', () => {
+  it('uses the NEXT_LOCALE cookie when present', () => {
+    expect(resolveRequestLocale(fakeRequest({ cookie: 'es' }))).toBe('es')
+  })
+  it('ignores an unsupported cookie value and negotiates Accept-Language instead', () => {
+    expect(resolveRequestLocale(fakeRequest({ cookie: 'pt', acceptLanguage: 'de-DE,de;q=0.9' }))).toBe('de')
+  })
+  it('negotiates Accept-Language when there is no cookie', () => {
+    expect(resolveRequestLocale(fakeRequest({ acceptLanguage: 'it-IT,it;q=0.9,en;q=0.8' }))).toBe('it')
+  })
+  it('falls back to en', () => {
+    expect(resolveRequestLocale(fakeRequest())).toBe('en')
   })
 })
