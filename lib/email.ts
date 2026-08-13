@@ -40,7 +40,14 @@ function layout(body: string, footer = "You're receiving this because you have f
   `
 }
 
-async function send(to: string | string[], subject: string, html: string, label: string, ctx?: EmailLogContext): Promise<boolean> {
+// A file travelling with the mail. `content` is base64 — Resend's own wire
+// format — so nothing here has to hold a Buffer type.
+type EmailAttachment = { filename: string; content: string }
+
+async function send(
+  to: string | string[], subject: string, html: string, label: string,
+  ctx?: EmailLogContext, attachments?: EmailAttachment[],
+): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
     console.warn(`[email] RESEND_API_KEY not set — skipping ${label}`)
@@ -48,7 +55,10 @@ async function send(to: string | string[], subject: string, html: string, label:
   }
   const recipient = Array.isArray(to) ? to.join(', ') : to
   try {
-    const { error } = await resend.emails.send({ from: FROM, to, subject, html })
+    const { error } = await resend.emails.send({
+      from: FROM, to, subject, html,
+      ...(attachments?.length ? { attachments } : {}),
+    })
     if (error) {
       logSendError(label, error)
       await logEmailSend({
@@ -325,6 +335,42 @@ export async function sendFeedbackNotificationEmail(opts: {
     <p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${message}</p>
   `, ORG_FOOTER)
   await send(to, `Nouveau feedback (${opts.type}) — ${opts.schoolName}`, html, 'feedback notification email')
+}
+
+// An organizer sending us the application form they already use, so we can add
+// it to the library. UNLIKE every other notification here, this one is the
+// DELIVERY, not an alert about something already stored: there is no bucket and
+// no object, the attachment is the only copy we ever see. That is why it
+// reports whether it sent — the action turns a false into a visible failure
+// rather than swallowing it, so an organizer is never told « reçu » about a
+// file that went nowhere.
+export async function sendTemplateRequestEmail(opts: {
+  schoolName: string
+  organizerName: string
+  organizerEmail: string
+  note: string | null
+  filename: string
+  content: string
+}): Promise<boolean> {
+  const to = process.env.FEEDBACK_EMAIL
+  if (!to) {
+    console.warn('[email] FEEDBACK_EMAIL not set — skipping template request email')
+    return false
+  }
+
+  const note = opts.note ? esc(opts.note).replace(/\n/g, '<br>') : null
+  const html = layout(`
+    <p><strong>Demande de modèle</strong> — ${esc(opts.schoolName)}</p>
+    <p style="font-size:13px;color:#5C7268;">De ${esc(opts.organizerName)} · ${esc(opts.organizerEmail)}</p>
+    <p style="font-size:13px;">Fichier joint : <strong>${esc(opts.filename)}</strong></p>
+    ${note ? `<p style="background:#EAF7F0;border:1px solid #E7F1EC;border-radius:8px;padding:12px;">${note}</p>` : ''}
+    <p style="font-size:13px;color:#5C7268;">Promis sous 48 h.</p>
+  `, ORG_FOOTER)
+
+  return send(
+    to, `Demande de modèle — ${opts.schoolName}`, html, 'template request email',
+    undefined, [{ filename: opts.filename, content: opts.content }],
+  )
 }
 
 // A school claimed with country != 'FR' skips the registry check, so it needs a

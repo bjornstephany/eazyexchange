@@ -73,6 +73,26 @@ describe('ApplicationSetup — Vierge', () => {
 })
 
 describe('ApplicationSetup — Bibliothèque', () => {
+  // One decision at a time: the deadline belongs to the candidature being
+  // created, so it has nothing to ask before a template exists to attach it to.
+  it('does not show the deadline until a template is chosen', () => {
+    renderSetup()
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter une candidature' }))
+    expect(screen.queryByRole('button', { name: DEADLINE_EMPTY })).toBeNull()
+    expect(screen.queryByText('Date limite des candidatures')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choisir' }))
+    expect(screen.getByRole('button', { name: DEADLINE_EMPTY })).toBeInTheDocument()
+  })
+
+  // « Changer de modèle » starts with the current template already picked, so
+  // the field is there from the first frame — and still carries its date.
+  it('shows the deadline immediately when re-entering with a template already chosen', () => {
+    renderSetup({ created: true, applicationTemplate: 'standard', applicationDeadline: TODAY })
+    fireEvent.click(screen.getByRole('button', { name: 'Changer de modèle' }))
+    expect(screen.getByRole('button', { name: `Date limite des candidatures ${longFr(TODAY)}` })).toBeInTheDocument()
+  })
+
   it('keeps « Ajouter la candidature » disabled until both a template and a deadline are chosen', () => {
     renderSetup()
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter une candidature' }))

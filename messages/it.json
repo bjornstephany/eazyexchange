@@ -7,7 +7,8 @@
       "newExchange": "+ Nuovo scambio",
       "add": "Aggiungi",
       "continue": "Continua",
-      "retry": "Riprova"
+      "retry": "Riprova",
+      "close": "Chiudi"
     },
     "states": {
       "saved": "✓ Modifiche salvate",
@@ -508,7 +509,27 @@
         "cardSummary": "{n} domande · scadenza {date}",
         "cardSummaryNoDeadline": "{n} domande",
         "customizeCta": "Personalizza",
-        "changeTemplateCta": "Cambia modello"
+        "changeTemplateCta": "Cambia modello",
+        "previewCta": "Vedi le domande",
+        "chooseThisCta": "Scegli questo modello",
+        "requestTitle": "Non trovi un modello adatto?",
+        "requestBody": "Inviaci il modulo di candidatura che usi già: lo aggiungiamo alla libreria entro 48 ore.",
+        "requestCta": "Invia il mio modulo",
+        "requestDialogBody": "Allega il tuo modulo di candidatura. Lo aggiungiamo alla libreria entro 48 ore e ti avvisiamo via e-mail.",
+        "requestFileLabel": "Il tuo modulo (PDF, Word o una foto, max 3 MB)",
+        "requestPrivacyHint": "Invia una copia in bianco, senza risposte né dati degli studenti.",
+        "requestNoteLabel": "Precisazioni (facoltativo)",
+        "requestSubmitCta": "Invia",
+        "requestSending": "Invio…",
+        "requestSent": "Ricevuto. Aggiungiamo il tuo modello entro 48 ore e ti avvisiamo via e-mail.",
+        "requestErrors": {
+          "missing_file": "Scegli un file da inviare.",
+          "unsupported_type": "Formato non supportato. Invia un PDF, un documento Word o una foto.",
+          "too_large": "File troppo grande. La dimensione massima è di 3 MB.",
+          "note_too_long": "Le tue precisazioni superano i 1000 caratteri.",
+          "rate_limited": "Troppi invii. Riprova tra un’ora.",
+          "failed": "Invio non riuscito. Riprova."
+        }
       },
       "inviteCta": "Invita gli studenti",
       "countSummary": "{n, plural, one {# candidatura} other {# candidature}} per {exchangeName}.",
